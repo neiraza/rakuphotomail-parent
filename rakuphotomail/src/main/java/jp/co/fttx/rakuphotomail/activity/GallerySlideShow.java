@@ -57,7 +57,8 @@ import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
-public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickListener {
+public class GallerySlideShow extends RakuPhotoActivity implements
+		View.OnClickListener {
 
 	private static final String EXTRA_ACCOUNT = "account";
 	private static final String EXTRA_FOLDER = "folder";
@@ -122,12 +123,14 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 	private CopyOnWriteArrayList<String> mMessageUids = new CopyOnWriteArrayList<String>();
 	private ConcurrentHashMap<String, MessageBean> mMessages = new ConcurrentHashMap<String, MessageBean>();
 
-	public static void actionHandleFolder(Context context, Account account, String folder) {
+	public static void actionHandleFolder(Context context, Account account,
+			String folder) {
 		Intent intent = actionHandleFolderIntent(context, account, folder);
 		context.startActivity(intent);
 	}
 
-	public static Intent actionHandleFolderIntent(Context context, Account account, String folder) {
+	public static Intent actionHandleFolderIntent(Context context,
+			Account account, String folder) {
 		Intent intent = new Intent(context, GallerySlideShow.class);
 		if (account != null) {
 			intent.putExtra(EXTRA_ACCOUNT, account.getUuid());
@@ -157,7 +160,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 	@Override
 	protected void onRestoreInstanceState(Bundle savedInstanceState) {
 		super.onRestoreInstanceState(savedInstanceState);
-		mAccount = Preferences.getPreferences(this).getAccount(savedInstanceState.getString(EXTRA_ACCOUNT));
+		mAccount = Preferences.getPreferences(this).getAccount(
+				savedInstanceState.getString(EXTRA_ACCOUNT));
 		mFolderName = savedInstanceState.getString(EXTRA_FOLDER);
 	}
 
@@ -197,7 +201,13 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 	@Override
 	public void onNewIntent(Intent intent) {
 		setIntent(intent);
-		mAccount = Preferences.getPreferences(this).getAccount(intent.getStringExtra(EXTRA_ACCOUNT));
+		Log.d("steinsgate", "mAccount:" + mAccount);
+		Log.d("steinsgate",
+				"Preferences.getPreferences(this):"
+						+ Preferences.getPreferences(this));
+		Log.d("steinsgate", "intent.getStringExtra(EXTRA_ACCOUNT):" + intent.getStringExtra(EXTRA_ACCOUNT));
+		mAccount = Preferences.getPreferences(this).getAccount(
+				intent.getStringExtra(EXTRA_ACCOUNT));
 		mFolderName = intent.getStringExtra(EXTRA_FOLDER);
 		mController = MessagingController.getInstance(getApplication());
 	}
@@ -296,7 +306,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 			for (MessageInfo newMessage : newMessages) {
 				String uid = newMessage.getUid();
 				if (!mMessageUids.contains(uid)) {
-					LocalMessage message = loadMessage(mAccount, mFolderName, uid);
+					LocalMessage message = loadMessage(mAccount, mFolderName,
+							uid);
 					MessageBean mb = setNewMessage(message, newMessage);
 					if (mb.getAttachmentCount() > 0) {
 						CopyOnWriteArrayList<AttachmentBean> attachments = renderAttachmentsNewMail(message);
@@ -314,7 +325,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 	private void slideShowNewMailStart(ArrayList<MessageBean> messages) {
 		// TODO 初回は新着メールが複数ない場合で実現してみる
 		newMessageBean = messages.get(0);
-		CopyOnWriteArrayList<AttachmentBean> attachments = newMessageBean.getAttachments();
+		CopyOnWriteArrayList<AttachmentBean> attachments = newMessageBean
+				.getAttachments();
 		// TODO 想定どおりだと新着メールの複数件添付ファイルは、新着メールスライドで対応する
 		newAttachmentBean = attachments.get(0);
 		handler.post(setNewMailInfo);
@@ -333,7 +345,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 			String messageUid = mMessageUids.get(index);
 			messageBean = mMessages.get(messageUid);
 			if (messageBean != null && isSlideRepeat) {
-				CopyOnWriteArrayList<AttachmentBean> attachments = messageBean.getAttachments();
+				CopyOnWriteArrayList<AttachmentBean> attachments = messageBean
+						.getAttachments();
 				slideShowAttachmentLoop(attachments);
 			} else if (!isSlideRepeat) {
 				return;
@@ -343,7 +356,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 		}
 	}
 
-	private void slideShowAttachmentLoop(CopyOnWriteArrayList<AttachmentBean> attachments) {
+	private void slideShowAttachmentLoop(
+			CopyOnWriteArrayList<AttachmentBean> attachments) {
 		for (AttachmentBean attachment : attachments) {
 			if (!isSlideRepeat) {
 				return;
@@ -358,6 +372,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 		LocalStore localStore = null;
 		LocalFolder localFolder = null;
 		try {
+			Log.d("steinsgate", "mAccount:" + mAccount);
 			localStore = mAccount.getLocalStore();
 			localFolder = localStore.getFolder(mFolderName);
 			localFolder.open(OpenMode.READ_WRITE);
@@ -399,7 +414,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 		return messageBean;
 	}
 
-	private MessageBean setNewMessage(LocalMessage message, MessageInfo messageInfo) {
+	private MessageBean setNewMessage(LocalMessage message,
+			MessageInfo messageInfo) {
 		MessageBean messageBean = new MessageBean();
 		messageBean.setId(message.getId());
 		messageBean.setSubject(message.getSubject());
@@ -424,7 +440,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 	 * @param uid
 	 * @return
 	 */
-	private LocalMessage loadMessage(final Account account, final String folder, final String uid) {
+	private LocalMessage loadMessage(final Account account,
+			final String folder, final String uid) {
 		try {
 			LocalStore localStore = account.getLocalStore();
 			LocalFolder localFolder = localStore.getFolder(folder);
@@ -463,7 +480,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 		return attachments;
 	}
 
-	public CopyOnWriteArrayList<AttachmentBean> renderAttachmentsNewMail(Part part) {
+	public CopyOnWriteArrayList<AttachmentBean> renderAttachmentsNewMail(
+			Part part) {
 		CopyOnWriteArrayList<AttachmentBean> attachments = null;
 		if (part.getBody() instanceof Multipart) {
 			try {
@@ -481,7 +499,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 		return attachments;
 	}
 
-	private CopyOnWriteArrayList<AttachmentBean> splitMultipart(Part part) throws MessagingException {
+	private CopyOnWriteArrayList<AttachmentBean> splitMultipart(Part part)
+			throws MessagingException {
 		Multipart mp = (Multipart) part.getBody();
 		CopyOnWriteArrayList<AttachmentBean> attachments = new CopyOnWriteArrayList<AttachmentBean>();
 		for (int i = 0; i < mp.getCount(); i++) {
@@ -499,9 +518,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 		AttachmentBean attachment = new AttachmentBean();
 		String contentDisposition = null;
 		try {
-			contentDisposition = MimeUtility.unfoldAndDecode(part.getDisposition());
+			contentDisposition = MimeUtility.unfoldAndDecode(part
+					.getDisposition());
 			if (contentDisposition != null
-					&& MimeUtility.getHeaderParameter(contentDisposition, null).matches("^(?i:inline)")
+					&& MimeUtility.getHeaderParameter(contentDisposition, null)
+							.matches("^(?i:inline)")
 					&& part.getHeader("Content-ID") != null) {
 				return null;
 			}
@@ -557,17 +578,20 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 	private Bitmap getBitmapView(LocalAttachmentBodyPart part) {
 		try {
 			BitmapFactory.Options options = new BitmapFactory.Options();
-			Uri uri = AttachmentProvider.getAttachmentUri(mAccount, part.getAttachmentId());
+			Uri uri = AttachmentProvider.getAttachmentUri(mAccount,
+					part.getAttachmentId());
 			options.inJustDecodeBounds = true;
 			this.getContentResolver().openInputStream(uri);
-			BitmapFactory.decodeStream(this.getContentResolver().openInputStream(uri), null, options);
+			BitmapFactory.decodeStream(this.getContentResolver()
+					.openInputStream(uri), null, options);
 			int displayW = getWindowManager().getDefaultDisplay().getWidth();
 			int displayH = getWindowManager().getDefaultDisplay().getHeight();
 			int scaleW = options.outWidth / displayW + 1;
 			int scaleH = options.outHeight / displayH + 1;
 			options.inJustDecodeBounds = false;
 			options.inSampleSize = Math.max(scaleW, scaleH);
-			return BitmapFactory.decodeStream(this.getContentResolver().openInputStream(uri), null, options);
+			return BitmapFactory.decodeStream(this.getContentResolver()
+					.openInputStream(uri), null, options);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -607,8 +631,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 	private boolean isSlide(AttachmentBean attachment) {
 		String mimeType = attachment.getMimeType();
 		String fileName = attachment.getName();
-		return "image/jpeg".equals(mimeType) || "image/png".equals(mimeType)
-				|| (null != fileName && (fileName.endsWith(".png") || fileName.endsWith(".JPG")));
+		return "image/jpeg".equals(mimeType)
+				|| "image/png".equals(mimeType)
+				|| (null != fileName && (fileName.endsWith(".png") || fileName
+						.endsWith(".JPG")));
 	}
 
 	private void sleep(long time) {
@@ -649,7 +675,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 		isCheckRepeat = false;
 	}
 
-	private void applyRotation(ViewGroup view, float start, float mid, float end, float depth) {
+	private void applyRotation(ViewGroup view, float start, float mid,
+			float end, float depth) {
 		this.centerX = view.getWidth() / 2.0f;
 		this.centerY = view.getHeight() / 2.0f;
 		Rotate3dAnimation rot;
@@ -683,7 +710,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 						mImageViewEven.setVisibility(View.GONE);
 						mImageViewOdd.setVisibility(View.VISIBLE);
 					}
-					Rotate3dAnimation rot = new Rotate3dAnimation(mid, end, centerX, centerY, depth, false);
+					Rotate3dAnimation rot = new Rotate3dAnimation(mid, end,
+							centerX, centerY, depth, false);
 					rot.setDuration(DURATION);
 					rot.setInterpolator(new AccelerateInterpolator());
 					mContainer.startAnimation(rot);
@@ -692,10 +720,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 		}
 
 		@Override
-		public void onAnimationRepeat(Animation animation) {}
+		public void onAnimationRepeat(Animation animation) {
+		}
 
 		@Override
-		public void onAnimationStart(Animation animation) {}
+		public void onAnimationStart(Animation animation) {
+		}
 
 	}
 
@@ -718,7 +748,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 			mMailFromName.setText(mailFromArr[1]);
 		}
 		/* To */
-		String[] mailToList = RakuPhotoStringUtil.splitMailAdressList(newMessageBean.getToList());
+		String[] mailToList = RakuPhotoStringUtil
+				.splitMailAdressList(newMessageBean.getToList());
 		if (mailToList != null) {
 			mMailTo.setText(RakuPhotoStringUtil.getMailAddress(mailToList));
 		} else {
@@ -730,7 +761,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 			mMailCc.setVisibility(View.INVISIBLE);
 			mMailCcTitle.setVisibility(View.INVISIBLE);
 		} else {
-			String[] mailCcList = RakuPhotoStringUtil.splitMailAdressList(ccList);
+			String[] mailCcList = RakuPhotoStringUtil
+					.splitMailAdressList(ccList);
 			if (mailCcList != null) {
 				mMailCc.setText(RakuPhotoStringUtil.getMailAddress(mailCcList));
 			}
@@ -791,7 +823,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 				visibleLimit = RakuPhotoMail.DEFAULT_VISIBLE_LIMIT;
 			}
 
-			Message[] remoteMessageArray = new Message[0];;
+			Message[] remoteMessageArray = new Message[0];
+			;
 			final ArrayList<Message> remoteMessages = new ArrayList<Message>();
 			HashMap<String, Message> remoteUidMap = new HashMap<String, Message>();
 
@@ -801,7 +834,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 				/* Message numbers start at 1. */
 				int remoteStart;
 				if (visibleLimit > 0) {
-					remoteStart = Math.max(0, remoteMessageCount - visibleLimit) + 1;
+					remoteStart = Math
+							.max(0, remoteMessageCount - visibleLimit) + 1;
 				} else {
 					remoteStart = 1;
 				}
@@ -809,12 +843,14 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
 				final AtomicInteger headerProgress = new AtomicInteger(0);
 
-				remoteMessageArray = remoteFolder.getMessages(remoteStart, remoteEnd, earliestDate, null);
+				remoteMessageArray = remoteFolder.getMessages(remoteStart,
+						remoteEnd, earliestDate, null);
 
 				for (Message thisMess : remoteMessageArray) {
 					headerProgress.incrementAndGet();
 					Message localMessage = localUidMap.get(thisMess.getUid());
-					if (localMessage == null || !localMessage.olderThan(earliestDate)) {
+					if (localMessage == null
+							|| !localMessage.olderThan(earliestDate)) {
 						remoteMessages.add(thisMess);
 						remoteUidMap.put(thisMess.getUid(), thisMess);
 					}
@@ -822,7 +858,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 				remoteMessageArray = null;
 
 			} else if (remoteMessageCount < 0) {
-				throw new Exception("Message count " + remoteMessageCount + " for folder " + folderName);
+				throw new Exception("Message count " + remoteMessageCount
+						+ " for folder " + folderName);
 			}
 
 			/*
@@ -837,15 +874,18 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 					}
 				}
 
-				localFolder.destroyMessages(destroyMessages.toArray(new Message[0]));
+				localFolder.destroyMessages(destroyMessages
+						.toArray(new Message[0]));
 
 			}
 			localMessages = null;
 
-//			int newMessages = mController
-//					.downloadMessages(account, remoteFolder, localFolder, remoteMessages);
-//
-//			int unreadMessageCount = setLocalUnreadCountToRemote(localFolder, remoteFolder, newMessages);
+			// int newMessages = mController
+			// .downloadMessages(account, remoteFolder, localFolder,
+			// remoteMessages);
+			//
+			// int unreadMessageCount = setLocalUnreadCountToRemote(localFolder,
+			// remoteFolder, newMessages);
 			setLocalFlaggedCountToRemote(localFolder, remoteFolder);
 
 			/* Notify listeners that we're finally done. */
@@ -860,8 +900,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 		}
 	}
 
-	private void setLocalFlaggedCountToRemote(LocalFolder localFolder, Folder remoteFolder)
-			throws MessagingException {
+	private void setLocalFlaggedCountToRemote(LocalFolder localFolder,
+			Folder remoteFolder) throws MessagingException {
 		int remoteFlaggedMessageCount = remoteFolder.getFlaggedMessageCount();
 		if (remoteFlaggedMessageCount != -1) {
 			localFolder.setFlaggedMessageCount(remoteFlaggedMessageCount);
@@ -877,47 +917,48 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 		}
 	}
 
-//	private int setLocalUnreadCountToRemote(LocalFolder localFolder, Folder remoteFolder, int newMessageCount)
-//			throws MessagingException {
-//		int remoteUnreadMessageCount = remoteFolder.getUnreadMessageCount();
-//		if (remoteUnreadMessageCount != -1) {
-//			localFolder.setUnreadMessageCount(remoteUnreadMessageCount);
-//		} else {
-//			int unreadCount = 0;
-//			Message[] messages = localFolder.getMessages(null, false);
-//			for (Message message : messages) {
-//				if (!message.isSet(Flag.SEEN) && !message.isSet(Flag.DELETED)) {
-//					unreadCount++;
-//				}
-//			}
-//			localFolder.setUnreadMessageCount(unreadCount);
-//		}
-//		return localFolder.getUnreadMessageCount();
-//	}
+	// private int setLocalUnreadCountToRemote(LocalFolder localFolder, Folder
+	// remoteFolder, int newMessageCount)
+	// throws MessagingException {
+	// int remoteUnreadMessageCount = remoteFolder.getUnreadMessageCount();
+	// if (remoteUnreadMessageCount != -1) {
+	// localFolder.setUnreadMessageCount(remoteUnreadMessageCount);
+	// } else {
+	// int unreadCount = 0;
+	// Message[] messages = localFolder.getMessages(null, false);
+	// for (Message message : messages) {
+	// if (!message.isSet(Flag.SEEN) && !message.isSet(Flag.DELETED)) {
+	// unreadCount++;
+	// }
+	// }
+	// localFolder.setUnreadMessageCount(unreadCount);
+	// }
+	// return localFolder.getUnreadMessageCount();
+	// }
 
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
-			case R.id.gallery_mail_slide:
-				onSlide();
-				break;
-			case R.id.gallery_mail_reply:
-				onReply();
-				break;
-			case R.id.gallery_mail_detail_open:
-				onMailInfoDetail();
-				break;
-			case R.id.gallery_attachment_picuture_default:
-				Log.d("steinsgate", "gallery_attachment_picuture_default");
-				break;
-			case R.id.gallery_attachment_picuture_even:
-				Log.d("steinsgate", "gallery_attachment_picuture_even");
-				break;
-			case R.id.gallery_attachment_picuture_odd:
-				Log.d("steinsgate", "gallery_attachment_picuture_odd");
-				break;
-			default:
-				Log.w(RakuPhotoMail.LOG_TAG, "onClick is no Action !!!!");
+		case R.id.gallery_mail_slide:
+			onSlide();
+			break;
+		case R.id.gallery_mail_reply:
+			onReply();
+			break;
+		case R.id.gallery_mail_detail_open:
+			onMailInfoDetail();
+			break;
+		case R.id.gallery_attachment_picuture_default:
+			Log.d("steinsgate", "gallery_attachment_picuture_default");
+			break;
+		case R.id.gallery_attachment_picuture_even:
+			Log.d("steinsgate", "gallery_attachment_picuture_even");
+			break;
+		case R.id.gallery_attachment_picuture_odd:
+			Log.d("steinsgate", "gallery_attachment_picuture_odd");
+			break;
+		default:
+			Log.w(RakuPhotoMail.LOG_TAG, "onClick is no Action !!!!");
 		}
 	}
 
@@ -939,7 +980,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 	}
 
 	private void onReply() {
-		MessageCompose.actionReply(this, mAccount, newMessageBean.getMessage(), false, null);
+		MessageCompose.actionReply(this, mAccount, newMessageBean.getMessage(),
+				false, null);
 		finish();
 	}
 
@@ -948,8 +990,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 	}
 
 	private void showPopupWindow(Context context, View parent) {
-		LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		final View vPopupWindow = inflater.inflate(R.layout.gallery_view_mail_detail_info_popup, null, false);
+		LayoutInflater inflater = (LayoutInflater) context
+				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		final View vPopupWindow = inflater.inflate(
+				R.layout.gallery_view_mail_detail_info_popup, null, false);
 		pWindowMailDetail = new PopupWindow(vPopupWindow, 650, 400, true);
 		setupPopupWindowViews(vPopupWindow);
 		pWindowMailDetail.showAtLocation(parent, Gravity.CENTER, 0, 0);
@@ -957,21 +1001,29 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
 	private void setupPopupWindowViews(View vPopupWindow) {
 		/* 件名 */
-		TextView subject = (TextView) vPopupWindow.findViewById(R.id.gallery_mail_detail_subject);
+		TextView subject = (TextView) vPopupWindow
+				.findViewById(R.id.gallery_mail_detail_subject);
 		subject.setText(newMessageBean.getSubject());
 		/* 日付 */
-		TextView date = (TextView) vPopupWindow.findViewById(R.id.gallery_mail_detail_date);
+		TextView date = (TextView) vPopupWindow
+				.findViewById(R.id.gallery_mail_detail_date);
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd h:mm a");
 		date.setText(sdf.format(newMessageBean.getDate()));
 		/* From */
-		TextView from = (TextView) vPopupWindow.findViewById(R.id.gallery_mail_detail_from);
-		from.setText(RakuPhotoStringUtil.getMailAddressInfo(newMessageBean.getSenderList()));
+		TextView from = (TextView) vPopupWindow
+				.findViewById(R.id.gallery_mail_detail_from);
+		from.setText(RakuPhotoStringUtil.getMailAddressInfo(newMessageBean
+				.getSenderList()));
 		/* To */
-		TextView to = (TextView) vPopupWindow.findViewById(R.id.gallery_mail_detail_to);
-		to.setText(RakuPhotoStringUtil.getMailAddressInfoList(newMessageBean.getToList()));
+		TextView to = (TextView) vPopupWindow
+				.findViewById(R.id.gallery_mail_detail_to);
+		to.setText(RakuPhotoStringUtil.getMailAddressInfoList(newMessageBean
+				.getToList()));
 		/* Cc */
-		TextView ccTitle = (TextView) vPopupWindow.findViewById(R.id.gallery_mail_detail_cc_title);
-		TextView cc = (TextView) vPopupWindow.findViewById(R.id.gallery_mail_detail_cc);
+		TextView ccTitle = (TextView) vPopupWindow
+				.findViewById(R.id.gallery_mail_detail_cc_title);
+		TextView cc = (TextView) vPopupWindow
+				.findViewById(R.id.gallery_mail_detail_cc);
 		String ccList = newMessageBean.getCcList();
 		if (ccList == null || "".equals(ccList)) {
 			ccTitle.setVisibility(View.GONE);
@@ -979,7 +1031,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 		} else {
 			cc.setText(RakuPhotoStringUtil.getMailAddressInfoList(ccList));
 		}
-		TextView close = (TextView) vPopupWindow.findViewById(R.id.gallery_mail_detail_close);
+		TextView close = (TextView) vPopupWindow
+				.findViewById(R.id.gallery_mail_detail_close);
 		/* 閉じる */
 		close.setOnClickListener(new PopupClickEvent());
 	}
@@ -992,11 +1045,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 		@Override
 		public void onClick(View v) {
 			switch (v.getId()) {
-				case R.id.gallery_mail_detail_close:
-					onMailInfoClose();
-					break;
-				default:
-					Log.w(RakuPhotoMail.LOG_TAG, "PopupClickEvent#onClick is no Action !!!!");
+			case R.id.gallery_mail_detail_close:
+				onMailInfoClose();
+				break;
+			default:
+				Log.w(RakuPhotoMail.LOG_TAG,
+						"PopupClickEvent#onClick is no Action !!!!");
 			}
 		}
 	}

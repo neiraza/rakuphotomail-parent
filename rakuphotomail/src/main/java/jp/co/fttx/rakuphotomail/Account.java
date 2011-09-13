@@ -172,8 +172,9 @@ public class Account implements BaseAccount {
 
     protected Account(Context context) {
         mUuid = UUID.randomUUID().toString();
+        //TODO FROM Application TO Context
         mLocalStorageProviderId =
-                StorageManager.getInstance(RakuPhotoMail.app).getDefaultProviderId();
+                StorageManager.getInstance(context).getDefaultProviderId();
         mAutomaticCheckIntervalMinutes = -1;
         mIdleRefreshMinutes = 24;
         mSaveAllHeaders = true;

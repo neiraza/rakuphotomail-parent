@@ -293,11 +293,9 @@ public class Accounts extends K9ListActivity implements OnItemClickListener, OnC
 
 	@Override
 	public void onCreate(Bundle icicle) {
-		Log.d("robbin", "すべてはここから始まった");
 		super.onCreate(icicle);
 
 		if (!RakuPhotoMail.isHideSpecialAccounts()) {
-			Log.d("robbin", "サーチアカウントだな");
 			unreadAccount = new SearchAccount(this, false, null, null);
 			unreadAccount.setDescription(getString(R.string.search_all_messages_title));
 			unreadAccount.setEmail(getString(R.string.search_all_messages_detail));
@@ -313,15 +311,12 @@ public class Accounts extends K9ListActivity implements OnItemClickListener, OnC
 		Intent intent = getIntent();
 		boolean startup = intent.getBooleanExtra(EXTRA_STARTUP, true);
 		if (startup && RakuPhotoMail.startIntegratedInbox() && !RakuPhotoMail.isHideSpecialAccounts()) {
-			Log.d("robbin", "初めてアカウントひらくよ？");
 			onOpenAccount(integratedInboxAccount);
 			finish();
 		} else if (startup && accounts.length == 1 && onOpenAccount(accounts[0])) {
 			// fall through to "else" if !onOpenAccount()
-			Log.d("robbin", "アカウントがなくね？");
 			finish();
 		} else {
-			Log.d("robbin", "アカウントを開いたよ？");
 			requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 			requestWindowFeature(Window.FEATURE_PROGRESS);
 
