@@ -1,6 +1,5 @@
 package jp.co.fttx.rakuphotomail.test;
 
-import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import android.content.Context;
 import android.content.ContextWrapper;
 
