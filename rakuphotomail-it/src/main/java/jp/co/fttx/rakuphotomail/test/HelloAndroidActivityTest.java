@@ -1,6 +1,7 @@
 package jp.co.fttx.rakuphotomail.test;
 
 import jp.co.fttx.rakuphotomail.HelloAndroidActivity;
+import android.app.Activity;
 import android.test.ActivityInstrumentationTestCase2;
 
 public class HelloAndroidActivityTest extends
@@ -12,5 +13,7 @@ public class HelloAndroidActivityTest extends
 
 	public void testFuga() {
 		assertNotNull(getActivity());
+		Activity activity = getActivity();
+
 	}
 }
