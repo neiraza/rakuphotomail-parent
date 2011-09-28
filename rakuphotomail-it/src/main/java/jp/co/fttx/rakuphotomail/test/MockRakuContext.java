@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.ContextWrapper;
 
 // gerrit test 1
+// gerrit test 2
 public class MockRakuContext extends ContextWrapper {
 
 	Context context;
