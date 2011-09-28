@@ -3,6 +3,7 @@ package jp.co.fttx.rakuphotomail.test;
 import android.content.Context;
 import android.content.ContextWrapper;
 
+// gerrit test 1
 public class MockRakuContext extends ContextWrapper {
 
 	Context context;
