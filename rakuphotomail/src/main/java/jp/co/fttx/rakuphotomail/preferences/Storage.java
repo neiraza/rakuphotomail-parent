@@ -35,9 +35,6 @@ public class Storage implements SharedPreferences {
 	private Context context = null;
 
 	private SQLiteDatabase openDB() {
-		Log.d("steinsgate", "openDB 1:" + context);
-		Log.d("steinsgate", "openDB 2:" + DB_NAME);
-		Log.d("steinsgate", "openDB 3:" + Context.MODE_PRIVATE);
 		SQLiteDatabase mDb = context.openOrCreateDatabase(DB_NAME,
 				Context.MODE_PRIVATE, null);
 
@@ -170,7 +167,6 @@ public class Storage implements SharedPreferences {
 	}
 
 	public static Storage getStorage(Context context) {
-		Log.d("steinsgate", "getStorage(Context context) context:" + context);
 		Storage tmpStorage = storages.get(context);
 		if (tmpStorage != null) {
 			if (RakuPhotoMail.DEBUG) {
@@ -233,9 +229,7 @@ public class Storage implements SharedPreferences {
 	}
 
 	private Storage(Context context) {
-		Log.d("steinsgate", "Storageeeeeeeeeeeeeeeeeeee1:" + context);
 		this.context = context;
-		Log.d("steinsgate", "Storageeeeeeeeeeeeeeeeeeee2:" + this.context);
 		loadValues();
 	}
 

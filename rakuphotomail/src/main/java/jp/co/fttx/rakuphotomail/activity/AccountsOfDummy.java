@@ -57,7 +57,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class Accounts extends K9ListActivity implements OnItemClickListener,
+public class AccountsOfDummy extends K9ListActivity implements OnItemClickListener,
 		OnClickListener {
 
 	/**
@@ -94,7 +94,7 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 		 * AccountsHandler#setViewTitle.
 		 */
 		private void setViewTitle() {
-			String dispString = mListener.formatHeader(Accounts.this,
+			String dispString = mListener.formatHeader(AccountsOfDummy.this,
 					getString(R.string.accounts_title), mUnreadMessageCount,
 					getTimeFormat());
 
@@ -212,7 +212,7 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 		public void folderStatusChanged(Account account, String folderName,
 				int unreadMessageCount) {
 			try {
-				AccountStats stats = account.getStats(Accounts.this);
+				AccountStats stats = account.getStats(AccountsOfDummy.this);
 				if (stats == null) {
 					Log.w(RakuPhotoMail.LOG_TAG, "Unable to get account stats");
 				} else {
@@ -263,7 +263,7 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 		public void synchronizeMailboxFinished(Account account, String folder,
 				int totalMessagesInMailbox, int numNewMessages) {
 			MessagingController.getInstance(getApplication()).getAccountStats(
-					Accounts.this, account, mListener);
+					AccountsOfDummy.this, account, mListener);
 			super.synchronizeMailboxFinished(account, folder,
 					totalMessagesInMailbox, numNewMessages);
 
@@ -293,7 +293,7 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 	public static final String EXTRA_STARTUP = "startup";
 
 	public static void actionLaunch(Context context) {
-		Intent intent = new Intent(context, Accounts.class);
+		Intent intent = new Intent(context, AccountsOfDummy.class);
 		intent.putExtra(EXTRA_STARTUP, true);
 		context.startActivity(intent);
 	}
@@ -301,7 +301,7 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 	public static void listAccounts(Context context) {
 		Log.v(RakuPhotoMail.LOG_TAG,
 				"Accounts#listAccounts:intent startActivity");
-		Intent intent = new Intent(context, Accounts.class);
+		Intent intent = new Intent(context, AccountsOfDummy.class);
 		intent.putExtra(EXTRA_STARTUP, false);
 		context.startActivity(intent);
 	}
@@ -464,7 +464,7 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 				pendingWork.put(account, "true");
 				Account realAccount = (Account) account;
 				MessagingController.getInstance(getApplication())
-						.getAccountStats(Accounts.this, realAccount, mListener);
+						.getAccountStats(AccountsOfDummy.this, realAccount, mListener);
 			} else if (RakuPhotoMail.countSearchMessages()
 					&& account instanceof SearchAccount) {
 				pendingWork.put(account, "true");
@@ -576,14 +576,12 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 			if (RakuPhotoMail.FOLDER_NONE.equals(realAccount
 					.getAutoExpandFolderName())) {
 				Log.d("fujiyama", "Accounts#onOpenAccount 4");
-//				FolderList.actionHandleAccount(this, realAccount);
+				FolderList.actionHandleAccount(this, realAccount);
 			} else {
 				Log.d("fujiyama", "Accounts#onOpenAccount 5");
-//				MessageList.actionHandleFolder(this, realAccount,
-//						realAccount.getAutoExpandFolderName());
+				MessageList.actionHandleFolder(this, realAccount,
+						realAccount.getAutoExpandFolderName());
 			}
-			Log.d("fujiyama", "Accounts#onOpenAccount 6");
-			GallerySlideShow.actionHandleFolder(this, realAccount, realAccount.getInboxFolderName());
 		}
 		return true;
 	}
@@ -634,10 +632,10 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 								}
 								MessagingController.getInstance(
 										getApplication()).notifyAccountCancel(
-										Accounts.this, realAccount);
-								Preferences.getPreferences(Accounts.this)
+										AccountsOfDummy.this, realAccount);
+								Preferences.getPreferences(AccountsOfDummy.this)
 										.deleteAccount(realAccount);
-								RakuPhotoMail.setServicesEnabled(Accounts.this);
+								RakuPhotoMail.setServicesEnabled(AccountsOfDummy.this);
 								refresh();
 							}
 						}
@@ -940,7 +938,7 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 
 	class AccountsAdapter extends ArrayAdapter<BaseAccount> {
 		public AccountsAdapter(BaseAccount[] accounts) {
-			super(Accounts.this, 0, accounts);
+			super(AccountsOfDummy.this, 0, accounts);
 		}
 
 		@Override
@@ -976,7 +974,7 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 			AccountStats stats = accountStats.get(account.getUuid());
 
 			if (stats != null && account instanceof Account && stats.size >= 0) {
-				holder.email.setText(SizeFormatter.formatSize(Accounts.this,
+				holder.email.setText(SizeFormatter.formatSize(AccountsOfDummy.this,
 						stats.size));
 				holder.email.setVisibility(View.VISIBLE);
 			} else {
@@ -1068,7 +1066,7 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 				holder.folders.setVisibility(View.VISIBLE);
 				holder.folders.setOnClickListener(new OnClickListener() {
 					public void onClick(View v) {
-						FolderList.actionHandleAccount(Accounts.this,
+						FolderList.actionHandleAccount(AccountsOfDummy.this,
 								(Account) account);
 					}
 				});
@@ -1120,7 +1118,7 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 			if (account instanceof SearchAccount) {
 				SearchAccount searchAccount = (SearchAccount) account;
 				MessageList.actionHandle(
-						Accounts.this,
+						AccountsOfDummy.this,
 						description,
 						"",
 						searchAccount.isIntegrate(),
@@ -1163,7 +1161,7 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 				};
 				// 彼はスターを見つけたらしい
 				MessageList
-						.actionHandle(Accounts.this, description, searchSpec);
+						.actionHandle(AccountsOfDummy.this, description, searchSpec);
 			}
 		}
 

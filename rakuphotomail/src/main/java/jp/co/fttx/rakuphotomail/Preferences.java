@@ -21,8 +21,6 @@ public class Preferences {
 
 	public static synchronized Preferences getPreferences(Context context) {
 		if (preferences == null) {
-			Log.d("steinsgate", "getPreferences(Context context) context:"
-					+ context);
 			preferences = new Preferences(context);
 		}
 		return preferences;
@@ -34,7 +32,6 @@ public class Preferences {
 	private Context mContext;
 
 	private Preferences(Context context) {
-		Log.d("steinsgate", "Preferencesのコンストラクタ context:" + context);
 		mStorage = Storage.getStorage(context);
 		mContext = context;
 		if (mStorage.size() == 0) {
@@ -105,7 +102,6 @@ public class Preferences {
 	}
 
 	public synchronized Account getAccount(String uuid) {
-		Log.d("steinsgate", "accounts:" + accounts);
 		if (accounts == null) {
 			loadAccounts();
 		}

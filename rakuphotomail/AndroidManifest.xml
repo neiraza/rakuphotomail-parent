@@ -47,7 +47,15 @@
 		<activity android:name="jp.co.fttx.rakuphotomail.HelloAndroidActivity" />
 		<activity android:name="jp.co.fttx.rakuphotomail.activity.RakuPhotoMenuSelecter"
 			android:launchMode="singleTask" android:configChanges="locale"
-			android:label="@string/app_name">
+			android:label="らくフォトメニュー（廃止予定）">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+		<activity android:name="jp.co.fttx.rakuphotomail.activity.RakuPhotoTestDriver"
+			android:label="らくフォト　送信メッセージ作成モック画面">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.DEFAULT" />
@@ -61,8 +69,14 @@
 			android:launchMode="singleInstance" android:configChanges="locale"
 			android:label="@string/app_name">
 			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.DEFAULT" />
+				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
+		</activity>
+		<activity android:name="jp.co.fttx.rakuphotomail.activity.AccountsOfDummy"
+			android:launchMode="singleInstance" android:configChanges="locale"
+			android:label="らくフォトダミー">
 		</activity>
 		<activity android:name="jp.co.fttx.rakuphotomail.activity.setup.Prefs"
 			android:label="@string/prefs_title" android:configChanges="locale">

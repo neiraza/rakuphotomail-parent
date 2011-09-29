@@ -345,11 +345,7 @@ public class StorageManager {
 
 		@Override
 		public void init(Context context) {
-			Log.d("steinsgate", "StoreManager#init(context): context" + context);
 			mRoot = Environment.getExternalStorageDirectory();
-			Log.d("steinsgate",
-					"StoreManager#init(context): context.getPackageName()"
-							+ context.getPackageName());
 			mApplicationDirectory = new File(new File(new File(new File(mRoot,
 					"Android"), "data"), context.getPackageName()), "files");
 		}
