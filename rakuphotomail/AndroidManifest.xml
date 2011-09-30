@@ -55,7 +55,15 @@
 			</intent-filter>
 		</activity>
 		<activity android:name="jp.co.fttx.rakuphotomail.activity.RakuPhotoTestDriver"
-			android:label="らくフォト　送信メッセージ作成モック画面">
+			android:configChanges="locale" android:label="らくフォト　送信メッセージ作成モック画面">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+		<activity android:name="jp.co.fttx.rakuphotomail.activity.RakuPhotoTestDriver2"
+			android:configChanges="locale" android:label="らくフォト　メール詳細モック画面">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.DEFAULT" />
