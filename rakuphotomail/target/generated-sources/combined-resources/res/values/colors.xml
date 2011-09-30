@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+		<color
+				name="message_list_item_background">#ffffff</color>
+		<color
+				name="message_list_item_footer_background">#eeeeee</color>
+  		<color
+				name="gallery_view_shadow">#adff2f</color>
+  		<color
+				name="gallery_view_bottom_shadow">#66ff66</color>
+		<color
+				name="gallery_view_shadow_background">#aaffffff</color>
+		<color
+				name="gallery_mail_detail_popup_background">#ddffffff</color>
+</resources>

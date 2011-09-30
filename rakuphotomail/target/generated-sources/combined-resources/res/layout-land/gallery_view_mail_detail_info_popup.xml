@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+		xmlns:android="http://schemas.android.com/apk/res/android"
+		android:layout_height="fill_parent"
+		android:layout_width="fill_parent"
+		android:orientation="vertical"
+		android:background="@color/gallery_mail_detail_popup_background">
+		<LinearLayout
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:orientation="vertical">
+				<TextView
+						android:typeface="sans"
+						android:textStyle="bold"
+						android:textSize="14sp"
+						android:layout_width="fill_parent"
+						android:layout_height="wrap_content"
+						android:paddingTop="3dp"
+						android:paddingLeft="3dp"
+						android:text="@string/gallery_mail_detail_title" />
+				<ImageView
+						android:layout_width="fill_parent"
+						android:layout_height="wrap_content"
+						android:src="@drawable/divider_horizontal_gallery" />
+		</LinearLayout>
+		<LinearLayout
+				android:layout_weight="100"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content">
+				<ScrollView
+						android:layout_width="fill_parent"
+						android:layout_height="fill_parent"
+						android:scrollbarSize="15dp"
+						android:fadeScrollbars="false"
+						android:scrollbarThumbVertical="@drawable/scrollbar_thumb">
+						<LinearLayout
+								android:layout_width="fill_parent"
+								android:layout_height="fill_parent">
+								<TableLayout
+										android:layout_width="fill_parent"
+										android:layout_height="wrap_content"
+										android:paddingLeft="3dp"
+										android:shrinkColumns="1"
+										android:stretchColumns="1">
+										<TableRow
+												android:layout_weight="1">
+												<TextView
+														android:typeface="sans"
+														android:textSize="12sp"
+														android:layout_width="fill_parent"
+														android:layout_height="wrap_content"
+														android:text="@string/gallery_mail_detail_subject" />
+												<TextView
+														android:id="@+id/gallery_mail_detail_subject"
+														android:typeface="sans"
+														android:textSize="12sp"
+														android:scrollHorizontally="false"
+														android:layout_width="fill_parent"
+														android:layout_height="wrap_content" />
+										</TableRow>
+										<TableRow
+												android:layout_weight="1">
+												<TextView
+														android:typeface="sans"
+														android:textSize="12sp"
+														android:layout_width="fill_parent"
+														android:layout_height="wrap_content"
+														android:text="@string/gallery_mail_detail_date" />
+												<TextView
+														android:id="@+id/gallery_mail_detail_date"
+														android:typeface="sans"
+														android:textSize="12sp"
+														android:scrollHorizontally="false"
+														android:layout_width="fill_parent"
+														android:layout_height="wrap_content" />
+										</TableRow>
+										<TableRow
+												android:layout_weight="1">
+												<TextView
+														android:typeface="sans"
+														android:textSize="12sp"
+														android:layout_width="fill_parent"
+														android:layout_height="wrap_content"
+														android:text="@string/gallery_mail_detail_from" />
+												<TextView
+														android:id="@+id/gallery_mail_detail_from"
+														android:typeface="sans"
+														android:textSize="12sp"
+														android:scrollHorizontally="false"
+														android:layout_width="fill_parent"
+														android:layout_height="wrap_content" />
+										</TableRow>
+										<TableRow
+												android:layout_weight="1">
+												<TextView
+														android:typeface="sans"
+														android:textSize="12sp"
+														android:layout_width="fill_parent"
+														android:layout_height="wrap_content"
+														android:text="@string/gallery_mail_detail_to" />
+												<TextView
+														android:id="@+id/gallery_mail_detail_to"
+														android:typeface="sans"
+														android:textSize="12sp"
+														android:scrollHorizontally="false"
+														android:layout_width="fill_parent"
+														android:layout_height="wrap_content" />
+										</TableRow>
+										<TableRow
+												android:layout_weight="1">
+												<TextView
+														android:id="@+id/gallery_mail_detail_cc_title"
+														android:typeface="sans"
+														android:textSize="12sp"
+														android:layout_width="fill_parent"
+														android:layout_height="wrap_content"
+														android:text="@string/gallery_mail_detail_cc" />
+												<TextView
+														android:id="@+id/gallery_mail_detail_cc"
+														android:typeface="sans"
+														android:textSize="12sp"
+														android:scrollHorizontally="false"
+														android:layout_width="fill_parent"
+														android:layout_height="wrap_content" />
+										</TableRow>
+								</TableLayout>
+						</LinearLayout>
+				</ScrollView>
+		</LinearLayout>
+		<LinearLayout
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:orientation="vertical">
+				<ImageView
+						android:layout_width="fill_parent"
+						android:layout_height="wrap_content"
+						android:src="@drawable/divider_horizontal_gallery" />
+				<TextView
+						android:id="@+id/gallery_mail_detail_close"
+						android:typeface="sans"
+						android:textStyle="bold"
+						android:textSize="14sp"
+						android:layout_weight="1"
+						android:padding="3dp"
+						android:layout_width="fill_parent"
+						android:layout_height="wrap_content"
+						android:gravity="center"
+						android:text="@string/gallery_mail_detail_close" />
+		</LinearLayout>
+</LinearLayout>
