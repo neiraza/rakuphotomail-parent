@@ -62,6 +62,14 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
+		<activity android:name="jp.co.fttx.rakuphotomail.activity.GallerySendingMail"
+			android:configChanges="locale" android:label="(TEST)送信メッセージ作成">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
 		<activity android:name="jp.co.fttx.rakuphotomail.activity.RakuPhotoTestDriver2"
 			android:configChanges="locale" android:label="らくフォト　メール詳細モック画面">
 			<intent-filter>
