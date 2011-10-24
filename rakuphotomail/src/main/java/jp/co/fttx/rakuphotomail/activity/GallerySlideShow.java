@@ -65,7 +65,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 
 	private Account mAccount;
 	private String mFolderName;
-	// TODO loadAttachmentが必要になったら実装する
+	// XXX loadAttachmentが必要になったら実装する
 	// private Message mMessage;
 	private MessageBean messageBean;
 	private AttachmentBean attachmentBean;
@@ -208,6 +208,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		Log.d("steinsgate", "intent.getStringExtra(EXTRA_ACCOUNT):" + intent.getStringExtra(EXTRA_ACCOUNT));
 		mAccount = Preferences.getPreferences(this).getAccount(
 				intent.getStringExtra(EXTRA_ACCOUNT));
+		
+		Log.d("steinsgate", "uuid:" + mAccount.getUuid());
+		Log.d("steinsgate", "folder name:" + mAccount.getInboxFolderName());
+		
+		
 		mFolderName = intent.getStringExtra(EXTRA_FOLDER);
 		mController = MessagingController.getInstance(getApplication());
 	}
@@ -392,7 +397,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 				onDestroy();
 			}
 			if (message.getAttachmentCount() > 0) {
-				// TODO loadAttachmentを実装する際に使えるかも
+				// XXX loadAttachmentを実装する際に使えるかも
 				// mMessage = message;
 				MessageBean mb = setMessage(message);
 				CopyOnWriteArrayList<AttachmentBean> attachments = renderAttachments(message);
@@ -563,7 +568,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		Bitmap bitmapView = null;
 		try {
 			bitmapView = getBitmapView(part);
-			// TODO loadAttachmentが必要になったら実装する
+			// XXX loadAttachmentが必要になったら実装する
 			// if (bitmapView == null) {
 			// Log.d("steinsgate", "GallerySlideShow#populateFromPart 画像ない");
 			// loadAttachment(mAccount, mMessage, part);
@@ -598,7 +603,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		return null;
 	}
 
-	// // TODO サービス化したいなぁ。必要になったら実装するってことで。
+	// XXX サービス化したいなぁ。必要になったら実装するってことで。
 	// private void loadAttachment(final Account account, final Message message,
 	// final Part part) {
 	// Log.d("steinsgate", "GallerySlideShow#loadAttachment");

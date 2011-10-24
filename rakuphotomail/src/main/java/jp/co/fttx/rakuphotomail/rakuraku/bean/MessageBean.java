@@ -11,10 +11,13 @@ public class MessageBean {
 	private String subject;
 	private long date;
 	private String senderList;
+	private String senderListName;
 	private String toList;
+	private String toListName;
 	private String ccList;
 	private String bccList;
 	private String replyToList;
+	private String messageId;
 	private String textContent;
 	private long attachmentCount;
 	private CopyOnWriteArrayList<AttachmentBean> attachments;
@@ -134,5 +137,29 @@ public class MessageBean {
 
 	public void setMessage(LocalMessage message) {
 		this.message = message;
+	}
+	
+	public String getSenderListName() {
+		return senderListName;
+	}
+
+	public void setSenderListName(String senderListName) {
+		this.senderListName = senderListName;
+	}
+
+	public String getToListName() {
+		return toListName;
+	}
+
+	public void setToListName(String toListName) {
+		this.toListName = toListName;
+	}
+
+	public String getMessageId() {
+		return messageId;
+	}
+
+	public void setMessageId(String messageId) {
+		this.messageId = messageId;
 	}
 }
