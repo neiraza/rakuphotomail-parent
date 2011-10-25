@@ -46,11 +46,9 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 	private Address mToAddress;
 	private Address mFromAddress;
 	private Button mSend;
-	// private Contacts mContacts;
 	private MessageReference mMessageReference;
 	private String mReferences;
 	private String mInReplyTo;
-	private Context mContext;
 
 	private static final String STATE_IN_REPLY_TO = "jp.co.fttx.rakuphotomail.activity.GallerySendingMail.inReplyTo";
 	private static final String STATE_REFERENCES = "jp.co.fttx.rakuphotomail.activity.GallerySendingMail.references";
@@ -61,7 +59,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 	private static final String EXTRA_ADDRESS_FROM_NAME = "addressFromName";
 	private static final String EXTRA_ADDRESS_TO = "addressTo";
 	private static final String EXTRA_ADDRESS_TO_NAME = "addressToName";
-	private static final String EXTRA_MESSAGE_UID = "messageUid";
 	private static final String EXTRA_MESSAGE_ID = "messageId";
 
 	private Listener mListener = new Listener();
@@ -71,7 +68,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 		super.onCreate(icicle);
 		Log.d("steinsgate", "GallerySendingMail#onCreate");
 		setContentView(R.layout.gallery_sending_mail);
-		mContext = this;
 		setupViews();
 
 		final Intent intent = getIntent();
@@ -176,7 +172,7 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 	@Override
 	public void onClick(View v) {
 		Log.d("steinsgate", "GallerySendingMail#onClick");
-		if(onCheck()){
+		if (onCheck()) {
 			onSend();
 			finish();
 		}
@@ -184,19 +180,13 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 
 	private boolean onCheck() {
 		Log.d("steinsgate", "GallerySendingMail#onCheck");
-		if (17 < mMessage.getText().toString().length()) {
-			// FIXME この書き方だと同じActivityが増えそうな気がする？
-			 Log.d("steinsgate", "GallerySendingMail#onCheck 文字長すぎだよ、やめときな。 :"
-			 + mMessage.getText().toString());
-			 Toast.makeText(this, "mail送ってもいいお。", 1000);
-			// MessageBean messageBean = new MessageBean();
-			// // messageBean.getUid();
-			// messageBean.setSenderList(mTo.getText().toString());
-			// messageBean.setSenderListName(mToName.getText().toString());
-			// messageBean.setToList(mFromAddress.getAddress());
-			// messageBean.setToListName(mFromAddress.getPersonal());
-			// messageBean.setMessageId(mInReplyTo);
-			// actionReply(mContext, mMessageReference, messageBean);
+		String message = mMessage.getText().toString();
+		if (17 < message.length()) {
+			// XXX これで再入力させる展開になっているはず
+			Log.d("steinsgate",
+					"GallerySendingMail#onCheck message is to long :" + message);
+			Toast.makeText(this, "メッセージが「" + message
+					+ "」長すぎます。入力可能な文字数は17文字までです。", 1000);
 			return false;
 		}
 		return true;
