@@ -205,14 +205,15 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		Log.d("steinsgate",
 				"Preferences.getPreferences(this):"
 						+ Preferences.getPreferences(this));
-		Log.d("steinsgate", "intent.getStringExtra(EXTRA_ACCOUNT):" + intent.getStringExtra(EXTRA_ACCOUNT));
+		Log.d("steinsgate",
+				"intent.getStringExtra(EXTRA_ACCOUNT):"
+						+ intent.getStringExtra(EXTRA_ACCOUNT));
 		mAccount = Preferences.getPreferences(this).getAccount(
 				intent.getStringExtra(EXTRA_ACCOUNT));
-		
+
 		Log.d("steinsgate", "uuid:" + mAccount.getUuid());
 		Log.d("steinsgate", "folder name:" + mAccount.getInboxFolderName());
-		
-		
+
 		mFolderName = intent.getStringExtra(EXTRA_FOLDER);
 		mController = MessagingController.getInstance(getApplication());
 	}
@@ -432,6 +433,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		messageBean.setToList(messageInfo.getToList());
 		messageBean.setCcList(messageInfo.getCcList());
 		messageBean.setBccList(messageInfo.getBccList());
+		messageBean.setMessageId(messageInfo.getMessageId());
 		messageBean.setMessage(message);
 		return messageBean;
 	}
@@ -985,9 +987,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	}
 
 	private void onReply() {
-		MessageCompose.actionReply(this, mAccount, newMessageBean.getMessage(),
-				false, null);
-		finish();
+		Log.d("steinsgate", "GallerySlideShow#onReply");
+		// FIXME from MessageCompose to GallerySendingMail, Original features.
+		GallerySendingMail.actionReply(this, newMessageBean.getMessage()
+				.makeMessageReference(), newMessageBean);
 	}
 
 	private void onMailInfoDetail() {
