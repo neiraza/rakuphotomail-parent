@@ -22,6 +22,14 @@ public class MessageBean {
 	private long attachmentCount;
 	private CopyOnWriteArrayList<AttachmentBean> attachments;
 	private LocalMessage message;
+	private String flags;
+	private boolean flagXGotAllHeaders;
+	private boolean flagSeen;
+	private boolean flagAnswered;
+	private boolean flagXDownLoadedFull;
+	private boolean flagXDownLoadedPartial;
+	private boolean flagXRemoteCopyStarted;
+	private String flagOther;
 
 	public MessageBean() {
 		attachments = new CopyOnWriteArrayList<AttachmentBean>();
@@ -162,4 +170,69 @@ public class MessageBean {
 	public void setMessageId(String messageId) {
 		this.messageId = messageId;
 	}
+
+	public String getFlags() {
+		return flags;
+	}
+
+	public void setFlags(String flags) {
+		this.flags = flags;
+	}
+
+	public boolean isFlagXGotAllHeaders() {
+		return flagXGotAllHeaders;
+	}
+
+	public void setFlagXGotAllHeaders(boolean flagXGotAllHeaders) {
+		this.flagXGotAllHeaders = flagXGotAllHeaders;
+	}
+
+	public boolean isFlagSeen() {
+		return flagSeen;
+	}
+
+	public void setFlagSeen(boolean flagSeen) {
+		this.flagSeen = flagSeen;
+	}
+
+	public boolean isFlagAnswered() {
+		return flagAnswered;
+	}
+
+	public void setFlagAnswered(boolean flagAnswered) {
+		this.flagAnswered = flagAnswered;
+	}
+
+	public boolean isFlagXDownLoadedFull() {
+		return flagXDownLoadedFull;
+	}
+
+	public void setFlagXDownLoadedFull(boolean flagXDownLoadedFull) {
+		this.flagXDownLoadedFull = flagXDownLoadedFull;
+	}
+
+	public boolean isFlagXDownLoadedPartial() {
+		return flagXDownLoadedPartial;
+	}
+
+	public void setFlagXDownLoadedPartial(boolean flagXDownLoadedPartial) {
+		this.flagXDownLoadedPartial = flagXDownLoadedPartial;
+	}
+
+	public boolean isFlagXRemoteCopyStarted() {
+		return flagXRemoteCopyStarted;
+	}
+
+	public void setFlagXRemoteCopyStarted(boolean flagXRemoteCopyStarted) {
+		this.flagXRemoteCopyStarted = flagXRemoteCopyStarted;
+	}
+
+	public String getFlagOther() {
+		return flagOther;
+	}
+
+	public void setFlagOther(String flagOther) {
+		this.flagOther = flagOther;
+	}
+
 }

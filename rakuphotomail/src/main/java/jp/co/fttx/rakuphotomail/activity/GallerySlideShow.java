@@ -34,7 +34,7 @@ import jp.co.fttx.rakuphotomail.mail.store.UnavailableStorageException;
 import jp.co.fttx.rakuphotomail.provider.AttachmentProvider;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
-import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtil;
+import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
 import jp.co.fttx.rakuphotomail.rakuraku.util.Rotate3dAnimation;
 import android.content.Context;
 import android.content.Intent;
@@ -143,6 +143,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		Log.d("haganai", "GallerySlideShow#onCreate");
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.gallery_view);
@@ -220,6 +221,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 
 	@Override
 	public void onResume() {
+		Log.d("haganai", "GallerySlideShow#onResume");
 		super.onResume();
 		createMessageListThread.start();
 		checkMailThread.start();
@@ -435,7 +437,57 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		messageBean.setBccList(messageInfo.getBccList());
 		messageBean.setMessageId(messageInfo.getMessageId());
 		messageBean.setMessage(message);
+		// TODO
+		// [X_GOT_ALL_HEADERS,X_DOWNLOADED_FULL,SEEN,ANSWERED,X_DOWNLOADED_PARTIAL,X_REMOTE_COPY_STARTED]
+		// 他にもあるかも
+		String flags = messageInfo.getFlags();
+		messageBean.setFlags(flags);
+		String[] flagList = RakuPhotoStringUtils.splitFlags(flags);
+		if (null != flagList && flagList.length != 0) {
+			setFlag(flagList, messageBean);
+		}
 		return messageBean;
+	}
+
+	/**
+	 * setFlag.
+	 * <ul>
+	 * <li>X_GOT_ALL_HEADERS</li>
+	 * <li>X_DOWNLOADED_FULL</li>
+	 * <li>SEEN</li>
+	 * <li>ANSWERED</li>
+	 * <li>X_DOWNLOADED_PARTIAL</li>
+	 * <li>X_REMOTE_COPY_STARTED</li>
+	 * </ul>
+	 * 
+	 * @param flag
+	 */
+	private void setFlag(String[] flag, MessageBean messageBean) {
+		Log.d("haganai", "GallerySlideShow#setFlag");
+		StringBuilder builder = new StringBuilder();
+		for (String f : flag) {
+			Log.d("haganai", "flag:" + f);
+			if ("X_GOT_ALL_HEADERS".equals(f)) {
+				messageBean.setFlagXGotAllHeaders(true);
+			} else if ("SEEN".equals(f)) {
+				messageBean.setFlagSeen(true);
+			} else if ("ANSWERED".equals(f)) {
+				messageBean.setFlagAnswered(true);
+			} else if ("X_DOWNLOADED_FULL".equals(f)) {
+				messageBean.setFlagXDownLoadedFull(true);
+			} else if ("X_DOWNLOADED_PARTIAL".equals(f)) {
+				messageBean.setFlagXDownLoadedPartial(true);
+			} else if ("X_REMOTE_COPY_STARTED".equals(f)) {
+				messageBean.setFlagXRemoteCopyStarted(true);
+			} else {
+				builder.append(f + ",");
+			}
+			int len = builder.length();
+			if (0 != len) {
+				messageBean.setFlagOther(builder.delete(len - 1, len)
+						.toString());
+			}
+		}
 	}
 
 	/**
@@ -654,16 +706,20 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 
 	@Override
 	public void onStop() {
+		Log.d("haganai", "GallerySlideShow#onStop");
 		super.onStop();
 		repeatEnd();
-		createMessageListThread = null;
-		messageSlideThread = null;
-		checkMailThread = null;
+		// FIXME これをnullにするとメール返信画面から戻ってこれないお
+		// createMessageListThread = null;
+		// messageSlideThread = null;
+		// checkMailThread = null;
+		// XXX what?
 		// finish();
 	}
 
 	@Override
 	public void onDestroy() {
+		Log.d("haganai", "GallerySlideShow#onDestroy");
 		super.onDestroy();
 		repeatEnd();
 		createMessageListThread = null;
@@ -755,10 +811,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 			mMailFromName.setText(mailFromArr[1]);
 		}
 		/* To */
-		String[] mailToList = RakuPhotoStringUtil
+		String[] mailToList = RakuPhotoStringUtils
 				.splitMailAdressList(newMessageBean.getToList());
 		if (mailToList != null) {
-			mMailTo.setText(RakuPhotoStringUtil.getMailAddress(mailToList));
+			mMailTo.setText(RakuPhotoStringUtils.getMailAddress(mailToList));
 		} else {
 			mMailTo.setText("宛先名が表示できません");
 		}
@@ -768,10 +824,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 			mMailCc.setVisibility(View.INVISIBLE);
 			mMailCcTitle.setVisibility(View.INVISIBLE);
 		} else {
-			String[] mailCcList = RakuPhotoStringUtil
+			String[] mailCcList = RakuPhotoStringUtils
 					.splitMailAdressList(ccList);
 			if (mailCcList != null) {
-				mMailCc.setText(RakuPhotoStringUtil.getMailAddress(mailCcList));
+				mMailCc.setText(RakuPhotoStringUtils.getMailAddress(mailCcList));
 			}
 		}
 		/* 本文 */
@@ -1020,12 +1076,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		/* From */
 		TextView from = (TextView) vPopupWindow
 				.findViewById(R.id.gallery_mail_detail_from);
-		from.setText(RakuPhotoStringUtil.getMailAddressInfo(newMessageBean
+		from.setText(RakuPhotoStringUtils.getMailAddressInfo(newMessageBean
 				.getSenderList()));
 		/* To */
 		TextView to = (TextView) vPopupWindow
 				.findViewById(R.id.gallery_mail_detail_to);
-		to.setText(RakuPhotoStringUtil.getMailAddressInfoList(newMessageBean
+		to.setText(RakuPhotoStringUtils.getMailAddressInfoList(newMessageBean
 				.getToList()));
 		/* Cc */
 		TextView ccTitle = (TextView) vPopupWindow
@@ -1037,7 +1093,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 			ccTitle.setVisibility(View.GONE);
 			cc.setVisibility(View.GONE);
 		} else {
-			cc.setText(RakuPhotoStringUtil.getMailAddressInfoList(ccList));
+			cc.setText(RakuPhotoStringUtils.getMailAddressInfoList(ccList));
 		}
 		TextView close = (TextView) vPopupWindow
 				.findViewById(R.id.gallery_mail_detail_close);

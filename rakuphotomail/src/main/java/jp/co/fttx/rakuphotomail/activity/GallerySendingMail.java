@@ -43,12 +43,14 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 	private EditText mMessage;
 	private TextView mTo;
 	private TextView mToName;
+	private TextView mSentFlag;
 	private Address mToAddress;
 	private Address mFromAddress;
 	private Button mSend;
 	private MessageReference mMessageReference;
 	private String mReferences;
 	private String mInReplyTo;
+	private boolean mAnswered;
 
 	private static final String STATE_IN_REPLY_TO = "jp.co.fttx.rakuphotomail.activity.GallerySendingMail.inReplyTo";
 	private static final String STATE_REFERENCES = "jp.co.fttx.rakuphotomail.activity.GallerySendingMail.references";
@@ -60,6 +62,7 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 	private static final String EXTRA_ADDRESS_TO = "addressTo";
 	private static final String EXTRA_ADDRESS_TO_NAME = "addressToName";
 	private static final String EXTRA_MESSAGE_ID = "messageId";
+	private static final String EXTRA_MESSAGE_ANSWERED = "answered";
 
 	private Listener mListener = new Listener();
 
@@ -74,10 +77,20 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 		initInfo(intent);
 
 		setMToAddressVisibility();
+		setMSentFlagVisibility();
 
 		MessagingController.getInstance(getApplication())
 				.addListener(mListener);
 
+	}
+
+	private void setMSentFlagVisibility() {
+		Log.d("haganai", "GallerySendingMail#setMSentFlagVisibility mAnswered:" + mAnswered);
+		if (!mAnswered) {
+			mSentFlag.setVisibility(View.GONE);
+		}
+		Log.d("haganai", "GallerySendingMail#setMSentFlagVisibility mSentFlag:"
+				+ mSentFlag.getVisibility());
 	}
 
 	private void setupViews() {
@@ -87,6 +100,7 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 		mToName = (TextView) findViewById(R.id.gallery_sending_mail_to_name);
 		mSend = (Button) findViewById(R.id.gallery_sending_mail_send);
 		mSend.setOnClickListener(this);
+		mSentFlag = (TextView) findViewById(R.id.gallery_sending_mail_sent_flag);
 	}
 
 	private void initInfo(Intent intent) {
@@ -113,6 +127,8 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 
 		mInReplyTo = intent.getStringExtra(EXTRA_MESSAGE_ID);
 		mReferences = intent.getStringExtra(EXTRA_MESSAGE_ID);
+		mAnswered = intent.getBooleanExtra(EXTRA_MESSAGE_ANSWERED, false);
+		Log.d("haganai", "GallerySendingMail#initInfo mAnswered:" + mAnswered);
 	}
 
 	private void setMToAddressVisibility() {
@@ -290,12 +306,12 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 			MessageBean messageBean) {
 		Log.d("steinsgate", "GallerySendingMail#actionReply");
 		Intent i = new Intent(context, GallerySendingMail.class);
-		// i.putExtra(EXTRA_MESSAGE_UID, messageBean.getUid());
 		i.putExtra(EXTRA_ADDRESS_TO, messageBean.getSenderList());
 		i.putExtra(EXTRA_ADDRESS_TO_NAME, messageBean.getSenderListName());
 		i.putExtra(EXTRA_ADDRESS_FROM, messageBean.getToList());
 		i.putExtra(EXTRA_ADDRESS_FROM_NAME, messageBean.getToListName());
 		i.putExtra(EXTRA_MESSAGE_ID, messageBean.getMessageId());
+		i.putExtra(EXTRA_MESSAGE_ANSWERED, messageBean.isFlagAnswered());
 		i.putExtra(EXTRA_MESSAGE_REFERENCE, reference);
 		context.startActivity(i);
 	}
