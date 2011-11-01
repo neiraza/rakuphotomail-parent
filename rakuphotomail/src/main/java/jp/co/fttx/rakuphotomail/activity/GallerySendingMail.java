@@ -33,7 +33,7 @@ import android.widget.Toast;
 
 /**
  * @author tooru.oguri
- * 
+ * @since rakuphoto 0.1-beta1
  */
 public class GallerySendingMail extends RakuPhotoActivity implements
 		View.OnClickListener {
@@ -65,6 +65,12 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 
 	private Listener mListener = new Listener();
 
+	/**
+	 * @author tooru.oguri
+	 * @since rakuphoto 0.1-beta1
+	 * @param icicle
+	 *            Activity起動時に使用
+	 */
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
@@ -82,6 +88,10 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 				.addListener(mListener);
 	}
 
+	/**
+	 * @author tooru.oguri
+	 * @since rakuphoto 0.1-beta1
+	 */
 	@Override
 	public void onResume() {
 		super.onResume();
@@ -89,6 +99,10 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 				.addListener(mListener);
 	}
 
+	/**
+	 * @author tooru.oguri
+	 * @since rakuphoto 0.1-beta1
+	 */
 	@Override
 	public void onPause() {
 		super.onPause();
@@ -96,16 +110,27 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 				mListener);
 	}
 
+	/**
+	 * 返信済みフラグ非表示.<br>
+	 * 本メールが以前返信済みか否かをmAnsweredの状態で判定し、表示をView.GONEにする。
+	 * 
+	 * @author tooru.oguri
+	 * @since rakuphoto 0.1-beta1
+	 */
 	private void setMSentFlagVisibility() {
 		Log.d("haganai", "GallerySendingMail#setMSentFlagVisibility mAnswered:"
 				+ mAnswered);
 		if (!mAnswered) {
 			mSentFlag.setVisibility(View.GONE);
 		}
-		Log.d("haganai", "GallerySendingMail#setMSentFlagVisibility mSentFlag:"
-				+ mSentFlag.getVisibility());
 	}
 
+	/**
+	 * 各Viewの初期設定を行う.
+	 * 
+	 * @author tooru.oguri
+	 * @since rakuphoto 0.1-beta1
+	 */
 	private void setupViews() {
 		Log.d("steinsgate", "GallerySendingMail#setupViews");
 		mMessage = (EditText) findViewById(R.id.gallery_sending_mail_content);
@@ -116,6 +141,14 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 		mSentFlag = (TextView) findViewById(R.id.gallery_sending_mail_sent_flag);
 	}
 
+	/**
+	 * Intentを元に初期設定を行う.
+	 * 
+	 * @author tooru.oguri
+	 * @since rakuphoto 0.1-beta1
+	 * @param intent
+	 *            初期設定用のIntent
+	 */
 	private void initInfo(Intent intent) {
 		Log.d("steinsgate", "GallerySendingMail#initInfo");
 
@@ -146,6 +179,13 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 		Log.d("haganai", "GallerySendingMail#initInfo mAnswered:" + mAnswered);
 	}
 
+	/**
+	 * 宛先の表示名をメールアドレスか宛先名のいづれかを選択し表示する.<br>
+	 * 表示優先順位は「宛先名」、「メールアドレス」の順。
+	 * 
+	 * @author tooru.oguri
+	 * @since rakuphoto 0.1-beta1
+	 */
 	private void setMToAddressVisibility() {
 		Log.d("steinsgate", "GallerySendingMail#setMToAddressVisibility");
 		int mToAddressNameVisibility = mToName == null
@@ -156,12 +196,27 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 		}
 	}
 
+	/**
+	 * 宛先メールアドレスをTextViewに設定する.
+	 * 
+	 * @author tooru.oguri
+	 * @since rakuphoto 0.1-beta1
+	 * @param addressTo
+	 *            宛先メールアドレス
+	 */
 	private void setMToAddress(String addressTo) {
 		Log.d("steinsgate", "GallerySendingMail#setMToAddress addressTo:"
 				+ addressTo);
 		mTo.setText(addressTo);
 	}
 
+	/**
+	 * 宛先名をTextViewに設定する.
+	 * 
+	 * @author tooru.oguri
+	 * @since 0.1-beta1
+	 * @param addressToName
+	 */
 	private void setMToAddressName(String addressToName) {
 		Log.d("steinsgate",
 				"GallerySendingMail#setMToAddressName addressToName:"
@@ -169,6 +224,16 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 		mToName.setText(addressToName);
 	}
 
+	/**
+	 * メール送信側のメールアドレス、送信者名を設定する.
+	 * 
+	 * @author tooru.oguri
+	 * @since 0.1-beta1
+	 * @param address
+	 *            送信側のメールアドレス
+	 * @param personal
+	 *            送信側の送信者名
+	 */
 	private void setMFromAddress(String address, String personal) {
 		Log.d("steinsgate", "GallerySendingMail#setMFromAddress address:"
 				+ address + " personal:" + personal);
@@ -176,9 +241,9 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 	}
 
 	/**
-	 * The framework handles most of the fields, but we need to handle stuff
-	 * that we dynamically show and hide: Attachment list, Cc field, Bcc field,
-	 * Quoted text,
+	 * @author tooru.oguri
+	 * @since 0.1-beta1
+	 * @param outState
 	 */
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
@@ -189,15 +254,24 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 
 	}
 
+	/**
+	 * @author tooru.oguri
+	 * @since 0.1-beta1
+	 * @param savedInstanceState
+	 */
 	@Override
 	protected void onRestoreInstanceState(Bundle savedInstanceState) {
 		super.onRestoreInstanceState(savedInstanceState);
 		Log.d("steinsgate", "GallerySendingMail#onRestoreInstanceState");
 		mInReplyTo = savedInstanceState.getString(STATE_IN_REPLY_TO);
 		mReferences = savedInstanceState.getString(STATE_REFERENCES);
-
 	}
 
+	/**
+	 * @author tooru.oguri
+	 * @since 0.1-beta1
+	 * @param v
+	 */
 	@Override
 	public void onClick(View v) {
 		Log.d("steinsgate", "GallerySendingMail#onClick");
@@ -207,6 +281,15 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 		}
 	}
 
+	/**
+	 * メッセージ入力チェック.<br>
+	 * メッセージ未入力の場合、入力可能文字数以下の場合はfalseを返す.<br>
+	 * それ以外についてはtrueを返す.
+	 * 
+	 * @author tooru.oguri
+	 * @since 0.1-beta1
+	 * @return boolean. メッセージ再入力をさせる場合はfalse. それ以外はtrue.
+	 */
 	private boolean onCheck() {
 		Log.d("steinsgate", "GallerySendingMail#onCheck");
 		String message = mMessage.getText().toString();
@@ -218,7 +301,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 			Toast.makeText(this, "メッセージが入力されていません。", Toast.LENGTH_LONG).show();
 			return false;
 		} else if (17 < len) {
-			// XXX これで再入力させる展開になっているはず
 			Log.d("steinsgate",
 					"GallerySendingMail#onCheck message is to long :" + message);
 			Toast.makeText(
@@ -231,6 +313,13 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 		return true;
 	}
 
+	/**
+	 * メールを送信. <br>
+	 * 送信後はMessagingControllerに送信済みを表すフラグをDBに書き込む処理を委譲する.
+	 * 
+	 * @author tooru.oguri
+	 * @since 0.1-beta1
+	 */
 	private void onSend() {
 		Log.d("steinsgate", "GallerySendingMail#onSend");
 		sendMessage();
@@ -238,25 +327,28 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 				mMessageReference.accountUuid);
 		final String folderName = mMessageReference.folderName;
 		final String sourceMessageUid = mMessageReference.uid;
-		Log.d("steinsgate", "GallerySendingMail#onSend account's name:"
-				+ account.getName());
-		Log.d("steinsgate", "GallerySendingMail#onSend folderName:"
-				+ folderName);
-		Log.d("steinsgate", "GallerySendingMail#onSend sourceMessageUid:"
-				+ sourceMessageUid);
-		// XXX このフラグどうなってんだ？
-		Log.d("steinsgate", "GallerySendingMail#onSend mMessageReference.flag:"
-				+ mMessageReference.flag);
 		MessagingController.getInstance(getApplication()).setFlag(account,
 				folderName, new String[] { sourceMessageUid },
 				mMessageReference.flag, true);
 	}
 
+	/**
+	 * メールを送信.
+	 * 
+	 * @author tooru.oguri
+	 * @since 0.1-beta1
+	 */
 	private void sendMessage() {
 		Log.d("steinsgate", "GallerySendingMail#sendMessage");
 		new SendMessageTask().execute();
 	}
 
+	/**
+	 * メールを送信Class.
+	 * 
+	 * @author tooru.oguri
+	 * @since 0.1-beta1
+	 */
 	private class SendMessageTask extends AsyncTask<Void, Void, Void> {
 		@Override
 		protected Void doInBackground(Void... params) {
@@ -285,6 +377,8 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 	/**
 	 * Build the message to be sent.
 	 * 
+	 * @author tooru.oguri
+	 * @since 0.1-beta1
 	 * @return Message to be sent.
 	 * @throws MessagingException
 	 */
@@ -292,25 +386,17 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 		Log.d("steinsgate", "GallerySendingMail#createMessage");
 
 		MimeMessage message = new MimeMessage();
-		// date
 		message.addSentDate(new Date());
-		// XXX Address From use mFromAddress
 		message.setFrom(mFromAddress);
-		// XXX Address To use mToAddress & mToAddressName
 		message.setRecipient(RecipientType.TO, mToAddress);
-		// subject
 		message.setSubject(mMessage.getText().toString());
-		// header
 		message.setHeader("User-Agent", getString(R.string.message_header_mua));
-		// reply to
 		if (mInReplyTo != null) {
 			message.setInReplyTo(mInReplyTo);
 		}
-		// references
 		if (mReferences != null) {
 			message.setReferences(mReferences);
 		}
-		// body
 		TextBody body = null;
 		body = new TextBody("このメールは、らくフォトメールの試験用メールです。");
 		message.setBody(body);
@@ -319,15 +405,12 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 	}
 
 	/**
-	 * Compose a new message as a reply to the given message. If replyAll is
-	 * true the function is reply all instead of simply reply.
+	 * Activity外部呼び出し用.
 	 * 
+	 * @author tooru.oguri
+	 * @since 0.1-beta1
 	 * @param context
-	 * @param message
-	 * @param replyAll
-	 * @param messageBody
-	 *            optional, for decrypted messages, null if it should be grabbed
-	 *            from the given message
+	 * @param messageBean
 	 */
 	public static void actionReply(Context context, MessageBean messageBean) {
 		Log.d("steinsgate", "GallerySendingMail#actionReply");
@@ -345,7 +428,20 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 		context.startActivity(i);
 	}
 
+	/**
+	 * @author tooru.oguri
+	 * @since 0.1-beta1
+	 */
 	class Listener extends MessagingListener {
+		/**
+		 * 未使用.
+		 * 
+		 * @author tooru.oguri
+		 * @since 0.1-beta1
+		 * @param account
+		 * @param folder
+		 * @param uid
+		 */
 		@Override
 		public void loadMessageForViewStarted(Account account, String folder,
 				String uid) {
@@ -358,6 +454,15 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 			}
 		}
 
+		/**
+		 * 未使用.
+		 * 
+		 * @author tooru.oguri
+		 * @since 0.1-beta1
+		 * @param account
+		 * @param folder
+		 * @param uid
+		 */
 		@Override
 		public void loadMessageForViewFinished(Account account, String folder,
 				String uid, Message message) {
@@ -370,6 +475,13 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 			}
 		}
 
+		/**
+		 * @author tooru.oguri
+		 * @since 0.1-beta1
+		 * @param account
+		 * @param folder
+		 * @param uid
+		 */
 		@Override
 		public void loadMessageForViewBodyAvailable(Account account,
 				String folder, String uid, final Message message) {
