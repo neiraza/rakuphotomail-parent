@@ -188,10 +188,11 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 	 */
 	private void setMToAddressVisibility() {
 		Log.d("steinsgate", "GallerySendingMail#setMToAddressVisibility");
-		int mToAddressNameVisibility = mToName == null
-				|| "".equals(mToName.toString()) ? View.GONE : View.VISIBLE;
-		mToName.setVisibility(mToAddressNameVisibility);
-		if (mToAddressNameVisibility == View.VISIBLE) {
+		if (null == mToName || "".equals(mToName.getText().toString())) {
+			mToName.setVisibility(View.GONE);
+			mTo.setVisibility(View.VISIBLE);
+		} else {
+			mToName.setVisibility(View.VISIBLE);
 			mTo.setVisibility(View.GONE);
 		}
 	}
@@ -251,7 +252,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 		Log.d("steinsgate", "GallerySendingMail#onSaveInstanceState");
 		outState.putString(STATE_IN_REPLY_TO, mInReplyTo);
 		outState.putString(STATE_REFERENCES, mReferences);
-
 	}
 
 	/**
