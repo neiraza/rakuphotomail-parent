@@ -13,6 +13,7 @@ import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.controller.MessagingController;
 import jp.co.fttx.rakuphotomail.controller.MessagingListener;
 import jp.co.fttx.rakuphotomail.mail.Address;
+import jp.co.fttx.rakuphotomail.mail.Flag;
 import jp.co.fttx.rakuphotomail.mail.Message;
 import jp.co.fttx.rakuphotomail.mail.Message.RecipientType;
 import jp.co.fttx.rakuphotomail.mail.MessagingException;
@@ -31,8 +32,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 /**
- * GallerySendingMail.
- * 
  * @author tooru.oguri
  * 
  */
@@ -81,11 +80,25 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 
 		MessagingController.getInstance(getApplication())
 				.addListener(mListener);
+	}
 
+	@Override
+	public void onResume() {
+		super.onResume();
+		MessagingController.getInstance(getApplication())
+				.addListener(mListener);
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+		MessagingController.getInstance(getApplication()).removeListener(
+				mListener);
 	}
 
 	private void setMSentFlagVisibility() {
-		Log.d("haganai", "GallerySendingMail#setMSentFlagVisibility mAnswered:" + mAnswered);
+		Log.d("haganai", "GallerySendingMail#setMSentFlagVisibility mAnswered:"
+				+ mAnswered);
 		if (!mAnswered) {
 			mSentFlag.setVisibility(View.GONE);
 		}
@@ -107,6 +120,8 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 		Log.d("steinsgate", "GallerySendingMail#initInfo");
 
 		mMessageReference = intent.getParcelableExtra(EXTRA_MESSAGE_REFERENCE);
+		Log.d("steinsgate", "GallerySendingMail#initInfo mMessageReference:"
+				+ mMessageReference);
 
 		final String accountUuid = (mMessageReference != null) ? mMessageReference.accountUuid
 				: intent.getStringExtra(EXTRA_ACCOUNT);
@@ -160,7 +175,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 		mFromAddress = new Address(address, personal);
 	}
 
-	// FIXME i feel that the lack of entries.
 	/**
 	 * The framework handles most of the fields, but we need to handle stuff
 	 * that we dynamically show and hide: Attachment list, Cc field, Bcc field,
@@ -175,7 +189,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 
 	}
 
-	// FIXME i feel that the lack of entries.
 	@Override
 	protected void onRestoreInstanceState(Bundle savedInstanceState) {
 		super.onRestoreInstanceState(savedInstanceState);
@@ -197,12 +210,22 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 	private boolean onCheck() {
 		Log.d("steinsgate", "GallerySendingMail#onCheck");
 		String message = mMessage.getText().toString();
-		if (17 < message.length()) {
+		int len = message.length();
+		if (0 == len) {
+			Log.d("steinsgate",
+					"GallerySendingMail#onCheck message is no input :"
+							+ message);
+			Toast.makeText(this, "メッセージが入力されていません。", Toast.LENGTH_LONG).show();
+			return false;
+		} else if (17 < len) {
 			// XXX これで再入力させる展開になっているはず
 			Log.d("steinsgate",
 					"GallerySendingMail#onCheck message is to long :" + message);
-			Toast.makeText(this, "メッセージが「" + message
-					+ "」長すぎます。入力可能な文字数は17文字までです。", 1000);
+			Toast.makeText(
+					this,
+					"入力された本文「" + message + "」(" + len
+							+ "文字) は長すぎます。入力可能な文字数は17文字までです。",
+					Toast.LENGTH_LONG).show();
 			return false;
 		}
 		return true;
@@ -211,6 +234,22 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 	private void onSend() {
 		Log.d("steinsgate", "GallerySendingMail#onSend");
 		sendMessage();
+		final Account account = Preferences.getPreferences(this).getAccount(
+				mMessageReference.accountUuid);
+		final String folderName = mMessageReference.folderName;
+		final String sourceMessageUid = mMessageReference.uid;
+		Log.d("steinsgate", "GallerySendingMail#onSend account's name:"
+				+ account.getName());
+		Log.d("steinsgate", "GallerySendingMail#onSend folderName:"
+				+ folderName);
+		Log.d("steinsgate", "GallerySendingMail#onSend sourceMessageUid:"
+				+ sourceMessageUid);
+		// XXX このフラグどうなってんだ？
+		Log.d("steinsgate", "GallerySendingMail#onSend mMessageReference.flag:"
+				+ mMessageReference.flag);
+		MessagingController.getInstance(getApplication()).setFlag(account,
+				folderName, new String[] { sourceMessageUid },
+				mMessageReference.flag, true);
 	}
 
 	private void sendMessage() {
@@ -257,32 +296,20 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 		message.addSentDate(new Date());
 		// XXX Address From use mFromAddress
 		message.setFrom(mFromAddress);
-		Log.d("steinsgate", "GallerySendingMail#createMessage mFromAddress:"
-				+ mFromAddress.getAddress() + ":" + mFromAddress.getPersonal());
 		// XXX Address To use mToAddress & mToAddressName
-		Log.d("steinsgate", "GallerySendingMail#createMessage mToAddress:"
-				+ mToAddress.getAddress() + ":" + mToAddress.getPersonal());
 		message.setRecipient(RecipientType.TO, mToAddress);
 		// subject
 		message.setSubject(mMessage.getText().toString());
-		Log.d("steinsgate", "GallerySendingMail#createMessage mMessage:"
-				+ mMessage.getText().toString());
 		// header
 		message.setHeader("User-Agent", getString(R.string.message_header_mua));
 		// reply to
-		// FIXME Reply specifying targets for case
 		if (mInReplyTo != null) {
 			message.setInReplyTo(mInReplyTo);
 		}
-		Log.d("steinsgate", "GallerySendingMail#createMessage mInReplyTo:"
-				+ mInReplyTo);
 		// references
-		// FIXME Reply specifying targets for case
 		if (mReferences != null) {
 			message.setReferences(mReferences);
 		}
-		Log.d("steinsgate", "GallerySendingMail#createMessage mReferences:"
-				+ mReferences);
 		// body
 		TextBody body = null;
 		body = new TextBody("このメールは、らくフォトメールの試験用メールです。");
@@ -302,16 +329,18 @@ public class GallerySendingMail extends RakuPhotoActivity implements
 	 *            optional, for decrypted messages, null if it should be grabbed
 	 *            from the given message
 	 */
-	public static void actionReply(Context context, MessageReference reference,
-			MessageBean messageBean) {
+	public static void actionReply(Context context, MessageBean messageBean) {
 		Log.d("steinsgate", "GallerySendingMail#actionReply");
 		Intent i = new Intent(context, GallerySendingMail.class);
-		i.putExtra(EXTRA_ADDRESS_TO, messageBean.getSenderList());
-		i.putExtra(EXTRA_ADDRESS_TO_NAME, messageBean.getSenderListName());
+		i.putExtra(EXTRA_ADDRESS_TO, messageBean.getSenderAddress());
+		i.putExtra(EXTRA_ADDRESS_TO_NAME, messageBean.getSenderName());
 		i.putExtra(EXTRA_ADDRESS_FROM, messageBean.getToList());
 		i.putExtra(EXTRA_ADDRESS_FROM_NAME, messageBean.getToListName());
 		i.putExtra(EXTRA_MESSAGE_ID, messageBean.getMessageId());
 		i.putExtra(EXTRA_MESSAGE_ANSWERED, messageBean.isFlagAnswered());
+		MessageReference reference = messageBean.getMessage()
+				.makeMessageReference();
+		reference.flag = Flag.ANSWERED;
 		i.putExtra(EXTRA_MESSAGE_REFERENCE, reference);
 		context.startActivity(i);
 	}

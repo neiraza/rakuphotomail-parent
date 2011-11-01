@@ -144,26 +144,13 @@ public class GallerySendingMailTest extends
 
 	}
 
-	public void testReplyMailSubjectSizeERROR() throws InterruptedException {
+	public void testReplyMailSubjectNoInput() throws InterruptedException {
 
 		startActivity();
 		setUpViews();
 
-		mActivity.runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				mMailContent.requestFocus();
-			}
-		});
-		mInstrumentation.waitForIdleSync();
-
-		sendKeys(KEYCODE_A, KEYCODE_I, KEYCODE_F, KEYCODE_O, KEYCODE_N,
-				KEYCODE_N, KEYCODE_A, KEYCODE_I, KEYCODE_F, KEYCODE_O,
-				KEYCODE_N, KEYCODE_N, KEYCODE_A, KEYCODE_I, KEYCODE_F,
-				KEYCODE_O, KEYCODE_N, KEYCODE_N);
-
 		// 入力確認
-		assertEquals("あいふぉんあいふぉんあいふぉん", mMailContent.getText().toString());
+		assertEquals("", mMailContent.getText().toString());
 
 		mActivity.runOnUiThread(new Runnable() {
 			@Override
@@ -173,6 +160,37 @@ public class GallerySendingMailTest extends
 		});
 		mInstrumentation.waitForIdleSync();
 
+	}
+	
+	public void testReplyMailSubjectSizeOVER() throws InterruptedException {
+		
+		startActivity();
+		setUpViews();
+		
+		mActivity.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				mMailContent.requestFocus();
+			}
+		});
+		mInstrumentation.waitForIdleSync();
+		
+		sendKeys(KEYCODE_A, KEYCODE_I, KEYCODE_F, KEYCODE_O, KEYCODE_N,
+				KEYCODE_N, KEYCODE_A, KEYCODE_I, KEYCODE_F, KEYCODE_O,
+				KEYCODE_N, KEYCODE_N, KEYCODE_A, KEYCODE_I, KEYCODE_F,
+				KEYCODE_O, KEYCODE_N, KEYCODE_N);
+		
+		// 入力確認
+		assertEquals("あいふぉんあいふぉんあいふぉん", mMailContent.getText().toString());
+		
+		mActivity.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				mSend.performClick();
+			}
+		});
+		mInstrumentation.waitForIdleSync();
+		
 	}
 
 	private void startActivity() {

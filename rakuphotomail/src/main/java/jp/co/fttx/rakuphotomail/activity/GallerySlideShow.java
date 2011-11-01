@@ -2,6 +2,7 @@ package jp.co.fttx.rakuphotomail.activity;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -203,18 +204,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	public void onNewIntent(Intent intent) {
 		setIntent(intent);
 		Log.d("steinsgate", "mAccount:" + mAccount);
-		Log.d("steinsgate",
-				"Preferences.getPreferences(this):"
-						+ Preferences.getPreferences(this));
-		Log.d("steinsgate",
-				"intent.getStringExtra(EXTRA_ACCOUNT):"
-						+ intent.getStringExtra(EXTRA_ACCOUNT));
 		mAccount = Preferences.getPreferences(this).getAccount(
 				intent.getStringExtra(EXTRA_ACCOUNT));
-
-		Log.d("steinsgate", "uuid:" + mAccount.getUuid());
-		Log.d("steinsgate", "folder name:" + mAccount.getInboxFolderName());
-
 		mFolderName = intent.getStringExtra(EXTRA_FOLDER);
 		mController = MessagingController.getInstance(getApplication());
 	}
@@ -380,7 +371,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		LocalStore localStore = null;
 		LocalFolder localFolder = null;
 		try {
-			Log.d("steinsgate", "mAccount:" + mAccount);
 			localStore = mAccount.getLocalStore();
 			localFolder = localStore.getFolder(mFolderName);
 			localFolder.open(OpenMode.READ_WRITE);
@@ -432,6 +422,16 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		messageBean.setDate(messageInfo.getDate());
 		messageBean.setTextContent(messageInfo.getTextContent());
 		messageBean.setSenderList(messageInfo.getSenderList());
+
+		String[] mailFromArr = messageInfo.getSenderList().split(";");
+		if (mailFromArr == null || mailFromArr.length == 0) {
+		} else if (mailFromArr.length == 1) {
+			messageBean.setSenderAddress(mailFromArr[0]);
+		} else {
+			messageBean.setSenderAddress(mailFromArr[0]);
+			messageBean.setSenderName(mailFromArr[1]);
+		}
+
 		messageBean.setToList(messageInfo.getToList());
 		messageBean.setCcList(messageInfo.getCcList());
 		messageBean.setBccList(messageInfo.getBccList());
@@ -805,6 +805,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 			mMailFromAddress.setVisibility(View.GONE);
 		} else if (mailFromArr.length == 1) {
 			mMailFromAddress.setText(mailFromArr[0]);
+			mMailFromAddress.setText(mailFromArr[0]);
 			mMailFromName.setVisibility(View.GONE);
 		} else {
 			mMailFromAddress.setVisibility(View.GONE);
@@ -1012,13 +1013,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 			onMailInfoDetail();
 			break;
 		case R.id.gallery_attachment_picuture_default:
-			Log.d("steinsgate", "gallery_attachment_picuture_default");
 			break;
 		case R.id.gallery_attachment_picuture_even:
-			Log.d("steinsgate", "gallery_attachment_picuture_even");
 			break;
 		case R.id.gallery_attachment_picuture_odd:
-			Log.d("steinsgate", "gallery_attachment_picuture_odd");
 			break;
 		default:
 			Log.w(RakuPhotoMail.LOG_TAG, "onClick is no Action !!!!");
@@ -1044,9 +1042,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 
 	private void onReply() {
 		Log.d("steinsgate", "GallerySlideShow#onReply");
-		// FIXME from MessageCompose to GallerySendingMail, Original features.
-		GallerySendingMail.actionReply(this, newMessageBean.getMessage()
-				.makeMessageReference(), newMessageBean);
+		GallerySendingMail.actionReply(this, newMessageBean);
 	}
 
 	private void onMailInfoDetail() {

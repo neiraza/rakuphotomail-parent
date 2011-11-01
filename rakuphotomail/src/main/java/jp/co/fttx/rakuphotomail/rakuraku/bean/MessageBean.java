@@ -11,7 +11,8 @@ public class MessageBean {
 	private String subject;
 	private long date;
 	private String senderList;
-	private String senderListName;
+	private String senderAddress;
+	private String senderName;
 	private String toList;
 	private String toListName;
 	private String ccList;
@@ -83,6 +84,14 @@ public class MessageBean {
 		this.senderList = senderList;
 	}
 
+	public String getSenderAddress() {
+		return senderAddress;
+	}
+
+	public void setSenderAddress(String senderAddress) {
+		this.senderAddress = senderAddress;
+	}
+
 	public String getToList() {
 		return toList;
 	}
@@ -146,13 +155,13 @@ public class MessageBean {
 	public void setMessage(LocalMessage message) {
 		this.message = message;
 	}
-	
-	public String getSenderListName() {
-		return senderListName;
+
+	public String getSenderName() {
+		return senderName;
 	}
 
-	public void setSenderListName(String senderListName) {
-		this.senderListName = senderListName;
+	public void setSenderName(String senderName) {
+		this.senderName = senderName;
 	}
 
 	public String getToListName() {
