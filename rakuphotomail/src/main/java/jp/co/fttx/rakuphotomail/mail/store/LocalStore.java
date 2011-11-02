@@ -3078,8 +3078,10 @@ public class LocalStore extends Store implements Serializable {
 
 		@Override
 		public void setFlags(Message[] messages, Flag[] flags, boolean value) throws MessagingException {
+			Log.d("steinsgate", "LocalFolder#setFlags");
 			open(OpenMode.READ_WRITE);
 			for (Message message : messages) {
+				Log.d("steinsgate", "LocalFolder#setFlags 1");
 				message.setFlags(flags, value);
 			}
 		}

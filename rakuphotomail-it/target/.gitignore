@@ -1,9 +1,9 @@
-/maven-archiver
 /android-classes
-/generated-sources
+/classes
 /cobertura
 /generated-classes
-/classes
+/maven-archiver
+/generated-sources
 /rakuphotomail-it-0.0.1-ALPHA1.ap_
 /classes.dex
 /rakuphotomail-it-0.0.1-ALPHA1.jar

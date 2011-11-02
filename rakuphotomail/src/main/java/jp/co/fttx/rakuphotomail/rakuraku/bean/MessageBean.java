@@ -11,14 +11,26 @@ public class MessageBean {
 	private String subject;
 	private long date;
 	private String senderList;
+	private String senderAddress;
+	private String senderName;
 	private String toList;
+	private String toListName;
 	private String ccList;
 	private String bccList;
 	private String replyToList;
+	private String messageId;
 	private String textContent;
 	private long attachmentCount;
 	private CopyOnWriteArrayList<AttachmentBean> attachments;
 	private LocalMessage message;
+	private String flags;
+	private boolean flagXGotAllHeaders;
+	private boolean flagSeen;
+	private boolean flagAnswered;
+	private boolean flagXDownLoadedFull;
+	private boolean flagXDownLoadedPartial;
+	private boolean flagXRemoteCopyStarted;
+	private String flagOther;
 
 	public MessageBean() {
 		attachments = new CopyOnWriteArrayList<AttachmentBean>();
@@ -70,6 +82,14 @@ public class MessageBean {
 
 	public void setSenderList(String senderList) {
 		this.senderList = senderList;
+	}
+
+	public String getSenderAddress() {
+		return senderAddress;
+	}
+
+	public void setSenderAddress(String senderAddress) {
+		this.senderAddress = senderAddress;
 	}
 
 	public String getToList() {
@@ -135,4 +155,93 @@ public class MessageBean {
 	public void setMessage(LocalMessage message) {
 		this.message = message;
 	}
+
+	public String getSenderName() {
+		return senderName;
+	}
+
+	public void setSenderName(String senderName) {
+		this.senderName = senderName;
+	}
+
+	public String getToListName() {
+		return toListName;
+	}
+
+	public void setToListName(String toListName) {
+		this.toListName = toListName;
+	}
+
+	public String getMessageId() {
+		return messageId;
+	}
+
+	public void setMessageId(String messageId) {
+		this.messageId = messageId;
+	}
+
+	public String getFlags() {
+		return flags;
+	}
+
+	public void setFlags(String flags) {
+		this.flags = flags;
+	}
+
+	public boolean isFlagXGotAllHeaders() {
+		return flagXGotAllHeaders;
+	}
+
+	public void setFlagXGotAllHeaders(boolean flagXGotAllHeaders) {
+		this.flagXGotAllHeaders = flagXGotAllHeaders;
+	}
+
+	public boolean isFlagSeen() {
+		return flagSeen;
+	}
+
+	public void setFlagSeen(boolean flagSeen) {
+		this.flagSeen = flagSeen;
+	}
+
+	public boolean isFlagAnswered() {
+		return flagAnswered;
+	}
+
+	public void setFlagAnswered(boolean flagAnswered) {
+		this.flagAnswered = flagAnswered;
+	}
+
+	public boolean isFlagXDownLoadedFull() {
+		return flagXDownLoadedFull;
+	}
+
+	public void setFlagXDownLoadedFull(boolean flagXDownLoadedFull) {
+		this.flagXDownLoadedFull = flagXDownLoadedFull;
+	}
+
+	public boolean isFlagXDownLoadedPartial() {
+		return flagXDownLoadedPartial;
+	}
+
+	public void setFlagXDownLoadedPartial(boolean flagXDownLoadedPartial) {
+		this.flagXDownLoadedPartial = flagXDownLoadedPartial;
+	}
+
+	public boolean isFlagXRemoteCopyStarted() {
+		return flagXRemoteCopyStarted;
+	}
+
+	public void setFlagXRemoteCopyStarted(boolean flagXRemoteCopyStarted) {
+		this.flagXRemoteCopyStarted = flagXRemoteCopyStarted;
+	}
+
+	public String getFlagOther() {
+		return flagOther;
+	}
+
+	public void setFlagOther(String flagOther) {
+		this.flagOther = flagOther;
+	}
+
 }
