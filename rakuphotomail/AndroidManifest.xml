@@ -44,7 +44,6 @@
 		android:name="RakuPhotoMail" android:allowTaskReparenting="false">
 		<meta-data android:name="android.app.default_searchable"
 			android:value=".activity.Search" />
-		<activity android:name="jp.co.fttx.rakuphotomail.HelloAndroidActivity" />
 		<activity android:name="jp.co.fttx.rakuphotomail.activity.RakuPhotoMenuSelecter"
 			android:launchMode="singleTask" android:configChanges="locale"
 			android:label="らくフォトメニュー（廃止予定）">
