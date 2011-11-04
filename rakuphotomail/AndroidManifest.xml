@@ -45,7 +45,7 @@
 		<meta-data android:name="android.app.default_searchable"
 			android:value=".activity.Search" />
 		<activity android:name="jp.co.fttx.rakuphotomail.activity.RakuPhotoMenuSelecter"
-			android:launchMode="singleTask" android:configChanges="locale"
+			android:launchMode="standard" android:configChanges="locale"
 			android:label="らくフォトメニュー（廃止予定）">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
@@ -53,35 +53,18 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
-		<activity android:name="jp.co.fttx.rakuphotomail.activity.RakuPhotoTestDriver"
-			android:configChanges="locale" android:label="らくフォト　送信メッセージ作成モック画面">
-			<intent-filter>
-				<action android:name="android.intent.action.MAIN" />
-				<category android:name="android.intent.category.DEFAULT" />
-				<category android:name="android.intent.category.LAUNCHER" />
-			</intent-filter>
-		</activity>
 		<activity android:name="jp.co.fttx.rakuphotomail.activity.GallerySendingMail"
-			android:configChanges="locale" android:label="(TEST)送信メッセージ作成">
+			android:launchMode="standard" android:configChanges="locale"
+			android:label="返信メッセージ作成">
 			<intent-filter>
-				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.DEFAULT" />
-				<category android:name="android.intent.category.LAUNCHER" />
-			</intent-filter>
-		</activity>
-		<activity android:name="jp.co.fttx.rakuphotomail.activity.RakuPhotoTestDriver2"
-			android:configChanges="locale" android:label="らくフォト　メール詳細モック画面">
-			<intent-filter>
-				<action android:name="android.intent.action.MAIN" />
-				<category android:name="android.intent.category.DEFAULT" />
-				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
 		<activity android:name="jp.co.fttx.rakuphotomail.activity.GallerySlideShow"
-			android:configChanges="locale">
+			android:launchMode="standard" android:configChanges="locale">
 		</activity>
 		<activity android:name="jp.co.fttx.rakuphotomail.activity.Accounts"
-			android:launchMode="singleInstance" android:configChanges="locale"
+			android:launchMode="singleTask" android:configChanges="locale"
 			android:label="@string/app_name">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
@@ -89,9 +72,9 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
-		<activity android:name="jp.co.fttx.rakuphotomail.activity.AccountsOfDummy"
-			android:launchMode="singleInstance" android:configChanges="locale"
-			android:label="らくフォトダミー">
+		<activity android:name="jp.co.fttx.rakuphotomail.activity.DummyAccounts"
+			android:launchMode="singleTask" android:configChanges="locale"
+			android:label="ダミー">
 		</activity>
 		<activity android:name="jp.co.fttx.rakuphotomail.activity.setup.Prefs"
 			android:label="@string/prefs_title" android:configChanges="locale">
@@ -167,16 +150,20 @@
 			android:configChanges="locale">
 		</activity>
 		<activity android:name="jp.co.fttx.rakuphotomail.activity.FolderList"
-			android:launchMode="singleTask" android:configChanges="locale">
+			android:launchMode="standard" android:configChanges="locale">
 			<intent-filter>
 				<!-- This action is only to allow an entry point for launcher shortcuts -->
 			</intent-filter>
 		</activity>
 		<activity android:name="jp.co.fttx.rakuphotomail.activity.MessageList"
-			android:launchMode="singleInstance" android:configChanges="locale">
+			android:launchMode="singleTask" android:configChanges="locale">
+			<intent-filter>
+				<category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
 		</activity>
 		<activity android:name="jp.co.fttx.rakuphotomail.activity.MessageView"
-			android:theme="@android:style/Theme.Light" android:configChanges="locale">
+			android:theme="@android:style/Theme.Light" android:configChanges="locale"
+			android:launchMode="standard">
 			<intent-filter>
 				<action android:name="android.intent.action.VIEW" />
 				<data android:scheme="email" android:host="messages" />

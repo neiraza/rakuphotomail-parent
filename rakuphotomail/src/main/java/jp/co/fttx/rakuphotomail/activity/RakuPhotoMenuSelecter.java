@@ -40,7 +40,7 @@ public class RakuPhotoMenuSelecter extends Activity {
 			@Override
 			public void onClick(View v) {
 				Log.v(RakuPhotoMail.LOG_TAG, "RakuPhotoMenuSelecter#onCreate:mail open!");
-				AccountsOfDummy.listAccounts(mContext);
+				DummyAccounts.listAccounts(mContext);
 				finish();
 			}
 		});
