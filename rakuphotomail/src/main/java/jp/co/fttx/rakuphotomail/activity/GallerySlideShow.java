@@ -147,7 +147,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		Log.d("haganai", "GallerySlideShow#onCreate");
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		setContentView(R.layout.gallery_view);
+		setContentView(R.layout.gallery_slide_show);
 		setupViews();
 		onNewIntent(getIntent());
 		initThreading();
@@ -242,7 +242,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		setNewMailInfo = new Runnable() {
 			@Override
 			public void run() {
-				setContentView(R.layout.gallery_view_mail_detail);
+				setContentView(R.layout.gallery_slide_show_stop);
 				setupViewsMailDetail();
 				Bitmap bitmap = populateFromPart(newAttachmentBean.getPart());
 				if (bitmap == null) {
@@ -1025,7 +1025,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 
 	private void onSlide() {
 		startMessageUid = messageBean.getUid();
-		setContentView(R.layout.gallery_view);
+		setContentView(R.layout.gallery_slide_show);
 		setupViews();
 		repeatStart();
 		List<MessageInfo> messageInfoList = getMessages();

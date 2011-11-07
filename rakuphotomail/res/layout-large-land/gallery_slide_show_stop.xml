@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/gallery_detail_container"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <ImageView
+        android:id="@+id/gallery_detail_attachment_picuture_even"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:src="@drawable/droid" />
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:gravity="top|left"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/gallery_mail_subject"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:scrollHorizontally="true"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:typeface="sans"
+            android:text="働くよ秋から本気ニート言う" />
+
+        <TextView
+            android:id="@+id/gallery_mail_date"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textSize="13sp"
+            android:typeface="sans" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="horizontal"
+        android:gravity="bottom|center"
+        android:paddingBottom="10dp"
+        android:paddingRight="10dp"
+        android:paddingTop="5dp" >
+
+        <TextView
+            android:id="@+id/gallery_mail_pre"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:shadowColor="#ff6600"
+            android:shadowDx="3.0"
+            android:shadowDy="5.0"
+            android:shadowRadius="2.0"
+            android:text="前へ"
+            android:textSize="18sp"
+            android:textStyle="normal"
+            android:typeface="sans" />
+
+        <TextView
+            android:id="@+id/gallery_mail_separator"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_marginLeft="5dip"
+            android:layout_marginRight="5dip"
+            android:shadowColor="#ff6600"
+            android:shadowDx="3.0"
+            android:shadowDy="5.0"
+            android:shadowRadius="2.0"
+            android:text="@string/gallery_separator"
+            android:textSize="18sp"
+            android:textStyle="normal"
+            android:typeface="sans" />
+
+        <TextView
+            android:id="@+id/gallery_mail_slide"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:shadowColor="#ff6600"
+            android:shadowDx="3.0"
+            android:shadowDy="5.0"
+            android:shadowRadius="2.0"
+            android:text="@string/gallery_slide"
+            android:textSize="18sp"
+            android:textStyle="normal"
+            android:typeface="sans" />
+
+        <TextView
+            android:id="@+id/gallery_mail_separator"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_marginLeft="5dip"
+            android:layout_marginRight="5dip"
+            android:shadowColor="#ff6600"
+            android:shadowDx="3.0"
+            android:shadowDy="5.0"
+            android:shadowRadius="2.0"
+            android:text="@string/gallery_separator"
+            android:textSize="18sp"
+            android:textStyle="normal"
+            android:typeface="sans" />
+
+        <TextView
+            android:id="@+id/gallery_mail_reply"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:shadowColor="#ff6600"
+            android:shadowDx="3.0"
+            android:shadowDy="5.0"
+            android:shadowRadius="2.0"
+            android:text="@string/gallery_reply"
+            android:textSize="18sp"
+            android:textStyle="normal"
+            android:typeface="sans" />
+
+        <TextView
+            android:id="@+id/gallery_mail_separator"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_marginLeft="5dip"
+            android:layout_marginRight="5dip"
+            android:shadowColor="#ff6600"
+            android:shadowDx="3.0"
+            android:shadowDy="5.0"
+            android:shadowRadius="2.0"
+            android:text="@string/gallery_separator"
+            android:textSize="18sp"
+            android:textStyle="normal"
+            android:typeface="sans" />
+
+        <TextView
+            android:id="@+id/gallery_mail_next"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:shadowColor="#ff6600"
+            android:shadowDx="3.0"
+            android:shadowDy="5.0"
+            android:shadowRadius="2.0"
+            android:text="次へ"
+            android:textSize="18sp"
+            android:textStyle="normal"
+            android:typeface="sans" />
+    </LinearLayout>
+
+</FrameLayout>
