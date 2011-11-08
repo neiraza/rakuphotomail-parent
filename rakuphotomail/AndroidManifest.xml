@@ -79,7 +79,6 @@
             android:name="jp.co.fttx.rakuphotomail.activity.RakuPhotoMenuSelecter" >
             <intent-filter >
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
@@ -90,6 +89,7 @@
             android:launchMode="standard"
             android:name="jp.co.fttx.rakuphotomail.activity.DummySlideStop" >
             <intent-filter >
+                <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>

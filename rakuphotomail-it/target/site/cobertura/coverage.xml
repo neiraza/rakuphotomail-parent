@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
 <!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
 
-<coverage line-rate="0.0" branch-rate="1.0" lines-covered="0" lines-valid="242" branches-covered="0" branches-valid="0" complexity="1.0" version="1.9.4.1" timestamp="1320394552877">
+<coverage line-rate="0.0" branch-rate="1.0" lines-covered="0" lines-valid="218" branches-covered="0" branches-valid="0" complexity="1.0" version="1.9.4.1" timestamp="1320718356228">
 	<sources>
 		<source>/home/tooru.oguri/workspace/rakuphotomail-parent/rakuphotomail-it/src/main/java</source>
 		<source>--source</source>
 		<source>/home/tooru.oguri/workspace/rakuphotomail-parent/rakuphotomail-it/target/generated-sources/extracted-dependencies/src/main/java</source>
+		<source>/home/tooru.oguri/workspace/rakuphotomail-parent/rakuphotomail-it/target/generated-sources/aidl</source>
 		<source>/home/tooru.oguri/workspace/rakuphotomail-parent/rakuphotomail-it/target/generated-sources/r</source>
 	</sources>
 	<packages>
@@ -51,18 +52,8 @@
 								<line number="52" hits="0" branch="false"/>
 							</lines>
 						</method>
-						<method name="access$0" signature="(Ljp/co/fttx/rakuphotomail/test/GallerySendingMailTest;)Landroid/widget/EditText;" line-rate="0.0" branch-rate="1.0">
-							<lines>
-								<line number="35" hits="0" branch="false"/>
-							</lines>
-						</method>
 						<method name="access$000" signature="(Ljp/co/fttx/rakuphotomail/test/GallerySendingMailTest;)Landroid/widget/EditText;" line-rate="1.0" branch-rate="1.0">
 							<lines>
-							</lines>
-						</method>
-						<method name="access$1" signature="(Ljp/co/fttx/rakuphotomail/test/GallerySendingMailTest;)Landroid/widget/Button;" line-rate="0.0" branch-rate="1.0">
-							<lines>
-								<line number="39" hits="0" branch="false"/>
 							</lines>
 						</method>
 						<method name="access$100" signature="(Ljp/co/fttx/rakuphotomail/test/GallerySendingMailTest;)Landroid/widget/Button;" line-rate="0.0" branch-rate="1.0">
@@ -86,14 +77,10 @@
 						<method name="setUpViews" signature="()V" line-rate="0.0" branch-rate="1.0">
 							<lines>
 								<line number="518" hits="0" branch="false"/>
-								<line number="519" hits="0" branch="false"/>
 								<line number="520" hits="0" branch="false"/>
 								<line number="521" hits="0" branch="false"/>
-								<line number="522" hits="0" branch="false"/>
 								<line number="523" hits="0" branch="false"/>
-								<line number="524" hits="0" branch="false"/>
 								<line number="525" hits="0" branch="false"/>
-								<line number="526" hits="0" branch="false"/>
 								<line number="528" hits="0" branch="false"/>
 								<line number="529" hits="0" branch="false"/>
 							</lines>
@@ -106,7 +93,6 @@
 								<line number="446" hits="0" branch="false"/>
 								<line number="447" hits="0" branch="false"/>
 								<line number="448" hits="0" branch="false"/>
-								<line number="449" hits="0" branch="false"/>
 								<line number="450" hits="0" branch="false"/>
 								<line number="452" hits="0" branch="false"/>
 								<line number="453" hits="0" branch="false"/>
@@ -127,7 +113,6 @@
 								<line number="471" hits="0" branch="false"/>
 								<line number="472" hits="0" branch="false"/>
 								<line number="473" hits="0" branch="false"/>
-								<line number="474" hits="0" branch="false"/>
 								<line number="475" hits="0" branch="false"/>
 								<line number="477" hits="0" branch="false"/>
 								<line number="478" hits="0" branch="false"/>
@@ -148,7 +133,6 @@
 								<line number="496" hits="0" branch="false"/>
 								<line number="497" hits="0" branch="false"/>
 								<line number="498" hits="0" branch="false"/>
-								<line number="499" hits="0" branch="false"/>
 								<line number="500" hits="0" branch="false"/>
 								<line number="502" hits="0" branch="false"/>
 								<line number="503" hits="0" branch="false"/>
@@ -230,7 +214,6 @@
 								<line number="310" hits="0" branch="false"/>
 								<line number="316" hits="0" branch="false"/>
 								<line number="318" hits="0" branch="false"/>
-								<line number="319" hits="0" branch="false"/>
 								<line number="322" hits="0" branch="false"/>
 								<line number="324" hits="0" branch="false"/>
 								<line number="330" hits="0" branch="false"/>
@@ -244,9 +227,6 @@
 								<line number="347" hits="0" branch="false"/>
 								<line number="353" hits="0" branch="false"/>
 								<line number="355" hits="0" branch="false"/>
-								<line number="356" hits="0" branch="false"/>
-								<line number="357" hits="0" branch="false"/>
-								<line number="358" hits="0" branch="false"/>
 								<line number="361" hits="0" branch="false"/>
 								<line number="362" hits="0" branch="false"/>
 								<line number="363" hits="0" branch="false"/>
@@ -272,9 +252,6 @@
 								<line number="412" hits="0" branch="false"/>
 								<line number="418" hits="0" branch="false"/>
 								<line number="420" hits="0" branch="false"/>
-								<line number="421" hits="0" branch="false"/>
-								<line number="422" hits="0" branch="false"/>
-								<line number="423" hits="0" branch="false"/>
 								<line number="426" hits="0" branch="false"/>
 								<line number="428" hits="0" branch="false"/>
 								<line number="434" hits="0" branch="false"/>
@@ -310,7 +287,6 @@
 								<line number="222" hits="0" branch="false"/>
 								<line number="223" hits="0" branch="false"/>
 								<line number="225" hits="0" branch="false"/>
-								<line number="226" hits="0" branch="false"/>
 								<line number="227" hits="0" branch="false"/>
 							</lines>
 						</method>
@@ -357,8 +333,6 @@
 					</methods>
 					<lines>
 						<line number="31" hits="0" branch="false"/>
-						<line number="35" hits="0" branch="false"/>
-						<line number="39" hits="0" branch="false"/>
 						<line number="51" hits="0" branch="false"/>
 						<line number="52" hits="0" branch="false"/>
 						<line number="61" hits="0" branch="false"/>
@@ -415,7 +389,6 @@
 						<line number="222" hits="0" branch="false"/>
 						<line number="223" hits="0" branch="false"/>
 						<line number="225" hits="0" branch="false"/>
-						<line number="226" hits="0" branch="false"/>
 						<line number="227" hits="0" branch="false"/>
 						<line number="236" hits="0" branch="false"/>
 						<line number="237" hits="0" branch="false"/>
@@ -442,7 +415,6 @@
 						<line number="310" hits="0" branch="false"/>
 						<line number="316" hits="0" branch="false"/>
 						<line number="318" hits="0" branch="false"/>
-						<line number="319" hits="0" branch="false"/>
 						<line number="322" hits="0" branch="false"/>
 						<line number="324" hits="0" branch="false"/>
 						<line number="330" hits="0" branch="false"/>
@@ -452,9 +424,6 @@
 						<line number="347" hits="0" branch="false"/>
 						<line number="353" hits="0" branch="false"/>
 						<line number="355" hits="0" branch="false"/>
-						<line number="356" hits="0" branch="false"/>
-						<line number="357" hits="0" branch="false"/>
-						<line number="358" hits="0" branch="false"/>
 						<line number="361" hits="0" branch="false"/>
 						<line number="362" hits="0" branch="false"/>
 						<line number="363" hits="0" branch="false"/>
@@ -472,9 +441,6 @@
 						<line number="412" hits="0" branch="false"/>
 						<line number="418" hits="0" branch="false"/>
 						<line number="420" hits="0" branch="false"/>
-						<line number="421" hits="0" branch="false"/>
-						<line number="422" hits="0" branch="false"/>
-						<line number="423" hits="0" branch="false"/>
 						<line number="426" hits="0" branch="false"/>
 						<line number="428" hits="0" branch="false"/>
 						<line number="434" hits="0" branch="false"/>
@@ -485,7 +451,6 @@
 						<line number="446" hits="0" branch="false"/>
 						<line number="447" hits="0" branch="false"/>
 						<line number="448" hits="0" branch="false"/>
-						<line number="449" hits="0" branch="false"/>
 						<line number="450" hits="0" branch="false"/>
 						<line number="452" hits="0" branch="false"/>
 						<line number="453" hits="0" branch="false"/>
@@ -502,7 +467,6 @@
 						<line number="471" hits="0" branch="false"/>
 						<line number="472" hits="0" branch="false"/>
 						<line number="473" hits="0" branch="false"/>
-						<line number="474" hits="0" branch="false"/>
 						<line number="475" hits="0" branch="false"/>
 						<line number="477" hits="0" branch="false"/>
 						<line number="478" hits="0" branch="false"/>
@@ -519,7 +483,6 @@
 						<line number="496" hits="0" branch="false"/>
 						<line number="497" hits="0" branch="false"/>
 						<line number="498" hits="0" branch="false"/>
-						<line number="499" hits="0" branch="false"/>
 						<line number="500" hits="0" branch="false"/>
 						<line number="502" hits="0" branch="false"/>
 						<line number="503" hits="0" branch="false"/>
@@ -531,14 +494,10 @@
 						<line number="510" hits="0" branch="false"/>
 						<line number="511" hits="0" branch="false"/>
 						<line number="518" hits="0" branch="false"/>
-						<line number="519" hits="0" branch="false"/>
 						<line number="520" hits="0" branch="false"/>
 						<line number="521" hits="0" branch="false"/>
-						<line number="522" hits="0" branch="false"/>
 						<line number="523" hits="0" branch="false"/>
-						<line number="524" hits="0" branch="false"/>
 						<line number="525" hits="0" branch="false"/>
-						<line number="526" hits="0" branch="false"/>
 						<line number="528" hits="0" branch="false"/>
 						<line number="529" hits="0" branch="false"/>
 					</lines>
@@ -547,7 +506,6 @@
 					<methods>
 						<method name="&lt;init&gt;" signature="(Ljp/co/fttx/rakuphotomail/test/GallerySendingMailTest;)V" line-rate="0.0" branch-rate="1.0">
 							<lines>
-								<line number="1" hits="0" branch="false"/>
 								<line number="310" hits="0" branch="false"/>
 							</lines>
 						</method>
@@ -559,7 +517,6 @@
 						</method>
 					</methods>
 					<lines>
-						<line number="1" hits="0" branch="false"/>
 						<line number="310" hits="0" branch="false"/>
 						<line number="313" hits="0" branch="false"/>
 						<line number="314" hits="0" branch="false"/>
@@ -569,7 +526,6 @@
 					<methods>
 						<method name="&lt;init&gt;" signature="(Ljp/co/fttx/rakuphotomail/test/GallerySendingMailTest;)V" line-rate="0.0" branch-rate="1.0">
 							<lines>
-								<line number="1" hits="0" branch="false"/>
 								<line number="324" hits="0" branch="false"/>
 							</lines>
 						</method>
@@ -581,7 +537,6 @@
 						</method>
 					</methods>
 					<lines>
-						<line number="1" hits="0" branch="false"/>
 						<line number="324" hits="0" branch="false"/>
 						<line number="327" hits="0" branch="false"/>
 						<line number="328" hits="0" branch="false"/>
@@ -591,7 +546,6 @@
 					<methods>
 						<method name="&lt;init&gt;" signature="(Ljp/co/fttx/rakuphotomail/test/GallerySendingMailTest;)V" line-rate="0.0" branch-rate="1.0">
 							<lines>
-								<line number="1" hits="0" branch="false"/>
 								<line number="347" hits="0" branch="false"/>
 							</lines>
 						</method>
@@ -603,7 +557,6 @@
 						</method>
 					</methods>
 					<lines>
-						<line number="1" hits="0" branch="false"/>
 						<line number="347" hits="0" branch="false"/>
 						<line number="350" hits="0" branch="false"/>
 						<line number="351" hits="0" branch="false"/>
@@ -613,7 +566,6 @@
 					<methods>
 						<method name="&lt;init&gt;" signature="(Ljp/co/fttx/rakuphotomail/test/GallerySendingMailTest;)V" line-rate="0.0" branch-rate="1.0">
 							<lines>
-								<line number="1" hits="0" branch="false"/>
 								<line number="365" hits="0" branch="false"/>
 							</lines>
 						</method>
@@ -625,7 +577,6 @@
 						</method>
 					</methods>
 					<lines>
-						<line number="1" hits="0" branch="false"/>
 						<line number="365" hits="0" branch="false"/>
 						<line number="368" hits="0" branch="false"/>
 						<line number="369" hits="0" branch="false"/>
@@ -635,7 +586,6 @@
 					<methods>
 						<method name="&lt;init&gt;" signature="(Ljp/co/fttx/rakuphotomail/test/GallerySendingMailTest;)V" line-rate="0.0" branch-rate="1.0">
 							<lines>
-								<line number="1" hits="0" branch="false"/>
 								<line number="389" hits="0" branch="false"/>
 							</lines>
 						</method>
@@ -647,7 +597,6 @@
 						</method>
 					</methods>
 					<lines>
-						<line number="1" hits="0" branch="false"/>
 						<line number="389" hits="0" branch="false"/>
 						<line number="392" hits="0" branch="false"/>
 						<line number="393" hits="0" branch="false"/>
@@ -657,7 +606,6 @@
 					<methods>
 						<method name="&lt;init&gt;" signature="(Ljp/co/fttx/rakuphotomail/test/GallerySendingMailTest;)V" line-rate="0.0" branch-rate="1.0">
 							<lines>
-								<line number="1" hits="0" branch="false"/>
 								<line number="412" hits="0" branch="false"/>
 							</lines>
 						</method>
@@ -669,7 +617,6 @@
 						</method>
 					</methods>
 					<lines>
-						<line number="1" hits="0" branch="false"/>
 						<line number="412" hits="0" branch="false"/>
 						<line number="415" hits="0" branch="false"/>
 						<line number="416" hits="0" branch="false"/>
@@ -679,7 +626,6 @@
 					<methods>
 						<method name="&lt;init&gt;" signature="(Ljp/co/fttx/rakuphotomail/test/GallerySendingMailTest;)V" line-rate="0.0" branch-rate="1.0">
 							<lines>
-								<line number="1" hits="0" branch="false"/>
 								<line number="428" hits="0" branch="false"/>
 							</lines>
 						</method>
@@ -691,7 +637,6 @@
 						</method>
 					</methods>
 					<lines>
-						<line number="1" hits="0" branch="false"/>
 						<line number="428" hits="0" branch="false"/>
 						<line number="431" hits="0" branch="false"/>
 						<line number="432" hits="0" branch="false"/>
