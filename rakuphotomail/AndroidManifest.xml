@@ -96,6 +96,17 @@
         </activity>
         <activity
             android:configChanges="locale"
+            android:label="GalleryTest"
+            android:launchMode="standard"
+            android:name="jp.co.fttx.rakuphotomail.activity.Gallery1" >
+            <intent-filter >
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:configChanges="locale"
             android:label="返信メッセージ作成"
             android:launchMode="standard"
             android:name="jp.co.fttx.rakuphotomail.activity.GallerySendingMail" >
