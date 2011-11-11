@@ -48,7 +48,7 @@ public class Gallery1 extends Activity {
 		setContentView(R.layout.gallery_1);
 
 		// Reference the Gallery view
-		Gallery g = (Gallery) findViewById(R.id.gallery);
+		Gallery g = (Gallery) findViewById(R.id.gallery1);
 		// Set the adapter to our custom adapter (below)
 		g.setAdapter(new ImageAdapter(this));
 

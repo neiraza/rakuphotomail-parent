@@ -244,11 +244,15 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 			public void run() {
 				setContentView(R.layout.gallery_slide_show_stop);
 				setupViewsMailDetail();
+				// TODO こいつを応用してサムネイル画像を作成して、モックで用意したリストにつっこむ
 				Bitmap bitmap = populateFromPart(newAttachmentBean.getPart());
 				if (bitmap == null) {
 					return;
 				}
+				// TODO 先頭の画像だけ表示
 				mImageViewDetailMailEven.setImageBitmap(bitmap);
+				// TODO 先頭以外の画像についてサムネイル化する
+				
 				setupViewNewMail();
 			}
 		};
@@ -322,11 +326,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	}
 
 	private void slideShowNewMailStart(ArrayList<MessageBean> messages) {
-		// TODO 初回は新着メールが複数ない場合で実現してみる
+		// TODO 初回は新着メールが複数ない場合で実現してみる 
 		newMessageBean = messages.get(0);
 		CopyOnWriteArrayList<AttachmentBean> attachments = newMessageBean
 				.getAttachments();
-		// TODO 想定どおりだと新着メールの複数件添付ファイルは、新着メールスライドで対応する
+		// TODO 1件複数画像のファイルをつめたいから、BeanをListにつめよう。List<newAttachmentBean>
 		newAttachmentBean = attachments.get(0);
 		handler.post(setNewMailInfo);
 	}

@@ -96,9 +96,20 @@
         </activity>
         <activity
             android:configChanges="locale"
-            android:label="GalleryTest"
+            android:label="GalleryTest1"
             android:launchMode="standard"
             android:name="jp.co.fttx.rakuphotomail.activity.Gallery1" >
+            <intent-filter >
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:configChanges="locale"
+            android:label="GalleryTest2"
+            android:launchMode="standard"
+            android:name="jp.co.fttx.rakuphotomail.activity.Gallery2" >
             <intent-filter >
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />

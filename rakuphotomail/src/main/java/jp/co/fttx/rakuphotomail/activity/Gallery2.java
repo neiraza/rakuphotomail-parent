@@ -1,9 +1,26 @@
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package jp.co.fttx.rakuphotomail.activity;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import jp.co.fttx.rakuphotomail.R;
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
@@ -20,35 +37,33 @@ import android.widget.Gallery;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-public class DummySlideStop extends RakuPhotoActivity implements OnItemClickListener {
-	
+public class Gallery2 extends Activity implements OnItemClickListener {
+
 	private ImageView image;
 	private List<Bitmap> imageItems;
-	private Context mContext;
 	
 	@Override
-	public void onCreate(Bundle icicle) {
-		super.onCreate(icicle);
-		setContentView(R.layout.gallery_slide_show_stop);
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.gallery_2);
 
 		// Reference the Gallery view
-		Gallery g = (Gallery) findViewById(R.id.gallery3);
+		Gallery g = (Gallery) findViewById(R.id.gallery2);
 		// Set the adapter to our custom adapter (below)
 		g.setAdapter(new ImageAdapter(this));
 
 		// Set a item click listener, and just Toast the clicked position
 		g.setOnItemClickListener(this);
 		
-		image = (ImageView) findViewById(R.id.gallery_mail_picuture);
+		image = (ImageView) findViewById(R.id.image2);
 		image.setImageBitmap(imageItems.get(0));
 	}
 	
 	@Override
 	public void onItemClick(AdapterView parent, View v, int position,
 			long id) {
-		Toast.makeText(DummySlideStop.this, "" + position, Toast.LENGTH_SHORT)
+		Toast.makeText(Gallery2.this, "" + position, Toast.LENGTH_SHORT)
 				.show();
-		// TODO 本チャンではサムネイルをそのまま表示ではないので注意
 		image.setImageBitmap(imageItems.get(position));
 	}
 
@@ -90,6 +105,8 @@ public class DummySlideStop extends RakuPhotoActivity implements OnItemClickList
 			return i;
 		}
 
+		private Context mContext;
+
 		// XXX まさにゴミ
 		private ArrayList<Bitmap> setDroidList() {
 			ArrayList<Bitmap> list = new ArrayList<Bitmap>();
@@ -100,8 +117,7 @@ public class DummySlideStop extends RakuPhotoActivity implements OnItemClickList
 			BitmapFactory.Options options = new BitmapFactory.Options();
 			options.inJustDecodeBounds = true;
 			BitmapFactory.decodeResource(r, R.drawable.droid, options);
-			// int displayW = getWindowManager().getDefaultDisplay().getWidth();
-			int displayW = getWindowManager().getDefaultDisplay().getWidth() / 4;
+			int displayW = getWindowManager().getDefaultDisplay().getWidth();
 			int displayH = getWindowManager().getDefaultDisplay().getHeight();
 			int scaleW = options.outWidth / displayW + 1;
 			int scaleH = options.outHeight / displayH + 1;
@@ -114,9 +130,7 @@ public class DummySlideStop extends RakuPhotoActivity implements OnItemClickList
 			BitmapFactory.Options options2 = new BitmapFactory.Options();
 			options2.inJustDecodeBounds = true;
 			BitmapFactory.decodeResource(r, R.drawable.droid2, options2);
-			// int displayW2 =
-			// getWindowManager().getDefaultDisplay().getWidth();
-			int displayW2 = getWindowManager().getDefaultDisplay().getWidth() / 4;
+			int displayW2 = getWindowManager().getDefaultDisplay().getWidth();
 			int displayH2 = getWindowManager().getDefaultDisplay().getHeight();
 			int scaleW2 = options2.outWidth / displayW2 + 1;
 			int scaleH2 = options2.outHeight / displayH2 + 1;
@@ -128,8 +142,7 @@ public class DummySlideStop extends RakuPhotoActivity implements OnItemClickList
 			BitmapFactory.Options options3 = new BitmapFactory.Options();
 			options3.inJustDecodeBounds = true;
 			BitmapFactory.decodeResource(r, R.drawable.droid3, options3);
-//			int displayW3 = getWindowManager().getDefaultDisplay().getWidth();
-			int displayW3 = getWindowManager().getDefaultDisplay().getWidth() / 4;
+			int displayW3 = getWindowManager().getDefaultDisplay().getWidth();
 			int displayH3 = getWindowManager().getDefaultDisplay().getHeight();
 			int scaleW3 = options3.outWidth / displayW3 + 1;
 			int scaleH3 = options3.outHeight / displayH3 + 1;
@@ -141,8 +154,7 @@ public class DummySlideStop extends RakuPhotoActivity implements OnItemClickList
 			BitmapFactory.Options options4 = new BitmapFactory.Options();
 			options4.inJustDecodeBounds = true;
 			BitmapFactory.decodeResource(r, R.drawable.droid4, options4);
-//			int displayW4 = getWindowManager().getDefaultDisplay().getWidth();
-			int displayW4 = getWindowManager().getDefaultDisplay().getWidth() /4;
+			int displayW4 = getWindowManager().getDefaultDisplay().getWidth();
 			int displayH4 = getWindowManager().getDefaultDisplay().getHeight();
 			int scaleW4 = options4.outWidth / displayW4 + 1;
 			int scaleH4 = options4.outHeight / displayH4 + 1;
@@ -155,4 +167,6 @@ public class DummySlideStop extends RakuPhotoActivity implements OnItemClickList
 			return list;
 		}
 	}
+
+
 }
