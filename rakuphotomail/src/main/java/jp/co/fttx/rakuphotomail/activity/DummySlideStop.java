@@ -32,7 +32,7 @@ public class DummySlideStop extends RakuPhotoActivity implements OnItemClickList
 		setContentView(R.layout.gallery_slide_show_stop);
 
 		// Reference the Gallery view
-		Gallery g = (Gallery) findViewById(R.id.gallery3);
+		Gallery g = (Gallery) findViewById(R.id.gallery_mail_picture_slide);
 		// Set the adapter to our custom adapter (below)
 		g.setAdapter(new ImageAdapter(this));
 
