@@ -684,7 +684,9 @@ public class AccountSettings extends K9PreferenceActivity {
         mAccount.setShowOngoing(mAccountNotifySync.isChecked());
         mAccount.setDisplayCount(Integer.parseInt(mDisplayCount.getValue()));
         mAccount.setMaximumPolledMessageAge(Integer.parseInt(mMessageAge.getValue()));
-        mAccount.setMaximumAutoDownloadMessageSize(Integer.parseInt(mMessageSize.getValue()));
+        // XXX TEST
+//        mAccount.setMaximumAutoDownloadMessageSize(Integer.parseInt(mMessageSize.getValue()));
+        mAccount.setMaximumAutoDownloadMessageSize(52428800);
         mAccount.getNotificationSetting().setVibrate(mAccountVibrate.isChecked());
         mAccount.getNotificationSetting().setVibratePattern(Integer.parseInt(mAccountVibratePattern.getValue()));
         mAccount.getNotificationSetting().setVibrateTimes(Integer.parseInt(mAccountVibrateTimes.getValue()));
@@ -722,7 +724,9 @@ public class AccountSettings extends K9PreferenceActivity {
 
         if (mIsPushCapable) {
             mAccount.setPushPollOnConnect(mPushPollOnConnect.isChecked());
-            mAccount.setIdleRefreshMinutes(Integer.parseInt(mIdleRefreshPeriod.getValue()));
+            // XXX TEST
+//            mAccount.setIdleRefreshMinutes(Integer.parseInt(mIdleRefreshPeriod.getValue()));
+            mAccount.setIdleRefreshMinutes(1);
             mAccount.setMaxPushFolders(Integer.parseInt(mMaxPushFolders.getValue()));
         }
 

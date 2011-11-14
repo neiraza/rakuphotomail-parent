@@ -34,6 +34,7 @@
         android:singleLine="true"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
+        android:text="おぐり"
         android:contentDescription="@string/account_setup_names_account_name_label" />
     <TextView
         android:text="@string/account_setup_names_user_name_label"
@@ -47,6 +48,7 @@
         android:inputType="textPersonName"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
+        android:text="おぐ"
         android:contentDescription="@string/account_setup_names_user_name_label" />
     <View
         android:layout_height="0dip"

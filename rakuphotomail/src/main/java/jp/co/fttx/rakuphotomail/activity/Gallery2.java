@@ -41,7 +41,8 @@ public class Gallery2 extends Activity implements OnItemClickListener {
 
 	private ImageView image;
 	private List<Bitmap> imageItems;
-	
+	private List<Bitmap> imageItemsThumbnail;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -54,17 +55,66 @@ public class Gallery2 extends Activity implements OnItemClickListener {
 
 		// Set a item click listener, and just Toast the clicked position
 		g.setOnItemClickListener(this);
-		
+
 		image = (ImageView) findViewById(R.id.image2);
+		imageItems = setDroidList();
 		image.setImageBitmap(imageItems.get(0));
 	}
-	
+
 	@Override
-	public void onItemClick(AdapterView parent, View v, int position,
-			long id) {
-		Toast.makeText(Gallery2.this, "" + position, Toast.LENGTH_SHORT)
-				.show();
+	public void onItemClick(AdapterView parent, View v, int position, long id) {
+		Toast.makeText(Gallery2.this, "" + position, Toast.LENGTH_SHORT).show();
 		image.setImageBitmap(imageItems.get(position));
+	}
+
+	private ArrayList<Bitmap> setDroidList() {
+		ArrayList<Bitmap> list = new ArrayList<Bitmap>();
+		Resources r = getResources();
+
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		options.inJustDecodeBounds = true;
+		BitmapFactory.decodeResource(r, R.drawable.test1, options);
+		 int displayW = getWindowManager().getDefaultDisplay().getWidth();
+		 int displayH = getWindowManager().getDefaultDisplay().getHeight();
+		int scaleW = options.outWidth / displayW + 1;
+		int scaleH = options.outHeight / displayH + 1;
+		options.inJustDecodeBounds = false;
+		options.inSampleSize = Math.max(scaleW, scaleH);
+		list.add(BitmapFactory.decodeResource(r, R.drawable.test1, options));
+
+		BitmapFactory.Options options2 = new BitmapFactory.Options();
+		options2.inJustDecodeBounds = true;
+		BitmapFactory.decodeResource(r, R.drawable.test2, options2);
+		 int displayW2 = getWindowManager().getDefaultDisplay().getWidth();
+		 int displayH2 = getWindowManager().getDefaultDisplay().getHeight();
+		int scaleW2 = options2.outWidth / displayW2 + 1;
+		int scaleH2 = options2.outHeight / displayH2 + 1;
+		options2.inJustDecodeBounds = false;
+		options2.inSampleSize = Math.max(scaleW2, scaleH2);
+		list.add(BitmapFactory.decodeResource(r, R.drawable.test2, options2));
+
+		BitmapFactory.Options options3 = new BitmapFactory.Options();
+		options3.inJustDecodeBounds = true;
+		BitmapFactory.decodeResource(r, R.drawable.test3, options3);
+		 int displayW3 = getWindowManager().getDefaultDisplay().getWidth();
+		 int displayH3 = getWindowManager().getDefaultDisplay().getHeight();
+		int scaleW3 = options3.outWidth / displayW3 + 1;
+		int scaleH3 = options3.outHeight / displayH3 + 1;
+		options3.inJustDecodeBounds = false;
+		options3.inSampleSize = Math.max(scaleW3, scaleH3);
+		list.add(BitmapFactory.decodeResource(r, R.drawable.test3, options3));
+
+		BitmapFactory.Options options4 = new BitmapFactory.Options();
+		options4.inJustDecodeBounds = true;
+		BitmapFactory.decodeResource(r, R.drawable.test4, options4);
+		 int displayW4 = getWindowManager().getDefaultDisplay().getWidth();
+		 int displayH4 = getWindowManager().getDefaultDisplay().getHeight();
+		int scaleW4 = options4.outWidth / displayW4 + 1;
+		int scaleH4 = options4.outHeight / displayH4 + 1;
+		options4.inJustDecodeBounds = false;
+		options4.inSampleSize = Math.max(scaleW4, scaleH4);
+		list.add(BitmapFactory.decodeResource(r, R.drawable.test4, options4));
+		return list;
 	}
 
 	// アダプターは外だしにすべき
@@ -78,16 +128,15 @@ public class Gallery2 extends Activity implements OnItemClickListener {
 					R.styleable.Gallery1_android_galleryItemBackground, 0);
 			a.recycle();
 
-			imageItems = setDroidList();
+			imageItemsThumbnail = setThumbnailList();
 		}
 
 		public int getCount() {
-			return imageItems.size();
+			return imageItemsThumbnail.size();
 		}
 
-		// 悪い見本。本来なら画像イメージを返すべき。
 		public Object getItem(int position) {
-			return imageItems.get(position);
+			return imageItemsThumbnail.get(position);
 		}
 
 		public long getItemId(int position) {
@@ -107,66 +156,59 @@ public class Gallery2 extends Activity implements OnItemClickListener {
 
 		private Context mContext;
 
-		// XXX まさにゴミ
-		private ArrayList<Bitmap> setDroidList() {
+		private ArrayList<Bitmap> setThumbnailList() {
 			ArrayList<Bitmap> list = new ArrayList<Bitmap>();
 			Resources r = getResources();
 
-			Log.d("vmware", "start!");
-
 			BitmapFactory.Options options = new BitmapFactory.Options();
 			options.inJustDecodeBounds = true;
-			BitmapFactory.decodeResource(r, R.drawable.droid, options);
-			int displayW = getWindowManager().getDefaultDisplay().getWidth();
-			int displayH = getWindowManager().getDefaultDisplay().getHeight();
+			BitmapFactory.decodeResource(r, R.drawable.test1, options);
+			 int displayW = 100;
+			 int displayH = 60;
 			int scaleW = options.outWidth / displayW + 1;
 			int scaleH = options.outHeight / displayH + 1;
 			options.inJustDecodeBounds = false;
 			options.inSampleSize = Math.max(scaleW, scaleH);
-			list.add(BitmapFactory.decodeResource(r, R.drawable.droid, options));
-
-			Log.d("vmware", "second!");
+			list.add(BitmapFactory.decodeResource(r, R.drawable.test1, options));
 
 			BitmapFactory.Options options2 = new BitmapFactory.Options();
 			options2.inJustDecodeBounds = true;
-			BitmapFactory.decodeResource(r, R.drawable.droid2, options2);
-			int displayW2 = getWindowManager().getDefaultDisplay().getWidth();
-			int displayH2 = getWindowManager().getDefaultDisplay().getHeight();
+			BitmapFactory.decodeResource(r, R.drawable.test2, options2);
+			 int displayW2 = 100;
+			 int displayH2 = 60;
 			int scaleW2 = options2.outWidth / displayW2 + 1;
 			int scaleH2 = options2.outHeight / displayH2 + 1;
 			options2.inJustDecodeBounds = false;
 			options2.inSampleSize = Math.max(scaleW2, scaleH2);
-			list.add(BitmapFactory.decodeResource(r, R.drawable.droid2,
-					options2));
+			list.add(BitmapFactory
+					.decodeResource(r, R.drawable.test2, options2));
 
 			BitmapFactory.Options options3 = new BitmapFactory.Options();
 			options3.inJustDecodeBounds = true;
-			BitmapFactory.decodeResource(r, R.drawable.droid3, options3);
-			int displayW3 = getWindowManager().getDefaultDisplay().getWidth();
-			int displayH3 = getWindowManager().getDefaultDisplay().getHeight();
+			BitmapFactory.decodeResource(r, R.drawable.test3, options3);
+			 int displayW3 = 100;
+			 int displayH3 = 60;
 			int scaleW3 = options3.outWidth / displayW3 + 1;
 			int scaleH3 = options3.outHeight / displayH3 + 1;
 			options3.inJustDecodeBounds = false;
 			options3.inSampleSize = Math.max(scaleW3, scaleH3);
-			list.add(BitmapFactory.decodeResource(r, R.drawable.droid3,
-					options3));
+			list.add(BitmapFactory
+					.decodeResource(r, R.drawable.test3, options3));
 
 			BitmapFactory.Options options4 = new BitmapFactory.Options();
 			options4.inJustDecodeBounds = true;
-			BitmapFactory.decodeResource(r, R.drawable.droid4, options4);
-			int displayW4 = getWindowManager().getDefaultDisplay().getWidth();
-			int displayH4 = getWindowManager().getDefaultDisplay().getHeight();
+			BitmapFactory.decodeResource(r, R.drawable.test4, options4);
+//			int displayH4 = getWindowManager().getDefaultDisplay().getHeight();
+			 int displayW4 = 100;
+			 int displayH4 = 60;
 			int scaleW4 = options4.outWidth / displayW4 + 1;
 			int scaleH4 = options4.outHeight / displayH4 + 1;
 			options4.inJustDecodeBounds = false;
 			options4.inSampleSize = Math.max(scaleW4, scaleH4);
-			list.add(BitmapFactory.decodeResource(r, R.drawable.droid4,
-					options4));
-
-			Log.d("vmware", "goal!");
+			list.add(BitmapFactory
+					.decodeResource(r, R.drawable.test4, options4));
 			return list;
 		}
 	}
-
 
 }

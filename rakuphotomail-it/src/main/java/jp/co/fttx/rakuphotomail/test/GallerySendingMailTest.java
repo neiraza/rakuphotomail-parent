@@ -450,7 +450,7 @@ public class GallerySendingMailTest extends
 		i.putExtra(EXTRA_MESSAGE_ANSWERED, false);
 
 		mReference = new MessageReference();
-		mReference.accountUuid = "2dd84172-3230-4ac9-b62c-c15200b72512";
+		mReference.accountUuid = "a848514f-b6a4-447f-9f8a-8632cd9c8316";
 		mReference.folderName = "INBOX";
 		mReference.uid = "500";
 		mReference.flag = Flag.ANSWERED;
@@ -475,7 +475,7 @@ public class GallerySendingMailTest extends
 		i.putExtra(EXTRA_MESSAGE_ANSWERED, false);
 
 		mReference = new MessageReference();
-		mReference.accountUuid = "2dd84172-3230-4ac9-b62c-c15200b72512";
+		mReference.accountUuid = "a848514f-b6a4-447f-9f8a-8632cd9c8316";
 		mReference.folderName = "INBOX";
 		mReference.uid = "500";
 		mReference.flag = Flag.ANSWERED;
@@ -500,7 +500,7 @@ public class GallerySendingMailTest extends
 		i.putExtra(EXTRA_MESSAGE_ANSWERED, true);
 
 		mReference = new MessageReference();
-		mReference.accountUuid = "2dd84172-3230-4ac9-b62c-c15200b72512";
+		mReference.accountUuid = "a848514f-b6a4-447f-9f8a-8632cd9c8316";
 		mReference.folderName = "INBOX";
 		mReference.uid = "500";
 		mReference.flag = Flag.ANSWERED;

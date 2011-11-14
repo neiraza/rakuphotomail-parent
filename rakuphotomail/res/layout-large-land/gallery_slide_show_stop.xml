@@ -6,12 +6,14 @@
 
     <LinearLayout
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:layout_weight="1" >
 
         <FrameLayout
             android:id="@+id/gallery_detail_container"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent" >
+            android:layout_height="fill_parent"
+             >
 
             <ImageView
                 android:id="@+id/gallery_mail_picuture"
@@ -143,7 +145,7 @@
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
                     android:scrollHorizontally="true"
-                    android:text="働くよ秋から本気ニート言う"
+                    android:text="wwww働くよ秋から本気ニート言う"
                     android:textSize="17sp"
                     android:textStyle="bold"
                     android:typeface="sans" />
@@ -166,7 +168,7 @@
         <Gallery
             android:id="@+id/gallery_mail_picture_slide"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent" />
+            android:layout_height="100dip" />
     </LinearLayout>
 
 </LinearLayout>
