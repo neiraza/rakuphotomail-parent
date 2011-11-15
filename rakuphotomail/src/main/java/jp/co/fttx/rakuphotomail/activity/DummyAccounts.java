@@ -57,7 +57,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class AccountsOfDummy extends K9ListActivity implements OnItemClickListener,
+public class DummyAccounts extends K9ListActivity implements OnItemClickListener,
 		OnClickListener {
 
 	/**
@@ -94,7 +94,7 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 		 * AccountsHandler#setViewTitle.
 		 */
 		private void setViewTitle() {
-			String dispString = mListener.formatHeader(AccountsOfDummy.this,
+			String dispString = mListener.formatHeader(DummyAccounts.this,
 					getString(R.string.accounts_title), mUnreadMessageCount,
 					getTimeFormat());
 
@@ -212,7 +212,7 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 		public void folderStatusChanged(Account account, String folderName,
 				int unreadMessageCount) {
 			try {
-				AccountStats stats = account.getStats(AccountsOfDummy.this);
+				AccountStats stats = account.getStats(DummyAccounts.this);
 				if (stats == null) {
 					Log.w(RakuPhotoMail.LOG_TAG, "Unable to get account stats");
 				} else {
@@ -263,7 +263,7 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 		public void synchronizeMailboxFinished(Account account, String folder,
 				int totalMessagesInMailbox, int numNewMessages) {
 			MessagingController.getInstance(getApplication()).getAccountStats(
-					AccountsOfDummy.this, account, mListener);
+					DummyAccounts.this, account, mListener);
 			super.synchronizeMailboxFinished(account, folder,
 					totalMessagesInMailbox, numNewMessages);
 
@@ -293,15 +293,13 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 	public static final String EXTRA_STARTUP = "startup";
 
 	public static void actionLaunch(Context context) {
-		Intent intent = new Intent(context, AccountsOfDummy.class);
+		Intent intent = new Intent(context, DummyAccounts.class);
 		intent.putExtra(EXTRA_STARTUP, true);
 		context.startActivity(intent);
 	}
 
 	public static void listAccounts(Context context) {
-		Log.v(RakuPhotoMail.LOG_TAG,
-				"Accounts#listAccounts:intent startActivity");
-		Intent intent = new Intent(context, AccountsOfDummy.class);
+		Intent intent = new Intent(context, DummyAccounts.class);
 		intent.putExtra(EXTRA_STARTUP, false);
 		context.startActivity(intent);
 	}
@@ -311,9 +309,7 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 		super.onCreate(icicle);
 		Log.d("fujiyama", "Accounts#onCreate");
 
-		// TODO 特別にアカウントを非表示って何これ？ by toguri 20110928
 		if (!RakuPhotoMail.isHideSpecialAccounts()) {
-			Log.d("fujiyama", "Accounts#onCreate 特別にアカウントを非表示って何これ？");
 			unreadAccount = new SearchAccount(this, false, null, null);
 			unreadAccount
 					.setDescription(getString(R.string.search_all_messages_title));
@@ -327,29 +323,16 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 					.setEmail(getString(R.string.integrated_inbox_detail));
 		}
 		Account[] accounts = Preferences.getPreferences(this).getAccounts();
-		Log.d("fujiyama", "Accounts#onCreate accounts : " + accounts.toString());
 		Intent intent = getIntent();
 		boolean startup = intent.getBooleanExtra(EXTRA_STARTUP, true);
-		Log.d("fujiyama",
-				"Accounts#onCreate startup : " + startup
-						+ ", RakuPhotoMail.startIntegratedInbox() : "
-						+ RakuPhotoMail.startIntegratedInbox()
-						+ ", RakuPhotoMail.isHideSpecialAccounts() : "
-						+ RakuPhotoMail.isHideSpecialAccounts());
 		if (startup && RakuPhotoMail.startIntegratedInbox()
 				&& !RakuPhotoMail.isHideSpecialAccounts()) {
-			Log.d("fujiyama", "Accounts#onCreate onOpenAccount !");
 			onOpenAccount(integratedInboxAccount);
 			finish();
 		} else if (startup && accounts.length == 1
 				&& onOpenAccount(accounts[0])) {
-			//TODO ここに来ればAccountがあるってことで、OKぽい by toguri 
-			Log.d("fujiyama",
-					"Accounts#onCreate [all through to (else) if !onOpenAccount()] finish......");
-			// fall through to "else" if !onOpenAccount()
 			finish();
 		} else {
-			Log.d("fujiyama", "Accounts#onCreate !!!!!");
 			requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 			requestWindowFeature(Window.FEATURE_PROGRESS);
 
@@ -362,7 +345,6 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 			registerForContextMenu(listView);
 
 			if (icicle != null && icicle.containsKey(SELECTED_CONTEXT_ACCOUNT)) {
-				Log.d("fujiyama", "Accounts#onCreate アカウントを選択？？");
 				String accountUuid = icicle.getString("selectedContextAccount");
 				mSelectedContextAccount = Preferences.getPreferences(this)
 						.getAccount(accountUuid);
@@ -374,14 +356,10 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 
 	@SuppressWarnings("unchecked")
 	private void restoreAccountStats(Bundle icicle) {
-		Log.d("fujiyama", "Accounts#restoreAccountStats");
 		if (icicle != null) {
-			Log.d("fujiyama", "Accounts#restoreAccountStats icicle != null");
 			Map<String, AccountStats> oldStats = (Map<String, AccountStats>) icicle
 					.get(ACCOUNT_STATS);
 			if (oldStats != null) {
-				Log.d("fujiyama",
-						"Accounts#restoreAccountStats oldStats != null");
 				accountStats.putAll(oldStats);
 			}
 		}
@@ -413,7 +391,6 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 	@Override
 	public void onResume() {
 		super.onResume();
-		Log.d("fujiyama", "Accounts#onResume");
 
 		refresh();
 		MessagingController.getInstance(getApplication())
@@ -425,7 +402,6 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 	@Override
 	public void onPause() {
 		super.onPause();
-		Log.d("fujiyama", "Accounts#onPause");
 
 		MessagingController.getInstance(getApplication()).removeListener(
 				mListener);
@@ -435,7 +411,6 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 	}
 
 	private void refresh() {
-		Log.d("fujiyama", "Accounts#refresh");
 
 		BaseAccount[] accounts = Preferences.getPreferences(this).getAccounts();
 
@@ -464,7 +439,7 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 				pendingWork.put(account, "true");
 				Account realAccount = (Account) account;
 				MessagingController.getInstance(getApplication())
-						.getAccountStats(AccountsOfDummy.this, realAccount, mListener);
+						.getAccountStats(DummyAccounts.this, realAccount, mListener);
 			} else if (RakuPhotoMail.countSearchMessages()
 					&& account instanceof SearchAccount) {
 				pendingWork.put(account, "true");
@@ -485,17 +460,14 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 	}
 
 	private void onAddNewAccount() {
-		Log.d("fujiyama", "Accounts#onAddNewAccount");
 		AccountSetupBasics.actionNewAccount(this);
 	}
 
 	private void onEditAccount(Account account) {
-		Log.d("fujiyama", "Accounts#onEditAccount");
 		AccountSettings.actionSettings(this, account);
 	}
 
 	private void onEditPrefs() {
-		Log.d("fujiyama", "Accounts#onEditPrefs");
 		Prefs.actionPrefs(this);
 	}
 
@@ -505,7 +477,6 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 	 * MessagingController.checkMail().
 	 */
 	private void onCheckMail(Account account) {
-		Log.d("fujiyama", "Accounts#onCheckMail");
 		MessagingController.getInstance(getApplication()).checkMail(this,
 				account, true, true, null);
 		if (account == null) {
@@ -519,19 +490,16 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 	}
 
 	private void onClearCommands(Account account) {
-		Log.d("fujiyama", "Accounts#onClearCommands");
 		MessagingController.getInstance(getApplication()).clearAllPending(
 				account);
 	}
 
 	private void onEmptyTrash(Account account) {
-		Log.d("fujiyama", "Accounts#onEmptyTrash");
 		MessagingController.getInstance(getApplication()).emptyTrash(account,
 				null);
 	}
 
 	private void onCompose() {
-		Log.d("fujiyama", "Accounts#onCompose");
 		Account defaultAccount = Preferences.getPreferences(this)
 				.getDefaultAccount();
 		if (defaultAccount != null) {
@@ -550,18 +518,14 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 	 * @return false if unsuccessfull
 	 */
 	private boolean onOpenAccount(BaseAccount account) {
-		Log.d("fujiyama", "Accounts#onOpenAccount");
 		if (account instanceof SearchAccount) {
-			Log.d("fujiyama", "Accounts#onOpenAccount 1");
 			SearchAccount searchAccount = (SearchAccount) account;
 			// TODO ここは「統合フォルダ」、「全メッセージ」を開くときに使ってたよ by toguri
 			MessageList.actionHandle(this, searchAccount.getDescription(),
 					searchAccount);
 		} else {
-			Log.d("fujiyama", "Accounts#onOpenAccount 2");
 			Account realAccount = (Account) account;
 			if (!realAccount.isAvailable(this)) {
-				Log.d("fujiyama", "Accounts#onOpenAccount 3");
 				String toastText = getString(R.string.account_unavailable,
 						account.getDescription());
 				Toast toast = Toast.makeText(getApplication(), toastText,
@@ -572,13 +536,10 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 						"refusing to open account that is not available");
 				return false;
 			}
-			// TODO ここでフォルダ一覧とメール一覧の表示振り分けだけでサクッとするーして、スライドショーに向かわしてみる by toguri
 			if (RakuPhotoMail.FOLDER_NONE.equals(realAccount
 					.getAutoExpandFolderName())) {
-				Log.d("fujiyama", "Accounts#onOpenAccount 4");
 				FolderList.actionHandleAccount(this, realAccount);
 			} else {
-				Log.d("fujiyama", "Accounts#onOpenAccount 5");
 				MessageList.actionHandleFolder(this, realAccount,
 						realAccount.getAutoExpandFolderName());
 			}
@@ -587,7 +548,6 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 	}
 
 	public void onClick(View view) {
-		Log.d("fujiyama", "Accounts#onClick");
 		if (view.getId() == R.id.next) {
 			onAddNewAccount();
 		} else {
@@ -600,17 +560,14 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 	}
 
 	private void onDeleteAccount(Account account) {
-		Log.d("fujiyama", "Accounts#onDeleteAccount");
 		mSelectedContextAccount = account;
 		showDialog(DIALOG_REMOVE_ACCOUNT);
 	}
 
 	@Override
 	public Dialog onCreateDialog(int id) {
-		Log.d("fujiyama", "Accounts#onCreateDialog");
 		switch (id) {
 		case DIALOG_REMOVE_ACCOUNT:
-			Log.d("fujiyama", "Accounts#onCreateDialog DIALOG_REMOVE_ACCOUNT");
 			return ConfirmationDialog.create(
 					this,
 					id,
@@ -632,17 +589,16 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 								}
 								MessagingController.getInstance(
 										getApplication()).notifyAccountCancel(
-										AccountsOfDummy.this, realAccount);
-								Preferences.getPreferences(AccountsOfDummy.this)
+										DummyAccounts.this, realAccount);
+								Preferences.getPreferences(DummyAccounts.this)
 										.deleteAccount(realAccount);
-								RakuPhotoMail.setServicesEnabled(AccountsOfDummy.this);
+								RakuPhotoMail.setServicesEnabled(DummyAccounts.this);
 								refresh();
 							}
 						}
 					});
 
 		case DIALOG_CLEAR_ACCOUNT:
-			Log.d("fujiyama", "Accounts#onCreateDialog DIALOG_CLEAR_ACCOUNT");
 			return ConfirmationDialog.create(
 					this,
 					id,
@@ -665,7 +621,6 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 					});
 
 		case DIALOG_RECREATE_ACCOUNT:
-			Log.d("fujiyama", "Accounts#onCreateDialog DIALOG_RECREATE_ACCOUNT");
 			return ConfirmationDialog.create(
 					this,
 					id,
@@ -692,7 +647,6 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 
 	@Override
 	public void onPrepareDialog(int id, Dialog d) {
-		Log.d("fujiyama", "Accounts#onPrepareDialog");
 		AlertDialog alert = (AlertDialog) d;
 		switch (id) {
 		case DIALOG_REMOVE_ACCOUNT:
@@ -717,7 +671,6 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		Log.d("fujiyama", "Accounts#onContextItemSelected");
 		AdapterContextMenuInfo menuInfo = (AdapterContextMenuInfo) item
 				.getMenuInfo();
 		if (menuInfo != null) {
@@ -761,33 +714,28 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 	}
 
 	private void onCompact(Account account) {
-		Log.d("fujiyama", "Accounts#onCompact");
 		mHandler.workingAccount(account, R.string.compacting_account);
 		MessagingController.getInstance(getApplication())
 				.compact(account, null);
 	}
 
 	private void onClear(Account account) {
-		Log.d("fujiyama", "Accounts#onClear");
 		showDialog(DIALOG_CLEAR_ACCOUNT);
 
 	}
 
 	private void onRecreate(Account account) {
-		Log.d("fujiyama", "Accounts#onRecreate");
 		showDialog(DIALOG_RECREATE_ACCOUNT);
 	}
 
 	public void onItemClick(AdapterView<?> parent, View view, int position,
 			long id) {
-		Log.d("fujiyama", "Accounts#onItemClick");
 		BaseAccount account = (BaseAccount) parent.getItemAtPosition(position);
 		onOpenAccount(account);
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		Log.d("fujiyama", "Accounts#onOptionsItemSelected");
 		switch (item.getItemId()) {
 		case R.id.add_new_account:
 			onAddNewAccount();
@@ -890,7 +838,6 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 	 * @return String version
 	 */
 	private String getVersionNumber() {
-		Log.d("fujiyama", "Accounts#getVersionNumber");
 		String version = "?";
 		try {
 			PackageInfo pi = getPackageManager().getPackageInfo(
@@ -904,13 +851,11 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 
 	public boolean onItemLongClick(AdapterView<?> parent, View view,
 			int position, long id) {
-		Log.d("fujiyama", "Accounts#onItemLongClick");
 		return true;
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		Log.d("fujiyama", "Accounts#onCreateOptionsMenu");
 		super.onCreateOptionsMenu(menu);
 		getMenuInflater().inflate(R.menu.accounts_option, menu);
 		return true;
@@ -919,7 +864,6 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v,
 			ContextMenuInfo menuInfo) {
-		Log.d("fujiyama", "Accounts#onCreateContextMenu");
 		super.onCreateContextMenu(menu, v, menuInfo);
 		menu.setHeaderTitle(R.string.accounts_context_menu_title);
 		getMenuInflater().inflate(R.menu.accounts_context, menu);
@@ -938,7 +882,7 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 
 	class AccountsAdapter extends ArrayAdapter<BaseAccount> {
 		public AccountsAdapter(BaseAccount[] accounts) {
-			super(AccountsOfDummy.this, 0, accounts);
+			super(DummyAccounts.this, 0, accounts);
 		}
 
 		@Override
@@ -974,7 +918,7 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 			AccountStats stats = accountStats.get(account.getUuid());
 
 			if (stats != null && account instanceof Account && stats.size >= 0) {
-				holder.email.setText(SizeFormatter.formatSize(AccountsOfDummy.this,
+				holder.email.setText(SizeFormatter.formatSize(DummyAccounts.this,
 						stats.size));
 				holder.email.setVisibility(View.VISIBLE);
 			} else {
@@ -1066,7 +1010,7 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 				holder.folders.setVisibility(View.VISIBLE);
 				holder.folders.setOnClickListener(new OnClickListener() {
 					public void onClick(View v) {
-						FolderList.actionHandleAccount(AccountsOfDummy.this,
+						FolderList.actionHandleAccount(DummyAccounts.this,
 								(Account) account);
 					}
 				});
@@ -1118,7 +1062,7 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 			if (account instanceof SearchAccount) {
 				SearchAccount searchAccount = (SearchAccount) account;
 				MessageList.actionHandle(
-						AccountsOfDummy.this,
+						DummyAccounts.this,
 						description,
 						"",
 						searchAccount.isIntegrate(),
@@ -1159,9 +1103,8 @@ public class AccountsOfDummy extends K9ListActivity implements OnItemClickListen
 					}
 
 				};
-				// 彼はスターを見つけたらしい
 				MessageList
-						.actionHandle(AccountsOfDummy.this, description, searchSpec);
+						.actionHandle(DummyAccounts.this, description, searchSpec);
 			}
 		}
 

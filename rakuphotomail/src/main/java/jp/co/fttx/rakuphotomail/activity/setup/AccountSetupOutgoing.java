@@ -206,14 +206,18 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
                 }
             }
 
-            if (username != null) {
-                mUsernameView.setText(username);
-                mRequireLoginView.setChecked(true);
-            }
+            // XXX テスト用
+//            if (username != null) {
+//                mUsernameView.setText(username);
+//                mRequireLoginView.setChecked(true);
+//            }
+            mUsernameView.setText("tooru.oguri@rakuphoto.ucom.local");
 
-            if (password != null) {
-                mPasswordView.setText(password);
-            }
+            // XXX テスト用
+//            if (password != null) {
+//                mPasswordView.setText(password);
+//            }
+            mPasswordView.setText("ucomrp2011");
 
             if (authType != null) {
                 for (int i = 0; i < authTypes.length; i++) {
@@ -230,9 +234,11 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
                 }
             }
 
-            if (uri.getHost() != null) {
-                mServerView.setText(uri.getHost());
-            }
+            // XXX テスト用
+//            if (uri.getHost() != null) {
+//                mServerView.setText(uri.getHost());
+//            }
+            mServerView.setText("172.29.51.226");
 
             if (uri.getPort() != -1) {
                 mPortView.setText(Integer.toString(uri.getPort()));
@@ -269,7 +275,9 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
 
     private void updatePortFromSecurityType() {
         int securityType = (Integer)((SpinnerOption)mSecurityTypeView.getSelectedItem()).value;
-        mPortView.setText(Integer.toString(smtpPorts[securityType]));
+        // XXX テスト用
+//        mPortView.setText(Integer.toString(smtpPorts[securityType]));
+        mPortView.setText("25");
     }
 
     @Override

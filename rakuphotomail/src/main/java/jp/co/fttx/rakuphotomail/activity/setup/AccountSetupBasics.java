@@ -33,6 +33,7 @@ import java.net.URLEncoder;
  * activity. If no settings are found the settings are handed off to the
  * AccountSetupAccountType activity.
  */
+// XXX アカウント設定君
 public class AccountSetupBasics extends RakuPhotoActivity
     implements OnClickListener, TextWatcher {
     private final static String EXTRA_ACCOUNT = "jp.co.fttx.rakuphotomail.AccountSetupBasics.account";
@@ -59,6 +60,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // XXX アカウント情報(EMail,Password)固定埋め込み
         setContentView(R.layout.account_setup_basics);
         mPrefs = Preferences.getPreferences(this);
         mEmailView = (EditText)findViewById(R.id.account_email);

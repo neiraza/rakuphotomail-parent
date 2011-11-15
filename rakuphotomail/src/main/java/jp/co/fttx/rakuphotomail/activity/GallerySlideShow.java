@@ -2,7 +2,6 @@ package jp.co.fttx.rakuphotomail.activity;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +13,6 @@ import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
-import jp.co.fttx.rakuphotomail.controller.MessagingController;
 import jp.co.fttx.rakuphotomail.mail.FetchProfile;
 import jp.co.fttx.rakuphotomail.mail.Flag;
 import jp.co.fttx.rakuphotomail.mail.Folder;
@@ -39,42 +37,43 @@ import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
 import jp.co.fttx.rakuphotomail.rakuraku.util.Rotate3dAnimation;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.BaseAdapter;
+import android.widget.Gallery;
 import android.widget.ImageView;
-import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class GallerySlideShow extends RakuPhotoActivity implements
-		View.OnClickListener {
+		View.OnClickListener, OnItemClickListener {
 
 	private static final String EXTRA_ACCOUNT = "account";
 	private static final String EXTRA_FOLDER = "folder";
 
 	private Account mAccount;
 	private String mFolderName;
-	// XXX loadAttachmentが必要になったら実装する
-	// private Message mMessage;
 	private MessageBean messageBean;
 	private AttachmentBean attachmentBean;
 	private MessageBean newMessageBean;
-	private AttachmentBean newAttachmentBean;
-	private MessagingController mController;
-	private PopupWindow pWindowMailDetail;
+	private CopyOnWriteArrayList<AttachmentBean> newAttachmentList;
 	private String startMessageUid = null;
+
+	private ImageAdapter mImageAdapter;
+	private Gallery mGallery;
 
 	/*
 	 * Slide
@@ -87,18 +86,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	/*
 	 * new mail(detail mail)
 	 */
-	private ImageView mImageViewDetailMailEven;
+	private ImageView mImageViewPicture;
 	private TextView mMailSubject;
 	private TextView mSlide;
 	private TextView mReply;
 	private TextView mMailDate;
-	private TextView mMailFromName;
-	private TextView mMailFromAddress;
-	private TextView mMailContent;
-	private TextView mMailTo;
-	private TextView mMailCc;
-	private TextView mMailCcTitle;
-	private TextView mMailInfoDetail;
 
 	/*
 	 * anime
@@ -120,6 +112,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	private Thread checkMailThread;
 	private Thread restartMesasgeSlideThread;
 	private Thread restartCheckMailThread;
+	private Context mContext;
 
 	private CopyOnWriteArrayList<String> mMessageUids = new CopyOnWriteArrayList<String>();
 	private ConcurrentHashMap<String, MessageBean> mMessages = new ConcurrentHashMap<String, MessageBean>();
@@ -146,8 +139,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	public void onCreate(Bundle savedInstanceState) {
 		Log.d("haganai", "GallerySlideShow#onCreate");
 		super.onCreate(savedInstanceState);
+		mContext = this;
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		setContentView(R.layout.gallery_view);
+		setContentView(R.layout.gallery_slide_show);
 		setupViews();
 		onNewIntent(getIntent());
 		initThreading();
@@ -182,22 +176,14 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		/*
 		 * 新着メール表示（詳細メール表示）
 		 */
-		mImageViewDetailMailEven = (ImageView) findViewById(R.id.gallery_detail_attachment_picuture_even);
-		mImageViewDetailMailEven.setVisibility(View.VISIBLE);
+		mImageViewPicture = (ImageView) findViewById(R.id.gallery_mail_picuture);
+		mImageViewPicture.setVisibility(View.VISIBLE);
 		mSlide = (TextView) findViewById(R.id.gallery_mail_slide);
 		mSlide.setOnClickListener(this);
 		mReply = (TextView) findViewById(R.id.gallery_mail_reply);
 		mReply.setOnClickListener(this);
 		mMailSubject = (TextView) findViewById(R.id.gallery_mail_subject);
 		mMailDate = (TextView) findViewById(R.id.gallery_mail_date);
-		mMailFromName = (TextView) findViewById(R.id.gallery_mail_from_name);
-		mMailFromAddress = (TextView) findViewById(R.id.gallery_mail_from_address);
-		mMailTo = (TextView) findViewById(R.id.gallery_mail_to);
-		mMailCc = (TextView) findViewById(R.id.gallery_mail_cc);
-		mMailCcTitle = (TextView) findViewById(R.id.gallery_mail_cc_title);
-		mMailInfoDetail = (TextView) findViewById(R.id.gallery_mail_detail_open);
-		mMailInfoDetail.setOnClickListener(this);
-		mMailContent = (TextView) findViewById(R.id.gallery_mail_content);
 	}
 
 	@Override
@@ -207,7 +193,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		mAccount = Preferences.getPreferences(this).getAccount(
 				intent.getStringExtra(EXTRA_ACCOUNT));
 		mFolderName = intent.getStringExtra(EXTRA_FOLDER);
-		mController = MessagingController.getInstance(getApplication());
+		// mController = MessagingController.getInstance(getApplication());
 	}
 
 	@Override
@@ -242,13 +228,26 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		setNewMailInfo = new Runnable() {
 			@Override
 			public void run() {
-				setContentView(R.layout.gallery_view_mail_detail);
+				setContentView(R.layout.gallery_slide_show_stop);
 				setupViewsMailDetail();
-				Bitmap bitmap = populateFromPart(newAttachmentBean.getPart());
+				Bitmap bitmap = populateFromPart(newAttachmentList.get(0)
+						.getPart());
 				if (bitmap == null) {
 					return;
 				}
-				mImageViewDetailMailEven.setImageBitmap(bitmap);
+				mImageViewPicture.setImageBitmap(bitmap);
+				ArrayList<Bitmap> list = new ArrayList<Bitmap>();
+				for (AttachmentBean bean : newAttachmentList) {
+					list.add(populateFromPartThumbnail(bean.getPart()));
+				}
+				Log.d("vmware",
+						"GallerySlideShow#initThreading setNewMailInfo list.size():"
+								+ list.size());
+				mGallery = (Gallery) findViewById(R.id.gallery_mail_picture_slide);
+				mImageAdapter = new ImageAdapter(mContext);
+				mImageAdapter.setImageItems(list);
+				mGallery.setAdapter(mImageAdapter);
+				mGallery.setOnItemClickListener((OnItemClickListener) mContext);
 				setupViewNewMail();
 			}
 		};
@@ -324,10 +323,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	private void slideShowNewMailStart(ArrayList<MessageBean> messages) {
 		// TODO 初回は新着メールが複数ない場合で実現してみる
 		newMessageBean = messages.get(0);
-		CopyOnWriteArrayList<AttachmentBean> attachments = newMessageBean
-				.getAttachments();
-		// TODO 想定どおりだと新着メールの複数件添付ファイルは、新着メールスライドで対応する
-		newAttachmentBean = attachments.get(0);
+		newAttachmentList = newMessageBean.getAttachments();
 		handler.post(setNewMailInfo);
 	}
 
@@ -437,9 +433,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		messageBean.setBccList(messageInfo.getBccList());
 		messageBean.setMessageId(messageInfo.getMessageId());
 		messageBean.setMessage(message);
-		// TODO
+		// TODO 他にもあるかも
 		// [X_GOT_ALL_HEADERS,X_DOWNLOADED_FULL,SEEN,ANSWERED,X_DOWNLOADED_PARTIAL,X_REMOTE_COPY_STARTED]
-		// 他にもあるかも
 		String flags = messageInfo.getFlags();
 		messageBean.setFlags(flags);
 		String[] flagList = RakuPhotoStringUtils.splitFlags(flags);
@@ -634,6 +629,22 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		return bitmapView;
 	}
 
+	private Bitmap populateFromPartThumbnail(LocalAttachmentBodyPart part) {
+		Bitmap bitmapView = null;
+		try {
+			bitmapView = getThumbnailBitmapView(part);
+			// XXX loadAttachmentが必要になったら実装する
+			// if (bitmapView == null) {
+			// Log.d("steinsgate", "GallerySlideShow#populateFromPart 画像ない");
+			// loadAttachment(mAccount, mMessage, part);
+			// }
+		} catch (Exception e) {
+			Log.e(RakuPhotoMail.LOG_TAG, "error ", e);
+			e.printStackTrace();
+		}
+		return bitmapView;
+	}
+
 	private Bitmap getBitmapView(LocalAttachmentBodyPart part) {
 		try {
 			BitmapFactory.Options options = new BitmapFactory.Options();
@@ -645,6 +656,30 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 					.openInputStream(uri), null, options);
 			int displayW = getWindowManager().getDefaultDisplay().getWidth();
 			int displayH = getWindowManager().getDefaultDisplay().getHeight();
+			int scaleW = options.outWidth / displayW + 1;
+			int scaleH = options.outHeight / displayH + 1;
+			options.inJustDecodeBounds = false;
+			options.inSampleSize = Math.max(scaleW, scaleH);
+			return BitmapFactory.decodeStream(this.getContentResolver()
+					.openInputStream(uri), null, options);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	private Bitmap getThumbnailBitmapView(LocalAttachmentBodyPart part) {
+		try {
+			BitmapFactory.Options options = new BitmapFactory.Options();
+			Uri uri = AttachmentProvider.getAttachmentUri(mAccount,
+					part.getAttachmentId());
+			options.inJustDecodeBounds = true;
+			this.getContentResolver().openInputStream(uri);
+			BitmapFactory.decodeStream(this.getContentResolver()
+					.openInputStream(uri), null, options);
+			// XXX 最終的にこのレイアウトサイズでOKOK？
+			int displayW = 100;
+			int displayH = 100;
 			int scaleW = options.outWidth / displayW + 1;
 			int scaleH = options.outHeight / displayH + 1;
 			options.inJustDecodeBounds = false;
@@ -798,41 +833,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		/* 日付 */
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd h:mm a");
 		mMailDate.setText(sdf.format(newMessageBean.getDate()));
-		/* From */
-		String[] mailFromArr = newMessageBean.getSenderList().split(";");
-		if (mailFromArr == null || mailFromArr.length == 0) {
-			mMailFromName.setText("差出人名が表示できません");
-			mMailFromAddress.setVisibility(View.GONE);
-		} else if (mailFromArr.length == 1) {
-			mMailFromAddress.setText(mailFromArr[0]);
-			mMailFromAddress.setText(mailFromArr[0]);
-			mMailFromName.setVisibility(View.GONE);
-		} else {
-			mMailFromAddress.setVisibility(View.GONE);
-			mMailFromName.setText(mailFromArr[1]);
-		}
-		/* To */
-		String[] mailToList = RakuPhotoStringUtils
-				.splitMailAdressList(newMessageBean.getToList());
-		if (mailToList != null) {
-			mMailTo.setText(RakuPhotoStringUtils.getMailAddress(mailToList));
-		} else {
-			mMailTo.setText("宛先名が表示できません");
-		}
-		/* Cc */
-		String ccList = newMessageBean.getCcList();
-		if (ccList == null || "".equals(ccList)) {
-			mMailCc.setVisibility(View.INVISIBLE);
-			mMailCcTitle.setVisibility(View.INVISIBLE);
-		} else {
-			String[] mailCcList = RakuPhotoStringUtils
-					.splitMailAdressList(ccList);
-			if (mailCcList != null) {
-				mMailCc.setText(RakuPhotoStringUtils.getMailAddress(mailCcList));
-			}
-		}
-		/* 本文 */
-		mMailContent.setText(newMessageBean.getTextContent());
 	}
 
 	private void synchronizeMailbox(Account account, String folderName) {
@@ -944,12 +944,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 			}
 			localMessages = null;
 
-			// int newMessages = mController
-			// .downloadMessages(account, remoteFolder, localFolder,
-			// remoteMessages);
-			//
-			// int unreadMessageCount = setLocalUnreadCountToRemote(localFolder,
-			// remoteFolder, newMessages);
 			setLocalFlaggedCountToRemote(localFolder, remoteFolder);
 
 			/* Notify listeners that we're finally done. */
@@ -981,25 +975,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		}
 	}
 
-	// private int setLocalUnreadCountToRemote(LocalFolder localFolder, Folder
-	// remoteFolder, int newMessageCount)
-	// throws MessagingException {
-	// int remoteUnreadMessageCount = remoteFolder.getUnreadMessageCount();
-	// if (remoteUnreadMessageCount != -1) {
-	// localFolder.setUnreadMessageCount(remoteUnreadMessageCount);
-	// } else {
-	// int unreadCount = 0;
-	// Message[] messages = localFolder.getMessages(null, false);
-	// for (Message message : messages) {
-	// if (!message.isSet(Flag.SEEN) && !message.isSet(Flag.DELETED)) {
-	// unreadCount++;
-	// }
-	// }
-	// localFolder.setUnreadMessageCount(unreadCount);
-	// }
-	// return localFolder.getUnreadMessageCount();
-	// }
-
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
@@ -1008,9 +983,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 			break;
 		case R.id.gallery_mail_reply:
 			onReply();
-			break;
-		case R.id.gallery_mail_detail_open:
-			onMailInfoDetail();
 			break;
 		case R.id.gallery_attachment_picuture_default:
 			break;
@@ -1025,7 +997,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 
 	private void onSlide() {
 		startMessageUid = messageBean.getUid();
-		setContentView(R.layout.gallery_view);
+		setContentView(R.layout.gallery_slide_show);
 		setupViews();
 		repeatStart();
 		List<MessageInfo> messageInfoList = getMessages();
@@ -1045,73 +1017,75 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		GallerySendingMail.actionReply(this, newMessageBean);
 	}
 
-	private void onMailInfoDetail() {
-		showPopupWindow(this, this.findViewById(R.id.gallery_mail_detail_open));
-	}
+	public class ImageAdapter extends BaseAdapter {
+		private int mGalleryItemBackground;
+		private Context mContext;
+		private ArrayList<Bitmap> mImageItems = new ArrayList<Bitmap>();
 
-	private void showPopupWindow(Context context, View parent) {
-		LayoutInflater inflater = (LayoutInflater) context
-				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		final View vPopupWindow = inflater.inflate(
-				R.layout.gallery_view_mail_detail_info_popup, null, false);
-		pWindowMailDetail = new PopupWindow(vPopupWindow, 650, 400, true);
-		setupPopupWindowViews(vPopupWindow);
-		pWindowMailDetail.showAtLocation(parent, Gravity.CENTER, 0, 0);
-	}
+		public ImageAdapter(Context c) {
+			Log.d("vmware", "ImageAdapter#ImageAdapter");
 
-	private void setupPopupWindowViews(View vPopupWindow) {
-		/* 件名 */
-		TextView subject = (TextView) vPopupWindow
-				.findViewById(R.id.gallery_mail_detail_subject);
-		subject.setText(newMessageBean.getSubject());
-		/* 日付 */
-		TextView date = (TextView) vPopupWindow
-				.findViewById(R.id.gallery_mail_detail_date);
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd h:mm a");
-		date.setText(sdf.format(newMessageBean.getDate()));
-		/* From */
-		TextView from = (TextView) vPopupWindow
-				.findViewById(R.id.gallery_mail_detail_from);
-		from.setText(RakuPhotoStringUtils.getMailAddressInfo(newMessageBean
-				.getSenderList()));
-		/* To */
-		TextView to = (TextView) vPopupWindow
-				.findViewById(R.id.gallery_mail_detail_to);
-		to.setText(RakuPhotoStringUtils.getMailAddressInfoList(newMessageBean
-				.getToList()));
-		/* Cc */
-		TextView ccTitle = (TextView) vPopupWindow
-				.findViewById(R.id.gallery_mail_detail_cc_title);
-		TextView cc = (TextView) vPopupWindow
-				.findViewById(R.id.gallery_mail_detail_cc);
-		String ccList = newMessageBean.getCcList();
-		if (ccList == null || "".equals(ccList)) {
-			ccTitle.setVisibility(View.GONE);
-			cc.setVisibility(View.GONE);
-		} else {
-			cc.setText(RakuPhotoStringUtils.getMailAddressInfoList(ccList));
+			mContext = c;
+			TypedArray a = obtainStyledAttributes(R.styleable.Gallery1);
+			mGalleryItemBackground = a.getResourceId(
+					R.styleable.Gallery1_android_galleryItemBackground, 0);
+			a.recycle();
+
+			 mImageItems = setDroidList();
 		}
-		TextView close = (TextView) vPopupWindow
-				.findViewById(R.id.gallery_mail_detail_close);
-		/* 閉じる */
-		close.setOnClickListener(new PopupClickEvent());
-	}
 
-	private void onMailInfoClose() {
-		pWindowMailDetail.dismiss();
-	}
-
-	private class PopupClickEvent implements OnClickListener {
-		@Override
-		public void onClick(View v) {
-			switch (v.getId()) {
-			case R.id.gallery_mail_detail_close:
-				onMailInfoClose();
-				break;
-			default:
-				Log.w(RakuPhotoMail.LOG_TAG,
-						"PopupClickEvent#onClick is no Action !!!!");
-			}
+		public int getCount() {
+			Log.d("vmware", "ImageAdapter#getCount");
+			return mImageItems.size();
 		}
+
+		public Object getItem(int position) {
+			Log.d("vmware", "ImageAdapter#getItem position:" + position);
+			return mImageItems.get(position);
+		}
+
+		public long getItemId(int position) {
+			Log.d("vmware", "ImageAdapter#getItemId position:" + position);
+			return position;
+		}
+
+		public View getView(int position, View convertView, ViewGroup parent) {
+			Log.d("vmware", "ImageAdapter#getView");
+
+			ImageView i = new ImageView(mContext);
+
+			Bitmap bitmap = (Bitmap) getItem(position);
+			i.setImageBitmap(bitmap);
+
+			i.setBackgroundResource(mGalleryItemBackground);
+
+			return i;
+		}
+
+		public void setImageItems(ArrayList<Bitmap> imageItems) {
+			Log.d("vmware", "ImageAdapter#setImageItems");
+			this.mImageItems = imageItems;
+		}
+
+		public ArrayList<Bitmap> getImageItems() {
+			Log.d("vmware", "ImageAdapter#getImageItems");
+			return this.mImageItems;
+		}
+
+		 // XXX まさにゴミ
+		 private ArrayList<Bitmap> setDroidList() {
+			 return new ArrayList<Bitmap>();
+		 }
+	}
+
+	@Override
+	public void onItemClick(AdapterView parent, View v, int position, long id) {
+		Log.d("vmware", "GallerySlideShow#onItemClick position:" + position
+				+ " id:" + id);
+
+		Toast.makeText(GallerySlideShow.this, "" + position, Toast.LENGTH_SHORT)
+				.show();
+		mImageViewPicture.setImageBitmap(populateFromPart(newAttachmentList
+				.get(position).getPart()));
 	}
 }
