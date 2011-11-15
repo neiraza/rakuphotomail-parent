@@ -45,14 +45,11 @@ public class Gallery1 extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.gallery_1);
+		setContentView(R.layout.gallery_slide_show_stop);
 
-		// Reference the Gallery view
-		Gallery g = (Gallery) findViewById(R.id.gallery1);
-		// Set the adapter to our custom adapter (below)
+		Gallery g = (Gallery) findViewById(R.id.gallery_mail_picture_slide);
 		g.setAdapter(new ImageAdapter(this));
 
-		// Set a item click listener, and just Toast the clicked position
 		g.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView parent, View v, int position,
 					long id) {
@@ -63,7 +60,6 @@ public class Gallery1 extends Activity {
 
 	}
 
-	// アダプターは外だしにすべき
 	public class ImageAdapter extends BaseAdapter {
 		int mGalleryItemBackground;
 		List<Bitmap> imageItems;
@@ -82,7 +78,6 @@ public class Gallery1 extends Activity {
 			return imageItems.size();
 		}
 
-		// 悪い見本。本来なら画像イメージを返すべき。
 		public Object getItem(int position) {
 			return imageItems.get(position);
 		}
@@ -104,7 +99,6 @@ public class Gallery1 extends Activity {
 
 		private Context mContext;
 
-		// XXX まさにゴミ
 		private ArrayList<Bitmap> setDroidList() {
 			ArrayList<Bitmap> list = new ArrayList<Bitmap>();
 			Resources r = getResources();
