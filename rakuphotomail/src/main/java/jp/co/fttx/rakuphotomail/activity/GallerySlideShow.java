@@ -70,7 +70,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	private AttachmentBean attachmentBean;
 	private MessageBean newMessageBean;
 	private CopyOnWriteArrayList<AttachmentBean> newAttachmentList;
-	private String startMessageUid = null;
+	private String mMessageUid = null;
 
 	private ImageAdapter mImageAdapter;
 	private Gallery mGallery;
@@ -88,10 +88,15 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	 */
 	private ImageView mImageViewPicture;
 	private TextView mMailSubject;
-	private TextView mSlide;
-	private TextView mReply;
 	private TextView mMailDate;
 	private TextView mAnswered;
+	private TextView mMailPre;
+	private TextView mMailSeparator1;
+	private TextView mMailSlide;
+	private TextView mMailSeparator2;
+	private TextView mMailNext;
+	private TextView mMailSeparator3;
+	private TextView mMailReply;
 
 	/*
 	 * anime
@@ -179,14 +184,21 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		 */
 		mImageViewPicture = (ImageView) findViewById(R.id.gallery_mail_picuture);
 		mImageViewPicture.setVisibility(View.VISIBLE);
-		mSlide = (TextView) findViewById(R.id.gallery_mail_slide);
-		mSlide.setOnClickListener(this);
-		mReply = (TextView) findViewById(R.id.gallery_mail_reply);
-		mReply.setOnClickListener(this);
 		mMailSubject = (TextView) findViewById(R.id.gallery_mail_subject);
 		mMailDate = (TextView) findViewById(R.id.gallery_mail_date);
 		mAnswered = (TextView) findViewById(R.id.gallery_mail_sent_flag);
 		mAnswered.setVisibility(View.GONE);
+		mMailPre = (TextView) findViewById(R.id.gallery_mail_pre);
+		mMailPre.setOnClickListener(this);
+		mMailSeparator1 = (TextView) findViewById(R.id.gallery_mail_separator1);
+		mMailSlide = (TextView) findViewById(R.id.gallery_mail_slide);
+		mMailSlide.setOnClickListener(this);
+		mMailSeparator2 = (TextView) findViewById(R.id.gallery_mail_separator2);
+		mMailReply = (TextView) findViewById(R.id.gallery_mail_reply);
+		mMailReply.setOnClickListener(this);
+		mMailSeparator3 = (TextView) findViewById(R.id.gallery_mail_separator3);
+		mMailNext = (TextView) findViewById(R.id.gallery_mail_next);
+		mMailNext.setOnClickListener(this);
 	}
 
 	@Override
@@ -251,7 +263,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 				mImageAdapter.setImageItems(list);
 				mGallery.setAdapter(mImageAdapter);
 				mGallery.setOnItemClickListener((OnItemClickListener) mContext);
-				setupViewNewMail();
+				setupViewMail(newMessageBean);
 			}
 		};
 
@@ -334,11 +346,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		if (mMessageUids == null || mMessageUids.size() == 0) {
 			onStop();
 		}
-		int index = mMessageUids.indexOf(startMessageUid);
+		int index = mMessageUids.indexOf(mMessageUid);
 		if (index == -1) {
 			index = 0;
 		}
-		startMessageUid = null;
+		mMessageUid = null;
 		for (; index < mMessageUids.size(); index++) {
 			String messageUid = mMessageUids.get(index);
 			messageBean = mMessages.get(messageUid);
@@ -830,13 +842,14 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 
 	}
 
-	private void setupViewNewMail() {
-		mMailSubject.setText(newMessageBean.getSubject());
+	private void setupViewMail(MessageBean message) {
+		mMailSubject.setText(message.getSubject());
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd h:mm a");
-		mMailDate.setText(sdf.format(newMessageBean.getDate()));
-		if (newMessageBean.isFlagAnswered()) {
+		mMailDate.setText(sdf.format(message.getDate()));
+		if (message.isFlagAnswered()) {
 			mAnswered.setVisibility(View.VISIBLE);
 		}
+		mMessageUid = message.getMessageId();
 	}
 
 	private void synchronizeMailbox(Account account, String folderName) {
@@ -988,6 +1001,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		case R.id.gallery_mail_reply:
 			onReply();
 			break;
+		case R.id.gallery_mail_pre:
+			onMailPre();
+			break;
+		case R.id.gallery_mail_next:
+			onMailNext();
+			break;
 		case R.id.gallery_attachment_picuture_default:
 			break;
 		case R.id.gallery_attachment_picuture_even:
@@ -999,8 +1018,65 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		}
 	}
 
+	private void onMailPre() {
+		Log.d("vmware", "GallerySlideShow#onMailPre");
+		int preIndex = mMessageUids.indexOf(mMessageUid) - 1;
+		int minIndex = 0;
+		if (preIndex >= minIndex) {
+			setMailDisp(preIndex);
+			if (preIndex == minIndex) {
+				// XXX これVISIBLEにする処理いれないと、回復しない？
+				mMailNext.setVisibility(View.GONE);
+				mMailSeparator3.setVisibility(View.GONE);
+			}
+		} else {
+			// XXX end
+			return;
+		}
+	}
+
+	private void onMailNext() {
+		Log.d("vmware", "GallerySlideShow#onMailNext");
+		int nextIndex = mMessageUids.indexOf(mMessageUid) + 1;
+		int maxIndex = mMessageUids.size() - 1;
+		if (nextIndex <= maxIndex) {
+			setMailDisp(nextIndex);
+			if (nextIndex == maxIndex) {
+				// XXX これVISIBLEにする処理いれないと、回復しない？
+				mMailPre.setVisibility(View.GONE);
+				mMailSeparator1.setVisibility(View.GONE);
+			}
+		} else {
+			// XXX end
+			return;
+		}
+	}
+
+	private void setMailDisp(int index) {
+		setContentView(R.layout.gallery_slide_show_stop);
+		MessageBean message = mMessages.get(mMessageUids.indexOf(index));
+		CopyOnWriteArrayList<AttachmentBean> attachments = message
+				.getAttachments();
+		Bitmap bitmap = populateFromPart(attachments.get(0).getPart());
+		if (bitmap == null) {
+			return;
+		}
+		mImageViewPicture.setImageBitmap(bitmap);
+		ArrayList<Bitmap> list = new ArrayList<Bitmap>();
+		for (AttachmentBean bean : attachments) {
+			list.add(populateFromPartThumbnail(bean.getPart()));
+		}
+		mImageAdapter = new ImageAdapter(mContext);
+		mImageAdapter.setImageItems(list);
+		mGallery.setAdapter(mImageAdapter);
+		mGallery.setOnItemClickListener((OnItemClickListener) mContext);
+		setupViewMail(message);
+	}
+
 	private void onSlide() {
-		startMessageUid = messageBean.getUid();
+		if (null == mMessageUid || mMessageUid.equals("")) {
+			mMessageUid = messageBean.getUid();
+		}
 		setContentView(R.layout.gallery_slide_show);
 		setupViews();
 		repeatStart();
