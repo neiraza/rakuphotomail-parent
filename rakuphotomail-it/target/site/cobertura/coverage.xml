@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
 
-<coverage line-rate="0.0" branch-rate="1.0" lines-covered="0" lines-valid="243" branches-covered="0" branches-valid="0" complexity="1.0" version="1.9.4.1" timestamp="1321254339827">
+<coverage line-rate="0.0" branch-rate="1.0" lines-covered="0" lines-valid="238" branches-covered="0" branches-valid="0" complexity="1.0" version="1.9.4.1" timestamp="1321335849899">
 	<sources>
 		<source>/home/tooru.oguri/workspace/rakuphotomail-parent/rakuphotomail-it/src/main/java</source>
 		<source>--source</source>
@@ -254,7 +254,6 @@
 								<line number="310" hits="0" branch="false"/>
 								<line number="316" hits="0" branch="false"/>
 								<line number="318" hits="0" branch="false"/>
-								<line number="322" hits="0" branch="false"/>
 								<line number="324" hits="0" branch="false"/>
 								<line number="330" hits="0" branch="false"/>
 								<line number="332" hits="0" branch="false"/>
@@ -267,9 +266,6 @@
 								<line number="347" hits="0" branch="false"/>
 								<line number="353" hits="0" branch="false"/>
 								<line number="355" hits="0" branch="false"/>
-								<line number="361" hits="0" branch="false"/>
-								<line number="362" hits="0" branch="false"/>
-								<line number="363" hits="0" branch="false"/>
 								<line number="365" hits="0" branch="false"/>
 								<line number="371" hits="0" branch="false"/>
 								<line number="373" hits="0" branch="false"/>
@@ -292,7 +288,6 @@
 								<line number="412" hits="0" branch="false"/>
 								<line number="418" hits="0" branch="false"/>
 								<line number="420" hits="0" branch="false"/>
-								<line number="426" hits="0" branch="false"/>
 								<line number="428" hits="0" branch="false"/>
 								<line number="434" hits="0" branch="false"/>
 								<line number="436" hits="0" branch="false"/>
@@ -455,7 +450,6 @@
 						<line number="310" hits="0" branch="false"/>
 						<line number="316" hits="0" branch="false"/>
 						<line number="318" hits="0" branch="false"/>
-						<line number="322" hits="0" branch="false"/>
 						<line number="324" hits="0" branch="false"/>
 						<line number="330" hits="0" branch="false"/>
 						<line number="332" hits="0" branch="false"/>
@@ -464,9 +458,6 @@
 						<line number="347" hits="0" branch="false"/>
 						<line number="353" hits="0" branch="false"/>
 						<line number="355" hits="0" branch="false"/>
-						<line number="361" hits="0" branch="false"/>
-						<line number="362" hits="0" branch="false"/>
-						<line number="363" hits="0" branch="false"/>
 						<line number="365" hits="0" branch="false"/>
 						<line number="371" hits="0" branch="false"/>
 						<line number="373" hits="0" branch="false"/>
@@ -481,7 +472,6 @@
 						<line number="412" hits="0" branch="false"/>
 						<line number="418" hits="0" branch="false"/>
 						<line number="420" hits="0" branch="false"/>
-						<line number="426" hits="0" branch="false"/>
 						<line number="428" hits="0" branch="false"/>
 						<line number="434" hits="0" branch="false"/>
 						<line number="436" hits="0" branch="false"/>

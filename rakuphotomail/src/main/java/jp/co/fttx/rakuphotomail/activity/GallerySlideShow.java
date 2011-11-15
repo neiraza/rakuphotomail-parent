@@ -91,6 +91,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	private TextView mSlide;
 	private TextView mReply;
 	private TextView mMailDate;
+	private TextView mAnswered;
 
 	/*
 	 * anime
@@ -184,6 +185,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		mReply.setOnClickListener(this);
 		mMailSubject = (TextView) findViewById(R.id.gallery_mail_subject);
 		mMailDate = (TextView) findViewById(R.id.gallery_mail_date);
+		mAnswered = (TextView) findViewById(R.id.gallery_mail_sent_flag);
+		mAnswered.setVisibility(View.GONE);
 	}
 
 	@Override
@@ -678,7 +681,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 			BitmapFactory.decodeStream(this.getContentResolver()
 					.openInputStream(uri), null, options);
 			// XXX 最終的にこのレイアウトサイズでOKOK？
-			int displayW = 100;
+			int displayW = 150;
 			int displayH = 100;
 			int scaleW = options.outWidth / displayW + 1;
 			int scaleH = options.outHeight / displayH + 1;
@@ -828,11 +831,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	}
 
 	private void setupViewNewMail() {
-		/* 件名 */
 		mMailSubject.setText(newMessageBean.getSubject());
-		/* 日付 */
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd h:mm a");
 		mMailDate.setText(sdf.format(newMessageBean.getDate()));
+		if (newMessageBean.isFlagAnswered()) {
+			mAnswered.setVisibility(View.VISIBLE);
+		}
 	}
 
 	private void synchronizeMailbox(Account account, String folderName) {
@@ -1031,7 +1035,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 					R.styleable.Gallery1_android_galleryItemBackground, 0);
 			a.recycle();
 
-			 mImageItems = setDroidList();
+			mImageItems = setDroidList();
 		}
 
 		public int getCount() {
@@ -1072,10 +1076,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 			return this.mImageItems;
 		}
 
-		 // XXX まさにゴミ
-		 private ArrayList<Bitmap> setDroidList() {
-			 return new ArrayList<Bitmap>();
-		 }
+		// XXX まさにゴミ
+		private ArrayList<Bitmap> setDroidList() {
+			return new ArrayList<Bitmap>();
+		}
 	}
 
 	@Override
