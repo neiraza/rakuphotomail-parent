@@ -151,7 +151,7 @@
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
                         android:scrollHorizontally="true"
-                        android:text="働くよ秋から本気ニート言う"
+                        android:text="会社で寝るのが俺の生き様"
                         android:textSize="25sp"
                         android:textStyle="bold"
                         android:typeface="sans" />
@@ -168,7 +168,7 @@
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="fill_parent"
-                        android:layout_weight="2"
+                    android:layout_weight="2"
                     android:gravity="top|right" >
 
                     <TextView
@@ -184,6 +184,7 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/gallery_mail_picture_slide_linear_layoput"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content" >
 
