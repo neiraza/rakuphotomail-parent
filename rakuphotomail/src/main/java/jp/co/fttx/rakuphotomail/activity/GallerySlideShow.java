@@ -173,8 +173,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		mImageViewDefault = (ImageView) findViewById(R.id.gallery_attachment_picuture_default);
 		mImageViewDefault.setVisibility(View.VISIBLE);
 		mImageViewEven = (ImageView) findViewById(R.id.gallery_attachment_picuture_even);
+		mImageViewEven.setOnClickListener(this);
 		mImageViewEven.setVisibility(View.GONE);
 		mImageViewOdd = (ImageView) findViewById(R.id.gallery_attachment_picuture_odd);
+		mImageViewOdd.setOnClickListener(this);
 		mImageViewOdd.setVisibility(View.GONE);
 	}
 
@@ -266,12 +268,13 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 					mGalleryLinearLayout.setVisibility(View.GONE);
 				}
 				// XXX mMessageUidsにnewMessageBean.getUid()を追加してしまおう
-				String uid = newMessageBean.getUid();
-				mMessageUids.add(0, uid);
+				// String uid = newMessageBean.getUid();
+				mMessageUid = newMessageBean.getUid();
+				mMessageUids.add(0, mMessageUid);
 				// FIXME mMessage.putしる!!!!!!
-				mMessages.put(uid, newMessageBean);
-				mMessageUid = uid;
-				if (0 >= mMessageUids.indexOf(uid)) {
+				mMessages.put(mMessageUid, newMessageBean);
+				// mMessageUid = uid;
+				if (0 >= mMessageUids.indexOf(mMessageUid)) {
 					mMailNext.setVisibility(View.GONE);
 					mMailSeparator3.setVisibility(View.GONE);
 				}
@@ -361,11 +364,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		int index = mMessageUids.indexOf(mMessageUid);
 		if (index == -1) {
 			index = 0;
+			mMessageUid = null;
 		}
-		mMessageUid = null;
 		for (; index < mMessageUids.size(); index++) {
-			String messageUid = mMessageUids.get(index);
-			messageBean = mMessages.get(messageUid);
+			// String messageUid = mMessageUids.get(index);
+			mMessageUid = mMessageUids.get(index);
+			messageBean = mMessages.get(mMessageUid);
 			if (messageBean != null && isSlideRepeat) {
 				CopyOnWriteArrayList<AttachmentBean> attachments = messageBean
 						.getAttachments();
@@ -788,6 +792,13 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		isCheckRepeat = false;
 	}
 
+	private boolean isSlide() {
+		if (isSlideRepeat && isCheckRepeat) {
+			return true;
+		}
+		return false;
+	}
+
 	private void applyRotation(ViewGroup view, float start, float mid,
 			float end, float depth) {
 		this.centerX = view.getWidth() / 2.0f;
@@ -1019,22 +1030,61 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		case R.id.gallery_attachment_picuture_default:
 			break;
 		case R.id.gallery_attachment_picuture_even:
+			Log.d("vmware",
+					"GallerySlideShow#onClick gallery_attachment_picuture_even");
+			// XXX りふぁくたりんぐしたい
+			if (isSlide()) {
+				onSlideStop();
+				onMailCurrent();
+			}
 			break;
 		case R.id.gallery_attachment_picuture_odd:
+			Log.d("vmware",
+					"GallerySlideShow#onClick gallery_attachment_picuture_odd");
+			// XXX りふぁくたりんぐしたい
+			if (isSlide()) {
+				onSlideStop();
+				onMailCurrent();
+			}
 			break;
 		default:
 			Log.w(RakuPhotoMail.LOG_TAG, "onClick is no Action !!!!");
 		}
 	}
 
+	// XXX りふぁくたりんぐしたい
+	private void onMailCurrent() {
+		Log.d("vmware", "GallerySlideShow#onMailCurrent mMessageUid:"
+				+ mMessageUid);
+		int currentIndex = mMessageUids.indexOf(mMessageUid);
+		int maxIndex = mMessageUids.size() - 1;
+		int minIndex = 0;
+		if (currentIndex >= minIndex && currentIndex <= maxIndex) {
+			setMailDisp(currentIndex);
+			if (currentIndex == maxIndex) {
+				mMailPre.setVisibility(View.GONE);
+				mMailSeparator1.setVisibility(View.GONE);
+			}
+			if (currentIndex == minIndex) {
+				mMailNext.setVisibility(View.GONE);
+				mMailSeparator3.setVisibility(View.GONE);
+			}
+		} else {
+			// XXX end
+			Toast.makeText(GallerySlideShow.this, "メールが存在しません。",
+					Toast.LENGTH_SHORT);
+		}
+		
+	}
+
+	// XXX りふぁくたりんぐしたい
 	private void onMailPre() {
 		Log.d("vmware", "GallerySlideShow#onMailPre mMessageUid:" + mMessageUid);
-		int nextIndex = mMessageUids.indexOf(mMessageUid) + 1;
+		int preIndex = mMessageUids.indexOf(mMessageUid) + 1;
 		int maxIndex = mMessageUids.size() - 1;
-		if (nextIndex <= maxIndex) {
-			setMailDisp(nextIndex);
-			if (nextIndex == maxIndex) {
-				// XXX これVISIBLEにする処理いれないと、回復しない？
+		if (preIndex <= maxIndex) {
+			setMailDisp(preIndex);
+			if (preIndex == maxIndex) {
 				mMailPre.setVisibility(View.GONE);
 				mMailSeparator1.setVisibility(View.GONE);
 			}
@@ -1047,6 +1097,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		}
 	}
 
+	// XXX りふぁくたりんぐしたい
 	private void onMailNext() {
 		Log.d("vmware", "GallerySlideShow#onMailNext mMessageUid:"
 				+ mMessageUid);
@@ -1055,7 +1106,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		if (nextIndex >= minIndex) {
 			setMailDisp(nextIndex);
 			if (nextIndex == minIndex) {
-				// XXX これVISIBLEにする処理いれないと、回復しない？
 				mMailNext.setVisibility(View.GONE);
 				mMailSeparator3.setVisibility(View.GONE);
 			}
@@ -1125,6 +1175,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		}
 	}
 
+	private void onSlideStop() {
+		repeatEnd();
+	}
+
 	private void onReply() {
 		Log.d("steinsgate", "GallerySlideShow#onReply");
 		GallerySendingMail.actionReply(this, newMessageBean);
@@ -1192,7 +1246,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	}
 
 	@Override
-	public void onItemClick(AdapterView parent, View v, int position, long id) {
+	public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
 		Log.d("vmware", "GallerySlideShow#onItemClick position:" + position
 				+ " id:" + id);
 
