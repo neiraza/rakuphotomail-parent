@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:background="#000000"
     android:orientation="vertical" >
 
     <LinearLayout
@@ -151,6 +152,11 @@
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
                         android:scrollHorizontally="true"
+                        android:background="@color/gallery_view_shadow_background"
+                        android:shadowColor="@color/gallery_view_shadow"
+                        android:shadowDx="3.0"
+                        android:shadowDy="5.0"
+                        android:shadowRadius="2.0"
                         android:text="会社で寝るのが俺の生き様"
                         android:textSize="25sp"
                         android:textStyle="bold"
@@ -160,6 +166,11 @@
                         android:id="@+id/gallery_mail_date"
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
+                        android:background="@color/gallery_view_shadow_background"
+                        android:shadowColor="@color/gallery_view_shadow"
+                        android:shadowDx="3.0"
+                        android:shadowDy="5.0"
+                        android:shadowRadius="2.0"
                         android:text="2011/11/1(Fri) 09:00:00 PM"
                         android:textSize="20sp"
                         android:typeface="sans" />
