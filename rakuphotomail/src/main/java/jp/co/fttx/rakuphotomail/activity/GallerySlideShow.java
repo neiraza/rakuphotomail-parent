@@ -71,7 +71,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	private AttachmentBean attachmentBean;
 	private MessageBean newMessageBean;
 	private CopyOnWriteArrayList<AttachmentBean> newAttachmentList;
-	private String mMessageUid = null;
+	private volatile String mMessageUid = null;
 
 	/*
 	 * Slide
@@ -107,8 +107,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 
 	private Thread createMessageListThread;
 	private Runnable createMessageList;
-	private boolean isSlideRepeat = true;
-	private boolean isCheckRepeat = true;
+	private volatile boolean isSlideRepeat = true;
+	private volatile boolean isCheckRepeat = true;
 	private Thread messageSlideThread;
 	private Runnable messageSlide;
 	private Handler handler;
@@ -125,8 +125,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	private ConcurrentHashMap<String, MessageBean> mMessages = new ConcurrentHashMap<String, MessageBean>();
 	private MessageBean mMessageInit = new MessageBean();
 	private AttachmentBean mAttachmentInit = new AttachmentBean();
-	private long mDispAttachmentId;
-	private long mDispMessageId;
+	private volatile long mDispAttachmentId;
+	private volatile long mDispMessageId;
 
 	public static void actionHandleFolder(Context context, Account account,
 			String folder) {
@@ -148,6 +148,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		Log.d("neko", "onCreate start");
 		super.onCreate(savedInstanceState);
 		mContext = this;
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -155,6 +156,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		setupViews();
 		onNewIntent(getIntent());
 		initThreading();
+		Log.d("neko", "onCreate end");
 	}
 
 	@Override
@@ -220,9 +222,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 
 	@Override
 	public void onResume() {
+		Log.d("neko", "onResume start");
 		super.onResume();
 		createMessageListThread.start();
 		checkMailThread.start();
+		Log.d("neko", "onResume end");
 	}
 
 	private void setMailInit(MessageBean message, AttachmentBean attachment) {
@@ -248,18 +252,23 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	}
 
 	private void initThreading() {
+		Log.d("neko", "initThreading start");
 		handler = new Handler();
 		setMailInfo = new Runnable() {
 			@Override
 			public void run() {
+				Log.d("neko", "setMailInfo run() start");
 				setMailEffect(messageBean, attachmentBean);
+				Log.d("neko", "setMailInfo  run() end");
 			}
 		};
 
 		setMailInit = new Runnable() {
 			@Override
 			public void run() {
+				Log.d("neko", "setMailInit  run() start");
 				setMailInit(mMessageInit, mAttachmentInit);
+				Log.d("neko", "setMailInit  run() end");
 			}
 		};
 
@@ -267,6 +276,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		setNewMailInfo = new Runnable() {
 			@Override
 			public void run() {
+				Log.d("neko", "setNewMailInfo  run() start");
 				setContentView(R.layout.gallery_slide_show_stop);
 				setupViewsMailDetail();
 				Bitmap bitmap = populateFromPart(newAttachmentList.get(0)
@@ -299,12 +309,14 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 					mMailSeparator3.setVisibility(View.GONE);
 				}
 				setupViewMail(newMessageBean);
+				Log.d("neko", "setNewMailInfo  run() end");
 			}
 		};
 
 		createMessageList = new Runnable() {
 			@Override
 			public void run() {
+				Log.d("neko", "createMessageList  run() start");
 				List<MessageInfo> messageInfoList = getMessages();
 				if (messageInfoList.size() > 0) {
 					setSlideInfo(messageInfoList);
@@ -312,6 +324,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 				} else {
 					onStop();
 				}
+				Log.d("neko", "createMessageList  run() end");
 			}
 		};
 		createMessageListThread = new Thread(createMessageList);
@@ -319,6 +332,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		messageSlide = new Runnable() {
 			@Override
 			public void run() {
+				Log.d("neko", "messageSlide  run() start");
 				// XXX init disp !!!!!!!!!!!!
 				checkMessageUid(mMessageUid);
 				// XXX ここに初期表示処理を置く、初期表示に使用したIDを保持する
@@ -327,10 +341,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 				handler.post(setMailInit);
 				mDispMessageId = mMessageInit.getId();
 				mDispAttachmentId = mAttachmentInit.getId();
-
 				while (isSlideRepeat) {
 					slideShowStart();
 				}
+				Log.d("neko", "messageSlide  run() end");
 			}
 		};
 		messageSlideThread = new Thread(messageSlide);
@@ -338,6 +352,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		checkMail = new Runnable() {
 			@Override
 			public void run() {
+				Log.d("neko", "checkMail  run() start");
 				ArrayList<MessageBean> messages = null;
 				while (isCheckRepeat) {
 					sleep(30000);
@@ -350,9 +365,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 				if (messages != null && messages.size() > 0) {
 					slideShowNewMailStart(messages);
 				}
+				Log.d("neko", "checkMail  run() end");
 			}
 		};
 		checkMailThread = new Thread(checkMail);
+		Log.d("neko", "initThreading end");
 	}
 
 	private ArrayList<MessageBean> getNewMail() {
@@ -397,27 +414,38 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 
 	// XXX ここがガンだ。特に初期表示時にデフォルトを一回経由して表示するのは悪しき習慣
 	private void slideShowStart() {
+		Log.d("neko", "slideShowStart start");
 		if (mMessageUids == null || mMessageUids.size() == 0) {
 			onStop();
 		}
 		int index = checkMessageUid(mMessageUid);
 		for (; index < mMessageUids.size(); index++) {
-			mMessageUid = mMessageUids.get(index);
-			messageBean = mMessages.get(mMessageUid);
-			if (messageBean != null && isSlideRepeat) {
-				CopyOnWriteArrayList<AttachmentBean> attachments = messageBean
-						.getAttachments();
-				// XXX 最後に表示したメッセージIDを引数に追加する
-				mDispAttachmentId = slideShowAttachmentLoop(attachments,
-						mDispMessageId, mDispAttachmentId);
-				mDispMessageId = messageBean.getId();
-			} else if (!isSlideRepeat) {
-				return;
+			if (isSlideRepeat) {
+				mMessageUid = mMessageUids.get(index);
+				messageBean = mMessages.get(mMessageUid);
+				if (messageBean != null) {
+					CopyOnWriteArrayList<AttachmentBean> attachments = messageBean
+							.getAttachments();
+					// XXX 最後に表示したメッセージIDを引数に追加する
+					mDispAttachmentId = slideShowAttachmentLoop(attachments,
+							mDispMessageId, mDispAttachmentId);
+					mDispMessageId = messageBean.getId();
+					Log.d("neko", "slideShowStart isSlideRepeat:"
+							+ isSlideRepeat);
+					Log.d("neko", "slideShowStart mDispMessageId:"
+							+ mDispMessageId + " mDispAttachmentId:"
+							+ mDispAttachmentId);
+				} else {
+					onStop();
+				}
 			} else {
-				onStop();
+				return;
 			}
 		}
-		mMessageUid = mMessageUids.get(0);
+		if (isSlideRepeat) {
+			mMessageUid = mMessageUids.get(0);
+		}
+		Log.d("neko", "slideShowStart end");
 	}
 
 	private long slideShowAttachmentLoop(
@@ -457,6 +485,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	}
 
 	private void setSlideInfo(List<MessageInfo> messageInfoList) {
+		Log.d("neko", "setSlideInfo start mMessageUids.size():" + mMessageUids.size());
+		mMessages.clear();
+		mMessageUids.clear();
 		for (MessageInfo messageInfo : messageInfoList) {
 			String uid = messageInfo.getUid();
 			LocalMessage message = loadMessage(mAccount, mFolderName, uid);
@@ -475,6 +506,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 				}
 			}
 		}
+		Log.d("neko", "setSlideInfo end mMessageUids.size():" + mMessageUids.size());
 	}
 
 	private MessageBean setMessage(LocalMessage message, MessageInfo messageInfo) {
@@ -825,21 +857,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		// finish();
 	}
 
-	private void repeatStart() {
-		isSlideRepeat = true;
-		isCheckRepeat = true;
-	}
-
 	private void repeatEnd() {
 		isSlideRepeat = false;
 		isCheckRepeat = false;
-	}
-
-	private boolean isSlide() {
-		if (isSlideRepeat && isCheckRepeat) {
-			return true;
-		}
-		return false;
 	}
 
 	private void applyRotation(Bitmap bitmap) {
@@ -907,6 +927,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	}
 
 	private void setupViewMail(MessageBean message) {
+		Log.d("neko", "setupViewMail start");
 		mMailSubject.setText(message.getSubject());
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd h:mm a");
 		// XXX sdf.format(message.getDate())????
@@ -915,6 +936,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		if (message.isFlagAnswered()) {
 			mAnswered.setVisibility(View.VISIBLE);
 		}
+		Log.d("neko", "setupViewMail end");
 	}
 
 	private void synchronizeMailbox(Account account, String folderName) {
@@ -1076,11 +1098,21 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 			break;
 		case R.id.gallery_attachment_picuture_even:
 			// XXX りふぁくたりんぐしたい
-			onSlideStop();
+			try {
+				onSlideStop();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			break;
 		case R.id.gallery_attachment_picuture_odd:
 			// XXX りふぁくたりんぐしたい
-			onSlideStop();
+			try {
+				onSlideStop();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			break;
 		default:
 			Log.w(RakuPhotoMail.LOG_TAG, "onClick is no Action !!!!");
@@ -1089,29 +1121,32 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 
 	// XXX りふぁくたりんぐしたい
 	private void onMailCurrent() {
+		Log.d("neko", "onMailCurrent mMessageUid:" + mMessageUid);
+		Log.d("neko", "onMailCurrent mMessageUids.size():" + mMessageUids.size());
 		int currentIndex = mMessageUids.indexOf(mMessageUid);
 		int maxIndex = mMessageUids.size() - 1;
 		int minIndex = 0;
 		if (currentIndex >= minIndex && currentIndex <= maxIndex) {
+			Log.d("neko", "onMailCurrent maxIndex:" + maxIndex);
 			setMailDisp(currentIndex);
-			if (currentIndex == maxIndex) {
-				mMailPre.setVisibility(View.GONE);
-				mMailSeparator1.setVisibility(View.GONE);
-			}
-			if (currentIndex == minIndex) {
-				mMailNext.setVisibility(View.GONE);
-				mMailSeparator3.setVisibility(View.GONE);
-			}
+			// if (currentIndex == maxIndex) {
+			// mMailPre.setVisibility(View.GONE);
+			// mMailSeparator1.setVisibility(View.GONE);
+			// }
+			// if (currentIndex == minIndex) {
+			// mMailNext.setVisibility(View.GONE);
+			// mMailSeparator3.setVisibility(View.GONE);
+			// }
 		} else {
 			// XXX end
 			Toast.makeText(GallerySlideShow.this, "メールが存在しません。",
 					Toast.LENGTH_SHORT);
 		}
-
 	}
 
 	// XXX りふぁくたりんぐしたい
 	private void onMailPre() {
+		Log.d("neko", "onMailPre mMessageUid:" + mMessageUid);
 		int preIndex = mMessageUids.indexOf(mMessageUid) + 1;
 		int maxIndex = mMessageUids.size() - 1;
 		if (preIndex <= maxIndex) {
@@ -1131,6 +1166,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 
 	// XXX りふぁくたりんぐしたい
 	private void onMailNext() {
+		Log.d("neko", "onMailNext mMessageUid:" + mMessageUid);
 		int nextIndex = mMessageUids.indexOf(mMessageUid) - 1;
 		int minIndex = 0;
 		if (nextIndex >= minIndex) {
@@ -1150,6 +1186,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 
 	// XXX setNewMailInfoの一部と共通化できそう
 	private void setMailDisp(int index) {
+		Log.d("neko", "setMailDisp start index:" + index);
 		setContentView(R.layout.gallery_slide_show_stop);
 		setupViewsMailDetail();
 		mMessageUid = mMessageUids.get(index);
@@ -1173,10 +1210,16 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		} else {
 			mGalleryLinearLayout.setVisibility(View.GONE);
 		}
-		if (0 == index) {
+		int maxIndex = mMessageUids.size() - 1;
+		int minIndex = 0;
+		Log.d("neko", "setMailDisp mMessageUids.size():" + mMessageUids.size());
+		Log.d("neko", "setMailDisp maxIndex:" + maxIndex);
+		if (minIndex == index) {
+			Log.d("neko", "setMailDisp minIndex");
 			mMailNext.setVisibility(View.GONE);
 			mMailSeparator3.setVisibility(View.GONE);
-		} else if ((mMessageUids.size() - 1) == index) {
+		} else if (maxIndex == index) {
+			Log.d("neko", "setMailDisp maxIndex");
 			mMailPre.setVisibility(View.GONE);
 			mMailSeparator1.setVisibility(View.GONE);
 		} else {
@@ -1186,35 +1229,64 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	}
 
 	private void onSlide() {
+		Log.d("neko", "onSlide start");
 		if (null == mMessageUid || "".equals(mMessageUid)) {
 			mMessageUid = messageBean.getUid();
 		}
 		setContentView(R.layout.gallery_slide_show);
 		setupViews();
-		repeatStart();
 		List<MessageInfo> messageInfoList = getMessages();
 		if (messageInfoList.size() > 0) {
+			Log.d("neko",
+					"onSlide messageInfoList.size():" + messageInfoList.size());
 			setSlideInfo(messageInfoList);
-			restartMesasgeSlideThread = new Thread(messageSlide);
-			restartMesasgeSlideThread.start();
-			restartCheckMailThread = new Thread(checkMail);
-			restartCheckMailThread.start();
+			if (!messageSlideThread.isAlive()) {
+				Log.d("neko", "onSlide messageSlideThread:"
+						+ messageSlideThread + " isSlideRepeat:"
+						+ isSlideRepeat);
+				isSlideRepeat = true;
+				restartMesasgeSlideThread = new Thread(messageSlide);
+				restartMesasgeSlideThread.start();
+			}
+			if (null == checkMailThread) {
+				isCheckRepeat = true;
+				restartCheckMailThread = new Thread(checkMail);
+				restartCheckMailThread.start();
+			}
 		} else {
 			onStop();
 		}
+		Log.d("neko", "onSlide end");
 	}
 
-	private void onSlideStop() {
-		if (isSlide()) {
+	private void onSlideStop() throws InterruptedException {
+		Log.d("neko", "onSlideStop start");
+		if (isSlideRepeat) {
+			Log.d("neko", "onSlideStop isSlideRepeat:" + isSlideRepeat);
 			repeatEnd();
-			// XXX こいつらはもう不要
-			messageSlideThread = null;
-			checkMailThread = null;
-			// XXX スライドさんはいらんけど、チェックさんは停止中でも何かしたければ？
-			restartMesasgeSlideThread = null;
-			restartCheckMailThread = null;
+			if (null != messageSlideThread && messageSlideThread.isAlive()) {
+				Log.d("neko", "onSlideStop messageSlideThread:"
+						+ messageSlideThread);
+				messageSlideThread.join();
+			}
+			// XXX Checkhはスレッドすんのやめる予定
+			if (null != checkMailThread && checkMailThread.isAlive()) {
+				checkMailThread.join();
+			}
+			if (null != restartMesasgeSlideThread
+					&& restartMesasgeSlideThread.isAlive()) {
+				Log.d("neko", "onSlideStop restartMesasgeSlideThread:"
+						+ restartMesasgeSlideThread);
+				restartMesasgeSlideThread.join();
+			}
+			// XXX Checkhはスレッドすんのやめる予定
+			if (null != restartCheckMailThread
+					&& restartCheckMailThread.isAlive()) {
+				restartCheckMailThread.join();
+			}
 			onMailCurrent();
 		}
+		Log.d("neko", "onSlideStop end");
 	}
 
 	private void onReply() {
