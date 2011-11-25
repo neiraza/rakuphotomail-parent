@@ -74,6 +74,17 @@
 
         <activity
             android:configChanges="locale"
+            android:label="らくフォト(Service練習)"
+            android:launchMode="standard"
+            android:name="jp.co.fttx.rakuphotomail.activity.HogeActivity" >
+            <intent-filter >
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:configChanges="locale"
             android:label="らくフォトメニュー（廃止予定）"
             android:launchMode="standard"
             android:name="jp.co.fttx.rakuphotomail.activity.RakuPhotoMenuSelecter" >
@@ -400,6 +411,10 @@
             </intent-filter>
         </receiver>
 
+        <service
+            android:enabled="true"
+            android:name="jp.co.fttx.rakuphotomail.service.HogeService" >
+        </service>
         <service
             android:enabled="true"
             android:name="jp.co.fttx.rakuphotomail.service.MailService" >

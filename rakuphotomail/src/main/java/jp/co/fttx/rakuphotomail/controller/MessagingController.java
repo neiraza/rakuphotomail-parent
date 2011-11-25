@@ -2966,6 +2966,7 @@ public class MessagingController implements Runnable {
 		put("loadMessageForViewRemote", listener, new Runnable() {
 			@Override
 			public void run() {
+				// XXX 画像DL対応箇所と思われ
 				Folder remoteFolder = null;
 				LocalFolder localFolder = null;
 				try {

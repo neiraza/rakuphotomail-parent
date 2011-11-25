@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2011, UCOM Corporation and/or its affiliates. All rights reserved.
+ * UCOM PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
 package jp.co.fttx.rakuphotomail.activity;
 
 import java.text.SimpleDateFormat;
@@ -59,6 +63,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+/**
+ * @author tooru.oguri
+ * @since rakuphoto 0.1-beta1
+ */
 public class GallerySlideShow extends RakuPhotoActivity implements
 		View.OnClickListener, OnItemClickListener {
 
