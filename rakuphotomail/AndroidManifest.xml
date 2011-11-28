@@ -79,6 +79,24 @@
             android:name="jp.co.fttx.rakuphotomail.activity.HogeActivity" >
             <intent-filter >
                 <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:configChanges="locale"
+            android:label="らくフォトDL Reslut"
+            android:launchMode="standard"
+            android:name="jp.co.fttx.rakuphotomail.activity.AttachmentSynqReslutActivity" >
+        </activity>
+        <activity
+            android:configChanges="locale"
+            android:label="らくフォトDL"
+            android:launchMode="standard"
+            android:name="jp.co.fttx.rakuphotomail.activity.AttachmentSynqTestActivity" >
+            <intent-filter >
+                <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
@@ -90,6 +108,7 @@
             android:name="jp.co.fttx.rakuphotomail.activity.RakuPhotoMenuSelecter" >
             <intent-filter >
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
@@ -101,6 +120,7 @@
             android:name="jp.co.fttx.rakuphotomail.activity.DummySlideStop" >
             <intent-filter >
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
@@ -112,6 +132,7 @@
             android:name="jp.co.fttx.rakuphotomail.activity.Gallery1" >
             <intent-filter >
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
@@ -123,6 +144,7 @@
             android:name="jp.co.fttx.rakuphotomail.activity.Gallery2" >
             <intent-filter >
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
@@ -346,6 +368,11 @@
         <activity android:name="jp.co.fttx.rakuphotomail.activity.AccessibleEmailContentActivity" >
         </activity>
 
+        <receiver android:name="jp.co.fttx.rakuphotomail.service.AttachmentSynqReceiver" >
+            <intent-filter >
+                <action android:name="action" />
+            </intent-filter>
+        </receiver>
         <receiver
             android:enabled="true"
             android:name="jp.co.fttx.rakuphotomail.service.BootReceiver" >
@@ -411,6 +438,10 @@
             </intent-filter>
         </receiver>
 
+        <service
+            android:enabled="true"
+            android:name="jp.co.fttx.rakuphotomail.service.AttachmentSynqService" >
+        </service>
         <service
             android:enabled="true"
             android:name="jp.co.fttx.rakuphotomail.service.HogeService" >
