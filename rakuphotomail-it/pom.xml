@@ -33,14 +33,14 @@
 			<groupId>jp.co.fttx</groupId>
 			<artifactId>rakuphotomail</artifactId>
 			<type>apk</type>
-			<version>0.0.1-ALPHA1</version>
+			<version>0.1-BETA1</version>
 			<!-- <classifier>${zipaligned-classifier}</classifier> --> <!-- classifier set according to the ran profile -->
 		</dependency>
 		<dependency>
 			<groupId>jp.co.fttx</groupId>
 			<artifactId>rakuphotomail</artifactId>
 			<type>jar</type>
-			<version>0.0.1-ALPHA1</version>
+			<version>0.1-BETA1</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

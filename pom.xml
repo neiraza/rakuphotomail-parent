@@ -41,11 +41,6 @@
 				<version>4.8.1</version>
 				<scope>provided</scope>
 			</dependency>
-			<dependency>
-				<groupId>com.google.android</groupId>
-				<artifactId>android-test</artifactId>
-				<version>2.3.1</version>
-			</dependency>
 
 		</dependencies>
 	</dependencyManagement>
@@ -62,16 +57,10 @@
 						<assetsDirectory>${project.basedir}/assets</assetsDirectory>
 						<resourceDirectory>${project.basedir}/res</resourceDirectory>
 						<nativeLibrariesDirectory>${project.basedir}/src/main/native</nativeLibrariesDirectory>
-						<sdk>
+                        <sdk>
+                            <path>${env.ANDROID_SDK}</path>
 							<platform>9</platform>
 						</sdk>
-						<!-- <dex>
-						   <jvmArguments>
-						      <jvmArgument>-Xms256m</jvmArgument>
-						      <jvmArgument>-Xmx512m</jvmArgument>
-						  </jvmArguments>
-						</dex>-->
-						<!--<deleteConflictingFiles>true</deleteConflictingFiles> -->
 						<undeployBeforeDeploy>true</undeployBeforeDeploy>
 					</configuration>
 				</plugin>
@@ -115,7 +104,7 @@
 						<keypass>${sign.keypass}</keypass>
 					</configuration>
 				</plugin>
-                <!--<plugin>
+                <plugin>
 					<groupId>com.pyx4me</groupId>
 					<artifactId>proguard-maven-plugin</artifactId>
 					<version>2.0.4</version>
@@ -130,7 +119,7 @@
 					<configuration>
 						<proguardVersion>4.4</proguardVersion>
 					</configuration>
-                </plugin>-->
+                </plugin>
 			</plugins>
 		</pluginManagement>
 	</build>

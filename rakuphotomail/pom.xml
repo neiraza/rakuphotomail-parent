@@ -66,7 +66,7 @@
 			<id>release</id>
 			<build>
 				<plugins>
-                        <!--<plugin>
+                        <plugin>
 						<groupId>com.pyx4me</groupId>
 						<artifactId>proguard-maven-plugin</artifactId>
 						<executions>
@@ -98,7 +98,7 @@
 								<scope>runtime</scope>
 							</dependency>
 						</dependencies>
-                    </plugin>-->
+                    </plugin>
 					<plugin>
 						<artifactId>maven-jarsigner-plugin</artifactId>
 						<executions>
