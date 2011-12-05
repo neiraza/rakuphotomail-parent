@@ -58,7 +58,8 @@
 						<resourceDirectory>${project.basedir}/res</resourceDirectory>
 						<nativeLibrariesDirectory>${project.basedir}/src/main/native</nativeLibrariesDirectory>
                         <sdk>
-                            <path>${env.ANDROID_SDK}</path>
+                            <!--  <path>${env.ANDROID_SDK}</path> -->
+                            <path>/usr/android/android-sdk-linux</path>
 							<platform>9</platform>
 						</sdk>
 						<undeployBeforeDeploy>true</undeployBeforeDeploy>
