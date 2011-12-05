@@ -370,7 +370,7 @@
 
         <receiver android:name="jp.co.fttx.rakuphotomail.service.AttachmentSynqReceiver" >
             <intent-filter >
-                <action android:name="action" />
+                <action android:name="jp.co.fttx.rakuphotomail.service.AttachmentSynqService.action" />
             </intent-filter>
         </receiver>
         <receiver

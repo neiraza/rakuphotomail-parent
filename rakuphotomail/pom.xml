@@ -6,12 +6,12 @@
 	<parent>
 		<groupId>jp.co.fttx</groupId>
 		<artifactId>rakuphotomail-parent</artifactId>
-		<version>0.0.1-ALPHA1</version>
+		<version>0.1-BETA1</version>
 	</parent>
 
 	<groupId>jp.co.fttx</groupId>
 	<artifactId>rakuphotomail</artifactId>
-	<version>0.0.1-ALPHA1</version>
+	<version>0.1-BETA1</version>
 	<packaging>apk</packaging>
 	<name>rakuphotomail - Application</name>
 
@@ -66,7 +66,7 @@
 			<id>release</id>
 			<build>
 				<plugins>
-					<plugin>
+                        <!--<plugin>
 						<groupId>com.pyx4me</groupId>
 						<artifactId>proguard-maven-plugin</artifactId>
 						<executions>
@@ -98,7 +98,7 @@
 								<scope>runtime</scope>
 							</dependency>
 						</dependencies>
-					</plugin>
+                    </plugin>-->
 					<plugin>
 						<artifactId>maven-jarsigner-plugin</artifactId>
 						<executions>

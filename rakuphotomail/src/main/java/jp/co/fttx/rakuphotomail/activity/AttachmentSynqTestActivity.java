@@ -207,7 +207,7 @@ public class AttachmentSynqTestActivity extends Activity implements
 		Log.d("download_test", "AttachmentSynqTestActivity#doDownload");
 		Log.d("download_test",
 				"AttachmentSynqTestActivity#doDownload mAccount:" + mAccount);
-		synqService.download(mAccount, mFolderName, mDispUid.getText()
+		synqService.onDownload(mAccount, mFolderName, mDispUid.getText()
 				.toString());
 	}
 

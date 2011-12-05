@@ -13,7 +13,7 @@ public class AttachmentSynqReceiver extends BroadcastReceiver {
 		String action = intent.getAction();
 		String uid = intent.getStringExtra("UID");
 		Intent new_intent;
-		if (action.equals("action")) {
+		if (action.equals("jp.co.fttx.rakuphotomail.service.AttachmentSynqService.action")) {
 			Log.d("download_test", "AttachmentSynqReceiver#onReceive action:"
 					+ action);
 			new_intent = new Intent(context, AttachmentSynqReslutActivity.class);

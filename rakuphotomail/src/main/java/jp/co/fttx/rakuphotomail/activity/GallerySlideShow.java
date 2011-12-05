@@ -13,6 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import android.content.*;
+import android.os.IBinder;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
@@ -39,8 +41,6 @@ import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
 import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
 import jp.co.fttx.rakuphotomail.rakuraku.util.Rotate3dAnimation;
-import android.content.Context;
-import android.content.Intent;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -62,6 +62,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import jp.co.fttx.rakuphotomail.service.AttachmentSynqReceiver;
+import jp.co.fttx.rakuphotomail.service.AttachmentSynqService;
 
 /**
  * @author tooru.oguri
@@ -136,6 +138,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	private volatile long mDispAttachmentId;
 	private volatile long mDispMessageId;
 
+	private AttachmentSynqService synqService;
+	private boolean mIsBound = false;
+	private AttachmentSynqReceiver receiver = new AttachmentSynqReceiver();
+
 	public static void actionHandleFolder(Context context, Account account,
 			String folder) {
 		Intent intent = actionHandleFolderIntent(context, account, folder);
@@ -154,8 +160,46 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		return intent;
 	}
 
+	private void doBindService() {
+		Log.d("download_test", "GallerySlideShow#doBindService start");
+		if (!mIsBound) {
+			Log.d("download_test", "GallerySlideShow#doBindService mIsBound:"
+					+ mIsBound);
+			mIsBound = bindService(getIntent(), mConnection,
+					Context.BIND_AUTO_CREATE);
+			IntentFilter filter = new IntentFilter(AttachmentSynqService.ACTION);
+			registerReceiver(receiver, filter);
+		}
+		Log.d("download_test", "GallerySlideShow#doBindService end");
+	}
+
+	private void doUnbindService() {
+		Log.d("download_test", "GallerySlideShow#doUnbindService start");
+		if (mIsBound) {
+			Log.d("hoge", "AttachmentSynqTestActivity#doUnBind unbindService");
+			unbindService(mConnection);
+			mIsBound = false;
+			unregisterReceiver(receiver);
+		}
+		Log.d("download_test", "GallerySlideShow#doUnbindService end");
+	}
+
+	private ServiceConnection mConnection = new ServiceConnection() {
+		public void onServiceConnected(ComponentName className, IBinder service) {
+			Log.d("download_test", "ServiceConnection#onServiceConnected");
+			synqService = ((AttachmentSynqService.AttachmentSynqBinder) service)
+					.getService();
+		}
+
+		public void onServiceDisconnected(ComponentName className) {
+			Log.d("download_test", "ServiceConnection#onServiceDisconnected");
+			synqService = null;
+		}
+	};
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		Log.d("download_test", "GallerySlideShow#onCreate start");
 		Log.d("neko", "onCreate start");
 		super.onCreate(savedInstanceState);
 		mContext = this;
@@ -163,22 +207,28 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		setContentView(R.layout.gallery_slide_show);
 		setupViews();
 		onNewIntent(getIntent());
+		doBindService();
 		initThreading();
 		Log.d("neko", "onCreate end");
+		Log.d("download_test", "GallerySlideShow#onCreate end");
 	}
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
+		Log.d("download_test", "GallerySlideShow#onSaveInstanceState start");
 		outState.putString(EXTRA_ACCOUNT, mAccount.getUuid());
 		outState.putString(EXTRA_FOLDER, mFolderName);
+		Log.d("download_test", "GallerySlideShow#onSaveInstanceState end");
 	}
 
 	@Override
 	protected void onRestoreInstanceState(Bundle savedInstanceState) {
+		Log.d("download_test", "GallerySlideShow#onRestoreInstanceState start");
 		super.onRestoreInstanceState(savedInstanceState);
 		mAccount = Preferences.getPreferences(this).getAccount(
 				savedInstanceState.getString(EXTRA_ACCOUNT));
 		mFolderName = savedInstanceState.getString(EXTRA_FOLDER);
+		Log.d("download_test", "GallerySlideShow#onRestoreInstanceState end");
 	}
 
 	private void setupViews() {
@@ -221,11 +271,15 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 
 	@Override
 	public void onNewIntent(Intent intent) {
+		Log.d("download_test", "GallerySlideShow#onNewIntent start");
 		setIntent(intent);
 		mAccount = Preferences.getPreferences(this).getAccount(
 				intent.getStringExtra(EXTRA_ACCOUNT));
 		mFolderName = intent.getStringExtra(EXTRA_FOLDER);
+		Log.d("download_test", "GallerySlideShow#onNewIntent mFolderName:"
+				+ mFolderName);
 		// mController = MessagingController.getInstance(getApplication());
+		Log.d("download_test", "GallerySlideShow#onNewIntent end");
 	}
 
 	@Override
@@ -327,7 +381,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 				Log.d("neko", "createMessageList  run() start");
 				List<MessageInfo> messageInfoList = getMessages();
 				if (messageInfoList.size() > 0) {
-					setSlideInfo(messageInfoList);
+					try {
+						setSlideInfo(messageInfoList);
+					} catch (MessagingException e) {
+						e.printStackTrace();
+						Log.e("rakuphotomail", "Happy!Happy!Error!", e);
+					}
 					messageSlideThread.start();
 				} else {
 					onStop();
@@ -478,10 +537,13 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	}
 
 	private List<MessageInfo> getMessages() {
+		Log.d("download_test", "GallerySlideShow#getMessages start");
 		LocalStore localStore = null;
 		LocalFolder localFolder = null;
 		try {
 			localStore = mAccount.getLocalStore();
+			Log.d("download_test", "GallerySlideShow#getMessages mFolderName:"
+					+ mFolderName);
 			localFolder = localStore.getFolder(mFolderName);
 			localFolder.open(OpenMode.READ_WRITE);
 			return localStore.getMessages(localFolder.getId());
@@ -489,11 +551,14 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 			e.printStackTrace();
 			closeFolder(localFolder);
 		}
+		Log.d("download_test", "GallerySlideShow#getMessages end");
 		return null;
 	}
 
-	private void setSlideInfo(List<MessageInfo> messageInfoList) {
-		Log.d("neko", "setSlideInfo start mMessageUids.size():" + mMessageUids.size());
+	private void setSlideInfo(List<MessageInfo> messageInfoList)
+			throws MessagingException {
+		Log.d("neko",
+				"setSlideInfo start mMessageUids.size():" + mMessageUids.size());
 		mMessages.clear();
 		mMessageUids.clear();
 		for (MessageInfo messageInfo : messageInfoList) {
@@ -506,7 +571,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 				// XXX loadAttachmentを実装する際に使えるかも
 				// mMessage = message;
 				MessageBean mb = setMessage(message, messageInfo);
-				CopyOnWriteArrayList<AttachmentBean> attachments = renderAttachments(message);
+				CopyOnWriteArrayList<AttachmentBean> attachments = renderAttachments(
+						message, message.getUid());
 				if (attachments.size() > 0) {
 					mb.setAttachments(attachments);
 					mMessages.put(String.valueOf(uid), mb);
@@ -514,7 +580,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 				}
 			}
 		}
-		Log.d("neko", "setSlideInfo end mMessageUids.size():" + mMessageUids.size());
+		Log.d("neko",
+				"setSlideInfo end mMessageUids.size():" + mMessageUids.size());
 	}
 
 	private MessageBean setMessage(LocalMessage message, MessageInfo messageInfo) {
@@ -592,11 +659,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	/**
 	 * loadMessage. Mail to get the BodyPart are not stored in the SQLite.
 	 * 
-	 * @author tooru.oguri
 	 * @param account
 	 * @param folder
 	 * @param uid
 	 * @return
+	 * @author tooru.oguri
 	 */
 	private LocalMessage loadMessage(final Account account,
 			final String folder, final String uid) {
@@ -618,11 +685,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		return null;
 	}
 
-	public CopyOnWriteArrayList<AttachmentBean> renderAttachments(Part part) {
+	public CopyOnWriteArrayList<AttachmentBean> renderAttachments(Part part,
+			String uid) throws MessagingException {
 		CopyOnWriteArrayList<AttachmentBean> attachments = null;
 		if (part.getBody() instanceof Multipart) {
 			try {
-				attachments = splitMultipart(part);
+				attachments = splitMultipart(part, uid);
 			} catch (MessagingException e) {
 				e.printStackTrace();
 			}
@@ -631,6 +699,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 			AttachmentBean attachment = setAttachment(part);
 			if (isSlide(attachment)) {
 				attachments.add(attachment);
+				synqService.onDownload(mAccount, mFolderName, uid);
 			}
 		} else {
 			return new CopyOnWriteArrayList<AttachmentBean>();
@@ -643,7 +712,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		CopyOnWriteArrayList<AttachmentBean> attachments = null;
 		if (part.getBody() instanceof Multipart) {
 			try {
-				attachments = splitMultipart(part);
+				attachments = splitMultipart(part, null);
 			} catch (MessagingException e) {
 				e.printStackTrace();
 			}
@@ -657,8 +726,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		return attachments;
 	}
 
-	private CopyOnWriteArrayList<AttachmentBean> splitMultipart(Part part)
-			throws MessagingException {
+	private CopyOnWriteArrayList<AttachmentBean> splitMultipart(Part part,
+			String uid) throws MessagingException {
 		Multipart mp = (Multipart) part.getBody();
 		CopyOnWriteArrayList<AttachmentBean> attachments = new CopyOnWriteArrayList<AttachmentBean>();
 		for (int i = 0; i < mp.getCount(); i++) {
@@ -666,6 +735,14 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 				AttachmentBean attachment = setAttachment(mp.getBodyPart(i));
 				if (isSlide(attachment)) {
 					attachments.add(setAttachment(mp.getBodyPart(i)));
+					// XXX ここでuid炸裂！
+					if (null != uid) {
+						// FIXME nullpo!!!!!!!!!!!!!!!!!!!!!!!!!
+						Log.d("download_test",
+								"GallerySlideShow#splitMultipart synqService:"
+										+ synqService);
+						synqService.onDownload(mAccount, mFolderName, uid);
+					}
 				}
 			}
 		}
@@ -857,12 +934,15 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 
 	@Override
 	public void onDestroy() {
+		Log.d("download_test", "GallerySlideShow#onDestroy start");
 		super.onDestroy();
 		repeatEnd();
 		createMessageListThread = null;
 		messageSlideThread = null;
 		checkMailThread = null;
+		doUnbindService();
 		// finish();
+		Log.d("download_test", "GallerySlideShow#onDestroy end");
 	}
 
 	private void repeatEnd() {
@@ -1091,7 +1171,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	public void onClick(View v) {
 		switch (v.getId()) {
 		case R.id.gallery_mail_slide:
-			onSlide();
+			try {
+				onSlide();
+			} catch (MessagingException e) {
+				e.printStackTrace();
+				Log.e("rakuphotomail", "Hello!Hello!Error! HAHAHAHA!", e);
+			}
 			break;
 		case R.id.gallery_mail_reply:
 			onReply();
@@ -1130,7 +1215,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 	// XXX りふぁくたりんぐしたい
 	private void onMailCurrent() {
 		Log.d("neko", "onMailCurrent mMessageUid:" + mMessageUid);
-		Log.d("neko", "onMailCurrent mMessageUids.size():" + mMessageUids.size());
+		Log.d("neko",
+				"onMailCurrent mMessageUids.size():" + mMessageUids.size());
 		int currentIndex = mMessageUids.indexOf(mMessageUid);
 		int maxIndex = mMessageUids.size() - 1;
 		int minIndex = 0;
@@ -1236,7 +1322,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements
 		setupViewMail(message);
 	}
 
-	private void onSlide() {
+	private void onSlide() throws MessagingException {
 		Log.d("neko", "onSlide start");
 		if (null == mMessageUid || "".equals(mMessageUid)) {
 			mMessageUid = messageBean.getUid();
