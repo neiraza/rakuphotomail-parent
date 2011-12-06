@@ -343,7 +343,7 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 			finish();
 		} else if (startup && accounts.length == 1
 				&& onOpenAccount(accounts[0])) {
-			//TODO ここに来ればAccountがあるってことで、OKぽい by toguri 
+			// TODO ここに来ればAccountがあるってことで、OKぽい by toguri
 			Log.d("fujiyama",
 					"Accounts#onCreate [all through to (else) if !onOpenAccount()] finish......");
 			// fall through to "else" if !onOpenAccount()
@@ -583,6 +583,7 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 //						realAccount.getAutoExpandFolderName());
 			}
 			Log.d("fujiyama", "Accounts#onOpenAccount 6");
+			Log.d("download_test", "Accounts#onOpenAccount realAccount.getInboxFolderName()" + realAccount.getInboxFolderName());
 			GallerySlideShow.actionHandleFolder(this, realAccount, realAccount.getInboxFolderName());
 		}
 		return true;

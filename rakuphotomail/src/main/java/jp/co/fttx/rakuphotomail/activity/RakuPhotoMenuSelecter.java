@@ -1,17 +1,19 @@
 package jp.co.fttx.rakuphotomail.activity;
 
+import jp.co.fttx.rakuphotomail.Account;
+import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
-import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
 public class RakuPhotoMenuSelecter extends Activity {
 	private ImageView mMail;
+	private ImageView mOther;
 	private Context mContext;
+	private Account account;
 
 	// private Button button;
 
@@ -26,11 +28,24 @@ public class RakuPhotoMenuSelecter extends Activity {
 		mMail.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				Log.v(RakuPhotoMail.LOG_TAG,
-						"RakuPhotoMenuSelecter#onCreate:mail open!");
 				DummyAccounts.listAccounts(mContext);
-				finish();
 			}
 		});
+
+		mOther = (ImageView) findViewById(R.id.rakuphoto_other);
+		mOther.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				onOther();
+			}
+		});
+	}
+
+	private void onOther() {
+		Account[] accounts = Preferences.getPreferences(this).getAccounts();
+		if (null != accounts && accounts.length > 0) {
+			account = accounts[0];
+			System.out.println(account);
+		}
 	}
 }

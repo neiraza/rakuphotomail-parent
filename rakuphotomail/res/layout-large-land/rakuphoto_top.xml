@@ -10,5 +10,12 @@
         android:layout_height="fill_parent"
         android:layout_weight="1"
         android:src="@drawable/mail" />
+    
+     <ImageView
+        android:id="@+id/rakuphoto_other"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="1"
+        android:src="@drawable/droid2" />
 
 </LinearLayout>
