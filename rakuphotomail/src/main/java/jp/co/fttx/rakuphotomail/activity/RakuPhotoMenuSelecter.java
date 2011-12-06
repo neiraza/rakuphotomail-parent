@@ -6,7 +6,6 @@ import jp.co.fttx.rakuphotomail.R;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -43,18 +42,10 @@ public class RakuPhotoMenuSelecter extends Activity {
 	}
 
 	private void onOther() {
-		Log.d("download_test", "RakuPhotoMenuSelecter#onOther");
-
 		Account[] accounts = Preferences.getPreferences(this).getAccounts();
 		if (null != accounts && accounts.length > 0) {
 			account = accounts[0];
-			Log.d("download_test", "RakuPhotoMenuSelecter#onOther account:"
-					+ account);
-			Log.d("download_test",
-					"RakuPhotoMenuSelecter#onOther account.getInboxFolderName():"
-							+ account.getInboxFolderName());
-			AttachmentSynqTestActivity.actionHandleFolder(this, account,
-					account.getInboxFolderName());
+			System.out.println(account);
 		}
 	}
 }

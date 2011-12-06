@@ -38,6 +38,5 @@ public class AttachmentSynqServiceTest extends
 		IBinder binder = bindService(new Intent());
 		testService = ((AttachmentSynqService.AttachmentSynqBinder) binder)
 				.getService();
-		assertEquals("service test", testService.fuga("service "));
 	}
 }

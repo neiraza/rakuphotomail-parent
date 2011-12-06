@@ -37,45 +37,34 @@ public class AttachmentSynqService extends Service {
 
 	@Override
 	public void onCreate() {
-		Log.d("download_test", "AttachmentSynqService#onCreate");
 		super.onCreate();
 		downloadList = new ArrayList<String>();
 	}
 
 	@Override
 	public void onStart(Intent intent, int startId) {
-		Log.d("download_test", "AttachmentSynqService#onStart");
 		super.onStart(intent, startId);
 	}
 
 	@Override
 	public IBinder onBind(Intent intent) {
-		Log.d("download_test", "AttachmentSynqService#onBind");
 		return mBinder;
 	}
 
 	@Override
 	public boolean onUnbind(Intent intent) {
-		Log.d("download_test", "AttachmentSynqService#onUnbind");
 		return super.onUnbind(intent);
 	}
 
 	@Override
 	public void onDestroy() {
-		Log.d("download_test", "AttachmentSynqService#onDestroy start");
 		super.onDestroy();
-		Log.d("download_test", "AttachmentSynqService#onDestroy end");
 	}
 
 	public class AttachmentSynqBinder extends Binder {
 		public AttachmentSynqService getService() {
-			Log.d("download_test", "AttachmentSynqBinder#getService");
 			return AttachmentSynqService.this;
 		}
-	}
-
-	public String fuga(String str) {
-		return str.concat("test");
 	}
 
 	/**
@@ -91,14 +80,10 @@ public class AttachmentSynqService extends Service {
 	 */
 	public void onDownload(final Account account, final String folder,
 			final String uid) throws MessagingException {
-		Log.d("download_test", "AttachmentSynqBinder#onDownload start");
 		if (!downloadList.contains(uid)) {
 			download(account, folder, uid);
-			Log.d("download_test", "AttachmentSynqBinder#download uid:"
-					+ Arrays.toString(downloadList.toArray()));
 			downloadList.add(uid);
 		}
-		Log.d("download_test", "AttachmentSynqBinder#onDownload end");
 	}
 
 	private void download(final Account account, final String folder,
@@ -113,15 +98,11 @@ public class AttachmentSynqService extends Service {
 			Message message = localFolder.getMessage(uid);
 
 			if (message.isSet(Flag.X_DOWNLOADED_FULL)) {
-				Log.d("download_test",
-						"AttachmentSynqBinder#download X_DOWNLOADED_FULL");
 				FetchProfile fp = new FetchProfile();
 				fp.add(FetchProfile.Item.ENVELOPE);
 				fp.add(FetchProfile.Item.BODY);
 				localFolder.fetch(new Message[] { message }, fp, null);
 			} else {
-				Log.d("download_test",
-						"AttachmentSynqBinder#download not X_DOWNLOADED_FULL");
 				Store remoteStore = account.getRemoteStore();
 				remoteFolder = remoteStore.getFolder(folder);
 				remoteFolder.open(OpenMode.READ_WRITE);
@@ -139,14 +120,11 @@ public class AttachmentSynqService extends Service {
 				message.setFlag(Flag.X_DOWNLOADED_FULL, true);
 			}
 
-			Log.d("download_test",
-					"AttachmentSynqBinder#download sendBroadcast");
-			Intent views = new Intent();
-			views.putExtra("UID", uid);
-			views.setAction("action");
-			sendBroadcast(views);
+			Intent intent = new Intent();
+			intent.putExtra("UID", uid);
+			intent.setAction("action");
+			sendBroadcast(intent);
 		} finally {
-			Log.d("download_test", "AttachmentSynqBinder#download finally");
 			closeFolder(remoteFolder);
 			closeFolder(localFolder);
 		}
