@@ -66,7 +66,7 @@
 			<id>release</id>
 			<build>
 				<plugins>
-                        <plugin>
+					<plugin>
 						<groupId>com.pyx4me</groupId>
 						<artifactId>proguard-maven-plugin</artifactId>
 						<executions>
@@ -98,7 +98,7 @@
 								<scope>runtime</scope>
 							</dependency>
 						</dependencies>
-                    </plugin>
+					</plugin>
 					<plugin>
 						<artifactId>maven-jarsigner-plugin</artifactId>
 						<executions>
@@ -161,5 +161,27 @@
 			</build>
 		</profile>
 	</profiles>
-
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>2.8</version>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>findbugs-maven-plugin</artifactId>
+				<version>2.3.3</version>
+				<configuration>
+					<inputEncoding>${project.build.sourceEncoding}</inputEncoding>
+					<outputEncoding>${project.reporting.outputEncoding}</outputEncoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>javancss-maven-plugin</artifactId>
+				<version>2.0</version>
+			</plugin>
+		</plugins>
+	</reporting>
 </project>

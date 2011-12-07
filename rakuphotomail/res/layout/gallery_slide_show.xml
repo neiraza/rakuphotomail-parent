@@ -3,22 +3,23 @@
 		xmlns:android="http://schemas.android.com/apk/res/android"
 		android:id="@+id/gallery_container"
 		android:layout_width="fill_parent"
-		android:layout_height="fill_parent">
+		android:layout_height="fill_parent" android:background="#000000">
+
 		<ImageView
                 android:id="@+id/gallery_attachment_picuture_default"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
-                android:src="@drawable/droid" />
+                android:src="@drawable/ucom_logo" />
 		<ImageView
 				android:id="@+id/gallery_attachment_picuture_even"
 				android:layout_width="fill_parent"
 				android:layout_height="fill_parent"
-				android:src="@drawable/droid" />
+				android:src="@drawable/ucom_logo" />
 		<ImageView
 				android:id="@+id/gallery_attachment_picuture_odd"
 				android:layout_width="fill_parent"
 				android:layout_height="fill_parent"
-				android:src="@drawable/droid" />
+				android:src="@drawable/ucom_logo" />
 		<LinearLayout
 				android:layout_width="fill_parent"
 				android:layout_height="fill_parent"

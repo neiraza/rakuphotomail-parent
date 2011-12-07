@@ -5,7 +5,6 @@
 package jp.co.fttx.rakuphotomail.service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import jp.co.fttx.rakuphotomail.Account;
@@ -22,7 +21,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
 
 /**
  * @author tooru.oguri
