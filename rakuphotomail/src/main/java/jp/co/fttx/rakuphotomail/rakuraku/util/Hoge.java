@@ -55,4 +55,49 @@ public class Hoge {
 	public static void shout(){
 		System.out.println(FUGA);
 	}
+	
+	public interface Fug{
+		public String buf();
+		public abstract void tt();
+		public String tttttt = "dddd";
+	}
+	
+	
+	
+	public abstract class Fuga implements Fug {
+		private String foo;
+		public abstract void ffff();
+		public Fuga(String foo){
+			this.foo = foo;
+		}
+		public void koko(){
+			System.out.println(tttttt);;
+		}
+	}
+	
+	public class FugaFuga extends Fuga {
+
+		public FugaFuga(String foo) {
+			super(foo);
+		}
+
+		@Override
+		public String buf() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public void tt() {
+			// TODO Auto-generated method stub
+			System.out.println(super.foo);
+		}
+
+		@Override
+		public void ffff() {
+			// TODO Auto-generated method stub
+			
+		}
+	}
 }
+
