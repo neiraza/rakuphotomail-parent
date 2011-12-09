@@ -156,4 +156,12 @@ public class AttachmentSynqService extends Service {
             f.close();
         }
     }
+    
+    public void onFuga(){
+        Log.d("maguro", "AttachmentSynqService#onFuga start");
+        Intent intent = new Intent();
+        intent.setAction(ACTION);
+        sendBroadcast(intent);
+        Log.d("maguro", "AttachmentSynqService#onFuga end");
+    }
 }

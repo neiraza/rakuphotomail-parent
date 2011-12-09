@@ -308,6 +308,11 @@
                 <action android:name="jp.co.fttx.rakuphotomail.service.AttachmentSynqService.action" />
             </intent-filter>
         </receiver>
+        <receiver android:name="jp.co.fttx.rakuphotomail.service.GallerySlideReceiver" >
+            <intent-filter >
+                <action android:name="jp.co.fttx.rakuphotomail.service.GallerySlideService.action" />
+            </intent-filter>
+        </receiver>
         <receiver
             android:enabled="true"
             android:name="jp.co.fttx.rakuphotomail.service.BootReceiver" >
@@ -376,6 +381,10 @@
         <service
             android:enabled="true"
             android:name="jp.co.fttx.rakuphotomail.service.AttachmentSynqService" >
+        </service>
+        <service
+            android:enabled="true"
+            android:name="jp.co.fttx.rakuphotomail.service.GallerySlideService" >
         </service>
         <service
             android:enabled="true"

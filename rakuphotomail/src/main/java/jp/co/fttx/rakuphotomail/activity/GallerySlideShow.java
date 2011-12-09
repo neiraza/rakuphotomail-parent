@@ -42,6 +42,8 @@ import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
 import jp.co.fttx.rakuphotomail.rakuraku.util.Rotate3dAnimation;
 import jp.co.fttx.rakuphotomail.service.AttachmentSynqReceiver;
 import jp.co.fttx.rakuphotomail.service.AttachmentSynqService;
+import jp.co.fttx.rakuphotomail.service.GallerySlideReceiver;
+import jp.co.fttx.rakuphotomail.service.GallerySlideService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -148,8 +150,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     private volatile long mDispMessageId;
 
     private AttachmentSynqService synqService;
+    private GallerySlideService slideService;
     private boolean mIsBound = false;
-    private AttachmentSynqReceiver receiver = new AttachmentSynqReceiver();
+    private AttachmentSynqReceiver attachmentReceiver = new AttachmentSynqReceiver();
+    private GallerySlideReceiver slideReceiver = new GallerySlideReceiver();
 
     private boolean newMailFlg = false;
 
@@ -177,8 +181,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         Log.d("maguro", "GallerySlideShow#doBindService start");
         if (!mIsBound) {
             mIsBound = bindService(getIntent(), mConnection, Context.BIND_AUTO_CREATE);
-            IntentFilter filter = new IntentFilter(AttachmentSynqService.ACTION);
-            registerReceiver(receiver, filter);
+//            IntentFilter attachmenFilter = new IntentFilter(AttachmentSynqService.ACTION);
+//            registerReceiver(attachmentReceiver, attachmenFilter);
+            IntentFilter slideFilter = new IntentFilter(GallerySlideService.ACTION);
+            registerReceiver(slideReceiver, slideFilter);
         }
         Log.d("maguro", "GallerySlideShow#doBindService end");
     }
@@ -188,7 +194,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         if (mIsBound) {
             unbindService(mConnection);
             mIsBound = false;
-            unregisterReceiver(receiver);
+//            unregisterReceiver(attachmentReceiver);
+            unregisterReceiver(slideReceiver);
         }
         Log.d("maguro", "GallerySlideShow#doUnBindService end");
     }
@@ -196,12 +203,14 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             Log.d("maguro", "GallerySlideShow#mConnection ServiceConnection#onServiceConnected");
-            synqService = ((AttachmentSynqService.AttachmentSynqBinder) service).getService();
+//            synqService = ((AttachmentSynqService.AttachmentSynqBinder) service).getService();
+            slideService = ((GallerySlideService.GallerySlideBinder) service).getService();
         }
 
         public void onServiceDisconnected(ComponentName className) {
             Log.d("maguro", "GallerySlideShow#mConnection ServiceConnection#onServiceDisconnected");
-            synqService = null;
+//            synqService = null;
+            slideService = null;
         }
     };
 
@@ -215,8 +224,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         setupSlideShowViews();
         onNewIntent(getIntent());
         doBindService();
-        initThreading();
-        createMessageListThread.start();
+        // TODO 新規サービス起動確認のため
+//        initThreading();
+        // TODO 新規サービス起動確認のため
+//        createMessageListThread.start();
         // TODO コメントアウトしてみた
         // checkMailThread.start();
         Log.d("maguro", "GallerySlideShow#onCreate end");
@@ -284,6 +295,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     public void onNewIntent(Intent intent) {
         Log.d("maguro", "GallerySlideShow#onNewIntent start");
         intent.setClass(mContext, AttachmentSynqService.class);
+        intent.setClass(mContext, GallerySlideService.class);
         setIntent(intent);
         mAccount = Preferences.getPreferences(this).getAccount(intent.getStringExtra(EXTRA_ACCOUNT));
         mFolderName = intent.getStringExtra(EXTRA_FOLDER);
@@ -292,8 +304,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
     @Override
     public void onResume() {
-        Log.d("maguro", "GallerySlideShow#onResume");
+        Log.d("maguro", "GallerySlideShow#onResume start");
         super.onResume();
+        Log.d("maguro", "GallerySlideShow#onResume end");
     }
 
     private void setMailInit(MessageBean message, AttachmentBean attachment) {
