@@ -1,4 +1,3 @@
-
 package jp.co.fttx.rakuphotomail.activity.setup;
 
 import android.content.Context;
@@ -8,15 +7,18 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.method.TextKeyListener;
 import android.text.method.TextKeyListener.Capitalize;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
-import jp.co.fttx.rakuphotomail.*;
+import jp.co.fttx.rakuphotomail.Account;
+import jp.co.fttx.rakuphotomail.Preferences;
+import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.activity.RakuPhotoActivity;
 import jp.co.fttx.rakuphotomail.helper.Utility;
 
-public class AccountSetupNames extends RakuPhotoActivity implements OnClickListener {
+public class DummyAccountSetupNames extends RakuPhotoActivity implements OnClickListener {
     private static final String EXTRA_ACCOUNT = "account";
 
     private EditText mDescription;
@@ -28,13 +30,19 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
     private Button mDoneButton;
 
     public static void actionSetNames(Context context, Account account) {
-        Intent i = new Intent(context, AccountSetupNames.class);
+        Log.d("redbull", "DummyAccountSetupNames#actionSetNames start");
+
+        Intent i = new Intent(context, DummyAccountSetupNames.class);
         i.putExtra(EXTRA_ACCOUNT, account.getUuid());
         context.startActivity(i);
+        Log.d("redbull", "DummyAccountSetupNames#actionSetNames end");
+
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.d("redbull", "DummyAccountSetupNames#onCreate start");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_names);
         mDescription = (EditText)findViewById(R.id.account_description);
@@ -42,23 +50,25 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
         mDoneButton = (Button)findViewById(R.id.done);
         mDoneButton.setOnClickListener(this);
 
-        TextWatcher validationTextWatcher = new TextWatcher() {
-            public void afterTextChanged(Editable s) {
-                validateFields();
-            }
+//        TextWatcher validationTextWatcher = new TextWatcher() {
+//            public void afterTextChanged(Editable s) {
+//                validateFields();
+//            }
+//
+//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//            }
+//
+//            public void onTextChanged(CharSequence s, int start, int before, int count) {
+//            }
+//        };
+//        mName.addTextChangedListener(validationTextWatcher);
 
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-        };
-        mName.addTextChangedListener(validationTextWatcher);
-
-        mName.setKeyListener(TextKeyListener.getInstance(false, Capitalize.WORDS));
+//        mName.setKeyListener(TextKeyListener.getInstance(false, Capitalize.WORDS));
 
         String accountUuid = getIntent().getStringExtra(EXTRA_ACCOUNT);
         mAccount = Preferences.getPreferences(this).getAccount(accountUuid);
+        mAccount.setDescription("おぐりさん");
+        mAccount.setName("おぐりん");
 
         /*
          * Since this field is considered optional, we don't set this here. If
@@ -66,17 +76,32 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
          * just leave the saved value alone.
          */
         // mDescription.setText(mAccount.getDescription());
-        if (mAccount.getName() != null) {
-            mName.setText(mAccount.getName());
-        }
-        if (!Utility.requiredFieldValid(mName)) {
-            mDoneButton.setEnabled(false);
-        }
+//        if (mAccount.getName() != null) {
+//            mName.setText(mAccount.getName());
+//        }
+//        if (!Utility.requiredFieldValid(mName)) {
+//            mDoneButton.setEnabled(false);
+//        }
+
+        Log.d("redbull", "DummyAccountSetupNames#onCreate end");
     }
 
-    private void validateFields() {
-        mDoneButton.setEnabled(Utility.requiredFieldValid(mName));
-        Utility.setCompoundDrawablesAlpha(mDoneButton, mDoneButton.isEnabled() ? 255 : 128);
+    @Override
+    public void onResume(){
+        super.onResume();
+        next();
+    }
+
+//    private void validateFields() {
+//        mDoneButton.setEnabled(Utility.requiredFieldValid(mName));
+//        Utility.setCompoundDrawablesAlpha(mDoneButton, mDoneButton.isEnabled() ? 255 : 128);
+//    }
+
+    protected void next() {
+        Log.d("redbull", "DummyAccountSetupNames#next start");
+        mAccount.save(Preferences.getPreferences(this));
+        finish();
+        Log.d("redbull", "DummyAccountSetupNames#next end");
     }
 
     @Override
@@ -86,10 +111,12 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
 //            mAccount.setDescription(mDescription.getText().toString());
 //        }
 //        mAccount.setName(mName.getText().toString());
-        mAccount.setDescription("おぐりさん");
-        mAccount.setName("おぐりん");
+        Log.d("redbull", "DummyAccountSetupNames#onNext start");
+
         mAccount.save(Preferences.getPreferences(this));
         finish();
+        Log.d("redbull", "DummyAccountSetupNames#onNext end");
+
     }
 
     public void onClick(View v) {

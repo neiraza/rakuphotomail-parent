@@ -1,31 +1,5 @@
 package jp.co.fttx.rakuphotomail.activity;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import jp.co.fttx.rakuphotomail.Account;
-import jp.co.fttx.rakuphotomail.AccountStats;
-import jp.co.fttx.rakuphotomail.BaseAccount;
-import jp.co.fttx.rakuphotomail.FontSizes;
-import jp.co.fttx.rakuphotomail.Preferences;
-import jp.co.fttx.rakuphotomail.R;
-import jp.co.fttx.rakuphotomail.RakuPhotoMail;
-import jp.co.fttx.rakuphotomail.SearchAccount;
-import jp.co.fttx.rakuphotomail.SearchSpecification;
-import jp.co.fttx.rakuphotomail.activity.setup.AccountSettings;
-import jp.co.fttx.rakuphotomail.activity.setup.AccountSetupBasics;
-import jp.co.fttx.rakuphotomail.activity.setup.Prefs;
-import jp.co.fttx.rakuphotomail.controller.MessagingController;
-import jp.co.fttx.rakuphotomail.controller.MessagingListener;
-import jp.co.fttx.rakuphotomail.helper.SizeFormatter;
-import jp.co.fttx.rakuphotomail.mail.Flag;
-import jp.co.fttx.rakuphotomail.mail.store.StorageManager;
-import jp.co.fttx.rakuphotomail.view.ColorChip;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -37,25 +11,26 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.util.TypedValue;
-import android.view.ContextMenu;
+import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
-import android.view.Window;
 import android.webkit.WebView;
-import android.widget.AdapterView;
+import android.widget.*;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ArrayAdapter;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
-import android.widget.Toast;
+import jp.co.fttx.rakuphotomail.*;
+import jp.co.fttx.rakuphotomail.activity.setup.AccountSettings;
+import jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupBasics;
+import jp.co.fttx.rakuphotomail.activity.setup.Prefs;
+import jp.co.fttx.rakuphotomail.controller.MessagingController;
+import jp.co.fttx.rakuphotomail.controller.MessagingListener;
+import jp.co.fttx.rakuphotomail.helper.SizeFormatter;
+import jp.co.fttx.rakuphotomail.mail.Flag;
+import jp.co.fttx.rakuphotomail.mail.store.StorageManager;
+import jp.co.fttx.rakuphotomail.view.ColorChip;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DummyAccounts extends K9ListActivity implements OnItemClickListener,
 		OnClickListener {
@@ -292,11 +267,11 @@ public class DummyAccounts extends K9ListActivity implements OnItemClickListener
 
 	public static final String EXTRA_STARTUP = "startup";
 
-	public static void actionLaunch(Context context) {
-		Intent intent = new Intent(context, DummyAccounts.class);
-		intent.putExtra(EXTRA_STARTUP, true);
-		context.startActivity(intent);
-	}
+//	public static void actionLaunch(Context context) {
+//		Intent intent = new Intent(context, DummyAccounts.class);
+//		intent.putExtra(EXTRA_STARTUP, true);
+//		context.startActivity(intent);
+//	}
 
 	public static void listAccounts(Context context) {
 		Intent intent = new Intent(context, DummyAccounts.class);
@@ -307,7 +282,7 @@ public class DummyAccounts extends K9ListActivity implements OnItemClickListener
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
-		Log.d("fujiyama", "Accounts#onCreate");
+        Log.d("redbull" , "DummyAcounts#onCreate start");
 
 		if (!RakuPhotoMail.isHideSpecialAccounts()) {
 			unreadAccount = new SearchAccount(this, false, null, null);
@@ -336,6 +311,7 @@ public class DummyAccounts extends K9ListActivity implements OnItemClickListener
 			requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 			requestWindowFeature(Window.FEATURE_PROGRESS);
 
+            // TODO アカウントの自動生成を行うにはここを最後にかえないとね
 			setContentView(R.layout.accounts);
 			ListView listView = getListView();
 			listView.setOnItemClickListener(this);
@@ -352,6 +328,8 @@ public class DummyAccounts extends K9ListActivity implements OnItemClickListener
 
 			restoreAccountStats(icicle);
 		}
+        Log.d("redbull" , "DummyAcounts#onCreate end");
+
 	}
 
 	@SuppressWarnings("unchecked")
@@ -390,6 +368,7 @@ public class DummyAccounts extends K9ListActivity implements OnItemClickListener
 
 	@Override
 	public void onResume() {
+        Log.d("redbull" , "DummyAcounts#onResume start");
 		super.onResume();
 
 		refresh();
@@ -397,6 +376,11 @@ public class DummyAccounts extends K9ListActivity implements OnItemClickListener
 				.addListener(mListener);
 		StorageManager.getInstance(getApplication()).addListener(
 				storageListener);
+
+        Log.d("redbull" , "DummyAcounts#onResume onAddNewAccount");
+        onAddNewAccount();
+        finish();
+        Log.d("redbull" , "DummyAcounts#onResume end");
 	}
 
 	@Override
@@ -460,7 +444,9 @@ public class DummyAccounts extends K9ListActivity implements OnItemClickListener
 	}
 
 	private void onAddNewAccount() {
-		AccountSetupBasics.actionNewAccount(this);
+        Log.d("redbull", "DummyAccounts#onAddNewAccount start");
+        DummyAccountSetupBasics.actionNewAccount(this);
+        Log.d("redbull", "DummyAccounts#onAddNewAccount end");
 	}
 
 	private void onEditAccount(Account account) {
@@ -518,32 +504,37 @@ public class DummyAccounts extends K9ListActivity implements OnItemClickListener
 	 * @return false if unsuccessfull
 	 */
 	private boolean onOpenAccount(BaseAccount account) {
-		if (account instanceof SearchAccount) {
-			SearchAccount searchAccount = (SearchAccount) account;
-			// TODO ここは「統合フォルダ」、「全メッセージ」を開くときに使ってたよ by toguri
-			MessageList.actionHandle(this, searchAccount.getDescription(),
-					searchAccount);
-		} else {
+//		if (account instanceof SearchAccount) {
+//			SearchAccount searchAccount = (SearchAccount) account;
+//			// TODO ここは「統合フォルダ」、「全メッセージ」を開くときに使ってたよ by toguri
+//			MessageList.actionHandle(this, searchAccount.getDescription(),
+//					searchAccount);
+//		} else {
+//			Account realAccount = (Account) account;
+//			if (!realAccount.isAvailable(this)) {
+//				String toastText = getString(R.string.account_unavailable,
+//						account.getDescription());
+//				Toast toast = Toast.makeText(getApplication(), toastText,
+//						Toast.LENGTH_SHORT);
+//				toast.show();
+//
+//				Log.i(RakuPhotoMail.LOG_TAG,
+//						"refusing to open account that is not available");
+//				return false;
+//			}      ・
+//			if (RakuPhotoMail.FOLDER_NONE.equals(realAccount
+//					.getAutoExpandFolderName())) {
+//				FolderList.actionHandleAccount(this, realAccount);
+//			} else {
+//				MessageList.actionHandleFolder(this, realAccount,
+//						realAccount.getAutoExpandFolderName());
+//			}
+//		}
+        
+        Log.d("redbull", "DummyAccounts#onOpenAccount start");
 			Account realAccount = (Account) account;
-			if (!realAccount.isAvailable(this)) {
-				String toastText = getString(R.string.account_unavailable,
-						account.getDescription());
-				Toast toast = Toast.makeText(getApplication(), toastText,
-						Toast.LENGTH_SHORT);
-				toast.show();
-
-				Log.i(RakuPhotoMail.LOG_TAG,
-						"refusing to open account that is not available");
-				return false;
-			}
-			if (RakuPhotoMail.FOLDER_NONE.equals(realAccount
-					.getAutoExpandFolderName())) {
-				FolderList.actionHandleAccount(this, realAccount);
-			} else {
-				MessageList.actionHandleFolder(this, realAccount,
-						realAccount.getAutoExpandFolderName());
-			}
-		}
+            GallerySlideShow.actionHandleFolder(this, realAccount, realAccount.getInboxFolderName());
+        Log.d("redbull", "DummyAccounts#onOpenAccount end");
 		return true;
 	}
 

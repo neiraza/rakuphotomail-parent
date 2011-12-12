@@ -102,19 +102,13 @@
             android:configChanges="locale"
             android:label="@string/app_name"
             android:launchMode="singleTask"
-            android:name="jp.co.fttx.rakuphotomail.activity.Accounts" >
+            android:name="jp.co.fttx.rakuphotomail.activity.DummyAccounts" >
             <intent-filter >
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        <activity
-            android:configChanges="locale"
-            android:label="ダミー"
-            android:launchMode="singleTask"
-            android:name="jp.co.fttx.rakuphotomail.activity.DummyAccounts" >
         </activity>
         <activity
             android:configChanges="locale"
@@ -129,6 +123,11 @@
         <activity
             android:configChanges="locale"
             android:label="@string/account_setup_basics_title"
+            android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupBasics" >
+        </activity>
+        <activity
+            android:configChanges="locale"
+            android:label="@string/account_setup_basics_title"
             android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupBasics" >
         </activity>
         <activity
@@ -138,8 +137,18 @@
         </activity>
         <activity
             android:configChanges="locale"
+            android:label="@string/account_setup_account_type_title"
+            android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupAccountType" >
+        </activity>
+        <activity
+            android:configChanges="locale"
             android:label="@string/account_setup_incoming_title"
             android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupIncoming" >
+        </activity>
+        <activity
+            android:configChanges="locale"
+            android:label="@string/account_setup_incoming_title"
+            android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupIncoming" >
         </activity>
         <activity
             android:configChanges="locale"
@@ -152,14 +161,29 @@
             android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupOutgoing" >
         </activity>
         <activity
+                android:configChanges="locale"
+                android:label="@string/account_setup_outgoing_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupOutgoing" >
+        </activity>
+        <activity
             android:configChanges="locale"
             android:label="@string/account_setup_options_title"
             android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupOptions" >
         </activity>
         <activity
+                android:configChanges="locale"
+                android:label="@string/account_setup_options_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupOptions" >
+        </activity>
+        <activity
             android:configChanges="locale"
             android:label="@string/account_setup_names_title"
             android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupNames" >
+        </activity>
+        <activity
+                android:configChanges="locale"
+                android:label="@string/account_setup_names_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupNames" >
         </activity>
         <activity
             android:configChanges="locale"
@@ -196,6 +220,11 @@
             android:configChanges="keyboardHidden|orientation|locale"
             android:label="@string/account_setup_check_settings_title"
             android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupCheckSettings" >
+        </activity>
+        <activity
+                android:configChanges="keyboardHidden|orientation|locale"
+                android:label="@string/account_setup_check_settings_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupCheckSettings" >
         </activity>
         <activity
             android:configChanges="locale"
