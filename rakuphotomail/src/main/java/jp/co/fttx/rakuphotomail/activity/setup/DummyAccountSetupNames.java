@@ -50,38 +50,11 @@ public class DummyAccountSetupNames extends RakuPhotoActivity implements OnClick
         mDoneButton = (Button)findViewById(R.id.done);
         mDoneButton.setOnClickListener(this);
 
-//        TextWatcher validationTextWatcher = new TextWatcher() {
-//            public void afterTextChanged(Editable s) {
-//                validateFields();
-//            }
-//
-//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//            }
-//
-//            public void onTextChanged(CharSequence s, int start, int before, int count) {
-//            }
-//        };
-//        mName.addTextChangedListener(validationTextWatcher);
-
-//        mName.setKeyListener(TextKeyListener.getInstance(false, Capitalize.WORDS));
 
         String accountUuid = getIntent().getStringExtra(EXTRA_ACCOUNT);
         mAccount = Preferences.getPreferences(this).getAccount(accountUuid);
         mAccount.setDescription("おぐりさん");
         mAccount.setName("おぐりん");
-
-        /*
-         * Since this field is considered optional, we don't set this here. If
-         * the user fills in a value we'll reset the current value, otherwise we
-         * just leave the saved value alone.
-         */
-        // mDescription.setText(mAccount.getDescription());
-//        if (mAccount.getName() != null) {
-//            mName.setText(mAccount.getName());
-//        }
-//        if (!Utility.requiredFieldValid(mName)) {
-//            mDoneButton.setEnabled(false);
-//        }
 
         Log.d("redbull", "DummyAccountSetupNames#onCreate end");
     }
@@ -92,11 +65,6 @@ public class DummyAccountSetupNames extends RakuPhotoActivity implements OnClick
         next();
     }
 
-//    private void validateFields() {
-//        mDoneButton.setEnabled(Utility.requiredFieldValid(mName));
-//        Utility.setCompoundDrawablesAlpha(mDoneButton, mDoneButton.isEnabled() ? 255 : 128);
-//    }
-
     protected void next() {
         Log.d("redbull", "DummyAccountSetupNames#next start");
         mAccount.save(Preferences.getPreferences(this));
@@ -106,13 +74,7 @@ public class DummyAccountSetupNames extends RakuPhotoActivity implements OnClick
 
     @Override
     protected void onNext() {
-        //XXX 勝手にかきかえましたよ
-//        if (Utility.requiredFieldValid(mDescription)) {
-//            mAccount.setDescription(mDescription.getText().toString());
-//        }
-//        mAccount.setName(mName.getText().toString());
         Log.d("redbull", "DummyAccountSetupNames#onNext start");
-
         mAccount.save(Preferences.getPreferences(this));
         finish();
         Log.d("redbull", "DummyAccountSetupNames#onNext end");

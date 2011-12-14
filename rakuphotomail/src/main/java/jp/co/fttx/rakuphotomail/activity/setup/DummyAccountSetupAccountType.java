@@ -4,9 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.Toast;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
@@ -21,7 +18,7 @@ import java.net.URI;
  * passed in email address, password and makeDefault are then passed on to the
  * AccountSetupIncoming activity.
  */
-public class DummyAccountSetupAccountType extends RakuPhotoActivity implements OnClickListener {
+public class DummyAccountSetupAccountType extends RakuPhotoActivity {
     private static final String EXTRA_ACCOUNT = "account";
 
     private static final String EXTRA_MAKE_DEFAULT = "makeDefault";
@@ -31,103 +28,59 @@ public class DummyAccountSetupAccountType extends RakuPhotoActivity implements O
     private boolean mMakeDefault;
 
     public static void actionSelectAccountType(Context context, Account account, boolean makeDefault) {
-        Log.d("redbull", "DummyAccountSetupAccountType#actionSelectAccountType start");
+        Log.d("maguro", "DummyAccountSetupAccountType#actionSelectAccountType start");
 
         Intent i = new Intent(context, DummyAccountSetupAccountType.class);
         i.putExtra(EXTRA_ACCOUNT, account.getUuid());
         i.putExtra(EXTRA_MAKE_DEFAULT, makeDefault);
 
         context.startActivity(i);
-        Log.d("redbull", "DummyAccountSetupAccountType#actionSelectAccountType end");
+        Log.d("maguro", "DummyAccountSetupAccountType#actionSelectAccountType end");
 
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.d("redbull", "DummyAccountSetupAccountType#onCreate start");
+        Log.d("maguro", "DummyAccountSetupAccountType#onCreate start");
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_account_type);
-        ((Button)findViewById(R.id.pop)).setOnClickListener(this);
-        ((Button)findViewById(R.id.imap)).setOnClickListener(this);
-        ((Button)findViewById(R.id.webdav)).setOnClickListener(this);
 
         String accountUuid = getIntent().getStringExtra(EXTRA_ACCOUNT);
         mAccount = Preferences.getPreferences(this).getAccount(accountUuid);
         mMakeDefault = getIntent().getBooleanExtra(EXTRA_MAKE_DEFAULT, false);
-        Log.d("redbull", "DummyAccountSetupAccountType#onCreate end");
+        Log.d("maguro", "DummyAccountSetupAccountType#onCreate end");
 
     }
 
     @Override
-    public void onResume(){
-        Log.d("redbull", "DummyAccountSetupAccountType#onResume start");
+    public void onResume() {
+        Log.d("maguro", "DummyAccountSetupAccountType#onResume start");
 
         super.onResume();
         // XXX ショートカットん
         onImap();
-        Log.d("redbull", "DummyAccountSetupAccountType#onResume end");
+        Log.d("maguro", "DummyAccountSetupAccountType#onResume end");
 
     }
 
-//    private void onPop() {
-//        try {
-//            URI uri = new URI(mAccount.getStoreUri());
-//            uri = new URI("pop3", uri.getUserInfo(), uri.getHost(), uri.getPort(), null, null, null);
-//            mAccount.setStoreUri(uri.toString());
-//            AccountSetupIncoming.actionIncomingSettings(this, mAccount, mMakeDefault);
-//            finish();
-//        } catch (Exception use) {
-//            failure(use);
-//        }
-//
-//    }
 
     private void onImap() {
-        Log.d("redbull", "DummyAccountSetupAccountType#onImap start");
+        Log.d("maguro", "DummyAccountSetupAccountType#onImap start");
 
         try {
             URI uri = new URI(mAccount.getStoreUri());
             uri = new URI("imap", uri.getUserInfo(), uri.getHost(), uri.getPort(), null, null, null);
             mAccount.setStoreUri(uri.toString());
-//            AccountSetupIncoming.actionIncomingSettings(this, mAccount, mMakeDefault);
             DummyAccountSetupIncoming.actionIncomingSettings(this, mAccount, mMakeDefault);
             finish();
         } catch (Exception use) {
             failure(use);
         }
-        Log.d("redbull", "DummyAccountSetupAccountType#onImap end");
+        Log.d("maguro", "DummyAccountSetupAccountType#onImap end");
 
     }
 
-//    private void onWebDav() {
-//        try {
-//            URI uri = new URI(mAccount.getStoreUri());
-//            uri = new URI("webdav", uri.getUserInfo(), uri.getHost(), uri.getPort(), null, null, null);
-//            mAccount.setStoreUri(uri.toString());
-//            AccountSetupIncoming.actionIncomingSettings(this, mAccount, mMakeDefault);
-//            finish();
-//        } catch (Exception use) {
-//            failure(use);
-//        }
-//
-//    }
-
-    public void onClick(View v) {
-        switch (v.getId()) {
-        case R.id.pop:
-//            onPop();
-            onImap();
-            break;
-        case R.id.imap:
-            onImap();
-            break;
-        case R.id.webdav:
-//            onWebDav();
-            onImap();
-            break;
-        }
-    }
     private void failure(Exception use) {
         Log.e(RakuPhotoMail.LOG_TAG, "Failure", use);
         String toastText = getString(R.string.account_setup_bad_uri, use.getMessage());

@@ -39,16 +39,6 @@ public class DummyAccountSetupOutgoing extends RakuPhotoActivity implements OnCl
     private static final String smtpSchemes[] = {
         "smtp", "smtp+ssl", "smtp+ssl+", "smtp+tls", "smtp+tls+"
     };
-    /*
-    private static final int webdavPorts[] =
-    {
-        80, 443, 443, 443, 443
-    };
-    private static final String webdavSchemes[] =
-    {
-        "webdav", "webdav+ssl", "webdav+ssl+", "webdav+tls", "webdav+tls+"
-    };
-    */
     private static final String authTypes[] = {
         SmtpTransport.AUTH_AUTOMATIC,
         SmtpTransport.AUTH_LOGIN,
@@ -78,13 +68,6 @@ public class DummyAccountSetupOutgoing extends RakuPhotoActivity implements OnCl
         Log.d("redbull", "DummyAccountSetupOutgoing#actionOutgoingSettings end");
 
     }
-
-//    public static void actionEditOutgoingSettings(Context context, Account account) {
-//        Intent i = new Intent(context, DummyAccountSetupOutgoing.class);
-//        i.setAction(Intent.ACTION_EDIT);
-//        i.putExtra(EXTRA_ACCOUNT, account.getUuid());
-//        context.startActivity(i);
-//    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -308,7 +291,6 @@ public class DummyAccountSetupOutgoing extends RakuPhotoActivity implements OnCl
                 mAccount.save(Preferences.getPreferences(this));
                 finish();
             } else {
-//                AccountSetupOptions.actionOptions(this, mAccount, mMakeDefault);
                 DummyAccountSetupOptions.actionOptions(this, mAccount, mMakeDefault);
                 finish();
             }
@@ -364,7 +346,6 @@ public class DummyAccountSetupOutgoing extends RakuPhotoActivity implements OnCl
             uri = new URI(smtpSchemes[securityType], userInfo, mServerView.getText().toString(),
                     Integer.parseInt(mPortView.getText().toString()), null, null, null);
             mAccount.setTransportUri(uri.toString());
-//            AccountSetupCheckSettings.actionCheckSettings(this, mAccount, false, true);
             DummyAccountSetupCheckSettings.actionCheckSettings(this, mAccount, false, true);
         } catch (UnsupportedEncodingException enc) {
             // This really shouldn't happen since the encoding is hardcoded to UTF-8

@@ -72,14 +72,6 @@ public class DummyAccountSetupIncoming extends RakuPhotoActivity implements
 
 	}
 
-//	public static void actionEditIncomingSettings(Activity context,
-//			Account account) {
-//		Intent i = new Intent(context, DummyAccountSetupIncoming.class);
-//		i.setAction(Intent.ACTION_EDIT);
-//		i.putExtra(EXTRA_ACCOUNT, account.getUuid());
-//		context.startActivity(i);
-//	}
-
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
         Log.d("redbull", "DummyAccountSetupIncoming#onCreate start");
@@ -427,8 +419,6 @@ public class DummyAccountSetupIncoming extends RakuPhotoActivity implements
 					 */
 				}
 
-//				AccountSetupOutgoing.actionOutgoingSettings(this, mAccount,
-//						mMakeDefault);
 				DummyAccountSetupOutgoing.actionOutgoingSettings(this, mAccount,
 						mMakeDefault);
 				finish();
@@ -487,7 +477,7 @@ public class DummyAccountSetupIncoming extends RakuPhotoActivity implements
 			mAccount.setSubscribedFoldersOnly(mSubscribedFoldersOnly
 					.isChecked());
 
-			AccountSetupCheckSettings.actionCheckSettings(this, mAccount, true,
+            DummyAccountSetupCheckSettings.actionCheckSettings(this, mAccount, true,
 					false);
 		} catch (Exception e) {
 			failure(e);
@@ -545,8 +535,6 @@ public class DummyAccountSetupIncoming extends RakuPhotoActivity implements
 			mAccount.setSubscribedFoldersOnly(mSubscribedFoldersOnly
 					.isChecked());
 
-//			AccountSetupCheckSettings.actionCheckSettings(this, mAccount, true,
-//					false);
             DummyAccountSetupCheckSettings.actionCheckSettings(this, mAccount, true,
 					false);
 		} catch (Exception e) {

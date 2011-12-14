@@ -170,7 +170,6 @@ public class DummyAccountSetupOptions extends RakuPhotoActivity implements OnCli
             Preferences.getPreferences(this).setDefaultAccount(mAccount);
         }
         RakuPhotoMail.setServicesEnabled(this);
-//        AccountSetupNames.actionSetNames(this, mAccount);
         DummyAccountSetupNames.actionSetNames(this, mAccount);
 
         finish();
@@ -199,7 +198,6 @@ public class DummyAccountSetupOptions extends RakuPhotoActivity implements OnCli
             Preferences.getPreferences(this).setDefaultAccount(mAccount);
         }
         RakuPhotoMail.setServicesEnabled(this);
-//        AccountSetupNames.actionSetNames(this, mAccount);
         DummyAccountSetupNames.actionSetNames(this, mAccount);
         finish();
     }

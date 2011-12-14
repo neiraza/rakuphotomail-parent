@@ -1258,7 +1258,7 @@ public class LocalStore extends Store implements Serializable {
         });
     }
 
-    public ArrayList<Attachments> getAttachments(final long messageId) throws UnavailableStorageException {
+    public ArrayList<Attachments> getAttachmentList(final long messageId) throws UnavailableStorageException {
         return database.execute(false, new DbCallback<ArrayList<Attachments>>() {
             @Override
             public ArrayList<Attachments> doDbWork(SQLiteDatabase db) throws WrappedException,
@@ -1292,7 +1292,7 @@ public class LocalStore extends Store implements Serializable {
             }
         });
     }
-
+    
     public Attachments getAttachment(final long attachmentId) throws UnavailableStorageException {
         return database.execute(false, new DbCallback<Attachments>() {
             @Override

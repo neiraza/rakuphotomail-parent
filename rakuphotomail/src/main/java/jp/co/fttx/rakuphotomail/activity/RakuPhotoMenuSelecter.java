@@ -104,7 +104,8 @@ public class RakuPhotoMenuSelecter extends Activity {
         mMail.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DummyAccounts.listAccounts(mContext);
+                Log.d("maguro", "RakuPhotoMenuSelecter#onClick mMail");
+//                DummyAccounts.listAccounts(mContext);
             }
         });
 
@@ -112,6 +113,7 @@ public class RakuPhotoMenuSelecter extends Activity {
         mOther.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d("maguro", "RakuPhotoMenuSelecter#onClick mOther");
                 onOther();
             }
         });
