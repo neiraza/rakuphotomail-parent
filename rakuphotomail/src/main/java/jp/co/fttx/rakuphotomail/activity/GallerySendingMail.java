@@ -395,7 +395,8 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
         i.putExtra(EXTRA_ADDRESS_TO, messageBean.getSenderAddress());
         i.putExtra(EXTRA_ADDRESS_TO_NAME, messageBean.getSenderName());
         i.putExtra(EXTRA_ADDRESS_FROM, messageBean.getToList());
-        i.putExtra(EXTRA_ADDRESS_FROM_NAME, messageBean.getToListName());
+        // XXX 送信者名は表示予定が無いため用意していない
+        i.putExtra(EXTRA_ADDRESS_FROM_NAME, "");
         i.putExtra(EXTRA_MESSAGE_ID, messageBean.getMessageId());
         i.putExtra(EXTRA_MESSAGE_ANSWERED, messageBean.isFlagAnswered());
         MessageReference reference = messageBean.getMessage().makeMessageReference();

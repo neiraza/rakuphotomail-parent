@@ -1,29 +1,15 @@
 package jp.co.fttx.rakuphotomail.mail.store;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.regex.Pattern;
-
+import android.app.Application;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.CursorIndexOutOfBoundsException;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
+import android.net.Uri;
+import android.util.Log;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.AccountStats;
 import jp.co.fttx.rakuphotomail.Preferences;
@@ -32,41 +18,22 @@ import jp.co.fttx.rakuphotomail.controller.MessageRemovalListener;
 import jp.co.fttx.rakuphotomail.controller.MessageRetrievalListener;
 import jp.co.fttx.rakuphotomail.helper.HtmlConverter;
 import jp.co.fttx.rakuphotomail.helper.Utility;
-import jp.co.fttx.rakuphotomail.mail.Address;
-import jp.co.fttx.rakuphotomail.mail.Body;
-import jp.co.fttx.rakuphotomail.mail.BodyPart;
-import jp.co.fttx.rakuphotomail.mail.FetchProfile;
-import jp.co.fttx.rakuphotomail.mail.Flag;
-import jp.co.fttx.rakuphotomail.mail.Folder;
-import jp.co.fttx.rakuphotomail.mail.Message;
+import jp.co.fttx.rakuphotomail.mail.*;
 import jp.co.fttx.rakuphotomail.mail.Message.RecipientType;
-import jp.co.fttx.rakuphotomail.mail.MessagingException;
-import jp.co.fttx.rakuphotomail.mail.Part;
-import jp.co.fttx.rakuphotomail.mail.Store;
 import jp.co.fttx.rakuphotomail.mail.filter.Base64OutputStream;
-import jp.co.fttx.rakuphotomail.mail.internet.MimeBodyPart;
-import jp.co.fttx.rakuphotomail.mail.internet.MimeHeader;
-import jp.co.fttx.rakuphotomail.mail.internet.MimeMessage;
-import jp.co.fttx.rakuphotomail.mail.internet.MimeMultipart;
-import jp.co.fttx.rakuphotomail.mail.internet.MimeUtility;
-import jp.co.fttx.rakuphotomail.mail.internet.TextBody;
+import jp.co.fttx.rakuphotomail.mail.internet.*;
 import jp.co.fttx.rakuphotomail.mail.store.LockableDatabase.DbCallback;
 import jp.co.fttx.rakuphotomail.mail.store.LockableDatabase.WrappedException;
 import jp.co.fttx.rakuphotomail.mail.store.StorageManager.StorageProvider;
 import jp.co.fttx.rakuphotomail.provider.AttachmentProvider;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mime4j.codec.EncoderUtil;
 
-import android.app.Application;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteException;
-import android.net.Uri;
-import android.util.Log;
+import java.io.*;
+import java.net.URLEncoder;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Pattern;
 
 /**
  * <pre>
@@ -84,8 +51,8 @@ public class LocalStore extends Store implements Serializable {
      */
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
-    private static final Flag[] PERMANENT_FLAGS = { Flag.DELETED, Flag.X_DESTROYED, Flag.SEEN,
-        Flag.FLAGGED };
+    private static final Flag[] PERMANENT_FLAGS = {Flag.DELETED, Flag.X_DESTROYED, Flag.SEEN,
+            Flag.FLAGGED};
 
     private static Set<String> HEADERS_TO_SAVE = new HashSet<String>();
 
@@ -106,12 +73,12 @@ public class LocalStore extends Store implements Serializable {
      * correct order.
      */
     static private String GET_MESSAGES_COLS = "subject, sender_list, date, uid, flags, id, to_list, cc_list, "
-        + "bcc_list, reply_to_list, attachment_count, internal_date, message_id, folder_id, preview ";
+            + "bcc_list, reply_to_list, attachment_count, internal_date, message_id, folder_id, preview ";
 
-    static private String[] GET_MESSAGES_COLS_ALL = new String[] { "id", "deleted", "folder_id", "uid",
-        "subject", "date", "flags", "sender_list", "to_list", "cc_list", "bcc_list", "reply_to_list",
-        "html_content", "text_content", "attachment_count", "internal_date", "message_id", "preview",
-        "mime_type" };
+    static private String[] GET_MESSAGES_COLS_ALL = new String[]{"id", "deleted", "folder_id", "uid",
+            "subject", "date", "flags", "sender_list", "to_list", "cc_list", "bcc_list", "reply_to_list",
+            "html_content", "text_content", "attachment_count", "internal_date", "message_id", "preview",
+            "mime_type"};
 
     static private String GET_FOLDER_COLS = "id, name, unread_count, visible_limit, last_updated, status, push_state, last_pushed, flagged_count, integrate, top_group, poll_class, push_class, display_class";
 
@@ -126,11 +93,10 @@ public class LocalStore extends Store implements Serializable {
     /**
      * local://localhost/path/to/database/uuid.db This constructor is only used
      * by {@link Store#getLocalInstance(Account, Application)}
-     * 
+     *
      * @param account
      * @param application
-     * @throws UnavailableStorageException
-     *             if not {@link StorageProvider#isReady(Context)}
+     * @throws UnavailableStorageException if not {@link StorageProvider#isReady(Context)}
      */
     public LocalStore(final Account account, final Application application) throws MessagingException {
         super(account);
@@ -160,7 +126,7 @@ public class LocalStore extends Store implements Serializable {
         @Override
         public void doDbUpgrade(final SQLiteDatabase db) {
             Log.i(RakuPhotoMail.LOG_TAG, String.format("Upgrading database from version %d to version %d",
-                db.getVersion(), DB_VERSION));
+                    db.getVersion(), DB_VERSION));
 
             AttachmentProvider.clear(mApplication);
 
@@ -172,17 +138,17 @@ public class LocalStore extends Store implements Serializable {
 
                     db.execSQL("DROP TABLE IF EXISTS folders");
                     db.execSQL("CREATE TABLE folders (id INTEGER PRIMARY KEY, name TEXT, "
-                        + "last_updated INTEGER, unread_count INTEGER, visible_limit INTEGER, status TEXT, "
-                        + "push_state TEXT, last_pushed INTEGER, flagged_count INTEGER default 0, "
-                        + "integrate INTEGER, top_group INTEGER, poll_class TEXT, push_class TEXT, display_class TEXT"
-                        + ")");
+                            + "last_updated INTEGER, unread_count INTEGER, visible_limit INTEGER, status TEXT, "
+                            + "push_state TEXT, last_pushed INTEGER, flagged_count INTEGER default 0, "
+                            + "integrate INTEGER, top_group INTEGER, poll_class TEXT, push_class TEXT, display_class TEXT"
+                            + ")");
 
                     db.execSQL("CREATE INDEX IF NOT EXISTS folder_name ON folders (name)");
                     db.execSQL("DROP TABLE IF EXISTS messages");
                     db.execSQL("CREATE TABLE messages (id INTEGER PRIMARY KEY, deleted INTEGER default 0, folder_id INTEGER, uid TEXT, subject TEXT, "
-                        + "date INTEGER, flags TEXT, sender_list TEXT, to_list TEXT, cc_list TEXT, bcc_list TEXT, reply_to_list TEXT, "
-                        + "html_content TEXT, text_content TEXT, attachment_count INTEGER, internal_date INTEGER, message_id TEXT, preview TEXT, "
-                        + "mime_type TEXT)");
+                            + "date INTEGER, flags TEXT, sender_list TEXT, to_list TEXT, cc_list TEXT, bcc_list TEXT, reply_to_list TEXT, "
+                            + "html_content TEXT, text_content TEXT, attachment_count INTEGER, internal_date INTEGER, message_id TEXT, preview TEXT, "
+                            + "mime_type TEXT)");
 
                     db.execSQL("DROP TABLE IF EXISTS headers");
                     db.execSQL("CREATE TABLE headers (id INTEGER PRIMARY KEY, message_id INTEGER, name TEXT, value TEXT)");
@@ -194,19 +160,19 @@ public class LocalStore extends Store implements Serializable {
                     db.execSQL("CREATE INDEX IF NOT EXISTS msg_folder_id_deleted_date ON messages (folder_id,deleted,internal_date)");
                     db.execSQL("DROP TABLE IF EXISTS attachments");
                     db.execSQL("CREATE TABLE attachments (id INTEGER PRIMARY KEY, message_id INTEGER,"
-                        + "store_data TEXT, content_uri TEXT, size INTEGER, name TEXT,"
-                        + "mime_type TEXT, content_id TEXT, content_disposition TEXT)");
+                            + "store_data TEXT, content_uri TEXT, size INTEGER, name TEXT,"
+                            + "mime_type TEXT, content_id TEXT, content_disposition TEXT)");
 
                     db.execSQL("DROP TABLE IF EXISTS pending_commands");
                     db.execSQL("CREATE TABLE pending_commands "
-                        + "(id INTEGER PRIMARY KEY, command TEXT, arguments TEXT)");
+                            + "(id INTEGER PRIMARY KEY, command TEXT, arguments TEXT)");
 
                     db.execSQL("DROP TRIGGER IF EXISTS delete_folder");
                     db.execSQL("CREATE TRIGGER delete_folder BEFORE DELETE ON folders BEGIN DELETE FROM messages WHERE old.id = folder_id; END;");
 
                     db.execSQL("DROP TRIGGER IF EXISTS delete_message");
                     db.execSQL("CREATE TRIGGER delete_message BEFORE DELETE ON messages BEGIN DELETE FROM attachments WHERE old.id = message_id; "
-                        + "DELETE FROM headers where old.id = message_id; END;");
+                            + "DELETE FROM headers where old.id = message_id; END;");
                 } else {
                     // in the case that we're starting out at 29 or newer, run
                     // all the needed updates
@@ -252,7 +218,7 @@ public class LocalStore extends Store implements Serializable {
                             db.execSQL("update messages set flags = replace(flags, 'X_NO_SEEN_INFO', 'X_BAD_FLAG')");
                         } catch (SQLiteException e) {
                             Log.e(RakuPhotoMail.LOG_TAG,
-                                "Unable to get rid of obsolete flag X_NO_SEEN_INFO", e);
+                                    "Unable to get rid of obsolete flag X_NO_SEEN_INFO", e);
                         }
                     }
                     if (db.getVersion() < 36) {
@@ -267,7 +233,7 @@ public class LocalStore extends Store implements Serializable {
                             db.execSQL("ALTER TABLE attachments ADD content_disposition TEXT");
                         } catch (SQLiteException e) {
                             Log.e(RakuPhotoMail.LOG_TAG,
-                                "Unable to add content_disposition column to attachments");
+                                    "Unable to add content_disposition column to attachments");
                         }
                     }
 
@@ -278,7 +244,7 @@ public class LocalStore extends Store implements Serializable {
                             db.execSQL("DELETE FROM headers WHERE id in (SELECT headers.id FROM headers LEFT JOIN messages ON headers.message_id = messages.id WHERE messages.id IS NULL)");
                         } catch (SQLiteException e) {
                             Log.e(RakuPhotoMail.LOG_TAG,
-                                "Unable to remove extra header data from the database");
+                                    "Unable to remove extra header data from the database");
                         }
                     }
 
@@ -316,13 +282,13 @@ public class LocalStore extends Store implements Serializable {
                                     update41Metadata(db, prefs, id, name);
                                 } catch (Exception e) {
                                     Log.e(RakuPhotoMail.LOG_TAG,
-                                        " error trying to ugpgrade a folder class: " + e);
+                                            " error trying to ugpgrade a folder class: " + e);
                                 }
                             }
                         } catch (SQLiteException e) {
                             Log.e(RakuPhotoMail.LOG_TAG,
-                                "Exception while upgrading database to v41. folder classes may have vanished "
-                                    + e);
+                                    "Exception while upgrading database to v41. folder classes may have vanished "
+                                            + e);
 
                         } finally {
                             if (cursor != null) {
@@ -346,12 +312,12 @@ public class LocalStore extends Store implements Serializable {
                             editor.commit();
                             long endTime = System.currentTimeMillis();
                             Log.i(RakuPhotoMail.LOG_TAG,
-                                "Putting folder preferences for " + folders.size()
-                                    + " folders back into Preferences took " + (endTime - startTime)
-                                    + " ms");
+                                    "Putting folder preferences for " + folders.size()
+                                            + " folders back into Preferences took " + (endTime - startTime)
+                                            + " ms");
                         } catch (Exception e) {
                             Log.e(RakuPhotoMail.LOG_TAG,
-                                "Could not replace Preferences in upgrade from DB_VERSION 41", e);
+                                    "Could not replace Preferences in upgrade from DB_VERSION 41", e);
                         }
                     }
                 }
@@ -359,7 +325,7 @@ public class LocalStore extends Store implements Serializable {
                 Log.e(RakuPhotoMail.LOG_TAG, "Exception while upgrading database. Resetting the DB to v0");
                 db.setVersion(0);
                 throw new Error(
-                    "Database upgrade failed! Resetting your DB version to 0 to force a full schema recreation.");
+                        "Database upgrade failed! Resetting your DB version to 0 to force a full schema recreation.");
             }
 
             db.setVersion(DB_VERSION);
@@ -401,16 +367,16 @@ public class LocalStore extends Store implements Serializable {
 
             try {
                 displayClass = Folder.FolderClass.valueOf(prefs.getString(uUid + "." + name
-                    + ".displayMode", displayClass.name()));
+                        + ".displayMode", displayClass.name()));
                 syncClass = Folder.FolderClass.valueOf(prefs.getString(uUid + "." + name + ".syncMode",
-                    syncClass.name()));
+                        syncClass.name()));
                 pushClass = Folder.FolderClass.valueOf(prefs.getString(uUid + "." + name + ".pushMode",
-                    pushClass.name()));
+                        pushClass.name()));
                 inTopGroup = prefs.getBoolean(uUid + "." + name + ".inTopGroup", inTopGroup);
                 integrate = prefs.getBoolean(uUid + "." + name + ".integrate", integrate);
             } catch (Exception e) {
                 Log.e(RakuPhotoMail.LOG_TAG,
-                    " Throwing away an error while trying to upgrade folder metadata: " + e);
+                        " Throwing away an error while trying to upgrade folder metadata: " + e);
             }
 
             if (displayClass == Folder.FolderClass.NONE) {
@@ -424,8 +390,8 @@ public class LocalStore extends Store implements Serializable {
             }
 
             db.execSQL(
-                "UPDATE folders SET integrate = ?, top_group = ?, poll_class=?, push_class =?, display_class = ? WHERE id = ?",
-                new Object[] { integrate, inTopGroup, syncClass, pushClass, displayClass, id });
+                    "UPDATE folders SET integrate = ?, top_group = ?, poll_class=?, push_class =?, display_class = ? WHERE id = ?",
+                    new Object[]{integrate, inTopGroup, syncClass, pushClass, displayClass, id});
 
         }
     }
@@ -435,7 +401,7 @@ public class LocalStore extends Store implements Serializable {
         final StorageManager storageManager = StorageManager.getInstance(mApplication);
 
         final File attachmentDirectory = storageManager.getAttachmentDirectory(uUid,
-            database.getStorageProviderId());
+                database.getStorageProviderId());
 
         return database.execute(false, new DbCallback<Long>() {
             @Override
@@ -535,26 +501,26 @@ public class LocalStore extends Store implements Serializable {
                     // folders and possibly
                     // more (depending on the folder display mode)
                     String baseQuery = "SELECT SUM(unread_count), SUM(flagged_count) " + "FROM folders "
-                        + "WHERE (name = ?)" + /* INBOX */
-                        " OR (" + "name NOT IN (?, ?, ?, ?, ?)" + /*
+                            + "WHERE (name = ?)" + /* INBOX */
+                            " OR (" + "name NOT IN (?, ?, ?, ?, ?)" + /*
                                                                    * special
                                                                    * folders
                                                                    */
-                        "%s)"; /* placeholder for additional constraints */
+                            "%s)"; /* placeholder for additional constraints */
 
                     List<String> queryParam = new ArrayList<String>();
                     queryParam.add(mAccount.getInboxFolderName());
 
                     queryParam.add((mAccount.getTrashFolderName() != null) ? mAccount.getTrashFolderName()
-                        : "");
+                            : "");
                     queryParam.add((mAccount.getDraftsFolderName() != null) ? mAccount
-                        .getDraftsFolderName() : "");
+                            .getDraftsFolderName() : "");
                     queryParam.add((mAccount.getSpamFolderName() != null) ? mAccount.getSpamFolderName()
-                        : "");
+                            : "");
                     queryParam.add((mAccount.getOutboxFolderName() != null) ? mAccount
-                        .getOutboxFolderName() : "");
+                            .getOutboxFolderName() : "");
                     queryParam.add((mAccount.getSentFolderName() != null) ? mAccount.getSentFolderName()
-                        : "");
+                            : "");
 
                     final String extraWhere;
                     switch (displayMode) {
@@ -584,8 +550,8 @@ public class LocalStore extends Store implements Serializable {
                             break;
                         default:
                             Log.e(RakuPhotoMail.LOG_TAG,
-                                "asked to compute account statistics for an impossible folder mode "
-                                    + displayMode);
+                                    "asked to compute account statistics for an impossible folder mode "
+                                            + displayMode);
                             stats.unreadMessageCount = 0;
                             stats.flaggedMessageCount = 0;
                             return null;
@@ -642,14 +608,14 @@ public class LocalStore extends Store implements Serializable {
 
                     try {
                         cursor = db.rawQuery("SELECT " + GET_FOLDER_COLS
-                            + " FROM folders ORDER BY name ASC", null);
+                                + " FROM folders ORDER BY name ASC", null);
                         while (cursor.moveToNext()) {
                             LocalFolder folder = new LocalFolder(cursor.getString(1));
                             folder.open(cursor.getInt(0), cursor.getString(1), cursor.getInt(2),
-                                cursor.getInt(3), cursor.getLong(4), cursor.getString(5),
-                                cursor.getString(6), cursor.getLong(7), cursor.getInt(8),
-                                cursor.getInt(9), cursor.getInt(10), cursor.getString(11),
-                                cursor.getString(12), cursor.getString(13));
+                                    cursor.getInt(3), cursor.getLong(4), cursor.getString(5),
+                                    cursor.getString(6), cursor.getLong(7), cursor.getInt(8),
+                                    cursor.getInt(9), cursor.getInt(10), cursor.getString(11),
+                                    cursor.getString(12), cursor.getString(13));
 
                             folders.add(folder);
                         }
@@ -687,10 +653,10 @@ public class LocalStore extends Store implements Serializable {
 
     /**
      * Deletes all cached attachments for the entire store.
-     * 
+     *
      * @param force
      * @throws jp.co.fttx.rakuphotomail.mail.MessagingException
-     * 
+     *
      */
     private void pruneCachedAttachments(final boolean force) throws MessagingException {
         database.execute(false, new DbCallback<Void>() {
@@ -703,20 +669,20 @@ public class LocalStore extends Store implements Serializable {
                 }
                 final StorageManager storageManager = StorageManager.getInstance(mApplication);
                 File[] files = storageManager
-                    .getAttachmentDirectory(uUid, database.getStorageProviderId()).listFiles();
+                        .getAttachmentDirectory(uUid, database.getStorageProviderId()).listFiles();
                 for (File file : files) {
                     if (file.exists()) {
                         if (!force) {
                             Cursor cursor = null;
                             try {
-                                cursor = db.query("attachments", new String[] { "store_data" }, "id = ?",
-                                    new String[] { file.getName() }, null, null, null);
+                                cursor = db.query("attachments", new String[]{"store_data"}, "id = ?",
+                                        new String[]{file.getName()}, null, null, null);
                                 if (cursor.moveToNext()) {
                                     if (cursor.getString(0) == null) {
                                         if (RakuPhotoMail.DEBUG)
                                             Log.d(RakuPhotoMail.LOG_TAG,
-                                                "Attachment " + file.getAbsolutePath()
-                                                    + " has no store data, not deleting");
+                                                    "Attachment " + file.getAbsolutePath()
+                                                            + " has no store data, not deleting");
                                         /*
                                          * If the attachment has no store data
                                          * it is not recoverable, so we won't
@@ -735,7 +701,7 @@ public class LocalStore extends Store implements Serializable {
                             try {
                                 ContentValues cv = new ContentValues();
                                 cv.putNull("content_uri");
-                                db.update("attachments", cv, "id = ?", new String[] { file.getName() });
+                                db.update("attachments", cv, "id = ?", new String[]{file.getName()});
                             } catch (Exception e) {
                                 /*
                                  * If the row has gone away before we got to
@@ -776,8 +742,8 @@ public class LocalStore extends Store implements Serializable {
             public ArrayList<PendingCommand> doDbWork(final SQLiteDatabase db) throws WrappedException {
                 Cursor cursor = null;
                 try {
-                    cursor = db.query("pending_commands", new String[] { "id", "command", "arguments" },
-                        null, null, null, null, "id ASC");
+                    cursor = db.query("pending_commands", new String[]{"id", "command", "arguments"},
+                            null, null, null, null, "id ASC");
                     ArrayList<PendingCommand> commands = new ArrayList<PendingCommand>();
                     while (cursor.moveToNext()) {
                         PendingCommand command = new PendingCommand();
@@ -824,7 +790,7 @@ public class LocalStore extends Store implements Serializable {
         database.execute(false, new DbCallback<Void>() {
             @Override
             public Void doDbWork(final SQLiteDatabase db) throws WrappedException {
-                db.delete("pending_commands", "id = ?", new String[] { Long.toString(command.mId) });
+                db.delete("pending_commands", "id = ?", new String[]{Long.toString(command.mId)});
                 return null;
             }
         });
@@ -870,8 +836,8 @@ public class LocalStore extends Store implements Serializable {
     }
 
     public Message[] searchForMessages(MessageRetrievalListener listener, String[] queryFields,
-                    String queryString, List<LocalFolder> folders, Message[] messages,
-                    final Flag[] requiredFlags, final Flag[] forbiddenFlags) throws MessagingException {
+                                       String queryString, List<LocalFolder> folders, Message[] messages,
+                                       final Flag[] requiredFlags, final Flag[] forbiddenFlags) throws MessagingException {
         List<String> args = new LinkedList<String>();
 
         StringBuilder whereClause = new StringBuilder();
@@ -952,8 +918,8 @@ public class LocalStore extends Store implements Serializable {
             Log.v(RakuPhotoMail.LOG_TAG, "args = " + args);
         }
         return getMessages(listener, null, "SELECT " + GET_MESSAGES_COLS
-            + "FROM messages WHERE deleted = 0 " + whereClause.toString() + " ORDER BY date DESC",
-            args.toArray(EMPTY_STRING_ARRAY));
+                + "FROM messages WHERE deleted = 0 " + whereClause.toString() + " ORDER BY date DESC",
+                args.toArray(EMPTY_STRING_ARRAY));
     }
 
     public ArrayList<MessageInfo> getMessages(final long folderId) throws UnavailableStorageException {
@@ -963,7 +929,7 @@ public class LocalStore extends Store implements Serializable {
                 Cursor c = null;
                 try {
                     String where = "deleted = 0 AND folder_id = ?";
-                    String[] param = new String[] { Long.toString(folderId) };
+                    String[] param = new String[]{Long.toString(folderId)};
                     String orderBy = "date DESC";
                     c = db.query("messages", GET_MESSAGES_COLS_ALL, where, param, null, null, orderBy);
                     return setMessageInfos(c);
@@ -981,7 +947,7 @@ public class LocalStore extends Store implements Serializable {
      * MessageRetrievalListener for each one
      */
     private Message[] getMessages(final MessageRetrievalListener listener, final LocalFolder folder,
-                    final String queryString, final String[] placeHolders) throws MessagingException {
+                                  final String queryString, final String[] placeHolders) throws MessagingException {
         final ArrayList<LocalMessage> messages = new ArrayList<LocalMessage>();
         final int j = database.execute(false, new DbCallback<Integer>() {
             @Override
@@ -1034,11 +1000,11 @@ public class LocalStore extends Store implements Serializable {
 
     // TODO 勝手にDBアクセス結果をふやしてみた
     public class Attachments {
-        private String id;
-        private String messageId;
+        private long id;
+        private long messageId;
         private String storeData;
         private String contentUri;
-        private String size;
+        private int size;
         private String name;
         private String mimeType;
         private String contentId;
@@ -1048,19 +1014,19 @@ public class LocalStore extends Store implements Serializable {
             return "id:" + id + " messageId:" + messageId + " name:" + name + " mimeType:" + mimeType;
         }
 
-        public String getId() {
+        public long getId() {
             return id;
         }
 
-        public void setId(String id) {
+        public void setId(long id) {
             this.id = id;
         }
 
-        public String getMessageId() {
+        public long getMessageId() {
             return messageId;
         }
 
-        public void setMessageId(String messageId) {
+        public void setMessageId(long messageId) {
             this.messageId = messageId;
         }
 
@@ -1080,11 +1046,11 @@ public class LocalStore extends Store implements Serializable {
             this.contentUri = contentUri;
         }
 
-        public String getSize() {
+        public int getSize() {
             return size;
         }
 
-        public void setSize(String size) {
+        public void setSize(int size) {
             this.size = size;
         }
 
@@ -1122,7 +1088,7 @@ public class LocalStore extends Store implements Serializable {
     }
 
     public ArrayList<MessageInfo> getMessages(final CopyOnWriteArrayList<String> uidList,
-                    final long folderId) throws MessagingException {
+                                              final long folderId) throws MessagingException {
         return database.execute(false, new DbCallback<ArrayList<MessageInfo>>() {
             @Override
             public ArrayList<MessageInfo> doDbWork(final SQLiteDatabase db) throws WrappedException {
@@ -1140,19 +1106,19 @@ public class LocalStore extends Store implements Serializable {
                         uids.append(uidList.get(i));
                         Log.d("maguro", "LocalStore#getMessages uids:" + uids.toString());
                     }
-                    
+
                     // FIXME ここグダグダな予感 
-                   char lastChar = uids.toString().trim().charAt(uids.length());
-                   Log.d("maguro", "LocalStore#getMessages lastChar:" + lastChar);
-                   if(",".equals(lastChar)){
-                       uids.deleteCharAt(uids.length());
-                   }
+                    char lastChar = uids.toString().trim().charAt(uids.length());
+                    Log.d("maguro", "LocalStore#getMessages lastChar:" + lastChar);
+                    if (",".equals(lastChar)) {
+                        uids.deleteCharAt(uids.length());
+                    }
                     Log.d("maguro", "LocalStore#getMessages uids:" + uids.toString());
                     // xxx debug
                     Log.d("maguro", "LocalStore#getMessages start");
                     String where = "uid IN (" + uids + ") and folder_id = ?";
                     Log.d("maguro", "LocalStore#getMessages where:" + where);
-                    String[] param = new String[] { Long.toString(folderId) };
+                    String[] param = new String[]{Long.toString(folderId)};
                     Log.d("maguro", "LocalStore#getMessages param:" + Arrays.toString(param));
                     String orderBy = "date DESC";
                     c = db.query("messages", GET_MESSAGES_COLS_ALL, where, param, null, null, orderBy);
@@ -1172,11 +1138,11 @@ public class LocalStore extends Store implements Serializable {
         return database.execute(false, new DbCallback<ArrayList<String>>() {
             @Override
             public ArrayList<String> doDbWork(SQLiteDatabase db) throws WrappedException,
-                            UnavailableStorageException {
+                    UnavailableStorageException {
                 Cursor cursor = null;
                 ArrayList<String> list = new ArrayList<String>();
                 try {
-                    cursor = db.query("messages", new String[] { "uid" }, null, null, null, null, null);
+                    cursor = db.query("messages", new String[]{"uid"}, null, null, null, null, null);
                     while (cursor.moveToNext()) {
                         list.add(cursor.getString(0));
                     }
@@ -1191,9 +1157,9 @@ public class LocalStore extends Store implements Serializable {
     }
 
     /**
-     * @author tooru.oguri
      * @param c
      * @return
+     * @author tooru.oguri
      */
     private ArrayList<MessageInfo> setMessageInfos(Cursor c) {
         ArrayList<MessageInfo> list = new ArrayList<MessageInfo>();
@@ -1204,14 +1170,15 @@ public class LocalStore extends Store implements Serializable {
     }
 
     /**
-     * @author tooru.oguri
      * @param c
      * @return
+     * @author tooru.oguri
      */
     private MessageInfo setMessageInfo(Cursor c) {
+        Log.d("maguro", "LocalStore#setMessageInfo start");
         MessageInfo info = new MessageInfo();
         info.setId(c.getLong(0));
-        info.setDeleted(c.getLong(1));
+        info.setDeleted(c.getInt(1));
         info.setFolderId(c.getLong(2));
         info.setUid(c.getString(3));
         info.setSubject(c.getString(4));
@@ -1229,59 +1196,76 @@ public class LocalStore extends Store implements Serializable {
         info.setMessageId(c.getString(16));
         info.setPreview(c.getString(17));
         info.setMimeType(c.getString(18));
+        Log.d("maguro", "LocalStore#setMessageInfo end");
         return info;
     }
 
     /**
-     * @author tooru.oguri
      * @param uid
      * @return
      * @throws UnavailableStorageException
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
      */
     public MessageInfo getMessage(final String uid) throws UnavailableStorageException {
         return database.execute(false, new DbCallback<MessageInfo>() {
             @Override
             public MessageInfo doDbWork(final SQLiteDatabase db) throws WrappedException,
-                            UnavailableStorageException {
+                    UnavailableStorageException {
                 Cursor c = null;
                 try {
                     String where = "uid = ?";
-                    String[] param = new String[] { uid };
+                    String[] param = new String[]{uid};
+                    Log.d("maguro", "LocalStore#getMessage uid:" + uid);
                     c = db.query("messages", GET_MESSAGES_COLS_ALL, where, param, null, null, null);
+                    Log.d("maguro", "LocalStore#getMessage result::::::");
+                    if (null != c) {
+                        Log.d("maguro", "LocalStore#getMessageInfoList c.getCount:" + c.getCount());
+                        Log.d("maguro", "LocalStore#getMessageInfoList c.getColumnCount:" + c.getColumnCount());
+                        c.moveToFirst();
+                    } else {
+                        Log.d("maguro", "LocalStore#getMessageInfoList cursor is null...");
+                    }
                     return setMessageInfo(c);
+                } catch (CursorIndexOutOfBoundsException e) {
+                    Log.d("maguro", "LocalStore#getMessageInfoList CursorIndexOutOfBoundsException uid:" + uid);
                 } finally {
                     if (c != null) {
                         c.close();
                     }
                 }
+                // FIXME 仮
+                return new MessageInfo();
             }
         });
     }
 
+    /**
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private static final String[] ATTACHMENT_COLMUN = new String[]{"id", "message_id", "content_uri", "store_data", "size",
+            "name", "mime_type", "content_id", "content_disposition"};
+
+    /**
+     * @param messageId
+     * @return
+     * @throws UnavailableStorageException
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
     public ArrayList<Attachments> getAttachmentList(final long messageId) throws UnavailableStorageException {
         return database.execute(false, new DbCallback<ArrayList<Attachments>>() {
             @Override
             public ArrayList<Attachments> doDbWork(SQLiteDatabase db) throws WrappedException,
-                            UnavailableStorageException {
+                    UnavailableStorageException {
                 Cursor cursor = null;
                 ArrayList<Attachments> list = new ArrayList<Attachments>();
-                String[] attachments = new String[] { "message_id", "content_uri", "store_data", "size",
-                    "name", "mime_type", "content_id", "content_disposition", "id" };
                 try {
-                    cursor = db.query("attachments", attachments, "message_id = ?",
-                        new String[] { Long.toString(messageId) }, null, null, null);
+                    cursor = db.query("attachments", ATTACHMENT_COLMUN, "message_id = ?",
+                            new String[]{Long.toString(messageId)}, null, null, null);
                     while (cursor.moveToNext()) {
-                        Attachments attachment = new Attachments();
-                        attachment.setId(cursor.getString(8));
-                        attachment.setMessageId(cursor.getString(0));
-                        attachment.setContentUri(cursor.getString(1));
-                        attachment.setStoreData(cursor.getString(2));
-                        attachment.setSize(cursor.getString(3));
-                        attachment.setName(cursor.getString(4));
-                        attachment.setMimeType(cursor.getString(5));
-                        attachment.setContentId(cursor.getString(6));
-                        attachment.setContentDisposition(cursor.getString(7));
-                        list.add(attachment);
+                        list.add(setAttachments(cursor));
                     }
                     return list;
                 } finally {
@@ -1292,30 +1276,25 @@ public class LocalStore extends Store implements Serializable {
             }
         });
     }
-    
+
+    /**
+     * @param attachmentId
+     * @return
+     * @throws UnavailableStorageException
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
     public Attachments getAttachment(final long attachmentId) throws UnavailableStorageException {
         return database.execute(false, new DbCallback<Attachments>() {
             @Override
             public Attachments doDbWork(SQLiteDatabase db) throws WrappedException,
-                            UnavailableStorageException {
+                    UnavailableStorageException {
                 Cursor cursor = null;
-                String[] attachments = new String[] { "message_id", "content_uri", "store_data", "size",
-                    "name", "mime_type", "content_id", "content_disposition", "id" };
-                Attachments attachment = new Attachments();
                 try {
-                    cursor = db.query("attachments", attachments, "id = ?",
-                        new String[] { Long.toString(attachmentId) }, null, null, null);
+                    cursor = db.query("attachments", ATTACHMENT_COLMUN, "id = ?",
+                            new String[]{Long.toString(attachmentId)}, null, null, null);
                     cursor.moveToFirst();
-                    attachment.setId(cursor.getString(8));
-                    attachment.setMessageId(cursor.getString(0));
-                    attachment.setContentUri(cursor.getString(1));
-                    attachment.setStoreData(cursor.getString(2));
-                    attachment.setSize(cursor.getString(3));
-                    attachment.setName(cursor.getString(4));
-                    attachment.setMimeType(cursor.getString(5));
-                    attachment.setContentId(cursor.getString(6));
-                    attachment.setContentDisposition(cursor.getString(7));
-                    return attachment;
+                    return setAttachments(cursor);
                 } finally {
                     if (cursor != null) {
                         cursor.close();
@@ -1325,62 +1304,24 @@ public class LocalStore extends Store implements Serializable {
         });
     }
 
-    // TODO 勝手にDBアクセスふやしてみた
-    public ArrayList<Attachments> getAttachmentsAll() throws UnavailableStorageException {
-        return database.execute(false, new DbCallback<ArrayList<Attachments>>() {
-            @Override
-            public ArrayList<Attachments> doDbWork(SQLiteDatabase db) throws WrappedException,
-                            UnavailableStorageException {
-                Cursor cursor = null;
-                ArrayList<Attachments> list = new ArrayList<Attachments>();
-                String[] attachments = new String[] { "message_id", "content_uri", "store_data", "size",
-                    "name", "mime_type", "content_id", "content_disposition", "id" };
-                try {
-                    cursor = db.query("attachments", attachments, null, null, null, null, null);
-                    while (cursor.moveToNext()) {
-                        Attachments attachment = new Attachments();
-                        attachment.setId(cursor.getString(8));
-                        attachment.setMessageId(cursor.getString(0));
-                        attachment.setContentUri(cursor.getString(1));
-                        attachment.setStoreData(cursor.getString(2));
-                        attachment.setSize(cursor.getString(3));
-                        attachment.setName(cursor.getString(4));
-                        attachment.setMimeType(cursor.getString(5));
-                        attachment.setContentId(cursor.getString(6));
-                        attachment.setContentDisposition(cursor.getString(7));
-                        list.add(attachment);
-                    }
-                    return list;
-                } finally {
-                    if (cursor != null) {
-                        cursor.close();
-                    }
-                }
-            }
-        });
-    }
-
-    // TODO 勝手にDBアクセスふやしてみた
-    public ArrayList<String> getAttachmentsId() throws UnavailableStorageException {
-        return database.execute(false, new DbCallback<ArrayList<String>>() {
-            @Override
-            public ArrayList<String> doDbWork(SQLiteDatabase db) throws WrappedException,
-                            UnavailableStorageException {
-                Cursor cursor = null;
-                ArrayList<String> list = new ArrayList<String>();
-                try {
-                    cursor = db.query("attachments", new String[] { "id" }, null, null, null, null, null);
-                    while (cursor.moveToNext()) {
-                        list.add(cursor.getString(0));
-                    }
-                    return list;
-                } finally {
-                    if (cursor != null) {
-                        cursor.close();
-                    }
-                }
-            }
-        });
+    /**
+     * @param cursor
+     * @return
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private Attachments setAttachments(Cursor cursor) {
+        Attachments attachment = new Attachments();
+        attachment.setId(cursor.getLong(0));
+        attachment.setMessageId(cursor.getLong(1));
+        attachment.setContentUri(cursor.getString(2));
+        attachment.setStoreData(cursor.getString(3));
+        attachment.setSize(cursor.getInt(4));
+        attachment.setName(cursor.getString(5));
+        attachment.setMimeType(cursor.getString(6));
+        attachment.setContentId(cursor.getString(7));
+        attachment.setContentDisposition(cursor.getString(8));
+        return attachment;
     }
 
     public AttachmentInfo getAttachmentInfo(final String attachmentId) throws UnavailableStorageException {
@@ -1392,8 +1333,8 @@ public class LocalStore extends Store implements Serializable {
                 int size;
                 Cursor cursor = null;
                 try {
-                    cursor = db.query("attachments", new String[] { "name", "size", "mime_type" },
-                        "id = ?", new String[] { attachmentId }, null, null, null);
+                    cursor = db.query("attachments", new String[]{"name", "size", "mime_type"},
+                            "id = ?", new String[]{attachmentId}, null, null, null);
                     if (!cursor.moveToFirst()) {
                         return null;
                     }
@@ -1422,7 +1363,7 @@ public class LocalStore extends Store implements Serializable {
 
     public class MessageInfo {
         private long id;
-        private long deleted;
+        private int deleted;
         private long folderId;
         private String uid;
         private String subject;
@@ -1449,11 +1390,11 @@ public class LocalStore extends Store implements Serializable {
             this.id = id;
         }
 
-        public long getDeleted() {
+        public int getDeleted() {
             return deleted;
         }
 
-        public void setDeleted(long deleted) {
+        public void setDeleted(int deleted) {
             this.deleted = deleted;
         }
 
@@ -1595,7 +1536,7 @@ public class LocalStore extends Store implements Serializable {
     }
 
     public void createFolders(final List<LocalFolder> foldersToCreate, final int visibleLimit)
-                    throws UnavailableStorageException {
+            throws UnavailableStorageException {
         database.execute(true, new DbCallback<Void>() {
             @Override
             public Void doDbWork(final SQLiteDatabase db) throws WrappedException {
@@ -1618,20 +1559,20 @@ public class LocalStore extends Store implements Serializable {
 
                         }
                         if (name.equalsIgnoreCase(mAccount.getInboxFolderName())
-                            || name.equalsIgnoreCase(mAccount.getDraftsFolderName())) {
+                                || name.equalsIgnoreCase(mAccount.getDraftsFolderName())) {
                             prefHolder.syncClass = LocalFolder.FolderClass.FIRST_CLASS;
                         } else {
                             prefHolder.syncClass = LocalFolder.FolderClass.NO_CLASS;
                         }
                     }
                     folder.refresh(name, prefHolder); // Recover settings from
-                                                      // Preferences
+                    // Preferences
 
                     db.execSQL(
-                        "INSERT INTO folders (name, visible_limit, top_group, display_class, poll_class, push_class, integrate) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                        new Object[] { name, visibleLimit, prefHolder.inTopGroup ? 1 : 0,
-                            prefHolder.displayClass.name(), prefHolder.syncClass.name(),
-                            prefHolder.pushClass.name(), prefHolder.integrate ? 1 : 0, });
+                            "INSERT INTO folders (name, visible_limit, top_group, display_class, poll_class, push_class, integrate) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                            new Object[]{name, visibleLimit, prefHolder.inTopGroup ? 1 : 0,
+                                    prefHolder.displayClass.name(), prefHolder.syncClass.name(),
+                                    prefHolder.pushClass.name(), prefHolder.integrate ? 1 : 0,});
 
                 }
                 return null;
@@ -1696,24 +1637,24 @@ public class LocalStore extends Store implements Serializable {
 
                             if (mName != null) {
                                 cursor = db.rawQuery(baseQuery + "where folders.name = ?",
-                                    new String[] { mName });
+                                        new String[]{mName});
                             } else {
                                 cursor = db.rawQuery(baseQuery + "where folders.id = ?",
-                                    new String[] { Long.toString(mFolderId) });
+                                        new String[]{Long.toString(mFolderId)});
                             }
 
                             if (cursor.moveToFirst()) {
                                 int folderId = cursor.getInt(0);
                                 if (folderId > 0) {
                                     open(folderId, cursor.getString(1), cursor.getInt(2),
-                                        cursor.getInt(3), cursor.getLong(4), cursor.getString(5),
-                                        cursor.getString(6), cursor.getLong(7), cursor.getInt(8),
-                                        cursor.getInt(9), cursor.getInt(10), cursor.getString(11),
-                                        cursor.getString(12), cursor.getString(13));
+                                            cursor.getInt(3), cursor.getLong(4), cursor.getString(5),
+                                            cursor.getString(6), cursor.getLong(7), cursor.getInt(8),
+                                            cursor.getInt(9), cursor.getInt(10), cursor.getString(11),
+                                            cursor.getString(12), cursor.getString(13));
                                 }
                             } else {
                                 Log.w(RakuPhotoMail.LOG_TAG, "Creating folder " + getName()
-                                    + " with existing id " + getId());
+                                        + " with existing id " + getId());
                                 create(FolderType.HOLDS_MESSAGES);
                                 open(mode);
                             }
@@ -1733,9 +1674,9 @@ public class LocalStore extends Store implements Serializable {
         }
 
         private void open(int id, String name, int unreadCount, int visibleLimit, long lastChecked,
-                        String status, String pushState, long lastPushed, int flaggedCount, int integrate,
-                        int topGroup, String syncClass, String pushClass, String displayClass)
-                        throws MessagingException {
+                          String status, String pushState, long lastPushed, int flaggedCount, int integrate,
+                          int topGroup, String syncClass, String pushClass, String displayClass)
+                throws MessagingException {
             mFolderId = id;
             mName = name;
             mUnreadMessageCount = unreadCount;
@@ -1780,7 +1721,7 @@ public class LocalStore extends Store implements Serializable {
                     Cursor cursor = null;
                     try {
                         cursor = db.rawQuery("SELECT id FROM folders " + "where folders.name = ?",
-                            new String[] { LocalFolder.this.getName() });
+                                new String[]{LocalFolder.this.getName()});
                         if (cursor.moveToFirst()) {
                             int folderId = cursor.getInt(0);
                             return (folderId > 0);
@@ -1840,8 +1781,8 @@ public class LocalStore extends Store implements Serializable {
                         Cursor cursor = null;
                         try {
                             cursor = db.rawQuery(
-                                "SELECT COUNT(*) FROM messages WHERE deleted = 0 and folder_id = ?",
-                                new String[] { Long.toString(mFolderId) });
+                                    "SELECT COUNT(*) FROM messages WHERE deleted = 0 and folder_id = ?",
+                                    new String[]{Long.toString(mFolderId)});
                             cursor.moveToFirst();
                             return cursor.getInt(0); // messagecount
                         } finally {
@@ -1945,8 +1886,8 @@ public class LocalStore extends Store implements Serializable {
                         } catch (MessagingException e) {
                             throw new WrappedException(e);
                         }
-                        db.execSQL("UPDATE folders SET " + column + " = ? WHERE id = ?", new Object[] {
-                            value, mFolderId });
+                        db.execSQL("UPDATE folders SET " + column + " = ? WHERE id = ?", new Object[]{
+                                value, mFolderId});
                         return null;
                     }
                 });
@@ -2086,7 +2027,7 @@ public class LocalStore extends Store implements Serializable {
 
             try {
                 prefHolder.displayClass = FolderClass.valueOf(preferences.getString(id + ".displayMode",
-                    prefHolder.displayClass.name()));
+                        prefHolder.displayClass.name()));
             } catch (Exception e) {
                 Log.e(RakuPhotoMail.LOG_TAG, "Unable to load displayMode for " + getName(), e);
             }
@@ -2096,7 +2037,7 @@ public class LocalStore extends Store implements Serializable {
 
             try {
                 prefHolder.syncClass = FolderClass.valueOf(preferences.getString(id + ".syncMode",
-                    prefHolder.syncClass.name()));
+                        prefHolder.syncClass.name()));
             } catch (Exception e) {
                 Log.e(RakuPhotoMail.LOG_TAG, "Unable to load syncMode for " + getName(), e);
 
@@ -2107,7 +2048,7 @@ public class LocalStore extends Store implements Serializable {
 
             try {
                 prefHolder.pushClass = FolderClass.valueOf(preferences.getString(id + ".pushMode",
-                    prefHolder.pushClass.name()));
+                        prefHolder.pushClass.name()));
             } catch (Exception e) {
                 Log.e(RakuPhotoMail.LOG_TAG, "Unable to load pushMode for " + getName(), e);
             }
@@ -2121,7 +2062,7 @@ public class LocalStore extends Store implements Serializable {
 
         @Override
         public void fetch(final Message[] messages, final FetchProfile fp,
-                        final MessageRetrievalListener listener) throws MessagingException {
+                          final MessageRetrievalListener listener) throws MessagingException {
             try {
                 database.execute(false, new DbCallback<Void>() {
                     @Override
@@ -2136,24 +2077,24 @@ public class LocalStore extends Store implements Serializable {
                                     mp.setSubType("mixed");
                                     try {
                                         cursor = db.rawQuery(
-                                            "SELECT html_content, text_content, mime_type FROM messages "
-                                                + "WHERE id = ?",
-                                            new String[] { Long.toString(localMessage.mId) });
+                                                "SELECT html_content, text_content, mime_type FROM messages "
+                                                        + "WHERE id = ?",
+                                                new String[]{Long.toString(localMessage.mId)});
                                         cursor.moveToNext();
                                         String htmlContent = cursor.getString(0);
                                         String textContent = cursor.getString(1);
                                         String mimeType = cursor.getString(2);
                                         if (mimeType != null
-                                            && mimeType.toLowerCase().startsWith("multipart/")) {
+                                                && mimeType.toLowerCase().startsWith("multipart/")) {
                                             // If this is a multipart message,
                                             // preserve both text
                                             // and html parts, as well as the
                                             // subtype.
                                             mp.setSubType(mimeType.toLowerCase().replaceFirst(
-                                                "^multipart/", ""));
+                                                    "^multipart/", ""));
                                             if (textContent != null) {
                                                 LocalTextBody body = new LocalTextBody(textContent,
-                                                    htmlContent);
+                                                        htmlContent);
                                                 MimeBodyPart bp = new MimeBodyPart(body, "text/plain");
                                                 mp.addBodyPart(bp);
                                             }
@@ -2175,25 +2116,25 @@ public class LocalStore extends Store implements Serializable {
                                             // below before we attach to
                                             // the message.
                                             if (textContent != null && htmlContent != null
-                                                && !mimeType.equalsIgnoreCase("multipart/alternative")) {
+                                                    && !mimeType.equalsIgnoreCase("multipart/alternative")) {
                                                 MimeMultipart alternativeParts = mp;
                                                 alternativeParts.setSubType("alternative");
                                                 mp = new MimeMultipart();
                                                 mp.addBodyPart(new MimeBodyPart(alternativeParts));
                                             }
                                         } else if (mimeType != null
-                                            && mimeType.equalsIgnoreCase("text/plain")) {
+                                                && mimeType.equalsIgnoreCase("text/plain")) {
                                             // If it's text, add only the plain
                                             // part. The MIME
                                             // container will drop away below.
                                             if (textContent != null) {
                                                 LocalTextBody body = new LocalTextBody(textContent,
-                                                    htmlContent);
+                                                        htmlContent);
                                                 MimeBodyPart bp = new MimeBodyPart(body, "text/plain");
                                                 mp.addBodyPart(bp);
                                             }
                                         } else if (mimeType != null
-                                            && mimeType.equalsIgnoreCase("text/html")) {
+                                                && mimeType.equalsIgnoreCase("text/html")) {
                                             // If it's html, add only the html
                                             // part. The MIME
                                             // container will drop away below.
@@ -2210,7 +2151,7 @@ public class LocalStore extends Store implements Serializable {
                                             // composition behaviour.
                                             if (textContent != null) {
                                                 LocalTextBody body = new LocalTextBody(textContent,
-                                                    htmlContent);
+                                                        htmlContent);
                                                 MimeBodyPart bp = new MimeBodyPart(body, "text/plain");
                                                 mp.addBodyPart(bp);
                                             } else if (htmlContent != null) {
@@ -2229,11 +2170,11 @@ public class LocalStore extends Store implements Serializable {
                                     }
 
                                     try {
-                                        cursor = db.query("attachments", new String[] { "id", "size",
-                                            "name", "mime_type", "store_data", "content_uri",
-                                            "content_id", "content_disposition" }, "message_id = ?",
-                                            new String[] { Long.toString(localMessage.mId) }, null, null,
-                                            null);
+                                        cursor = db.query("attachments", new String[]{"id", "size",
+                                                "name", "mime_type", "store_data", "content_uri",
+                                                "content_id", "content_disposition"}, "message_id = ?",
+                                                new String[]{Long.toString(localMessage.mId)}, null, null,
+                                                null);
 
                                         while (cursor.moveToNext()) {
                                             long id = cursor.getLong(0);
@@ -2252,26 +2193,26 @@ public class LocalStore extends Store implements Serializable {
 
                                             if (contentUri != null) {
                                                 body = new LocalAttachmentBody(Uri.parse(contentUri),
-                                                    mApplication);
+                                                        mApplication);
                                             }
 
                                             MimeBodyPart bp = new LocalAttachmentBodyPart(body, id);
                                             bp.setHeader(MimeHeader.HEADER_CONTENT_TRANSFER_ENCODING,
-                                                "base64");
+                                                    "base64");
                                             if (name != null) {
                                                 String encoded_name = EncoderUtil.encodeIfNecessary(name,
-                                                    EncoderUtil.Usage.WORD_ENTITY, 7);
+                                                        EncoderUtil.Usage.WORD_ENTITY, 7);
 
                                                 bp.setHeader(MimeHeader.HEADER_CONTENT_TYPE,
-                                                    String.format("%s;\n name=\"%s\"", type, encoded_name));
+                                                        String.format("%s;\n name=\"%s\"", type, encoded_name));
                                                 bp.setHeader(MimeHeader.HEADER_CONTENT_DISPOSITION, String
-                                                    .format("%s;\n filename=\"%s\";\n size=%d",
-                                                        contentDisposition, encoded_name,
-                                                        // TODO: Should
-                                                        // use encoded
-                                                        // word defined
-                                                        // in RFC 2231.
-                                                        size));
+                                                        .format("%s;\n filename=\"%s\";\n size=%d",
+                                                                contentDisposition, encoded_name,
+                                                                // TODO: Should
+                                                                // use encoded
+                                                                // word defined
+                                                                // in RFC 2231.
+                                                                size));
                                             }
 
                                             bp.setHeader(MimeHeader.HEADER_CONTENT_ID, contentId);
@@ -2283,7 +2224,7 @@ public class LocalStore extends Store implements Serializable {
                                              * necessary.
                                              */
                                             bp.setHeader(MimeHeader.HEADER_ANDROID_ATTACHMENT_STORE_DATA,
-                                                storeData);
+                                                    storeData);
 
                                             mp.addBodyPart(bp);
                                         }
@@ -2302,17 +2243,17 @@ public class LocalStore extends Store implements Serializable {
                                         // T_TVD_MIME_NO_HEADERS
                                         // SpamAssassin rules.
                                         localMessage.setHeader(MimeHeader.HEADER_CONTENT_TYPE,
-                                            "text/plain");
+                                                "text/plain");
                                         localMessage.setBody(new TextBody(""));
                                     } else if (mp.getCount() == 1
-                                        && (mp.getBodyPart(0) instanceof LocalAttachmentBodyPart) == false)
+                                            && (mp.getBodyPart(0) instanceof LocalAttachmentBodyPart) == false)
 
                                     {
                                         // If we have only one part, drop the
                                         // MimeMultipart container.
                                         BodyPart part = mp.getBodyPart(0);
                                         localMessage.setHeader(MimeHeader.HEADER_CONTENT_TYPE,
-                                            part.getContentType());
+                                                part.getContentType());
                                         localMessage.setBody(part.getBody());
                                     } else {
                                         // Otherwise, attach the MimeMultipart
@@ -2334,25 +2275,24 @@ public class LocalStore extends Store implements Serializable {
 
         @Override
         public Message[] getMessages(int start, int end, Date earliestDate,
-                        MessageRetrievalListener listener) throws MessagingException {
+                                     MessageRetrievalListener listener) throws MessagingException {
             open(OpenMode.READ_WRITE);
             throw new MessagingException(
-                "LocalStore.getMessages(int, int, MessageRetrievalListener) not yet implemented");
+                    "LocalStore.getMessages(int, int, MessageRetrievalListener) not yet implemented");
         }
 
         /**
          * Populate the header fields of the given list of messages by reading
          * the saved header data from the database.
-         * 
-         * @param messages
-         *            The messages whose headers should be loaded.
+         *
+         * @param messages The messages whose headers should be loaded.
          * @throws UnavailableStorageException
          */
         private void populateHeaders(final List<LocalMessage> messages) throws UnavailableStorageException {
             database.execute(false, new DbCallback<Void>() {
                 @Override
                 public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                UnavailableStorageException {
+                        UnavailableStorageException {
                     Cursor cursor = null;
                     if (messages.size() == 0) {
                         return null;
@@ -2375,7 +2315,7 @@ public class LocalStore extends Store implements Serializable {
                         }
 
                         cursor = db.rawQuery("SELECT message_id, name, value FROM headers "
-                            + "WHERE message_id in ( " + questions + ") ", ids.toArray(EMPTY_STRING_ARRAY));
+                                + "WHERE message_id in ( " + questions + ") ", ids.toArray(EMPTY_STRING_ARRAY));
 
                         while (cursor.moveToNext()) {
                             Long id = cursor.getLong(0);
@@ -2399,7 +2339,7 @@ public class LocalStore extends Store implements Serializable {
                 return database.execute(false, new DbCallback<Message>() {
                     @Override
                     public Message doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                    UnavailableStorageException {
+                            UnavailableStorageException {
                         try {
                             open(OpenMode.READ_WRITE);
                             LocalMessage message = new LocalMessage(uid, LocalFolder.this);
@@ -2407,8 +2347,8 @@ public class LocalStore extends Store implements Serializable {
 
                             try {
                                 cursor = db.rawQuery("SELECT " + GET_MESSAGES_COLS
-                                    + "FROM messages WHERE uid = ? AND folder_id = ?", new String[] {
-                                    message.getUid(), Long.toString(mFolderId) });
+                                        + "FROM messages WHERE uid = ? AND folder_id = ?", new String[]{
+                                        message.getUid(), Long.toString(mFolderId)});
                                 if (!cursor.moveToNext()) {
                                     return null;
                                 }
@@ -2436,19 +2376,19 @@ public class LocalStore extends Store implements Serializable {
 
         @Override
         public Message[] getMessages(final MessageRetrievalListener listener, final boolean includeDeleted)
-                        throws MessagingException {
+                throws MessagingException {
             try {
                 return database.execute(false, new DbCallback<Message[]>() {
                     @Override
                     public Message[] doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                    UnavailableStorageException {
+                            UnavailableStorageException {
                         try {
                             open(OpenMode.READ_WRITE);
                             return LocalStore.this.getMessages(listener, LocalFolder.this, "SELECT "
-                                + GET_MESSAGES_COLS + "FROM messages WHERE "
-                                + (includeDeleted ? "" : "deleted = 0 AND ")
-                                + " folder_id = ? ORDER BY date DESC",
-                                new String[] { Long.toString(mFolderId) });
+                                    + GET_MESSAGES_COLS + "FROM messages WHERE "
+                                    + (includeDeleted ? "" : "deleted = 0 AND ")
+                                    + " folder_id = ? ORDER BY date DESC",
+                                    new String[]{Long.toString(mFolderId)});
                         } catch (MessagingException e) {
                             throw new WrappedException(e);
                         }
@@ -2461,7 +2401,7 @@ public class LocalStore extends Store implements Serializable {
 
         @Override
         public Message[] getMessages(String[] uids, MessageRetrievalListener listener)
-                        throws MessagingException {
+                throws MessagingException {
             open(OpenMode.READ_WRITE);
             if (uids == null) {
                 return getMessages(listener);
@@ -2496,7 +2436,7 @@ public class LocalStore extends Store implements Serializable {
                 database.execute(false, new DbCallback<Void>() {
                     @Override
                     public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                    UnavailableStorageException {
+                            UnavailableStorageException {
                         try {
                             lDestFolder.open(OpenMode.READ_WRITE);
                             for (Message message : msgs) {
@@ -2510,28 +2450,28 @@ public class LocalStore extends Store implements Serializable {
                                 if (message.isSet(Flag.FLAGGED)) {
                                     setFlaggedMessageCount(getFlaggedMessageCount() - 1);
                                     lDestFolder.setFlaggedMessageCount(lDestFolder
-                                        .getFlaggedMessageCount() + 1);
+                                            .getFlaggedMessageCount() + 1);
                                 }
 
                                 String oldUID = message.getUid();
 
                                 if (RakuPhotoMail.DEBUG)
                                     Log.d(RakuPhotoMail.LOG_TAG,
-                                        "Updating folder_id to " + lDestFolder.getId()
-                                            + " for message with UID " + message.getUid() + ", id "
-                                            + lMessage.getId() + " currently in folder " + getName());
+                                            "Updating folder_id to " + lDestFolder.getId()
+                                                    + " for message with UID " + message.getUid() + ", id "
+                                                    + lMessage.getId() + " currently in folder " + getName());
 
                                 message.setUid(RakuPhotoMail.LOCAL_UID_PREFIX
-                                    + UUID.randomUUID().toString());
+                                        + UUID.randomUUID().toString());
 
                                 db.execSQL("UPDATE messages " + "SET folder_id = ?, uid = ? "
-                                    + "WHERE id = ?", new Object[] { lDestFolder.getId(),
-                                    message.getUid(), lMessage.getId() });
+                                        + "WHERE id = ?", new Object[]{lDestFolder.getId(),
+                                        message.getUid(), lMessage.getId()});
 
                                 LocalMessage placeHolder = new LocalMessage(oldUID, LocalFolder.this);
                                 placeHolder.setFlagInternal(Flag.DELETED, true);
                                 placeHolder.setFlagInternal(Flag.SEEN, true);
-                                appendMessages(new Message[] { placeHolder });
+                                appendMessages(new Message[]{placeHolder});
                             }
                         } catch (MessagingException e) {
                             throw new WrappedException(e);
@@ -2549,23 +2489,21 @@ public class LocalStore extends Store implements Serializable {
          * Convenience transaction wrapper for storing a message and set it as
          * fully downloaded. Implemented mainly to speed up DB transaction
          * commit.
-         * 
-         * @param message
-         *            Message to store. Never <code>null</code>.
-         * @param runnable
-         *            What to do before setting {@link Flag#X_DOWNLOADED_FULL}.
-         *            Never <code>null</code>.
+         *
+         * @param message  Message to store. Never <code>null</code>.
+         * @param runnable What to do before setting {@link Flag#X_DOWNLOADED_FULL}.
+         *                 Never <code>null</code>.
          * @return The local version of the message. Never <code>null</code>.
          * @throws MessagingException
          */
         public Message storeSmallMessage(final Message message, final Runnable runnable)
-                        throws MessagingException {
+                throws MessagingException {
             return database.execute(true, new DbCallback<Message>() {
                 @Override
                 public Message doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                UnavailableStorageException {
+                        UnavailableStorageException {
                     try {
-                        appendMessages(new Message[] { message });
+                        appendMessages(new Message[]{message});
                         final String uid = message.getUid();
                         final Message result = getMessage(uid);
                         runnable.run();
@@ -2604,7 +2542,7 @@ public class LocalStore extends Store implements Serializable {
                 database.execute(true, new DbCallback<Void>() {
                     @Override
                     public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                    UnavailableStorageException {
+                            UnavailableStorageException {
                         for (Message message : messages) {
                             try {
                                 message.destroy();
@@ -2633,23 +2571,23 @@ public class LocalStore extends Store implements Serializable {
          * are not). Therefore, if you want to make local changes only to a
          * message, retrieve the appropriate local message instance first (if it
          * already exists).
-         * 
+         *
          * @param messages
          * @param copy
          */
         private void appendMessages(final Message[] messages, final boolean copy)
-                        throws MessagingException {
+                throws MessagingException {
             open(OpenMode.READ_WRITE);
             try {
                 database.execute(true, new DbCallback<Void>() {
                     @Override
                     public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                    UnavailableStorageException {
+                            UnavailableStorageException {
                         try {
                             for (Message message : messages) {
                                 if (!(message instanceof MimeMessage)) {
                                     throw new Error(
-                                        "LocalStore can only store Messages that extend MimeMessage");
+                                            "LocalStore can only store Messages that extend MimeMessage");
                                 }
 
                                 String uid = message.getUid();
@@ -2672,7 +2610,7 @@ public class LocalStore extends Store implements Serializable {
                                      */
                                     deleteAttachments(message.getUid());
                                     db.execSQL("DELETE FROM messages WHERE folder_id = ? AND uid = ?",
-                                        new Object[] { mFolderId, message.getUid() });
+                                            new Object[]{mFolderId, message.getUid()});
                                 }
 
                                 ArrayList<Part> viewables = new ArrayList<Part>();
@@ -2706,7 +2644,7 @@ public class LocalStore extends Store implements Serializable {
                                         }
                                     } catch (Exception e) {
                                         throw new MessagingException(
-                                            "Unable to get text for message part", e);
+                                                "Unable to get text for message part", e);
                                     }
                                 }
 
@@ -2726,25 +2664,25 @@ public class LocalStore extends Store implements Serializable {
                                     cv.put("subject", message.getSubject());
                                     cv.put("sender_list", Address.pack(message.getFrom()));
                                     cv.put("date",
-                                        message.getSentDate() == null ? System.currentTimeMillis()
-                                            : message.getSentDate().getTime());
+                                            message.getSentDate() == null ? System.currentTimeMillis()
+                                                    : message.getSentDate().getTime());
                                     cv.put("flags", Utility.combine(message.getFlags(), ',').toUpperCase());
                                     cv.put("deleted", message.isSet(Flag.DELETED) ? 1 : 0);
                                     cv.put("folder_id", mFolderId);
                                     cv.put("to_list",
-                                        Address.pack(message.getRecipients(RecipientType.TO)));
+                                            Address.pack(message.getRecipients(RecipientType.TO)));
                                     cv.put("cc_list",
-                                        Address.pack(message.getRecipients(RecipientType.CC)));
+                                            Address.pack(message.getRecipients(RecipientType.CC)));
                                     cv.put("bcc_list",
-                                        Address.pack(message.getRecipients(RecipientType.BCC)));
+                                            Address.pack(message.getRecipients(RecipientType.BCC)));
                                     cv.put("html_content", html.length() > 0 ? html : null);
                                     cv.put("text_content", text.length() > 0 ? text : null);
                                     cv.put("preview", preview.length() > 0 ? preview : null);
                                     cv.put("reply_to_list", Address.pack(message.getReplyTo()));
                                     cv.put("attachment_count", attachments.size());
                                     cv.put("internal_date",
-                                        message.getInternalDate() == null ? System.currentTimeMillis()
-                                            : message.getInternalDate().getTime());
+                                            message.getInternalDate() == null ? System.currentTimeMillis()
+                                                    : message.getInternalDate().getTime());
                                     cv.put("mime_type", message.getMimeType());
 
                                     String messageId = message.getMessageId();
@@ -2785,7 +2723,7 @@ public class LocalStore extends Store implements Serializable {
          * not removing existing attachment data. TODO In the future this method
          * should be combined with appendMessages since the Message contains
          * enough data to decide what to do.
-         * 
+         *
          * @param message
          * @throws MessagingException
          */
@@ -2795,7 +2733,7 @@ public class LocalStore extends Store implements Serializable {
                 database.execute(false, new DbCallback<Void>() {
                     @Override
                     public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                    UnavailableStorageException {
+                            UnavailableStorageException {
                         try {
                             ArrayList<Part> viewables = new ArrayList<Part>();
                             ArrayList<Part> attachments = new ArrayList<Part>();
@@ -2845,25 +2783,25 @@ public class LocalStore extends Store implements Serializable {
                             }
                             try {
                                 db.execSQL(
-                                    "UPDATE messages SET "
-                                        + "uid = ?, subject = ?, sender_list = ?, date = ?, flags = ?, "
-                                        + "folder_id = ?, to_list = ?, cc_list = ?, bcc_list = ?, "
-                                        + "html_content = ?, text_content = ?, preview = ?, reply_to_list = ?, "
-                                        + "attachment_count = ? WHERE id = ?",
-                                    new Object[] {
-                                        message.getUid(),
-                                        message.getSubject(),
-                                        Address.pack(message.getFrom()),
-                                        message.getSentDate() == null ? System.currentTimeMillis()
-                                            : message.getSentDate().getTime(),
-                                        Utility.combine(message.getFlags(), ',').toUpperCase(), mFolderId,
-                                        Address.pack(message.getRecipients(RecipientType.TO)),
-                                        Address.pack(message.getRecipients(RecipientType.CC)),
-                                        Address.pack(message.getRecipients(RecipientType.BCC)),
-                                        html.length() > 0 ? html : null, text.length() > 0 ? text : null,
-                                        preview.length() > 0 ? preview : null,
-                                        Address.pack(message.getReplyTo()), attachments.size(),
-                                        message.mId });
+                                        "UPDATE messages SET "
+                                                + "uid = ?, subject = ?, sender_list = ?, date = ?, flags = ?, "
+                                                + "folder_id = ?, to_list = ?, cc_list = ?, bcc_list = ?, "
+                                                + "html_content = ?, text_content = ?, preview = ?, reply_to_list = ?, "
+                                                + "attachment_count = ? WHERE id = ?",
+                                        new Object[]{
+                                                message.getUid(),
+                                                message.getSubject(),
+                                                Address.pack(message.getFrom()),
+                                                message.getSentDate() == null ? System.currentTimeMillis()
+                                                        : message.getSentDate().getTime(),
+                                                Utility.combine(message.getFlags(), ',').toUpperCase(), mFolderId,
+                                                Address.pack(message.getRecipients(RecipientType.TO)),
+                                                Address.pack(message.getRecipients(RecipientType.CC)),
+                                                Address.pack(message.getRecipients(RecipientType.BCC)),
+                                                html.length() > 0 ? html : null, text.length() > 0 ? text : null,
+                                                preview.length() > 0 ? preview : null,
+                                                Address.pack(message.getReplyTo()), attachments.size(),
+                                                message.mId});
 
                                 for (int i = 0, count = attachments.size(); i < count; i++) {
                                     Part attachment = attachments.get(i);
@@ -2887,17 +2825,17 @@ public class LocalStore extends Store implements Serializable {
         /**
          * Save the headers of the given message. Note that the message is not
          * necessarily a {@link LocalMessage} instance.
-         * 
+         *
          * @param id
          * @param message
          * @throws jp.co.fttx.rakuphotomail.mail.MessagingException
-         * 
+         *
          */
         private void saveHeaders(final long id, final MimeMessage message) throws MessagingException {
             database.execute(true, new DbCallback<Void>() {
                 @Override
                 public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                UnavailableStorageException {
+                        UnavailableStorageException {
                     boolean saveAllHeaders = mAccount.saveAllHeaders();
                     boolean gotAdditionalHeaders = false;
 
@@ -2926,8 +2864,8 @@ public class LocalStore extends Store implements Serializable {
                         appendedFlags.addAll(Arrays.asList(message.getFlags()));
                         appendedFlags.add(Flag.X_GOT_ALL_HEADERS);
 
-                        db.execSQL("UPDATE messages " + "SET flags = ? " + " WHERE id = ?", new Object[] {
-                            Utility.combine(appendedFlags.toArray(), ',').toUpperCase(), id });
+                        db.execSQL("UPDATE messages " + "SET flags = ? " + " WHERE id = ?", new Object[]{
+                                Utility.combine(appendedFlags.toArray(), ',').toUpperCase(), id});
                     }
                     return null;
                 }
@@ -2938,8 +2876,8 @@ public class LocalStore extends Store implements Serializable {
             database.execute(false, new DbCallback<Void>() {
                 @Override
                 public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                UnavailableStorageException {
-                    db.execSQL("DELETE FROM headers WHERE message_id = ?", new Object[] { id });
+                        UnavailableStorageException {
+                    db.execSQL("DELETE FROM headers WHERE message_id = ?", new Object[]{id});
                     return null;
                 }
             });
@@ -2953,12 +2891,12 @@ public class LocalStore extends Store implements Serializable {
          * @throws MessagingException
          */
         private void saveAttachment(final long messageId, final Part attachment, final boolean saveAsNew)
-                        throws IOException, MessagingException {
+                throws IOException, MessagingException {
             try {
                 database.execute(true, new DbCallback<Void>() {
                     @Override
                     public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                    UnavailableStorageException {
+                            UnavailableStorageException {
                         try {
                             long attachmentId = -1;
                             Uri contentUri = null;
@@ -2970,7 +2908,7 @@ public class LocalStore extends Store implements Serializable {
                             }
 
                             final File attachmentDirectory = StorageManager.getInstance(mApplication)
-                                .getAttachmentDirectory(uUid, database.getStorageProviderId());
+                                    .getAttachmentDirectory(uUid, database.getStorageProviderId());
                             if (attachment.getBody() != null) {
                                 Body body = attachment.getBody();
                                 if (body instanceof LocalAttachmentBody) {
@@ -2984,7 +2922,7 @@ public class LocalStore extends Store implements Serializable {
                                      */
                                     InputStream in = attachment.getBody().getInputStream();
                                     tempAttachmentFile = File.createTempFile("att", null,
-                                        attachmentDirectory);
+                                            attachmentDirectory);
                                     FileOutputStream out = new FileOutputStream(tempAttachmentFile);
                                     size = IOUtils.copy(in, out);
                                     in.close();
@@ -3011,15 +2949,15 @@ public class LocalStore extends Store implements Serializable {
                             }
 
                             String storeData = Utility.combine(
-                                attachment.getHeader(MimeHeader.HEADER_ANDROID_ATTACHMENT_STORE_DATA), ',');
+                                    attachment.getHeader(MimeHeader.HEADER_ANDROID_ATTACHMENT_STORE_DATA), ',');
 
                             String name = MimeUtility.unfoldAndDecode(MimeUtility.getHeaderParameter(
-                                attachment.getContentType(), "name"));
+                                    attachment.getContentType(), "name"));
                             String contentId = MimeUtility.getHeaderParameter(attachment.getContentId(),
-                                null);
+                                    null);
 
                             String contentDisposition = MimeUtility.unfoldAndDecode(attachment
-                                .getDisposition());
+                                    .getDisposition());
                             String dispositionType = contentDisposition;
 
                             if (dispositionType != null) {
@@ -3034,7 +2972,7 @@ public class LocalStore extends Store implements Serializable {
 
                             if (name == null && contentDisposition != null) {
                                 name = MimeUtility.unfoldAndDecode(MimeUtility.getHeaderParameter(
-                                    contentDisposition, "filename"));
+                                        contentDisposition, "filename"));
                             }
                             if (attachmentId == -1) {
                                 ContentValues cv = new ContentValues();
@@ -3053,37 +2991,37 @@ public class LocalStore extends Store implements Serializable {
                                 cv.put("content_uri", contentUri != null ? contentUri.toString() : null);
                                 cv.put("size", size);
                                 db.update("attachments", cv, "id = ?",
-                                    new String[] { Long.toString(attachmentId) });
+                                        new String[]{Long.toString(attachmentId)});
                             }
 
                             if (attachmentId != -1 && tempAttachmentFile != null) {
                                 File attachmentFile = new File(attachmentDirectory, Long
-                                    .toString(attachmentId));
+                                        .toString(attachmentId));
                                 tempAttachmentFile.renameTo(attachmentFile);
                                 contentUri = AttachmentProvider.getAttachmentUri(mAccount, attachmentId);
                                 attachment.setBody(new LocalAttachmentBody(contentUri, mApplication));
                                 ContentValues cv = new ContentValues();
                                 cv.put("content_uri", contentUri != null ? contentUri.toString() : null);
                                 db.update("attachments", cv, "id = ?",
-                                    new String[] { Long.toString(attachmentId) });
+                                        new String[]{Long.toString(attachmentId)});
                             }
 
                             /* The message has attachment with Content-ID */
                             if (contentId != null && contentUri != null) {
-                                Cursor cursor = db.query("messages", new String[] { "html_content" },
-                                    "id = ?", new String[] { Long.toString(messageId) }, null, null, null);
+                                Cursor cursor = db.query("messages", new String[]{"html_content"},
+                                        "id = ?", new String[]{Long.toString(messageId)}, null, null, null);
                                 try {
                                     if (cursor.moveToNext()) {
                                         String htmlContent = cursor.getString(0);
 
                                         if (htmlContent != null) {
                                             String newHtmlContent = htmlContent.replaceAll(
-                                                Pattern.quote("cid:" + contentId), contentUri.toString());
+                                                    Pattern.quote("cid:" + contentId), contentUri.toString());
 
                                             ContentValues cv = new ContentValues();
                                             cv.put("html_content", newHtmlContent);
                                             db.update("messages", cv, "id = ?",
-                                                new String[] { Long.toString(messageId) });
+                                                    new String[]{Long.toString(messageId)});
                                         }
                                     }
                                 } finally {
@@ -3117,10 +3055,10 @@ public class LocalStore extends Store implements Serializable {
         /**
          * Changes the stored uid of the given message (using it's internal id
          * as a key) to the uid in the message.
-         * 
+         *
          * @param message
          * @throws jp.co.fttx.rakuphotomail.mail.MessagingException
-         * 
+         *
          */
         public void changeUid(final LocalMessage message) throws MessagingException {
             open(OpenMode.READ_WRITE);
@@ -3129,8 +3067,8 @@ public class LocalStore extends Store implements Serializable {
             database.execute(false, new DbCallback<Void>() {
                 @Override
                 public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                UnavailableStorageException {
-                    db.update("messages", cv, "id = ?", new String[] { Long.toString(message.mId) });
+                        UnavailableStorageException {
+                    db.update("messages", cv, "id = ?", new String[]{Long.toString(message.mId)});
                     return null;
                 }
             });
@@ -3160,10 +3098,10 @@ public class LocalStore extends Store implements Serializable {
         }
 
         private void clearMessagesWhere(final String whereClause, final String[] params)
-                        throws MessagingException {
+                throws MessagingException {
             open(OpenMode.READ_ONLY);
             Message[] messages = LocalStore.this.getMessages(null, this, "SELECT " + GET_MESSAGES_COLS
-                + "FROM messages WHERE " + whereClause, params);
+                    + "FROM messages WHERE " + whereClause, params);
 
             for (Message message : messages) {
                 deleteAttachments(message.getUid());
@@ -3171,7 +3109,7 @@ public class LocalStore extends Store implements Serializable {
             database.execute(false, new DbCallback<Void>() {
                 @Override
                 public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                UnavailableStorageException {
+                        UnavailableStorageException {
                     db.execSQL("DELETE FROM messages WHERE " + whereClause, params);
                     return null;
                 }
@@ -3181,14 +3119,14 @@ public class LocalStore extends Store implements Serializable {
 
         public void clearMessagesOlderThan(long cutoff) throws MessagingException {
             final String where = "folder_id = ? and date < ?";
-            final String[] params = new String[] { Long.toString(mFolderId), Long.toString(cutoff) };
+            final String[] params = new String[]{Long.toString(mFolderId), Long.toString(cutoff)};
 
             clearMessagesWhere(where, params);
         }
 
         public void clearAllMessages() throws MessagingException {
             final String where = "folder_id = ?";
-            final String[] params = new String[] { Long.toString(mFolderId) };
+            final String[] params = new String[]{Long.toString(mFolderId)};
 
             clearMessagesWhere(where, params);
             setPushState(null);
@@ -3223,7 +3161,7 @@ public class LocalStore extends Store implements Serializable {
                 database.execute(false, new DbCallback<Void>() {
                     @Override
                     public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                    UnavailableStorageException {
+                            UnavailableStorageException {
                         try {
                             // We need to open the folder first to make sure
                             // we've got it's id
@@ -3236,7 +3174,7 @@ public class LocalStore extends Store implements Serializable {
                             throw new WrappedException(e);
                         }
                         db.execSQL("DELETE FROM folders WHERE id = ?",
-                            new Object[] { Long.toString(mFolderId), });
+                                new Object[]{Long.toString(mFolderId),});
                         return null;
                     }
                 });
@@ -3268,13 +3206,13 @@ public class LocalStore extends Store implements Serializable {
             database.execute(false, new DbCallback<Void>() {
                 @Override
                 public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                UnavailableStorageException {
+                        UnavailableStorageException {
                     Cursor attachmentsCursor = null;
                     try {
-                        attachmentsCursor = db.query("attachments", new String[] { "id" },
-                            "message_id = ?", new String[] { Long.toString(messageId) }, null, null, null);
+                        attachmentsCursor = db.query("attachments", new String[]{"id"},
+                                "message_id = ?", new String[]{Long.toString(messageId)}, null, null, null);
                         final File attachmentDirectory = StorageManager.getInstance(mApplication)
-                            .getAttachmentDirectory(uUid, database.getStorageProviderId());
+                                .getAttachmentDirectory(uUid, database.getStorageProviderId());
                         while (attachmentsCursor.moveToNext()) {
                             long attachmentId = attachmentsCursor.getLong(0);
                             try {
@@ -3302,12 +3240,12 @@ public class LocalStore extends Store implements Serializable {
                 database.execute(false, new DbCallback<Void>() {
                     @Override
                     public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                    UnavailableStorageException {
+                            UnavailableStorageException {
                         Cursor messagesCursor = null;
                         try {
-                            messagesCursor = db.query("messages", new String[] { "id" },
-                                "folder_id = ? AND uid = ?",
-                                new String[] { Long.toString(mFolderId), uid }, null, null, null);
+                            messagesCursor = db.query("messages", new String[]{"id"},
+                                    "folder_id = ? AND uid = ?",
+                                    new String[]{Long.toString(mFolderId), uid}, null, null, null);
                             while (messagesCursor.moveToNext()) {
                                 long messageId = messagesCursor.getLong(0);
                                 deleteAttachments(messageId);
@@ -3421,7 +3359,7 @@ public class LocalStore extends Store implements Serializable {
          * things for POP (which doesn't have internal dates), we can likely use
          * this as a framework to examine send date in lieu of internal date.
          * </p>
-         * 
+         *
          * @throws MessagingException
          */
         public void updateLastUid() throws MessagingException {
@@ -3432,7 +3370,7 @@ public class LocalStore extends Store implements Serializable {
                     try {
                         open(OpenMode.READ_ONLY);
                         cursor = db.rawQuery("SELECT MAX(uid) FROM messages WHERE folder_id=?",
-                            new String[] { Long.toString(mFolderId) });
+                                new String[]{Long.toString(mFolderId)});
                         if (cursor.getCount() > 0) {
                             cursor.moveToFirst();
                             return cursor.getInt(0);
@@ -3460,7 +3398,7 @@ public class LocalStore extends Store implements Serializable {
                     try {
                         open(OpenMode.READ_ONLY);
                         cursor = db.rawQuery("SELECT MIN(date) FROM messages WHERE folder_id=?",
-                            new String[] { Long.toString(mFolderId) });
+                                new String[]{Long.toString(mFolderId)});
                         if (cursor.getCount() > 0) {
                             cursor.moveToFirst();
                             return cursor.getLong(0);
@@ -3575,7 +3513,7 @@ public class LocalStore extends Store implements Serializable {
          * Fetch the message text for display. This always returns an HTML-ified
          * version of the message, even if it was originally a text-only
          * message.
-         * 
+         *
          * @return HTML version of message for display purposes or null.
          * @throws MessagingException
          */
@@ -3665,7 +3603,7 @@ public class LocalStore extends Store implements Serializable {
 
         @Override
         public void setFrom(Address from) throws MessagingException {
-            this.mFrom = new Address[] { from };
+            this.mFrom = new Address[]{from};
             mMessageDirty = true;
         }
 
@@ -3762,7 +3700,7 @@ public class LocalStore extends Store implements Serializable {
                 database.execute(true, new DbCallback<Void>() {
                     @Override
                     public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                    UnavailableStorageException {
+                            UnavailableStorageException {
                         try {
                             if (flag == Flag.DELETED && set) {
                                 delete();
@@ -3777,8 +3715,8 @@ public class LocalStore extends Store implements Serializable {
                         /*
                          * Set the flags on the message.
                          */
-                        db.execSQL("UPDATE messages " + "SET flags = ? " + " WHERE id = ?", new Object[] {
-                            Utility.combine(getFlags(), ',').toUpperCase(), mId });
+                        db.execSQL("UPDATE messages " + "SET flags = ? " + " WHERE id = ?", new Object[]{
+                                Utility.combine(getFlags(), ',').toUpperCase(), mId});
                         return null;
                     }
                 });
@@ -3803,12 +3741,12 @@ public class LocalStore extends Store implements Serializable {
                 database.execute(true, new DbCallback<Void>() {
                     @Override
                     public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                    UnavailableStorageException {
+                            UnavailableStorageException {
                         db.execSQL("UPDATE messages SET " + "deleted = 1," + "subject = NULL, "
-                            + "sender_list = NULL, " + "date = NULL, " + "to_list = NULL, "
-                            + "cc_list = NULL, " + "bcc_list = NULL, " + "preview = NULL, "
-                            + "html_content = NULL, " + "text_content = NULL, " + "reply_to_list = NULL "
-                            + "WHERE id = ?", new Object[] { mId });
+                                + "sender_list = NULL, " + "date = NULL, " + "to_list = NULL, "
+                                + "cc_list = NULL, " + "bcc_list = NULL, " + "preview = NULL, "
+                                + "html_content = NULL, " + "text_content = NULL, " + "reply_to_list = NULL "
+                                + "WHERE id = ?", new Object[]{mId});
                         /*
                          * Delete all of the message's attachments to save
                          * space. We do this explicit deletion here because
@@ -3821,7 +3759,7 @@ public class LocalStore extends Store implements Serializable {
                         } catch (MessagingException e) {
                             throw new WrappedException(e);
                         }
-                        db.execSQL("DELETE FROM attachments WHERE message_id = ?", new Object[] { mId });
+                        db.execSQL("DELETE FROM attachments WHERE message_id = ?", new Object[]{mId});
                         return null;
                     }
                 });
@@ -3841,11 +3779,11 @@ public class LocalStore extends Store implements Serializable {
                 database.execute(true, new DbCallback<Void>() {
                     @Override
                     public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
-                                    UnavailableStorageException {
+                            UnavailableStorageException {
                         try {
                             updateFolderCountsOnFlag(Flag.X_DESTROYED, true);
                             ((LocalFolder) mFolder).deleteAttachments(mId);
-                            db.execSQL("DELETE FROM messages WHERE id = ?", new Object[] { mId });
+                            db.execSQL("DELETE FROM messages WHERE id = ?", new Object[]{mId});
                         } catch (MessagingException e) {
                             throw new WrappedException(e);
                         }
@@ -3894,7 +3832,7 @@ public class LocalStore extends Store implements Serializable {
             ArrayList<LocalMessage> messages = new ArrayList<LocalMessage>();
             messages.add(this);
             mHeadersLoaded = true; // set true before calling populate headers
-                                   // to stop recursion
+            // to stop recursion
             ((LocalFolder) mFolder).populateHeaders(messages);
 
         }
@@ -3946,7 +3884,7 @@ public class LocalStore extends Store implements Serializable {
         /**
          * Returns the local attachment id of this body, or -1 if it is not
          * stored.
-         * 
+         *
          * @return
          */
         public long getAttachmentId() {

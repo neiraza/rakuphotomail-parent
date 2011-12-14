@@ -14,12 +14,6 @@ public class RakuRakuException extends Exception {
      */
     static final long serialVersionUID = 1L;
 
-    public RakuRakuException(String message, Throwable cause, boolean enableSuppression,
-                    boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-        // TODO Auto-generated constructor stub
-    }
-
     public RakuRakuException(String message, Throwable cause) {
         super(message, cause);
         // TODO Auto-generated constructor stub

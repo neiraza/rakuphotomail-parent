@@ -19,6 +19,10 @@ import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore.Attachments;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore.MessageInfo;
+import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
+import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
+import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
+import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideCheck;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideMessage;
 
 import java.util.ArrayList;
@@ -118,11 +122,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         setContentView(R.layout.gallery_slide_show);
         setupViews();
         onNewIntent(getIntent());
-
-        // TODO ここでUIDを取得しちゃいなよ（新規開始も再開もここ通せよな）
         setUidList();
-
-
         Log.d("maguro", "GallerySlideShow#onCreate end");
     }
 
@@ -164,9 +164,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     }
 
     /**
+     * @param intent
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
-     * @param intent
      */
     @Override
     public void onNewIntent(Intent intent) {
@@ -186,9 +186,13 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         for (MessageInfo messageInfo : messageInfoList) {
             String uid = messageInfo.getUid();
             Log.d("maguro", "GallerySlideShow#setUidList uid:" + uid);
-            ArrayList<Attachments> attachments = SlideMessage.getAttachmentList(mAccount, mFolder, uid);
-            if (attachments.size() > 0) {
-                mUidList.add(uid);
+            ArrayList<Attachments> attachmentsList = SlideMessage.getAttachmentList(mAccount, mFolder, uid);
+            for (Attachments attachments : attachmentsList) {
+                //追加対象はスライドする奴のみ（重複UIDは省く）
+                if (SlideCheck.isSlide(attachments) && !mUidList.contains(uid)) {
+                    Log.d("maguro", "GallerySlideShow#setUidList mUidListにuid(" + uid + ")を追加しますた");
+                    mUidList.add(uid);
+                }
             }
         }
         Log.d("maguro", "GallerySlideShow#setUidList end");
@@ -217,20 +221,60 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             @Override
             public void run() {
                 Log.d("maguro", "GallerySlideShow#onSlide thread start");
-                while (mIsRepeatUidList) {
-                    for (Iterator i = mUidList.iterator(); i.hasNext(); ) {
-                        Log.d("maguro", "GallerySlideShow#onSlide " + i.next());
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                            Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#onSlide thread:" + e);
-                        }
-                    }
+                try {
+                    roopInfinity();
+                } catch (RakuRakuException e) {
+                    Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow#onSlide thread Error:" + e);
                 }
                 Log.d("maguro", "GallerySlideShow#onSlide thread end");
             }
         }).start();
         Log.d("maguro", "GallerySlideShow#onSlide end");
+    }
+
+    /**
+     * roooooooop.
+     */
+    private void roopInfinity() throws RakuRakuException {
+        while (mIsRepeatUidList) {
+            roopUid();
+        }
+    }
+
+    /**
+     * uid roop.
+     */
+    private void roopUid() throws RakuRakuException {
+        Log.d("maguro", "GallerySlideShow#roopUid start ");
+        for (Iterator i = mUidList.iterator(); i.hasNext(); ) {
+            String uid = (String) i.next();
+            Log.d("maguro", "GallerySlideShow#roopUid uid:" + uid);
+            // TODO MessageBean & AttachmentBean
+            MessageBean bean = SlideMessage.getMessage(mAccount, mFolder, uid);
+
+            Log.d("maguro", "GallerySlideShow#roopUid bean.getId():" + bean.getId());
+            Log.d("maguro", "GallerySlideShow#roopUid bean.getUid():" + bean.getUid());
+            Log.d("maguro", "GallerySlideShow#roopUid bean.getSubject():" + bean.getSubject());
+            Log.d("maguro", "GallerySlideShow#roopUid bean.getAttachmentCount():" + bean.getAttachmentCount());
+            if (null != bean.getAttachmentBeanList() && 0 < bean.getAttachmentBeanList().size()) {
+                for (AttachmentBean attachmentBean : bean.getAttachmentBeanList()) {
+                    Log.d("maguro", "GallerySlideShow#roopUid attachmentBean.getId():" + attachmentBean.getId());
+                    Log.d("maguro", "GallerySlideShow#roopUid attachmentBean.getMessageId():" + attachmentBean.getMessageId());
+                    Log.d("maguro", "GallerySlideShow#roopUid attachmentBean.getMimeType():" + attachmentBean.getMimeType());
+                    Log.d("maguro", "GallerySlideShow#roopUid attachmentBean.getName():" + attachmentBean.getName());
+                    Log.d("maguro", "GallerySlideShow#roopUid attachmentBean.getSize():" + attachmentBean.getSize());
+                    Log.d("maguro", "GallerySlideShow#roopUid attachmentBean.getContentUrl():" + attachmentBean.getContentUrl());
+                }
+            }
+
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#roopUid thread:" + e);
+            }
+        }
+        Log.d("maguro", "GallerySlideShow#roopUid end");
     }
 
     /**

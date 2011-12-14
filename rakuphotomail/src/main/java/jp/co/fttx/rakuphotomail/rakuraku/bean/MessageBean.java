@@ -1,247 +1,381 @@
+/*
+ * Copyright (c) 2011, UCOM Corporation and/or its affiliates. All rights reserved.
+ * UCOM PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
 package jp.co.fttx.rakuphotomail.rakuraku.bean;
 
+import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore.LocalMessage;
 
+/**
+ * @author tooru.oguri
+ * @since rakuphoto 0.1-beta1
+ */
 public class MessageBean {
-	private long id;
-	private long folderId;
-	private String uid;
-	private String subject;
-	private long date;
-	private String senderList;
-	private String senderAddress;
-	private String senderName;
-	private String toList;
-	private String toListName;
-	private String ccList;
-	private String bccList;
-	private String replyToList;
-	private String messageId;
-	private String textContent;
-	private long attachmentCount;
-	private CopyOnWriteArrayList<AttachmentBean> attachments;
-	private LocalMessage message;
-	private String flags;
-	private boolean flagXGotAllHeaders;
-	private boolean flagSeen;
-	private boolean flagAnswered;
-	private boolean flagXDownLoadedFull;
-	private boolean flagXDownLoadedPartial;
-	private boolean flagXRemoteCopyStarted;
-	private String flagOther;
+    /**
+     * messages.id(DB)
+     */
+    private long id;
+    /**
+     * messages.deleted(DB)
+     */
+    private int deleted;
+    /**
+     * messages.folderId(DB)
+     */
+    private long folderId;
+    /**
+     * messages.uid(DB)
+     */
+    private String uid;
+    /**
+     * messages.subject(DB)
+     */
+    private String subject;
+    /**
+     * messages.date(DB)
+     */
+    private long date;
+    /**
+     * messages.flags(DB)
+     */
+    private String flags;
+    /**
+     * flags X_GOT_ALL_HEADERS
+     */
+    private boolean flagXGotAllHeaders;
+    /**
+     * flags SEEN
+     */
+    private boolean flagSeen;
+    /**
+     * flags ANSWERED
+     */
+    private boolean flagAnswered;
+    /**
+     * flags X_DOWNLOADED_FULL
+     */
+    private boolean flagXDownLoadedFull;
+    /**
+     * flags X_DOWNLOADED_PARTIAL
+     */
+    private boolean flagXDownLoadedPartial;
+    /**
+     * flags X_REMOTE_COPY_STARTED
+     */
+    private boolean flagXRemoteCopyStarted;
+    /**
+     * flags other...
+     */
+    private String flagOther;
+    /**
+     * messages.senderList(DB)
+     */
+    private String senderList;
+    /**
+     * senderList address
+     */
+    private String senderAddress;
+    /**
+     * senderList name
+     */
+    private String senderName;
+    /**
+     * messages.toList(DB)
+     */
+    private String toList;
+    /**
+     * messages.ccList(DB)
+     */
+    private String ccList;
+    /**
+     * messages.bccList(DB)
+     */
+    private String bccList;
+    /**
+     * messages.replyToList(DB)
+     */
+    private String replyToList;
+    /**
+     * messages.htmlContent(DB)
+     */
+    private String htmlContent;
+    /**
+     * messages.textContent(DB)
+     */
+    private String textContent;
+    /**
+     * messages.attachmentCount(DB)
+     */
+    private long attachmentCount;
+    /**
+     * messages.internalDate(DB)
+     */
+    private long internalDate;
+    /**
+     * messages.messageId(DB)
+     */
+    private String messageId;
+    /**
+     * messages.preview(DB)
+     */
+    private String preview;
+    /**
+     * messages.mimeType(DB)
+     */
+    private String mimeType;
+    /**
+     * attachments
+     */
+    private ArrayList<AttachmentBean> attachmentBeanList;
+    /**
+     * LocalMessage
+     */
+    private LocalMessage message;
 
-	public MessageBean() {
-		attachments = new CopyOnWriteArrayList<AttachmentBean>();
-	}
+    public MessageBean() {
+        attachmentBeanList = new ArrayList<AttachmentBean>();
+    }
 
-	public long getId() {
-		return id;
-	}
+    public long getId() {
+        return id;
+    }
 
-	public void setId(long id) {
-		this.id = id;
-	}
+    public void setId(long id) {
+        this.id = id;
+    }
 
-	public long getFolderId() {
-		return folderId;
-	}
+    public long getFolderId() {
+        return folderId;
+    }
 
-	public void setFolderId(long folderId) {
-		this.folderId = folderId;
-	}
+    public void setFolderId(long folderId) {
+        this.folderId = folderId;
+    }
 
-	public String getUid() {
-		return uid;
-	}
+    public String getUid() {
+        return uid;
+    }
 
-	public void setUid(String uid) {
-		this.uid = uid;
-	}
+    public void setUid(String uid) {
+        this.uid = uid;
+    }
 
-	public String getSubject() {
-		return subject;
-	}
+    public String getSubject() {
+        return subject;
+    }
 
-	public void setSubject(String subject) {
-		this.subject = subject;
-	}
+    public void setSubject(String subject) {
+        this.subject = subject;
+    }
 
-	public long getDate() {
-		return date;
-	}
+    public long getDate() {
+        return date;
+    }
 
-	public void setDate(long date) {
-		this.date = date;
-	}
+    public void setDate(long date) {
+        this.date = date;
+    }
 
-	public String getSenderList() {
-		return senderList;
-	}
+    public String getSenderList() {
+        return senderList;
+    }
 
-	public void setSenderList(String senderList) {
-		this.senderList = senderList;
-	}
+    public void setSenderList(String senderList) {
+        this.senderList = senderList;
+    }
 
-	public String getSenderAddress() {
-		return senderAddress;
-	}
+    public String getSenderAddress() {
+        return senderAddress;
+    }
 
-	public void setSenderAddress(String senderAddress) {
-		this.senderAddress = senderAddress;
-	}
+    public void setSenderAddress(String senderAddress) {
+        this.senderAddress = senderAddress;
+    }
 
-	public String getToList() {
-		return toList;
-	}
+    public String getToList() {
+        return toList;
+    }
 
-	public void setToList(String toList) {
-		this.toList = toList;
-	}
+    public void setToList(String toList) {
+        this.toList = toList;
+    }
 
-	public String getCcList() {
-		return ccList;
-	}
+    public String getCcList() {
+        return ccList;
+    }
 
-	public void setCcList(String ccList) {
-		this.ccList = ccList;
-	}
+    public void setCcList(String ccList) {
+        this.ccList = ccList;
+    }
 
-	public String getBccList() {
-		return bccList;
-	}
+    public String getBccList() {
+        return bccList;
+    }
 
-	public void setBccList(String bccList) {
-		this.bccList = bccList;
-	}
+    public void setBccList(String bccList) {
+        this.bccList = bccList;
+    }
 
-	public String getReplyToList() {
-		return replyToList;
-	}
+    public String getReplyToList() {
+        return replyToList;
+    }
 
-	public void setReplyToList(String replyToList) {
-		this.replyToList = replyToList;
-	}
+    public void setReplyToList(String replyToList) {
+        this.replyToList = replyToList;
+    }
 
-	public String getTextContent() {
-		return textContent;
-	}
+    public String getTextContent() {
+        return textContent;
+    }
 
-	public void setTextContent(String textContent) {
-		this.textContent = textContent;
-	}
+    public void setTextContent(String textContent) {
+        this.textContent = textContent;
+    }
 
-	public long getAttachmentCount() {
-		return attachmentCount;
-	}
+    public long getAttachmentCount() {
+        return attachmentCount;
+    }
 
-	public void setAttachmentCount(long attachmentCount) {
-		this.attachmentCount = attachmentCount;
-	}
+    public void setAttachmentCount(long attachmentCount) {
+        this.attachmentCount = attachmentCount;
+    }
 
-	public CopyOnWriteArrayList<AttachmentBean> getAttachments() {
-		return attachments;
-	}
+    public ArrayList<AttachmentBean> getAttachmentBeanList() {
+        return attachmentBeanList;
+    }
 
-	public void setAttachments(CopyOnWriteArrayList<AttachmentBean> attachments) {
-		this.attachments = attachments;
-	}
+    public void setAttachmentBeanList(ArrayList<AttachmentBean> attachmentBeanList) {
+        this.attachmentBeanList = attachmentBeanList;
+    }
 
-	public LocalMessage getMessage() {
-		return message;
-	}
+    public LocalMessage getMessage() {
+        return message;
+    }
 
-	public void setMessage(LocalMessage message) {
-		this.message = message;
-	}
+    public void setMessage(LocalMessage message) {
+        this.message = message;
+    }
 
-	public String getSenderName() {
-		return senderName;
-	}
+    public String getSenderName() {
+        return senderName;
+    }
 
-	public void setSenderName(String senderName) {
-		this.senderName = senderName;
-	}
+    public void setSenderName(String senderName) {
+        this.senderName = senderName;
+    }
 
-	public String getToListName() {
-		return toListName;
-	}
+    public String getMessageId() {
+        return messageId;
+    }
 
-	public void setToListName(String toListName) {
-		this.toListName = toListName;
-	}
+    public void setMessageId(String messageId) {
+        this.messageId = messageId;
+    }
 
-	public String getMessageId() {
-		return messageId;
-	}
+    public String getFlags() {
+        return flags;
+    }
 
-	public void setMessageId(String messageId) {
-		this.messageId = messageId;
-	}
+    public void setFlags(String flags) {
+        this.flags = flags;
+    }
 
-	public String getFlags() {
-		return flags;
-	}
+    public boolean isFlagXGotAllHeaders() {
+        return flagXGotAllHeaders;
+    }
 
-	public void setFlags(String flags) {
-		this.flags = flags;
-	}
+    public void setFlagXGotAllHeaders(boolean flagXGotAllHeaders) {
+        this.flagXGotAllHeaders = flagXGotAllHeaders;
+    }
 
-	public boolean isFlagXGotAllHeaders() {
-		return flagXGotAllHeaders;
-	}
+    public boolean isFlagSeen() {
+        return flagSeen;
+    }
 
-	public void setFlagXGotAllHeaders(boolean flagXGotAllHeaders) {
-		this.flagXGotAllHeaders = flagXGotAllHeaders;
-	}
+    public void setFlagSeen(boolean flagSeen) {
+        this.flagSeen = flagSeen;
+    }
 
-	public boolean isFlagSeen() {
-		return flagSeen;
-	}
+    public boolean isFlagAnswered() {
+        return flagAnswered;
+    }
 
-	public void setFlagSeen(boolean flagSeen) {
-		this.flagSeen = flagSeen;
-	}
+    public void setFlagAnswered(boolean flagAnswered) {
+        this.flagAnswered = flagAnswered;
+    }
 
-	public boolean isFlagAnswered() {
-		return flagAnswered;
-	}
+    public boolean isFlagXDownLoadedFull() {
+        return flagXDownLoadedFull;
+    }
 
-	public void setFlagAnswered(boolean flagAnswered) {
-		this.flagAnswered = flagAnswered;
-	}
+    public void setFlagXDownLoadedFull(boolean flagXDownLoadedFull) {
+        this.flagXDownLoadedFull = flagXDownLoadedFull;
+    }
 
-	public boolean isFlagXDownLoadedFull() {
-		return flagXDownLoadedFull;
-	}
+    public boolean isFlagXDownLoadedPartial() {
+        return flagXDownLoadedPartial;
+    }
 
-	public void setFlagXDownLoadedFull(boolean flagXDownLoadedFull) {
-		this.flagXDownLoadedFull = flagXDownLoadedFull;
-	}
+    public void setFlagXDownLoadedPartial(boolean flagXDownLoadedPartial) {
+        this.flagXDownLoadedPartial = flagXDownLoadedPartial;
+    }
 
-	public boolean isFlagXDownLoadedPartial() {
-		return flagXDownLoadedPartial;
-	}
+    public boolean isFlagXRemoteCopyStarted() {
+        return flagXRemoteCopyStarted;
+    }
 
-	public void setFlagXDownLoadedPartial(boolean flagXDownLoadedPartial) {
-		this.flagXDownLoadedPartial = flagXDownLoadedPartial;
-	}
+    public void setFlagXRemoteCopyStarted(boolean flagXRemoteCopyStarted) {
+        this.flagXRemoteCopyStarted = flagXRemoteCopyStarted;
+    }
 
-	public boolean isFlagXRemoteCopyStarted() {
-		return flagXRemoteCopyStarted;
-	}
+    public String getFlagOther() {
+        return flagOther;
+    }
 
-	public void setFlagXRemoteCopyStarted(boolean flagXRemoteCopyStarted) {
-		this.flagXRemoteCopyStarted = flagXRemoteCopyStarted;
-	}
+    public void setFlagOther(String flagOther) {
+        this.flagOther = flagOther;
+    }
 
-	public String getFlagOther() {
-		return flagOther;
-	}
+    public int getDeleted() {
+        return deleted;
+    }
 
-	public void setFlagOther(String flagOther) {
-		this.flagOther = flagOther;
-	}
+    public void setDeleted(int deleted) {
+        this.deleted = deleted;
+    }
 
+    public String getHtmlContent() {
+        return htmlContent;
+    }
+
+    public void setHtmlContent(String htmlContent) {
+        this.htmlContent = htmlContent;
+    }
+
+    public long getInternalDate() {
+        return internalDate;
+    }
+
+    public void setInternalDate(long internalDate) {
+        this.internalDate = internalDate;
+    }
+
+    public String getPreview() {
+        return preview;
+    }
+
+    public void setPreview(String preview) {
+        this.preview = preview;
+    }
+
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
+    }
 }
