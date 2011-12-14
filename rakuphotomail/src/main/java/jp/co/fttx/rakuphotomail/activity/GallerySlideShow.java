@@ -249,9 +249,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         for (Iterator i = mUidList.iterator(); i.hasNext(); ) {
             String uid = (String) i.next();
             Log.d("maguro", "GallerySlideShow#roopUid uid:" + uid);
-            // TODO MessageBean & AttachmentBean
             MessageBean bean = SlideMessage.getMessage(mAccount, mFolder, uid);
-
             Log.d("maguro", "GallerySlideShow#roopUid bean.getId():" + bean.getId());
             Log.d("maguro", "GallerySlideShow#roopUid bean.getUid():" + bean.getUid());
             Log.d("maguro", "GallerySlideShow#roopUid bean.getSubject():" + bean.getSubject());
