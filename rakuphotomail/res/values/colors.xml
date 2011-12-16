@@ -5,11 +5,11 @@
 		<color
 				name="message_list_item_footer_background">#eeeeee</color>
   		<color
-				name="gallery_view_shadow">#adff2f</color>
+				name="gallery_view_shadow">#ffffff</color>
   		<color
 				name="gallery_view_bottom_shadow">#66ff66</color>
 		<color
-				name="gallery_view_shadow_background">#aaffffff</color>
+				name="gallery_view_shadow_background">#aa000000</color>
 		<color
 				name="gallery_mail_detail_popup_background">#ddffffff</color>
 </resources>

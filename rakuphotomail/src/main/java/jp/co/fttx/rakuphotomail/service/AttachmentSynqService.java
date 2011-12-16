@@ -75,25 +75,23 @@ public class AttachmentSynqService extends Service {
      * <p>
      * ダウンロード処理.
      * </p>
-     * <p>
      * downloadListに含まれていないuidのメールのみ、ダウンロードの対象とする。<br>
      * これはスライドショーの中で、ダウンロードリクエストが非同期に送信される前提で、<br>
      * 同じリクエストが複数回無駄に送信される事を避けるため。<br>
-     * 
-     * @param account
-     *            アカウント情報
-     * @param folder
-     *            フォルダー名
-     * @param uid
-     *            メール識別番号
-     * @throws MessagingException
+     *
+     * @param account アカウント情報
+     * @param folder  フォルダー名
+     * @param uid     メール識別番号
+     * @throws MessagingException oyakusoku
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
      */
     public void onDownload(final Account account, final String folder, final String uid)
-                    throws MessagingException {
+            throws MessagingException {
         Log.d("maguro", "AttachmentSynqService#onDownload start");
         Log.d("maguro", "AttachmentSynqService#onDownload uid:" + uid);
         Log.d("maguro",
-            "AttachmentSynqService#onDownload downloadList.contains(uid):" + downloadList.contains(uid));
+                "AttachmentSynqService#onDownload downloadList.contains(uid):" + downloadList.contains(uid));
         if (!downloadList.contains(uid)) {
             download(account, folder, uid);
             downloadList.add(uid);
@@ -101,8 +99,16 @@ public class AttachmentSynqService extends Service {
         Log.d("maguro", "AttachmentSynqService#onDownload end");
     }
 
+    /**
+     * @param account アカウント情報
+     * @param folder  フォルダー名
+     * @param uid     メール識別番号
+     * @throws MessagingException oyakusoku
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
     private void download(final Account account, final String folder, final String uid)
-                    throws MessagingException {
+            throws MessagingException {
         Log.d("maguro", "AttachmentSynqService#download start");
         Log.d("maguro", "AttachmentSynqService#download uid:" + uid);
         Folder remoteFolder = null;
@@ -119,7 +125,7 @@ public class AttachmentSynqService extends Service {
                 FetchProfile fp = new FetchProfile();
                 fp.add(FetchProfile.Item.ENVELOPE);
                 fp.add(FetchProfile.Item.BODY);
-                localFolder.fetch(new Message[] { message }, fp, null);
+                localFolder.fetch(new Message[]{message}, fp, null);
             } else {
                 Log.d("maguro", "AttachmentSynqService#download NOT X_DOWNLOADED_FULL");
                 Store remoteStore = account.getRemoteStore();
@@ -129,12 +135,12 @@ public class AttachmentSynqService extends Service {
                 Message remoteMessage = remoteFolder.getMessage(uid);
                 FetchProfile fp = new FetchProfile();
                 fp.add(FetchProfile.Item.BODY);
-                remoteFolder.fetch(new Message[] { remoteMessage }, fp, null);
+                remoteFolder.fetch(new Message[]{remoteMessage}, fp, null);
 
-                localFolder.appendMessages(new Message[] { remoteMessage });
+                localFolder.appendMessages(new Message[]{remoteMessage});
                 fp.add(FetchProfile.Item.ENVELOPE);
                 message = localFolder.getMessage(uid);
-                localFolder.fetch(new Message[] { message }, fp, null);
+                localFolder.fetch(new Message[]{message}, fp, null);
 
                 message.setFlag(Flag.X_DOWNLOADED_FULL, true);
             }
@@ -156,8 +162,8 @@ public class AttachmentSynqService extends Service {
             f.close();
         }
     }
-    
-    public void onFuga(){
+
+    public void onFuga() {
         Log.d("maguro", "AttachmentSynqService#onFuga start");
         Intent intent = new Intent();
         intent.setAction(ACTION);

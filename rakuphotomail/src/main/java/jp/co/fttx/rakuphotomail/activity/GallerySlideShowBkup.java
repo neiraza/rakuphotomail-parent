@@ -840,6 +840,11 @@ public class GallerySlideShowBkup {
 //                        Log.d("maguro", "GallerySlideShow#splitMultipart uid:" + uid);
 //                        synqService.onDownload(mAccount, mFolderName, uid);
 //                    }
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        return super.clone();    //To change body of overridden methods use File | Settings | File Templates.
+    }
 //                }
 //            }
 //        }

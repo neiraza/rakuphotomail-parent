@@ -24,125 +24,57 @@
             <LinearLayout
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
-                android:layout_marginBottom="15dip"
+                android:layout_marginBottom="5dip"
                 android:gravity="center|bottom"
                 android:orientation="horizontal" >
 
-                <TextView
+                <Button
                     android:id="@+id/gallery_mail_pre"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_weight="5"
                     android:gravity="center|bottom"
-                    android:shadowColor="#ff6600"
-                    android:shadowDx="3.0"
-                    android:shadowDy="5.0"
-                    android:shadowRadius="2.0"
-                    android:text="前へ"
+                    android:text="@string/gallery_pre"
                     android:textSize="22sp"
                     android:textStyle="normal"
                     android:typeface="sans" />
-
-                <TextView
-                    android:id="@+id/gallery_mail_separator1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="5dip"
-                    android:layout_marginRight="5dip"
-                    android:gravity="center|bottom"
-                    android:shadowColor="#ff6600"
-                    android:shadowDx="3.0"
-                    android:shadowDy="5.0"
-                    android:shadowRadius="2.0"
-                    android:text="@string/gallery_separator"
-                    android:textSize="22sp"
-                    android:textStyle="normal"
-                    android:typeface="sans" />
-
-                <TextView
+                <Button
                     android:id="@+id/gallery_mail_slide"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_weight="5"
                     android:gravity="center|bottom"
-                    android:shadowColor="#ff6600"
-                    android:shadowDx="3.0"
-                    android:shadowDy="5.0"
-                    android:shadowRadius="2.0"
                     android:text="@string/gallery_slide"
                     android:textSize="22sp"
                     android:textStyle="normal"
                     android:typeface="sans" />
 
-                <TextView
-                    android:id="@+id/gallery_mail_separator2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="5dip"
-                    android:layout_marginRight="5dip"
-                    android:gravity="center|bottom"
-                    android:shadowColor="#ff6600"
-                    android:shadowDx="3.0"
-                    android:shadowDy="5.0"
-                    android:shadowRadius="2.0"
-                    android:text="@string/gallery_separator"
-                    android:textSize="22sp"
-                    android:textStyle="normal"
-                    android:typeface="sans" />
-
-                <TextView
+                <Button
                     android:id="@+id/gallery_mail_reply"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_weight="5"
                     android:gravity="center|bottom"
-                    android:shadowColor="#ff6600"
-                    android:shadowDx="3.0"
-                    android:shadowDy="5.0"
-                    android:shadowRadius="2.0"
                     android:text="@string/gallery_reply"
                     android:textSize="22sp"
                     android:textStyle="normal"
                     android:typeface="sans" />
 
-                <TextView
-                    android:id="@+id/gallery_mail_separator3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="5dip"
-                    android:layout_marginRight="5dip"
-                    android:gravity="center|bottom"
-                    android:shadowColor="#ff6600"
-                    android:shadowDx="3.0"
-                    android:shadowDy="5.0"
-                    android:shadowRadius="2.0"
-                    android:text="@string/gallery_separator"
-                    android:textSize="22sp"
-                    android:textStyle="normal"
-                    android:typeface="sans" />
-
-                <TextView
+                <Button
                     android:id="@+id/gallery_mail_next"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_weight="5"
                     android:gravity="center|bottom"
-                    android:shadowColor="#ff6600"
-                    android:shadowDx="3.0"
-                    android:shadowDy="5.0"
-                    android:shadowRadius="2.0"
-                    android:text="次へ"
+                    android:text="@string/gallery_next"
                     android:textSize="22sp"
                     android:textStyle="normal"
                     android:typeface="sans" />
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:gravity="top"
-                android:orientation="horizontal" >
-
                 <LinearLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
-                    android:layout_weight="8"
+                    android:layout_height="wrap_content"
                     android:gravity="top|left"
                     android:orientation="vertical" >
 
@@ -153,12 +85,9 @@
                         android:ellipsize="end"
                         android:scrollHorizontally="true"
                         android:background="@color/gallery_view_shadow_background"
-                        android:shadowColor="@color/gallery_view_shadow"
-                        android:shadowDx="3.0"
-                        android:shadowDy="5.0"
-                        android:shadowRadius="2.0"
+                        android:textColor="@color/gallery_view_shadow"
                         android:text="会社で寝るのが俺の生き様"
-                        android:textSize="25sp"
+                        android:textSize="20sp"
                         android:textStyle="bold"
                         android:typeface="sans" />
 
@@ -167,30 +96,19 @@
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
                         android:background="@color/gallery_view_shadow_background"
-                        android:shadowColor="@color/gallery_view_shadow"
-                        android:shadowDx="3.0"
-                        android:shadowDy="5.0"
-                        android:shadowRadius="2.0"
+                        android:textColor="@color/gallery_view_shadow"
                         android:text="2011/11/1(Fri) 09:00:00 PM"
                         android:textSize="20sp"
                         android:typeface="sans" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
-                    android:layout_weight="2"
-                    android:gravity="top|right" >
-
                     <TextView
                         android:id="@+id/gallery_mail_sent_flag"
                         android:layout_width="fill_parent"
-                        android:layout_height="fill_parent"
-                        android:text="返信済み！"
-                        android:textColor="#FFA500"
+                        android:layout_height="wrap_content"
+                        android:background="@color/gallery_view_shadow_background"
+                        android:textColor="@color/gallery_view_shadow"
+                        android:text="@string/gallery_sent_flg"
                         android:textSize="20sp" />
                 </LinearLayout>
-            </LinearLayout>
         </FrameLayout>
     </LinearLayout>
 

@@ -94,6 +94,11 @@
             </intent-filter>
         </activity>
         <activity
+                android:configChanges="locale"
+                android:launchMode="standard"
+                android:name="jp.co.fttx.rakuphotomail.activity.GallerySlideStop" >
+        </activity>
+        <activity
             android:configChanges="locale"
             android:launchMode="standard"
             android:name="jp.co.fttx.rakuphotomail.activity.GallerySlideShow" >
