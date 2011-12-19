@@ -40,8 +40,8 @@ package jp.co.fttx.rakuphotomail.activity;
 //import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 //import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
 //import jp.co.fttx.rakuphotomail.rakuraku.util.Rotate3dAnimation;
-//import jp.co.fttx.rakuphotomail.service.AttachmentSynqReceiver;
-//import jp.co.fttx.rakuphotomail.service.AttachmentSynqService;
+//import jp.co.fttx.rakuphotomail.service.AttachmentSyncReceiver;
+//import jp.co.fttx.rakuphotomail.service.AttachmentSyncService;
 //import jp.co.fttx.rakuphotomail.service.GallerySlideReceiver;
 //import jp.co.fttx.rakuphotomail.service.GallerySlideService;
 //import android.content.ComponentName;
@@ -147,15 +147,15 @@ public class GallerySlideShowBkup {
 //    private volatile long mDispAttachmentId;
 //    private volatile long mDispMessageId;
 //
-//    private AttachmentSynqService synqService;
+//    private AttachmentSyncService synqService;
 //    private GallerySlideService slideService;
 //    private boolean mIsBound = false;
-//    private AttachmentSynqReceiver attachmentReceiver = new AttachmentSynqReceiver();
+//    private AttachmentSyncReceiver attachmentReceiver = new AttachmentSyncReceiver();
 //    private GallerySlideReceiver slideReceiver = new GallerySlideReceiver();
 //
 //    private boolean newMailFlg = false;
 //
-//    public static void actionHandleFolder(Context context, Account account, String folder) {
+//    public static void actionSlideShow(Context context, Account account, String folder) {
 //        Log.d("maguro", "GallerySlideShow#actionHandlerFolder start");
 //        Intent intent = actionHandleFolderIntent(context, account, folder);
 //        context.startActivity(intent);
@@ -179,7 +179,7 @@ public class GallerySlideShowBkup {
 //        Log.d("maguro", "GallerySlideShow#doBindService start");
 //        if (!mIsBound) {
 //            mIsBound = bindService(getIntent(), mConnection, Context.BIND_AUTO_CREATE);
-////            IntentFilter attachmenFilter = new IntentFilter(AttachmentSynqService.ACTION);
+////            IntentFilter attachmenFilter = new IntentFilter(AttachmentSyncService.ACTION);
 ////            registerReceiver(attachmentReceiver, attachmenFilter);
 //            IntentFilter slideFilter = new IntentFilter(GallerySlideService.ACTION);
 //            registerReceiver(slideReceiver, slideFilter);
@@ -201,7 +201,7 @@ public class GallerySlideShowBkup {
 //    private ServiceConnection mConnection = new ServiceConnection() {
 //        public void onServiceConnected(ComponentName className, IBinder service) {
 //            Log.d("maguro", "GallerySlideShow#mConnection ServiceConnection#onServiceConnected");
-////            synqService = ((AttachmentSynqService.AttachmentSynqBinder) service).getService();
+////            synqService = ((AttachmentSyncService.AttachmentSyncBinder) service).getService();
 //            slideService = ((GallerySlideService.GallerySlideBinder) service).getService();
 //        }
 //
@@ -289,7 +289,7 @@ public class GallerySlideShowBkup {
 //    @Override
 //    public void onNewIntent(Intent intent) {
 //        Log.d("maguro", "GallerySlideShow#onNewIntent start");
-//        intent.setClass(mContext, AttachmentSynqService.class);
+//        intent.setClass(mContext, AttachmentSyncService.class);
 //        intent.setClass(mContext, GallerySlideService.class);
 //        setIntent(intent);
 //        mAccount = Preferences.getPreferences(this).getAccount(intent.getStringExtra(EXTRA_ACCOUNT));

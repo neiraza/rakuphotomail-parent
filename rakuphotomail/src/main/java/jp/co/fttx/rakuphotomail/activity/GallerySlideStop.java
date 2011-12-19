@@ -12,21 +12,16 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
-import android.widget.Gallery;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+import android.widget.*;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
-import jp.co.fttx.rakuphotomail.mail.internet.BinaryTempFileBody;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
 import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideAttachment;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideMessage;
-import jp.co.fttx.rakuphotomail.service.AttachmentSynqService;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -53,9 +48,26 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      */
     private static final String EXTRA_UID = "uid";
     /**
-     *
+     * Display Receive Date
      */
     private static final String DATE_FORMAT = "yyyy/MM/dd h:mm a";
+    /**
+     * R.id.gallery_mail_slide
+     */
+    private static final int ID_GALLERY_MAIL_SLIDE = R.id.gallery_mail_slide;
+    /**
+     * R.id.gallery_mail_reply
+     */
+    private static final int ID_GALLERY_MAIL_REPLY = R.id.gallery_mail_reply;
+    /**
+     * R.id.gallery_mail_pre
+     */
+    private static final int ID_GALLERY_MAIL_PRE = R.id.gallery_mail_pre;
+    /**
+     * R.id.gallery_mail_next
+     */
+    private static final int ID_GALLERY_MAIL_NEXT = R.id.gallery_mail_next;
+
     /**
      * main image
      */
@@ -89,14 +101,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      */
     private TextView mMailReply;
     /**
-     * mail attachment gallery layout
-     */
-    private LinearLayout mGalleryLinearLayout;
-    /**
-     * mail attachment gallery
-     */
-    private Gallery mGallery;
-    /**
      *
      */
     private ProgressDialog mProgressDialog;
@@ -105,18 +109,23 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      */
     private Account mAccount;
     /**
-     *  folder name
+     * folder name
      */
     private String mFolder;
     /**
-     *  message uid
+     * message uid
      */
     private String mUid;
+    /**
+     *
+     */
+    private MessageBean mMessageBean;
 
     /**
      * @param context
      * @param account
      * @param folder
+     * @param uid
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -190,22 +199,20 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
 
     private void setupViews() {
         Log.d("maguro", "GallerySlideStop#setupSlideStopViews start");
-        mImageViewPicture = (ImageView) findViewById(R.id.gallery_mail_picuture);
+        mImageViewPicture = (ImageView) findViewById(R.id.gallery_mail_picture);
         mImageViewPicture.setVisibility(View.VISIBLE);
         mMailSubject = (TextView) findViewById(R.id.gallery_mail_subject);
         mMailDate = (TextView) findViewById(R.id.gallery_mail_date);
         mAnswered = (TextView) findViewById(R.id.gallery_mail_sent_flag);
         mAnswered.setVisibility(View.GONE);
-        mMailPre = (TextView) findViewById(R.id.gallery_mail_pre);
+        mMailPre = (TextView) findViewById(ID_GALLERY_MAIL_PRE);
         mMailPre.setOnClickListener(this);
-        mMailSlide = (TextView) findViewById(R.id.gallery_mail_slide);
+        mMailSlide = (TextView) findViewById(ID_GALLERY_MAIL_SLIDE);
         mMailSlide.setOnClickListener(this);
-        mMailReply = (TextView) findViewById(R.id.gallery_mail_reply);
+        mMailReply = (TextView) findViewById(ID_GALLERY_MAIL_REPLY);
         mMailReply.setOnClickListener(this);
-        mMailNext = (TextView) findViewById(R.id.gallery_mail_next);
+        mMailNext = (TextView) findViewById(ID_GALLERY_MAIL_NEXT);
         mMailNext.setOnClickListener(this);
-        mGalleryLinearLayout = (LinearLayout) findViewById(R.id.gallery_mail_picture_slide_linear_layoput);
-        mGallery = (Gallery) findViewById(R.id.gallery_mail_picture_slide);
         mProgressDialog = new ProgressDialog(this);
         Log.d("maguro", "GallerySlideStop#setupSlideStopViews end");
     }
@@ -225,33 +232,28 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void onDisp() throws RakuRakuException {
-        MessageBean messageBean = SlideMessage.getMessage(mAccount, mFolder, mUid);
-        setImageViewPicture(messageBean.getAttachmentBeanList(), 0);
-        mMailSubject.setText(messageBean.getSubject());
-        setDate(messageBean.getDate());
-        setAnswered(messageBean.isFlagAnswered());
+        mMessageBean = SlideMessage.getMessage(mAccount, mFolder, mUid);
+        setImageViewPicture(mMessageBean.getAttachmentBeanList(), 0);
+        mMailSubject.setText(mMessageBean.getSubject());
+        setDate(mMessageBean.getDate());
+        setAnswered(mMessageBean.isFlagAnswered());
         dissmissProgressDialog();
     }
 
-    private void setImageViewPicture(ArrayList<AttachmentBean> attachmentBeanList, int index){
+    private void setImageViewPicture(ArrayList<AttachmentBean> attachmentBeanList, int index) {
         Bitmap bitmap = SlideAttachment.getBitmap(mContext, getWindowManager().getDefaultDisplay(), mAccount, attachmentBeanList.get(index));
         mImageViewPicture.setImageBitmap(bitmap);
     }
 
-    private void setDate(long date){
+    private void setDate(long date) {
         SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
         mMailDate.setText(sdf.format(date));
     }
 
-    private void setAnswered(boolean isFlagAnswered){
+    private void setAnswered(boolean isFlagAnswered) {
         if (isFlagAnswered) {
             mAnswered.setVisibility(View.VISIBLE);
         }
-    }
-
-    @Override
-    public void onClick(View v) {
-        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     private void setUpProgressDialog() {
@@ -267,6 +269,50 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         if (mProgressDialog.isShowing()) {
             mProgressDialog.dismiss();
         }
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case ID_GALLERY_MAIL_SLIDE:
+                onSlide();
+                break;
+            case ID_GALLERY_MAIL_REPLY:
+                onReply();
+                break;
+            case ID_GALLERY_MAIL_PRE:
+                onMailPre();
+                break;
+            case ID_GALLERY_MAIL_NEXT:
+                onMailNext();
+                break;
+            default:
+                Log.w(RakuPhotoMail.LOG_TAG, "onClick is no Action !!!!");
+        }
+    }
+
+    private void onSlide() {
+        Log.d("maguro", "GallerySlideStop#onSlide");
+        GallerySlideShow.actionSlideShow(this, mAccount, mFolder, mMessageBean.getUid());
+    }
+
+    private void onReply() {
+        Log.d("maguro", "GallerySlideStop#onReply");
+        if (null != mMessageBean) {
+            GallerySendingMail.actionReply(this, mMessageBean);
+        } else {
+            Toast.makeText(GallerySlideStop.this, "メールが存在しません。", Toast.LENGTH_SHORT);
+            Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideStop#onReply() メールが存在しません UID:" + mUid);
+        }
+    }
+
+    private void onMailPre() {
+        Log.d("maguro", "GallerySlideStop#onMailPre");
+    }
+
+    private void onMailNext() {
+        Log.d("maguro", "GallerySlideStop#onMailNext");
+
     }
 
 }

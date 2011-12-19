@@ -580,12 +580,12 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 //				FolderList.actionHandleAccount(this, realAccount);
 			} else {
 				Log.d("fujiyama", "Accounts#onOpenAccount 5");
-//				MessageList.actionHandleFolder(this, realAccount,
+//				MessageList.actionSlideShow(this, realAccount,
 //						realAccount.getAutoExpandFolderName());
 			}
 			Log.d("fujiyama", "Accounts#onOpenAccount 6");
 			Log.d("download_test", "Accounts#onOpenAccount realAccount.getInboxFolderName()" + realAccount.getInboxFolderName());
-			GallerySlideShow.actionHandleFolder(this, realAccount, realAccount.getInboxFolderName());
+			GallerySlideShow.actionSlideShow(this, realAccount, realAccount.getInboxFolderName(),null);
 		}
 		return true;
 	}

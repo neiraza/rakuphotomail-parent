@@ -1,9 +1,8 @@
 package jp.co.fttx.rakuphotomail.activity;
 
 import jp.co.fttx.rakuphotomail.R;
-import jp.co.fttx.rakuphotomail.service.AttachmentSynqReceiver;
-import jp.co.fttx.rakuphotomail.service.AttachmentSynqService;
-import jp.co.fttx.rakuphotomail.service.AttachmentSynqService.AttachmentSynqBinder;
+import jp.co.fttx.rakuphotomail.service.AttachmentSyncReceiver;
+import jp.co.fttx.rakuphotomail.service.AttachmentSyncService;
 import jp.co.fttx.rakuphotomail.service.GallerySlideReceiver;
 import jp.co.fttx.rakuphotomail.service.GallerySlideService;
 import jp.co.fttx.rakuphotomail.service.GallerySlideService.GallerySlideBinder;
@@ -24,10 +23,10 @@ public class RakuPhotoMenuSelecter extends Activity {
     private ImageView mOther;
     private Context mContext;
 
-    private AttachmentSynqService synqService;
+    private AttachmentSyncService syncService;
     private GallerySlideService slideService;
     private boolean mIsBound = false;
-    private AttachmentSynqReceiver attachmentReceiver = new AttachmentSynqReceiver();
+    private AttachmentSyncReceiver attachmentReceiver = new AttachmentSyncReceiver();
     private GallerySlideReceiver slideReceiver = new GallerySlideReceiver();
 
     private Intent intent;
@@ -36,7 +35,7 @@ public class RakuPhotoMenuSelecter extends Activity {
         Log.d("maguro", "RakuPhotoMenuSelecter#doBindService start");
         if (!mIsBound) {
             mIsBound = bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-            IntentFilter attachmenFilter = new IntentFilter(AttachmentSynqService.ACTION);
+            IntentFilter attachmenFilter = new IntentFilter(AttachmentSyncService.ACTION);
             registerReceiver(attachmentReceiver, attachmenFilter);
             IntentFilter slideFilter = new IntentFilter(GallerySlideService.ACTION);
             registerReceiver(slideReceiver, slideFilter);
@@ -58,10 +57,10 @@ public class RakuPhotoMenuSelecter extends Activity {
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             Log.d("maguro", "RakuPhotoMenuSelecter#mConnection ServiceConnection#onServiceConnected start");
-            if (service instanceof AttachmentSynqBinder) {
+            if (service instanceof AttachmentSyncService.AttachmentSyncBinder) {
                 Log.d("maguro",
-                    "RakuPhotoMenuSelecter#mConnection ServiceConnection#onServiceConnected AttachmentSynqBinder");
-                synqService = ((AttachmentSynqService.AttachmentSynqBinder) service).getService();
+                    "RakuPhotoMenuSelecter#mConnection ServiceConnection#onServiceConnected AttachmentSyncBinder");
+                syncService = ((AttachmentSyncService.AttachmentSyncBinder) service).getService();
             } else if (service instanceof GallerySlideBinder) {
                 Log.d("maguro",
                     "RakuPhotoMenuSelecter#mConnection ServiceConnection#onServiceConnected GallerySlideBinder");
@@ -76,7 +75,7 @@ public class RakuPhotoMenuSelecter extends Activity {
         public void onServiceDisconnected(ComponentName className) {
             Log.d("maguro",
                 "RakuPhotoMenuSelecter#mConnection ServiceConnection#onServiceDisconnected start");
-            synqService = null;
+            syncService = null;
             slideService = null;
             Log.d("maguro",
                 "RakuPhotoMenuSelecter#mConnection ServiceConnection#onServiceDisconnected end");
@@ -93,7 +92,7 @@ public class RakuPhotoMenuSelecter extends Activity {
         intent = new Intent(mContext, GallerySlideService.class);
         Log.d("maguro", "RakuPhotoMenuSelecter#onCreate intent.getClass():" + intent.getClass().toString());
         Log.d("maguro", "RakuPhotoMenuSelecter#onCreate intent.getClass():" + intent.getClass());
-        intent.setClass(mContext, AttachmentSynqService.class);
+        intent.setClass(mContext, AttachmentSyncService.class);
         Log.d("maguro", "RakuPhotoMenuSelecter#onCreate intent.getClass():" + intent.getClass().toString());
         Log.d("maguro", "RakuPhotoMenuSelecter#onCreate intent.getClass():" + intent.getClass());
 
@@ -130,7 +129,7 @@ public class RakuPhotoMenuSelecter extends Activity {
     private void onOther() {
         Log.d("maguro", "RakuPhotoMenuSelecter#onOther start");
 
-        synqService.onFuga();
+        syncService.onFuga();
         slideService.onHoge();
         Log.d("maguro", "RakuPhotoMenuSelecter#onOther end");
     }

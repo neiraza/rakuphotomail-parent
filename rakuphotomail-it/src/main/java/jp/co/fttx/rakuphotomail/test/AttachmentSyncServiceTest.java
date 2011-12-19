@@ -3,24 +3,24 @@
  */
 package jp.co.fttx.rakuphotomail.test;
 
-import jp.co.fttx.rakuphotomail.service.AttachmentSynqService;
 import android.content.Intent;
 import android.os.IBinder;
 import android.test.ServiceTestCase;
 import android.test.suitebuilder.annotation.SmallTest;
+import jp.co.fttx.rakuphotomail.service.AttachmentSyncService;
 
 /**
  * @author tooru.oguri
- * @param <AttachmentSynqService>
+ * @param <AttachmentSyncService>
  * 
  */
-public class AttachmentSynqServiceTest extends
-		ServiceTestCase<AttachmentSynqService> {
+public class AttachmentSyncServiceTest extends
+		ServiceTestCase<AttachmentSyncService> {
 
-	AttachmentSynqService testService;
+    AttachmentSyncService testService;
 
-	public AttachmentSynqServiceTest() {
-		super(AttachmentSynqService.class);
+	public AttachmentSyncServiceTest() {
+		super(AttachmentSyncService.class);
 	}
 
 	@Override
@@ -36,7 +36,7 @@ public class AttachmentSynqServiceTest extends
 	@SmallTest
 	public void testHoge() {
 		IBinder binder = bindService(new Intent());
-		testService = ((AttachmentSynqService.AttachmentSynqBinder) binder)
+		testService = ((AttachmentSyncService.AttachmentSyncBinder) binder)
 				.getService();
 	}
 }

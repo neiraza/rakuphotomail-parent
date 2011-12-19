@@ -27,11 +27,11 @@ import android.util.Log;
  * @author tooru.oguri
  * @since rakuphoto 0.1-beta1
  */
-public class AttachmentSynqService extends Service {
+public class AttachmentSyncService extends Service {
 
-    public static final String ACTION = "jp.co.fttx.rakuphotomail.service.AttachmentSynqService.action";
+    public static final String ACTION = "jp.co.fttx.rakuphotomail.service.AttachmentSyncService.action";
 
-    private final IBinder mBinder = new AttachmentSynqBinder();
+    private final IBinder mBinder = new AttachmentSyncBinder();
     private List<String> downloadList;
 
     @Override
@@ -43,31 +43,31 @@ public class AttachmentSynqService extends Service {
     @Override
     public void onStart(Intent intent, int startId) {
         super.onStart(intent, startId);
-        Log.d("maguro", "AttachmentSynqService#onStart");
+        Log.d("maguro", "AttachmentSyncService#onStart");
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d("maguro", "AttachmentSynqService#onBind");
+        Log.d("maguro", "AttachmentSyncService#onBind");
         return mBinder;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-        Log.d("maguro", "AttachmentSynqService#onUnbind");
+        Log.d("maguro", "AttachmentSyncService#onUnbind");
         return super.onUnbind(intent);
     }
 
     @Override
     public void onDestroy() {
-        Log.d("maguro", "AttachmentSynqService#onDestroy");
+        Log.d("maguro", "AttachmentSyncService#onDestroy");
         super.onDestroy();
     }
 
-    public class AttachmentSynqBinder extends Binder {
-        public AttachmentSynqService getService() {
-            Log.d("maguro", "AttachmentSynqBinder#getService");
-            return AttachmentSynqService.this;
+    public class AttachmentSyncBinder extends Binder {
+        public AttachmentSyncService getService() {
+            Log.d("maguro", "AttachmentSyncBinder#getService");
+            return AttachmentSyncService.this;
         }
     }
 
@@ -88,15 +88,15 @@ public class AttachmentSynqService extends Service {
      */
     public void onDownload(final Account account, final String folder, final String uid)
             throws MessagingException {
-        Log.d("maguro", "AttachmentSynqService#onDownload start");
-        Log.d("maguro", "AttachmentSynqService#onDownload uid:" + uid);
+        Log.d("maguro", "AttachmentSyncService#onDownload start");
+        Log.d("maguro", "AttachmentSyncService#onDownload uid:" + uid);
         Log.d("maguro",
-                "AttachmentSynqService#onDownload downloadList.contains(uid):" + downloadList.contains(uid));
+                "AttachmentSyncService#onDownload downloadList.contains(uid):" + downloadList.contains(uid));
         if (!downloadList.contains(uid)) {
             download(account, folder, uid);
             downloadList.add(uid);
         }
-        Log.d("maguro", "AttachmentSynqService#onDownload end");
+        Log.d("maguro", "AttachmentSyncService#onDownload end");
     }
 
     /**
@@ -109,8 +109,8 @@ public class AttachmentSynqService extends Service {
      */
     private void download(final Account account, final String folder, final String uid)
             throws MessagingException {
-        Log.d("maguro", "AttachmentSynqService#download start");
-        Log.d("maguro", "AttachmentSynqService#download uid:" + uid);
+        Log.d("maguro", "AttachmentSyncService#download start");
+        Log.d("maguro", "AttachmentSyncService#download uid:" + uid);
         Folder remoteFolder = null;
         LocalFolder localFolder = null;
         try {
@@ -121,13 +121,13 @@ public class AttachmentSynqService extends Service {
             Message message = localFolder.getMessage(uid);
 
             if (message.isSet(Flag.X_DOWNLOADED_FULL)) {
-                Log.d("maguro", "AttachmentSynqService#download X_DOWNLOADED_FULL");
+                Log.d("maguro", "AttachmentSyncService#download X_DOWNLOADED_FULL");
                 FetchProfile fp = new FetchProfile();
                 fp.add(FetchProfile.Item.ENVELOPE);
                 fp.add(FetchProfile.Item.BODY);
                 localFolder.fetch(new Message[]{message}, fp, null);
             } else {
-                Log.d("maguro", "AttachmentSynqService#download NOT X_DOWNLOADED_FULL");
+                Log.d("maguro", "AttachmentSyncService#download NOT X_DOWNLOADED_FULL");
                 Store remoteStore = account.getRemoteStore();
                 remoteFolder = remoteStore.getFolder(folder);
                 remoteFolder.open(OpenMode.READ_WRITE);
@@ -150,11 +150,11 @@ public class AttachmentSynqService extends Service {
             intent.setAction(ACTION);
             sendBroadcast(intent);
         } finally {
-            Log.d("maguro", "AttachmentSynqService#download finally");
+            Log.d("maguro", "AttachmentSyncService#download finally");
             closeFolder(remoteFolder);
             closeFolder(localFolder);
         }
-        Log.d("maguro", "AttachmentSynqService#download end");
+        Log.d("maguro", "AttachmentSyncService#download end");
     }
 
     private void closeFolder(Folder f) {
@@ -164,10 +164,10 @@ public class AttachmentSynqService extends Service {
     }
 
     public void onFuga() {
-        Log.d("maguro", "AttachmentSynqService#onFuga start");
+        Log.d("maguro", "AttachmentSyncService#onFuga start");
         Intent intent = new Intent();
         intent.setAction(ACTION);
         sendBroadcast(intent);
-        Log.d("maguro", "AttachmentSynqService#onFuga end");
+        Log.d("maguro", "AttachmentSyncService#onFuga end");
     }
 }

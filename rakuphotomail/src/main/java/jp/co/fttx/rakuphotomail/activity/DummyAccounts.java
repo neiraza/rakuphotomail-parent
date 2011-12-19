@@ -24,7 +24,7 @@ public class DummyAccounts extends RakuPhotoActivity {
         Account[] accounts = Preferences.getPreferences(this).getAccounts();
         if (accounts.length == 1 && accounts[0].isAvailable(this)) {
             Log.d("maguro", "DummyAcounts#onCreate 1");
-            GallerySlideShow.actionHandleFolder(this, accounts[0], accounts[0].getInboxFolderName());
+            GallerySlideShow.actionSlideShow(this, accounts[0], accounts[0].getInboxFolderName(), null);
             finish();
         } else {
             Log.d("maguro", "DummyAcounts#onCreate 2");
