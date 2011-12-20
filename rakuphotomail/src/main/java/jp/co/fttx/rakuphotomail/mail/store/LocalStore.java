@@ -72,15 +72,19 @@ public class LocalStore extends Store implements Serializable {
      * a String containing the columns getMessages expects to work with in the
      * correct order.
      */
-    static private String GET_MESSAGES_COLS = "subject, sender_list, date, uid, flags, id, to_list, cc_list, "
+    private static final String GET_MESSAGES_COLS = "subject, sender_list, date, uid, flags, id, to_list, cc_list, "
             + "bcc_list, reply_to_list, attachment_count, internal_date, message_id, folder_id, preview ";
 
-    static private String[] GET_MESSAGES_COLS_ALL = new String[]{"id", "deleted", "folder_id", "uid",
+    private static final String GET_MESSAGES_COLS_STR_ALL = "id, deleted, folder_id, uid, subject, date," +
+            "flags, sender_list, to_list, cc_list, bcc_list, reply_to_list, html_content, text_content," +
+            "attachment_count, internal_date, message_id, preview, mime_type ";
+
+    private static final String[] GET_MESSAGES_COLS_ALL = new String[]{"id", "deleted", "folder_id", "uid",
             "subject", "date", "flags", "sender_list", "to_list", "cc_list", "bcc_list", "reply_to_list",
             "html_content", "text_content", "attachment_count", "internal_date", "message_id", "preview",
             "mime_type"};
 
-    static private String GET_FOLDER_COLS = "id, name, unread_count, visible_limit, last_updated, status, push_state, last_pushed, flagged_count, integrate, top_group, poll_class, push_class, display_class";
+    private static final String GET_FOLDER_COLS = "id, name, unread_count, visible_limit, last_updated, status, push_state, last_pushed, flagged_count, integrate, top_group, poll_class, push_class, display_class";
 
     protected static final int DB_VERSION = 42;
 
@@ -998,7 +1002,6 @@ public class LocalStore extends Store implements Serializable {
 
     }
 
-    // TODO 勝手にDBアクセス結果をふやしてみた
     public class Attachments {
         private long id;
         private long messageId;
@@ -1087,74 +1090,74 @@ public class LocalStore extends Store implements Serializable {
         }
     }
 
-    public ArrayList<MessageInfo> getMessages(final CopyOnWriteArrayList<String> uidList,
-                                              final long folderId) throws MessagingException {
-        return database.execute(false, new DbCallback<ArrayList<MessageInfo>>() {
-            @Override
-            public ArrayList<MessageInfo> doDbWork(final SQLiteDatabase db) throws WrappedException {
-                Cursor c = null;
-                Log.d("maguro", "LocalStore#getMessages uidList.size():" + uidList.size());
-                try {
-                    if (uidList.size() < 0) {
-                        return new ArrayList<MessageInfo>();
-                    }
-                    StringBuffer uids = new StringBuffer();
-                    for (int i = 0; i < uidList.size(); i++) {
-                        if (i != 0) {
-                            uids.append(", ");
-                        }
-                        uids.append(uidList.get(i));
-                        Log.d("maguro", "LocalStore#getMessages uids:" + uids.toString());
-                    }
+//    public ArrayList<MessageInfo> getMessages(final CopyOnWriteArrayList<String> uidList,
+//                                              final long folderId) throws MessagingException {
+//        return database.execute(false, new DbCallback<ArrayList<MessageInfo>>() {
+//            @Override
+//            public ArrayList<MessageInfo> doDbWork(final SQLiteDatabase db) throws WrappedException {
+//                Cursor c = null;
+//                Log.d("maguro", "LocalStore#getMessages uidList.size():" + uidList.size());
+//                try {
+//                    if (uidList.size() < 0) {
+//                        return new ArrayList<MessageInfo>();
+//                    }
+//                    StringBuffer uids = new StringBuffer();
+//                    for (int i = 0; i < uidList.size(); i++) {
+//                        if (i != 0) {
+//                            uids.append(", ");
+//                        }
+//                        uids.append(uidList.get(i));
+//                        Log.d("maguro", "LocalStore#getMessages uids:" + uids.toString());
+//                    }
+//
+//                    // FIXME ここグダグダな予感
+//                    char lastChar = uids.toString().trim().charAt(uids.length());
+//                    Log.d("maguro", "LocalStore#getMessages lastChar:" + lastChar);
+//                    if (",".equals(lastChar)) {
+//                        uids.deleteCharAt(uids.length());
+//                    }
+//                    Log.d("maguro", "LocalStore#getMessages uids:" + uids.toString());
+//                    // xxx debug
+//                    Log.d("maguro", "LocalStore#getMessages start");
+//                    String where = "uid IN (" + uids + ") and folder_id = ?";
+//                    Log.d("maguro", "LocalStore#getMessages where:" + where);
+//                    String[] param = new String[]{Long.toString(folderId)};
+//                    Log.d("maguro", "LocalStore#getMessages param:" + Arrays.toString(param));
+//                    String orderBy = "date DESC";
+//                    c = db.query("messages", GET_MESSAGES_COLS_ALL, where, param, null, null, orderBy);
+//                    Log.d("maguro", "LocalStore#getMessages SQL success?? db.toString():" + db.toString());
+//                    return setMessageInfos(c);
+//                } finally {
+//                    if (c != null) {
+//                        c.close();
+//                    }
+//                }
+//            }
+//        });
+//    }
 
-                    // FIXME ここグダグダな予感 
-                    char lastChar = uids.toString().trim().charAt(uids.length());
-                    Log.d("maguro", "LocalStore#getMessages lastChar:" + lastChar);
-                    if (",".equals(lastChar)) {
-                        uids.deleteCharAt(uids.length());
-                    }
-                    Log.d("maguro", "LocalStore#getMessages uids:" + uids.toString());
-                    // xxx debug
-                    Log.d("maguro", "LocalStore#getMessages start");
-                    String where = "uid IN (" + uids + ") and folder_id = ?";
-                    Log.d("maguro", "LocalStore#getMessages where:" + where);
-                    String[] param = new String[]{Long.toString(folderId)};
-                    Log.d("maguro", "LocalStore#getMessages param:" + Arrays.toString(param));
-                    String orderBy = "date DESC";
-                    c = db.query("messages", GET_MESSAGES_COLS_ALL, where, param, null, null, orderBy);
-                    Log.d("maguro", "LocalStore#getMessages SQL success?? db.toString():" + db.toString());
-                    return setMessageInfos(c);
-                } finally {
-                    if (c != null) {
-                        c.close();
-                    }
-                }
-            }
-        });
-    }
-
-    // TODO 勝手にDBアクセスふやしてみた
-    public ArrayList<String> getMessageUid() throws UnavailableStorageException {
-        return database.execute(false, new DbCallback<ArrayList<String>>() {
-            @Override
-            public ArrayList<String> doDbWork(SQLiteDatabase db) throws WrappedException,
-                    UnavailableStorageException {
-                Cursor cursor = null;
-                ArrayList<String> list = new ArrayList<String>();
-                try {
-                    cursor = db.query("messages", new String[]{"uid"}, null, null, null, null, null);
-                    while (cursor.moveToNext()) {
-                        list.add(cursor.getString(0));
-                    }
-                    return list;
-                } finally {
-                    if (cursor != null) {
-                        cursor.close();
-                    }
-                }
-            }
-        });
-    }
+//    // TODO 勝手にDBアクセスふやしてみた
+//    public ArrayList<String> getMessageUid() throws UnavailableStorageException {
+//        return database.execute(false, new DbCallback<ArrayList<String>>() {
+//            @Override
+//            public ArrayList<String> doDbWork(SQLiteDatabase db) throws WrappedException,
+//                    UnavailableStorageException {
+//                Cursor cursor = null;
+//                ArrayList<String> list = new ArrayList<String>();
+//                try {
+//                    cursor = db.query("messages", new String[]{"uid"}, null, null, null, null, null);
+//                    while (cursor.moveToNext()) {
+//                        list.add(cursor.getString(0));
+//                    }
+//                    return list;
+//                } finally {
+//                    if (cursor != null) {
+//                        cursor.close();
+//                    }
+//                }
+//            }
+//        });
+//    }
 
     /**
      * @param c
@@ -1207,35 +1210,162 @@ public class LocalStore extends Store implements Serializable {
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
-    public MessageInfo getMessage(final String uid) throws UnavailableStorageException {
+    public MessageInfo getMessage(final String uid, final long folderId) throws UnavailableStorageException {
         return database.execute(false, new DbCallback<MessageInfo>() {
             @Override
             public MessageInfo doDbWork(final SQLiteDatabase db) throws WrappedException,
                     UnavailableStorageException {
                 Cursor c = null;
                 try {
-                    String where = "uid = ?";
-                    String[] param = new String[]{uid};
-                    Log.d("maguro", "LocalStore#getMessage uid:" + uid);
+                    String where = "uid = ? and folder_id = ?";
+                    String[] param = new String[]{uid, Long.toString(folderId)};
                     c = db.query("messages", GET_MESSAGES_COLS_ALL, where, param, null, null, null);
-                    Log.d("maguro", "LocalStore#getMessage result::::::");
                     if (null != c) {
-                        Log.d("maguro", "LocalStore#getMessageInfoList c.getCount:" + c.getCount());
-                        Log.d("maguro", "LocalStore#getMessageInfoList c.getColumnCount:" + c.getColumnCount());
                         c.moveToFirst();
-                    } else {
-                        Log.d("maguro", "LocalStore#getMessageInfoList cursor is null...");
                     }
                     return setMessageInfo(c);
                 } catch (CursorIndexOutOfBoundsException e) {
-                    Log.d("maguro", "LocalStore#getMessageInfoList CursorIndexOutOfBoundsException uid:" + uid);
+                    Log.e(RakuPhotoMail.LOG_TAG, "LocalStore#getMessage CursorIndexOutOfBoundsException uid:" + uid);
                 } finally {
                     if (c != null) {
                         c.close();
                     }
                 }
-                // FIXME 仮
                 return new MessageInfo();
+            }
+        });
+    }
+
+    /**
+     * @param uid
+     * @return
+     * @throws UnavailableStorageException
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    public MessageInfo getNextMessage(final String uid, final long folderId) throws UnavailableStorageException {
+        return database.execute(false, new DbCallback<MessageInfo>() {
+            @Override
+            public MessageInfo doDbWork(final SQLiteDatabase db) throws WrappedException,
+                    UnavailableStorageException {
+                Cursor c = null;
+                try {
+                    c = db.rawQuery("SELECT " + GET_MESSAGES_COLS_STR_ALL
+                            + "FROM messages WHERE uid > ? and folder_id = ? ORDER BY uid ASC LIMIT 1",
+                            new String[]{uid, Long.toString(folderId)});
+                    if (null != c) {
+                        c.moveToFirst();
+                    }
+                    return setMessageInfo(c);
+                } catch (CursorIndexOutOfBoundsException e) {
+                    Log.e(RakuPhotoMail.LOG_TAG, "LocalStore#getNextMessage CursorIndexOutOfBoundsException uid:" + uid);
+                } finally {
+                    if (c != null) {
+                        c.close();
+                    }
+                }
+                return new MessageInfo();
+            }
+        });
+    }
+
+    /**
+     * @param uid
+     * @return
+     * @throws UnavailableStorageException
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    public MessageInfo getPreMessage(final String uid, final long folderId) throws UnavailableStorageException {
+        return database.execute(false, new DbCallback<MessageInfo>() {
+            @Override
+            public MessageInfo doDbWork(final SQLiteDatabase db) throws WrappedException,
+                    UnavailableStorageException {
+                Cursor c = null;
+                try {
+                    c = db.rawQuery("SELECT " + GET_MESSAGES_COLS_STR_ALL
+                            + "FROM messages WHERE uid < ? and folder_id = ? ORDER BY uid DESC LIMIT 1",
+                            new String[]{uid, Long.toString(folderId)});
+                    if (null != c) {
+                        c.moveToFirst();
+                    }
+                    return setMessageInfo(c);
+                } catch (CursorIndexOutOfBoundsException e) {
+                    Log.e(RakuPhotoMail.LOG_TAG, "LocalStore#getPreMessage CursorIndexOutOfBoundsException uid:" + uid);
+                } finally {
+                    if (c != null) {
+                        c.close();
+                    }
+                }
+                return new MessageInfo();
+            }
+        });
+    }
+
+    /**
+     * @param uid
+     * @return
+     * @throws UnavailableStorageException
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    public int isNextMessage(final String uid, final long folderId) throws UnavailableStorageException {
+        return database.execute(false, new DbCallback<Integer>() {
+            @Override
+            public Integer doDbWork(final SQLiteDatabase db) throws WrappedException,
+                    UnavailableStorageException {
+                Cursor c = null;
+                try {
+                    c = db.rawQuery("SELECT id "
+                            + "FROM messages WHERE uid > ? and folder_id = ?",
+                            new String[]{uid, Long.toString(folderId)});
+                    if (null == c) {
+                        return 0;
+                    }
+                    Log.d("maguro", "SlideMessage#isNextMessage c.getCount():" + c.getCount());
+                    return c.getCount();
+                } catch (CursorIndexOutOfBoundsException e) {
+                    Log.e(RakuPhotoMail.LOG_TAG, "LocalStore#getPreMessage CursorIndexOutOfBoundsException uid:" + uid);
+                } finally {
+                    if (c != null) {
+                        c.close();
+                    }
+                }
+                return 0;
+            }
+        });
+    }
+
+    /**
+     * @param uid
+     * @return
+     * @throws UnavailableStorageException
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    public int isPreMessage(final String uid, final long folderId) throws UnavailableStorageException {
+        return database.execute(false, new DbCallback<Integer>() {
+            @Override
+            public Integer doDbWork(final SQLiteDatabase db) throws WrappedException,
+                    UnavailableStorageException {
+                Cursor c = null;
+                try {
+                    c = db.rawQuery("SELECT id "
+                            + "FROM messages WHERE uid < ? and folder_id = ?",
+                            new String[]{uid, Long.toString(folderId)});
+                    if (null == c) {
+                        return 0;
+                    }
+                    Log.d("maguro", "SlideMessage#isNextMessage c.getCount():" + c.getCount());
+                    return c.getCount();
+                } catch (CursorIndexOutOfBoundsException e) {
+                    Log.e(RakuPhotoMail.LOG_TAG, "LocalStore#getPreMessage CursorIndexOutOfBoundsException uid:" + uid);
+                } finally {
+                    if (c != null) {
+                        c.close();
+                    }
+                }
+                return 0;
             }
         });
     }
@@ -1244,7 +1374,7 @@ public class LocalStore extends Store implements Serializable {
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
-    private static final String[] ATTACHMENT_COLMUN = new String[]{"id", "message_id", "content_uri", "store_data", "size",
+    private static final String[] ATTACHMENT_COLUMN = new String[]{"id", "message_id", "content_uri", "store_data", "size",
             "name", "mime_type", "content_id", "content_disposition"};
 
     /**
@@ -1262,7 +1392,7 @@ public class LocalStore extends Store implements Serializable {
                 Cursor cursor = null;
                 ArrayList<Attachments> list = new ArrayList<Attachments>();
                 try {
-                    cursor = db.query("attachments", ATTACHMENT_COLMUN, "message_id = ?",
+                    cursor = db.query("attachments", ATTACHMENT_COLUMN, "message_id = ?",
                             new String[]{Long.toString(messageId)}, null, null, null);
                     while (cursor.moveToNext()) {
                         list.add(setAttachments(cursor));
@@ -1291,7 +1421,7 @@ public class LocalStore extends Store implements Serializable {
                     UnavailableStorageException {
                 Cursor cursor = null;
                 try {
-                    cursor = db.query("attachments", ATTACHMENT_COLMUN, "id = ?",
+                    cursor = db.query("attachments", ATTACHMENT_COLUMN, "id = ?",
                             new String[]{Long.toString(attachmentId)}, null, null, null);
                     cursor.moveToFirst();
                     return setAttachments(cursor);
@@ -2414,6 +2544,76 @@ public class LocalStore extends Store implements Serializable {
                 }
             }
             return messages.toArray(EMPTY_MESSAGE_ARRAY);
+        }
+
+        public Message getNextMessage(final String uid) throws MessagingException {
+            try {
+                return database.execute(false, new DbCallback<Message>() {
+                    @Override
+                    public Message doDbWork(final SQLiteDatabase db) throws WrappedException,
+                            UnavailableStorageException {
+                        try {
+                            open(OpenMode.READ_WRITE);
+                            LocalMessage message = new LocalMessage(uid, LocalFolder.this);
+                            Cursor cursor = null;
+
+                            try {
+                                cursor = db.rawQuery("SELECT " + GET_MESSAGES_COLS
+                                        + "FROM messages WHERE uid > ? ORDER BY uid ASC LIMIT 1", new String[]{
+                                        message.getUid()});
+                                if (!cursor.moveToNext()) {
+                                    return null;
+                                }
+                                message.populateFromGetMessageCursor(cursor);
+                            } finally {
+                                if (cursor != null) {
+                                    cursor.close();
+                                }
+                            }
+                            return message;
+                        } catch (MessagingException e) {
+                            throw new WrappedException(e);
+                        }
+                    }
+                });
+            } catch (WrappedException e) {
+                throw (MessagingException) e.getCause();
+            }
+        }
+
+        public Message getPreMessage(final String uid) throws MessagingException {
+            try {
+                return database.execute(false, new DbCallback<Message>() {
+                    @Override
+                    public Message doDbWork(final SQLiteDatabase db) throws WrappedException,
+                            UnavailableStorageException {
+                        try {
+                            open(OpenMode.READ_WRITE);
+                            LocalMessage message = new LocalMessage(uid, LocalFolder.this);
+                            Cursor cursor = null;
+
+                            try {
+                                cursor = db.rawQuery("SELECT " + GET_MESSAGES_COLS
+                                        + "FROM messages WHERE uid < ? ORDER BY uid DESC LIMIT 1", new String[]{
+                                        message.getUid()});
+                                if (!cursor.moveToNext()) {
+                                    return null;
+                                }
+                                message.populateFromGetMessageCursor(cursor);
+                            } finally {
+                                if (cursor != null) {
+                                    cursor.close();
+                                }
+                            }
+                            return message;
+                        } catch (MessagingException e) {
+                            throw new WrappedException(e);
+                        }
+                    }
+                });
+            } catch (WrappedException e) {
+                throw (MessagingException) e.getCause();
+            }
         }
 
         @Override

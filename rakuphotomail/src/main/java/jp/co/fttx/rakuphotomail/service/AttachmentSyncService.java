@@ -29,9 +29,33 @@ import android.util.Log;
  */
 public class AttachmentSyncService extends Service {
 
-    public static final String ACTION = "jp.co.fttx.rakuphotomail.service.AttachmentSyncService.action";
-
+    /**
+     *
+     */
+    public static final String ACTION_SLIDE_SHOW = "jp.co.fttx.rakuphotomail.service.AttachmentSyncService.action.SLIDE_SHOW";
+    /**
+     *
+     */
+    public static final String ACTION_SLIDE_SHOW_STOP = "jp.co.fttx.rakuphotomail.service.AttachmentSyncService.action.SLIDE_SHOW_STOP";
+    /**
+     * Intent get/put account uuid
+     */
+    private static final String EXTRA_ACCOUNT = "account";
+    /**
+     * Intent get/put folder name
+     */
+    private static final String EXTRA_FOLDER = "folder";
+    /**
+     * Intent get/put folder name
+     */
+    private static final String EXTRA_UID = "uid";
+    /**
+     *
+     */
     private final IBinder mBinder = new AttachmentSyncBinder();
+    /**
+     *
+     */
     private List<String> downloadList;
 
     @Override
@@ -86,7 +110,7 @@ public class AttachmentSyncService extends Service {
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
-    public void onDownload(final Account account, final String folder, final String uid)
+    public void onDownload(final Account account, final String folder, final String uid, final String action)
             throws MessagingException {
         Log.d("maguro", "AttachmentSyncService#onDownload start");
         Log.d("maguro", "AttachmentSyncService#onDownload uid:" + uid);
@@ -95,6 +119,19 @@ public class AttachmentSyncService extends Service {
         if (!downloadList.contains(uid)) {
             download(account, folder, uid);
             downloadList.add(uid);
+
+            Intent intent = new Intent();
+            intent.putExtra(EXTRA_ACCOUNT, account.getUuid());
+            intent.putExtra(EXTRA_FOLDER, folder);
+            intent.putExtra(EXTRA_UID, uid);
+            if (ACTION_SLIDE_SHOW.equals(action)) {
+                intent.setAction(ACTION_SLIDE_SHOW);
+            } else if (ACTION_SLIDE_SHOW_STOP.equals(action)) {
+                intent.setAction(ACTION_SLIDE_SHOW_STOP);
+            } else {
+                intent.setAction("");
+            }
+            sendBroadcast(intent);
         }
         Log.d("maguro", "AttachmentSyncService#onDownload end");
     }
@@ -144,11 +181,6 @@ public class AttachmentSyncService extends Service {
 
                 message.setFlag(Flag.X_DOWNLOADED_FULL, true);
             }
-
-            Intent intent = new Intent();
-            intent.putExtra("UID", uid);
-            intent.setAction(ACTION);
-            sendBroadcast(intent);
         } finally {
             Log.d("maguro", "AttachmentSyncService#download finally");
             closeFolder(remoteFolder);
@@ -161,13 +193,5 @@ public class AttachmentSyncService extends Service {
         if (f != null) {
             f.close();
         }
-    }
-
-    public void onFuga() {
-        Log.d("maguro", "AttachmentSyncService#onFuga start");
-        Intent intent = new Intent();
-        intent.setAction(ACTION);
-        sendBroadcast(intent);
-        Log.d("maguro", "AttachmentSyncService#onFuga end");
     }
 }

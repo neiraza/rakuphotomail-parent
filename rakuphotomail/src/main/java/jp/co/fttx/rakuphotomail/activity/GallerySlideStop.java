@@ -5,10 +5,10 @@
 package jp.co.fttx.rakuphotomail.activity;
 
 import android.app.ProgressDialog;
-import android.content.Context;
-import android.content.Intent;
+import android.content.*;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -17,11 +17,15 @@ import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
+import jp.co.fttx.rakuphotomail.mail.MessagingException;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
 import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideAttachment;
+import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideCheck;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideMessage;
+import jp.co.fttx.rakuphotomail.service.AttachmentSyncReceiver;
+import jp.co.fttx.rakuphotomail.service.AttachmentSyncService;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -120,6 +124,18 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      *
      */
     private MessageBean mMessageBean;
+    /**
+     * service
+     */
+    private AttachmentSyncService mSyncService;
+    /**
+     * isBound
+     */
+    private boolean mIsBound = false;
+    /**
+     * receiver
+     */
+    private AttachmentSyncReceiver mAttachmentReceiver = new AttachmentSyncReceiver();
 
     /**
      * @param context
@@ -190,10 +206,11 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         setUpProgressDialog();
         onNewIntent(getIntent());
         try {
-            onDisp();
+            onDisp(null);
         } catch (RakuRakuException e) {
             Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideStop#onSlide thread Error:" + e);
         }
+        doBindService();
         Log.d("maguro", "GallerySlideStop#onCreate end");
     }
 
@@ -207,12 +224,14 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         mAnswered.setVisibility(View.GONE);
         mMailPre = (TextView) findViewById(ID_GALLERY_MAIL_PRE);
         mMailPre.setOnClickListener(this);
+        mMailPre.setVisibility(View.VISIBLE);
         mMailSlide = (TextView) findViewById(ID_GALLERY_MAIL_SLIDE);
         mMailSlide.setOnClickListener(this);
         mMailReply = (TextView) findViewById(ID_GALLERY_MAIL_REPLY);
         mMailReply.setOnClickListener(this);
         mMailNext = (TextView) findViewById(ID_GALLERY_MAIL_NEXT);
         mMailNext.setOnClickListener(this);
+        mMailNext.setVisibility(View.VISIBLE);
         mProgressDialog = new ProgressDialog(this);
         Log.d("maguro", "GallerySlideStop#setupSlideStopViews end");
     }
@@ -231,12 +250,15 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         Log.d("maguro", "GallerySlideStop#onNewIntent end");
     }
 
-    private void onDisp() throws RakuRakuException {
-        mMessageBean = SlideMessage.getMessage(mAccount, mFolder, mUid);
-        setImageViewPicture(mMessageBean.getAttachmentBeanList(), 0);
-        mMailSubject.setText(mMessageBean.getSubject());
-        setDate(mMessageBean.getDate());
-        setAnswered(mMessageBean.isFlagAnswered());
+    private void onDisp(MessageBean messageBean) throws RakuRakuException {
+        if (null == messageBean) {
+            messageBean = SlideMessage.getMessage(mAccount, mFolder, mUid);
+        }
+        mMessageBean = messageBean;
+        setImageViewPicture(messageBean.getAttachmentBeanList(), 0);
+        mMailSubject.setText(messageBean.getSubject());
+        setDate(messageBean.getDate());
+        setAnswered(messageBean.isFlagAnswered());
         dissmissProgressDialog();
     }
 
@@ -269,6 +291,22 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         if (mProgressDialog.isShowing()) {
             mProgressDialog.dismiss();
         }
+    }
+
+    @Override
+    public void onStop() {
+        Log.d("maguro", "GallerySlideStop#onStop start");
+        super.onStop();
+        doUnbindService();
+        finish();
+        Log.d("maguro", "GallerySlideStop#onStop stop");
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.d("maguro", "GallerySlideStop#onDestroy start");
+        super.onDestroy();
+        Log.d("maguro", "GallerySlideStop#onDestroy stop");
     }
 
     @Override
@@ -306,13 +344,103 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         }
     }
 
-    private void onMailPre() {
-        Log.d("maguro", "GallerySlideStop#onMailPre");
-    }
-
     private void onMailNext() {
         Log.d("maguro", "GallerySlideStop#onMailNext");
-
+        try {
+            MessageBean messageBean = SlideMessage.getNextMessage(mAccount, mFolder, mMessageBean.getUid());
+            dispSlide(messageBean);
+            Log.d("maguro", "GallerySlideStop#onMailNext messageBean.getUid():" + messageBean.getUid());
+            setMailMoveVisibility(messageBean.getUid());
+        } catch (RakuRakuException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideStop#onMailNext() 次のメールが取得できず UID:" + mMessageBean.getUid());
+        }
     }
+
+    private void onMailPre() {
+        Log.d("maguro", "GallerySlideStop#onMailPre");
+        try {
+            MessageBean messageBean = SlideMessage.getPreMessage(mAccount, mFolder, mMessageBean.getUid());
+            dispSlide(messageBean);
+            Log.d("maguro", "GallerySlideStop#onMailNext messageBean.getUid():" + messageBean.getUid());
+            setMailMoveVisibility(messageBean.getUid());
+        } catch (RakuRakuException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideStop#onMailPre() 前のメールが取得できず UID:" + mMessageBean.getUid());
+        }
+    }
+
+    /**
+     * @param messageBean MessageBean
+     * @throws RakuRakuException exception
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private void dispSlide(MessageBean messageBean) throws RakuRakuException {
+        Log.d("maguro", "GallerySlideStop#dispSlide(String) start");
+        if (SlideCheck.isDownloadedAttachment(messageBean)) {
+            //画像以外は先に共通で表示しちゃおうか
+            onDisp(messageBean);
+        } else {
+            try {
+                if (null == mSyncService) {
+                    Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideStop#loopUid mSyncServiceがnullでした。");
+                    return;
+                }
+                mSyncService.onDownload(mAccount, mFolder, messageBean.getUid(), AttachmentSyncService.ACTION_SLIDE_SHOW_STOP);
+            } catch (MessagingException e) {
+                Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideStop#loopUid なぜかError!!!!");
+            }
+        }
+        Log.d("maguro", "GallerySlideStop#dispSlide(String) end");
+    }
+    
+    private void setMailMoveVisibility(String uid){
+        if (!SlideMessage.isNextMessage(mAccount, mFolder, uid)) {
+            mMailNext.setVisibility(View.GONE);
+        } else {
+            mMailNext.setVisibility(View.VISIBLE);
+        }
+        if (!SlideMessage.isPreMessage(mAccount, mFolder, uid)) {
+            mMailPre.setVisibility(View.GONE);
+        } else {
+            mMailPre.setVisibility(View.VISIBLE);
+        }
+    }
+
+    /**
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private void doBindService() {
+        Log.d("maguro", "GallerySlideStop#doBindService start");
+        if (!mIsBound) {
+            mIsBound = bindService(getIntent(), mConnection, Context.BIND_AUTO_CREATE);
+            IntentFilter attachmentFilter = new IntentFilter(AttachmentSyncService.ACTION_SLIDE_SHOW_STOP);
+            registerReceiver(mAttachmentReceiver, attachmentFilter);
+        }
+        Log.d("maguro", "GallerySlideStop#doBindService end");
+    }
+
+    private void doUnbindService() {
+        Log.d("maguro", "GallerySlideStop#doUnBindService start");
+        if (mIsBound) {
+            unbindService(mConnection);
+            mIsBound = false;
+            unregisterReceiver(mAttachmentReceiver);
+        }
+        Log.d("maguro", "GallerySlideStop#doUnBindService end");
+    }
+
+    /**
+     * ServiceConnection
+     */
+    private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            mSyncService = ((AttachmentSyncService.AttachmentSyncBinder) service).getService();
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            mSyncService = null;
+        }
+    };
 
 }

@@ -344,8 +344,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         Log.d("maguro", "GallerySlideShow#doBindService start");
         if (!mIsBound) {
             mIsBound = bindService(getIntent(), mConnection, Context.BIND_AUTO_CREATE);
-            IntentFilter attachmenFilter = new IntentFilter(AttachmentSyncService.ACTION);
-            registerReceiver(mAttachmentReceiver, attachmenFilter);
+            IntentFilter attachmentFilter = new IntentFilter(AttachmentSyncService.ACTION_SLIDE_SHOW);
+            registerReceiver(mAttachmentReceiver, attachmentFilter);
         }
         Log.d("maguro", "GallerySlideShow#doBindService end");
     }
@@ -365,14 +365,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
-            Log.d("maguro", "GallerySlideShow#mConnection ServiceConnection#onServiceConnected");
-            Log.d("mSyncService", "GallerySlideShow#mConnection ServiceConnection#onServiceConnected");
             mSyncService = ((AttachmentSyncService.AttachmentSyncBinder) service).getService();
         }
 
         public void onServiceDisconnected(ComponentName className) {
-            Log.d("maguro", "GallerySlideShow#mConnection ServiceConnection#onServiceDisconnected");
-            Log.d("mSyncService", "GallerySlideShow#mConnection ServiceConnection#onServiceDisconnected");
             mSyncService = null;
         }
     };
@@ -490,7 +486,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                     Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#loopUid mSyncServiceがnullでした。");
                     return;
                 }
-                mSyncService.onDownload(mAccount, mFolder, uid);
+                mSyncService.onDownload(mAccount, mFolder, uid, AttachmentSyncService.ACTION_SLIDE_SHOW);
             } catch (MessagingException e) {
                 Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#loopUid 次のuid(" + uid + ")をDLしますね");
             }
