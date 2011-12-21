@@ -31,7 +31,6 @@ public class SlideAttachment {
             BitmapFactory.Options options = new BitmapFactory.Options();
             Uri uri = AttachmentProvider.getAttachmentUri(account, attachmentBean.getId());
             options.inJustDecodeBounds = true;
-            // TODO なんでcontext.getContentResolver().openInputStream(uri)を2回も呼んでるんだっけ？
             context.getContentResolver().openInputStream(uri);
             BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
             int displayW = display.getWidth();
@@ -48,4 +47,28 @@ public class SlideAttachment {
         }
         return null;
     }
+
+    public static Bitmap getThumbnailBitmap(Context context, Display display, Account account, AttachmentBean attachmentBean) {
+        Log.d("maguro", "SlideAttachment#getThumbnailBitmap");
+        try {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            Uri uri = AttachmentProvider.getAttachmentUri(account, attachmentBean.getId());
+            options.inJustDecodeBounds = true;
+            context.getContentResolver().openInputStream(uri);
+            BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
+            int displayW = 150;
+            int displayH = 100;
+            int scaleW = options.outWidth / displayW + 1;
+            int scaleH = options.outHeight / displayH + 1;
+            options.inJustDecodeBounds = false;
+            options.inSampleSize = Math.max(scaleW, scaleH);
+            Log.d("maguro", "SlideAttachment#getThumbnailBitmap Thumbnailいけそう？");
+            return BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null,
+                    options);
+        } catch (Exception e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "Exception:" + e);
+        }
+        return null;
+    }
+
 }

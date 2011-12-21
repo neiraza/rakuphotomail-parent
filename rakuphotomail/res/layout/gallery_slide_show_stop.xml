@@ -17,50 +17,87 @@
     <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:background="@color/gallery_view_shadow_background"
             android:layout_gravity="bottom"
-            android:layout_marginBottom="5dip"
-            android:padding="5dip"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
-        <Button
-                android:id="@+id/gallery_mail_pre"
+        <LinearLayout
+                android:id="@+id/gallery_thumbnail_info_layout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="5"
-                android:text="@string/gallery_pre"
-                android:textSize="22sp"
-                android:textStyle="normal"
-                android:typeface="sans"/>
-        <Button
-                android:id="@+id/gallery_mail_slide"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="5"
-                android:text="@string/gallery_slide"
-                android:textSize="22sp"
-                android:textStyle="normal"
-                android:typeface="sans"/>
+                android:background="@color/gallery_view_shadow_background">
 
-        <Button
-                android:id="@+id/gallery_mail_reply"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="5"
-                android:text="@string/gallery_reply"
-                android:textSize="22sp"
-                android:textStyle="normal"
-                android:typeface="sans"/>
+            <TextView
+                    android:id="@+id/gallery_thumbnail_info"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:scrollHorizontally="true"
+                    android:background="@color/gallery_view_shadow_background"
+                    android:textColor="@color/gallery_view_shadow"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:text="gazo ari"/>
+        </LinearLayout>
 
-        <Button
-                android:id="@+id/gallery_mail_next"
-                android:layout_width="wrap_content"
+        <LinearLayout
+                android:id="@+id/gallery_thumbnail_layout"
+                android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="5"
-                android:text="@string/gallery_next"
-                android:textSize="22sp"
-                android:textStyle="normal"
-                android:typeface="sans"/>
+                android:background="@color/gallery_view_shadow_background">
+
+            <Gallery
+                    android:id="@+id/gallery_thumbnail"
+                    android:layout_width="fill_parent"
+                    android:layout_height="100dip"/>
+        </LinearLayout>
+
+        <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/gallery_view_shadow_background"
+                android:layout_marginBottom="5dip"
+                android:padding="5dip"
+                android:orientation="horizontal">
+
+            <Button
+                    android:id="@+id/gallery_mail_pre"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="5"
+                    android:text="@string/gallery_pre"
+                    android:textSize="22sp"
+                    android:textStyle="normal"
+                    android:typeface="sans"/>
+            <Button
+                    android:id="@+id/gallery_mail_slide"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="5"
+                    android:text="@string/gallery_slide"
+                    android:textSize="22sp"
+                    android:textStyle="normal"
+                    android:typeface="sans"/>
+
+            <Button
+                    android:id="@+id/gallery_mail_reply"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="5"
+                    android:text="@string/gallery_reply"
+                    android:textSize="22sp"
+                    android:textStyle="normal"
+                    android:typeface="sans"/>
+
+            <Button
+                    android:id="@+id/gallery_mail_next"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="5"
+                    android:text="@string/gallery_next"
+                    android:textSize="22sp"
+                    android:textStyle="normal"
+                    android:typeface="sans"/>
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
@@ -99,4 +136,5 @@
                 android:text="@string/gallery_sent_flg"
                 android:textSize="20sp"/>
     </LinearLayout>
+
 </FrameLayout>

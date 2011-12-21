@@ -24,6 +24,7 @@ import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideAttachment;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideCheck;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideMessage;
+import jp.co.fttx.rakuphotomail.rakuraku.util.ThumbnailImageAdapter;
 import jp.co.fttx.rakuphotomail.service.AttachmentSyncReceiver;
 import jp.co.fttx.rakuphotomail.service.AttachmentSyncService;
 
@@ -34,7 +35,7 @@ import java.util.ArrayList;
  * @author tooru.oguri
  * @since rakuphoto 0.1-beta1
  */
-public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickListener {
+public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
     /**
      * context
      */
@@ -136,6 +137,22 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      * receiver
      */
     private AttachmentSyncReceiver mAttachmentReceiver = new AttachmentSyncReceiver();
+    /**
+     *
+     */
+    private LinearLayout mGalleryThumbnailInfoLayout;
+    /**
+     *
+     */
+    private TextView mGalleryThumbnailInfo;
+    /**
+     *
+     */
+    private LinearLayout mGalleryThumbnailLayout;
+    /**
+     *
+     */
+    private Gallery mGalleryThumbnail;
 
     /**
      * @param context
@@ -205,6 +222,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         setupViews();
         setUpProgressDialog();
         onNewIntent(getIntent());
+        setMailMoveVisibility(mUid);
         try {
             onDisp(null);
         } catch (RakuRakuException e) {
@@ -218,22 +236,41 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         Log.d("maguro", "GallerySlideStop#setupSlideStopViews start");
         mImageViewPicture = (ImageView) findViewById(R.id.gallery_mail_picture);
         mImageViewPicture.setVisibility(View.VISIBLE);
+        setupViewTopMailInfo();
+        setupViewBottomButton();
+        mProgressDialog = new ProgressDialog(this);
+        setupViewGalleryThumbnail();
+
+        Log.d("maguro", "GallerySlideStop#setupSlideStopViews end");
+    }
+
+    private void setupViewTopMailInfo() {
         mMailSubject = (TextView) findViewById(R.id.gallery_mail_subject);
         mMailDate = (TextView) findViewById(R.id.gallery_mail_date);
         mAnswered = (TextView) findViewById(R.id.gallery_mail_sent_flag);
         mAnswered.setVisibility(View.GONE);
+    }
+
+    private void setupViewBottomButton() {
         mMailPre = (TextView) findViewById(ID_GALLERY_MAIL_PRE);
         mMailPre.setOnClickListener(this);
-        mMailPre.setVisibility(View.VISIBLE);
         mMailSlide = (TextView) findViewById(ID_GALLERY_MAIL_SLIDE);
         mMailSlide.setOnClickListener(this);
         mMailReply = (TextView) findViewById(ID_GALLERY_MAIL_REPLY);
         mMailReply.setOnClickListener(this);
         mMailNext = (TextView) findViewById(ID_GALLERY_MAIL_NEXT);
         mMailNext.setOnClickListener(this);
-        mMailNext.setVisibility(View.VISIBLE);
-        mProgressDialog = new ProgressDialog(this);
-        Log.d("maguro", "GallerySlideStop#setupSlideStopViews end");
+    }
+
+    private void setupViewGalleryThumbnail() {
+        mGalleryThumbnailInfoLayout = (LinearLayout) findViewById(R.id.gallery_thumbnail_info_layout);
+        mGalleryThumbnailInfoLayout.setVisibility(View.GONE);
+        mGalleryThumbnailInfo = (TextView) findViewById(R.id.gallery_thumbnail_info);
+        mGalleryThumbnailInfo.setOnClickListener(this);
+        mGalleryThumbnailLayout = (LinearLayout) findViewById(R.id.gallery_thumbnail_layout);
+        mGalleryThumbnailLayout.setVisibility(View.GONE);
+        mGalleryThumbnail = (Gallery) findViewById(R.id.gallery_thumbnail);
+        mGalleryThumbnail.setOnItemClickListener((AdapterView.OnItemClickListener) mContext);
     }
 
     /**
@@ -251,15 +288,43 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void onDisp(MessageBean messageBean) throws RakuRakuException {
+        Log.d("maguro", "GallerySlideStop#onDisp start");
         if (null == messageBean) {
             messageBean = SlideMessage.getMessage(mAccount, mFolder, mUid);
         }
         mMessageBean = messageBean;
+        //Thumbnail
+        ArrayList<AttachmentBean> attachmentBeanList = messageBean.getAttachmentBeanList();
+        if (1 < attachmentBeanList.size()) {
+            mGalleryThumbnailLayout.setVisibility(View.VISIBLE);
+            ThumbnailImageAdapter thumbnailAdapter = new ThumbnailImageAdapter(mContext);
+            thumbnailAdapter.setImageItems(makeBitmapList(attachmentBeanList));
+            mGalleryThumbnail.setAdapter(thumbnailAdapter);
+        } else {
+            mGalleryThumbnailLayout.setVisibility(View.GONE);
+        }
+
+        //ここはThumnailから選択できるように変更する予定
         setImageViewPicture(messageBean.getAttachmentBeanList(), 0);
+
         mMailSubject.setText(messageBean.getSubject());
         setDate(messageBean.getDate());
         setAnswered(messageBean.isFlagAnswered());
         dissmissProgressDialog();
+        Log.d("maguro", "GallerySlideStop#onDisp end");
+    }
+
+    private ArrayList<Bitmap> makeBitmapList(ArrayList<AttachmentBean> beanArrayList) {
+        Log.d("maguro", "GallerySlideStop#makeBitmapList");
+        ArrayList<Bitmap> resultList = new ArrayList<Bitmap>();
+        for (AttachmentBean attachmentBean : beanArrayList) {
+            resultList.add(getThumbnailBitmap(attachmentBean));
+        }
+        return resultList;
+    }
+
+    private Bitmap getThumbnailBitmap(AttachmentBean attachmentBean) {
+        return SlideAttachment.getThumbnailBitmap(mContext, getWindowManager().getDefaultDisplay(), mAccount, attachmentBean);
     }
 
     private void setImageViewPicture(ArrayList<AttachmentBean> attachmentBeanList, int index) {
@@ -297,16 +362,17 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     public void onStop() {
         Log.d("maguro", "GallerySlideStop#onStop start");
         super.onStop();
-        doUnbindService();
-        finish();
-        Log.d("maguro", "GallerySlideStop#onStop stop");
+
+        Log.d("maguro", "GallerySlideStop#onStop end");
     }
 
     @Override
     public void onDestroy() {
         Log.d("maguro", "GallerySlideStop#onDestroy start");
         super.onDestroy();
-        Log.d("maguro", "GallerySlideStop#onDestroy stop");
+        doUnbindService();
+        finish();
+        Log.d("maguro", "GallerySlideStop#onDestroy end");
     }
 
     @Override
@@ -392,8 +458,8 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         }
         Log.d("maguro", "GallerySlideStop#dispSlide(String) end");
     }
-    
-    private void setMailMoveVisibility(String uid){
+
+    private void setMailMoveVisibility(String uid) {
         if (!SlideMessage.isNextMessage(mAccount, mFolder, uid)) {
             mMailNext.setVisibility(View.GONE);
         } else {
@@ -443,4 +509,8 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         }
     };
 
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Log.d("maguro", "GallerySlideStop#onItemClick id:" + id);
+    }
 }
