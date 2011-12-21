@@ -27,6 +27,7 @@ import jp.co.fttx.rakuphotomail.mail.store.LocalStore.MessageInfo;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
 import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
+import jp.co.fttx.rakuphotomail.rakuraku.photomail.MessageSync;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideAttachment;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideCheck;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideMessage;
@@ -34,9 +35,7 @@ import jp.co.fttx.rakuphotomail.service.AttachmentSyncReceiver;
 import jp.co.fttx.rakuphotomail.service.AttachmentSyncService;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author tooru.oguri
@@ -192,6 +191,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         Log.d("maguro", "GallerySlideShow#actionSlideShow end");
     }
 
+    //TODO Timer TEST
+    Timer mTimer   = null;
+
+
     /**
      * @param savedInstanceState
      * @author tooru.oguri
@@ -210,6 +213,26 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         setupViews();
         setUidList();
         doBindService();
+
+        //TODO Timer TEST
+        mTimer = new Timer(true);
+        mTimer.schedule( new TimerTask(){
+            @Override
+            public void run() {
+                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
+                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
+                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
+                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
+                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
+                MessageSync.synchronizeMailbox(mAccount,mFolder);
+                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
+                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
+                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
+                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
+                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
+            }
+        }, 60000L, 60000L);
+
         Log.d("maguro", "GallerySlideShow#onCreate end");
     }
 
@@ -596,6 +619,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     public void onDestroy() {
         Log.d("maguro", "GallerySlideShow#onDestroy start");
         super.onDestroy();
+        mTimer.cancel();
+        mTimer = null;
         Log.d("maguro", "GallerySlideShow#onDestroy stop");
     }
 
