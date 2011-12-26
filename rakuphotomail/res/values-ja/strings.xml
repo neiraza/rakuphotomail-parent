@@ -202,28 +202,12 @@
     <string name="end_of_folder">これ以上メールはありません</string>
 
     <string name="accounts_welcome">
-らくフォトメール Mail セットアップにようこそ。\nらくフォトメール は標準のAndroidメールクライアントを元に作成したAndroid用のオープンソースのメールクライアントです。
+らくフォトメール セットアップにようこそ。
+\nらくフォトメールは標準のAndroidメールクライアントを元に作成した
+\nAndroid用のメールクライアントです。
 \n
-\nらくフォトメールで改良された機能:
-\n * IMAP IDLEを利用したプッシュメール
-\n * パフォーマンス改善
-\n * メッセージ整理
-\n * 電子メール署名
-\n * Bcc-to-self
-\n * フォルダ購読
-\n * 全フォルダ同期
-\n * 返信先の設定
-\n * キーボードショートカット
-\n * より良いIMAPサポート
-\n * 添付ファイルのSDカードへの保存
-\n * ゴミ箱を空にする機能
-\n * メッセージのソート
-\n * ...他にもたくさんあります
-\n
-\nらくフォトメール は大多数のメールクライアントと同様に、ほとんどのフリーHotmailアカウントをサポートしていません。また、 Microsoft Exchange との通信において少し癖を持っていることに注意してください。
-\n
-\nバグレポートや新機能の貢献、質問は 小栗（#45452） にお願いします。
-\n日本語で質問などがある場合は 空想上の何か を参照してください。
+\nバグレポートや新機能の貢献、質問は
+\nTooru.Oguri（#45452 or tooru.oguri@fttx.co.jp） にお願いします。
 
 </string>
 
@@ -1037,11 +1021,13 @@
     <string name="settings_attachment_default_path">添付ファイルの保存先</string>
     <string name="attachment_save_title">添付ファイルの保存先</string>
     <string name="attachment_save_desc">ファイルブラウザがインストールされていません。添付ファイルの保存場所を直接入力してください。</string>
-    
+
+    <string name="gallery_pre">"前"</string>
     <string name="gallery_slide">"スライド"</string>
-    <string name="gallery_separator">"｜"</string>
     <string name="gallery_reply">"返信"</string>
-    
+    <string name="gallery_next">"次"</string>
+    <string name="gallery_sent_flg">"返信済み！"</string>
+
     <string name="gallery_mail_detail_subject">"件名："</string>
     <string name="gallery_mail_detail_date">"日付："</string>
     <string name="gallery_mail_detail_from">"From："</string>

@@ -353,7 +353,8 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 			requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 			requestWindowFeature(Window.FEATURE_PROGRESS);
 
-			setContentView(R.layout.accounts);
+			// TODO アカウントの自動生成を行うにはここを最後にかえないとね
+            setContentView(R.layout.accounts);
 			ListView listView = getListView();
 			listView.setOnItemClickListener(this);
 			listView.setItemsCanFocus(false);
@@ -485,9 +486,9 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 	}
 
 	private void onAddNewAccount() {
-		Log.d("fujiyama", "Accounts#onAddNewAccount");
-		AccountSetupBasics.actionNewAccount(this);
-	}
+        Log.d("fujiyama", "Accounts#onAddNewAccount");
+        AccountSetupBasics.actionNewAccount(this);
+    }
 
 	private void onEditAccount(Account account) {
 		Log.d("fujiyama", "Accounts#onEditAccount");
@@ -544,7 +545,7 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 	/**
 	 * Show that account's inbox or folder-list or return false if the account
 	 * is not available.
-	 * 
+	 *
 	 * @param account
 	 *            the account to open ({@link SearchAccount} or {@link Account})
 	 * @return false if unsuccessfull
@@ -579,12 +580,12 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 //				FolderList.actionHandleAccount(this, realAccount);
 			} else {
 				Log.d("fujiyama", "Accounts#onOpenAccount 5");
-//				MessageList.actionHandleFolder(this, realAccount,
+//				MessageList.actionSlideShow(this, realAccount,
 //						realAccount.getAutoExpandFolderName());
 			}
 			Log.d("fujiyama", "Accounts#onOpenAccount 6");
 			Log.d("download_test", "Accounts#onOpenAccount realAccount.getInboxFolderName()" + realAccount.getInboxFolderName());
-			GallerySlideShow.actionHandleFolder(this, realAccount, realAccount.getInboxFolderName());
+			GallerySlideShow.actionSlideShow(this, realAccount, realAccount.getInboxFolderName(),null);
 		}
 		return true;
 	}

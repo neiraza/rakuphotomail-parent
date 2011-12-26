@@ -4,1288 +4,743 @@
  */
 package jp.co.fttx.rakuphotomail.activity;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import android.app.ProgressDialog;
 import android.content.*;
-import android.os.IBinder;
-import jp.co.fttx.rakuphotomail.Account;
-import jp.co.fttx.rakuphotomail.Preferences;
-import jp.co.fttx.rakuphotomail.R;
-import jp.co.fttx.rakuphotomail.RakuPhotoMail;
-import jp.co.fttx.rakuphotomail.mail.FetchProfile;
-import jp.co.fttx.rakuphotomail.mail.Flag;
-import jp.co.fttx.rakuphotomail.mail.Folder;
-import jp.co.fttx.rakuphotomail.mail.Folder.OpenMode;
-import jp.co.fttx.rakuphotomail.mail.Message;
-import jp.co.fttx.rakuphotomail.mail.MessagingException;
-import jp.co.fttx.rakuphotomail.mail.Multipart;
-import jp.co.fttx.rakuphotomail.mail.Part;
-import jp.co.fttx.rakuphotomail.mail.Store;
-import jp.co.fttx.rakuphotomail.mail.internet.MimeUtility;
-import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
-import jp.co.fttx.rakuphotomail.mail.store.LocalStore.Attachments;
-import jp.co.fttx.rakuphotomail.mail.store.LocalStore.LocalAttachmentBodyPart;
-import jp.co.fttx.rakuphotomail.mail.store.LocalStore.LocalFolder;
-import jp.co.fttx.rakuphotomail.mail.store.LocalStore.LocalMessage;
-import jp.co.fttx.rakuphotomail.mail.store.LocalStore.MessageInfo;
-import jp.co.fttx.rakuphotomail.mail.store.UnavailableStorageException;
-import jp.co.fttx.rakuphotomail.provider.AttachmentProvider;
-import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
-import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
-import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
-import jp.co.fttx.rakuphotomail.rakuraku.util.Rotate3dAnimation;
-import android.content.res.TypedArray;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.Animation;
-import android.view.animation.Animation.AnimationListener;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.BaseAdapter;
-import android.widget.Gallery;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
-import jp.co.fttx.rakuphotomail.service.AttachmentSynqReceiver;
-import jp.co.fttx.rakuphotomail.service.AttachmentSynqService;
+import jp.co.fttx.rakuphotomail.Account;
+import jp.co.fttx.rakuphotomail.Preferences;
+import jp.co.fttx.rakuphotomail.R;
+import jp.co.fttx.rakuphotomail.RakuPhotoMail;
+import jp.co.fttx.rakuphotomail.mail.MessagingException;
+import jp.co.fttx.rakuphotomail.mail.store.LocalStore.Attachments;
+import jp.co.fttx.rakuphotomail.mail.store.LocalStore.MessageInfo;
+import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
+import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
+import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
+import jp.co.fttx.rakuphotomail.rakuraku.photomail.MessageSync;
+import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideAttachment;
+import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideCheck;
+import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideMessage;
+import jp.co.fttx.rakuphotomail.service.AttachmentSyncReceiver;
+import jp.co.fttx.rakuphotomail.service.AttachmentSyncService;
+
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * @author tooru.oguri
  * @since rakuphoto 0.1-beta1
  */
-public class GallerySlideShow extends RakuPhotoActivity implements
-		View.OnClickListener, OnItemClickListener {
-
-	private static final String EXTRA_ACCOUNT = "account";
-	private static final String EXTRA_FOLDER = "folder";
-
-	private Account mAccount;
-	private String mFolderName;
-	private MessageBean messageBean;
-	private AttachmentBean attachmentBean;
-	private MessageBean newMessageBean;
-	private CopyOnWriteArrayList<AttachmentBean> newAttachmentList;
-	private volatile String mMessageUid = null;
-
-	/*
-	 * Slide
-	 */
-	private TextView mSubject;
-	private ViewGroup mContainer;
-	private ImageView mImageViewDefault;
-	private ImageView mImageViewEven;
-	private ImageView mImageViewOdd;
-	/*
-	 * new mail(detail mail)
-	 */
-	private ImageView mImageViewPicture;
-	private TextView mMailSubject;
-	private TextView mMailDate;
-	private TextView mAnswered;
-	private TextView mMailPre;
-	private TextView mMailSeparator1;
-	private TextView mMailSlide;
-	private TextView mMailNext;
-	private TextView mMailSeparator3;
-	private TextView mMailReply;
-	private ImageAdapter mImageAdapter;
-	private LinearLayout mGalleryLinearLayout;
-	private Gallery mGallery;
-
-	/*
-	 * anime
-	 */
-	private float centerX;
-	private float centerY;
-	private int DURATION = 500;
-
-	private Thread createMessageListThread;
-	private Runnable createMessageList;
-	private volatile boolean isSlideRepeat = true;
-	private volatile boolean isCheckRepeat = true;
-	private Thread messageSlideThread;
-	private Runnable messageSlide;
-	private Handler handler;
-	private Runnable setMailInfo;
-	private Runnable setNewMailInfo;
-	private Runnable checkMail;
-	private Runnable setMailInit;
-	private Thread checkMailThread;
-	private Thread restartMesasgeSlideThread;
-	private Thread restartCheckMailThread;
-	private Context mContext;
-
-	private CopyOnWriteArrayList<String> mMessageUids = new CopyOnWriteArrayList<String>();
-	private ConcurrentHashMap<String, MessageBean> mMessages = new ConcurrentHashMap<String, MessageBean>();
-	private MessageBean mMessageInit = new MessageBean();
-	private AttachmentBean mAttachmentInit = new AttachmentBean();
-	private volatile long mDispAttachmentId;
-	private volatile long mDispMessageId;
-
-	private AttachmentSynqService synqService;
-	private boolean mIsBound = false;
-	private AttachmentSynqReceiver receiver = new AttachmentSynqReceiver();
-
-	public static void actionHandleFolder(Context context, Account account,
-			String folder) {
-		Intent intent = actionHandleFolderIntent(context, account, folder);
-		context.startActivity(intent);
-	}
-
-	public static Intent actionHandleFolderIntent(Context context,
-			Account account, String folder) {
-		Intent intent = new Intent(context, GallerySlideShow.class);
-		if (account != null) {
-			intent.putExtra(EXTRA_ACCOUNT, account.getUuid());
-		}
-		if (folder != null) {
-			intent.putExtra(EXTRA_FOLDER, folder);
-		}
-		return intent;
-	}
-
-	private void doBindService() {
-		if (!mIsBound) {
-			mIsBound = bindService(getIntent(), mConnection,
-					Context.BIND_AUTO_CREATE);
-			IntentFilter filter = new IntentFilter(AttachmentSynqService.ACTION);
-			registerReceiver(receiver, filter);
-		}
-	}
-
-	private void doUnbindService() {
-		if (mIsBound) {
-			Log.d("hoge", "GallerySlideShow#doUnBind unbindService");
-			unbindService(mConnection);
-			mIsBound = false;
-			unregisterReceiver(receiver);
-		}
-	}
-
-	private ServiceConnection mConnection = new ServiceConnection() {
-		public void onServiceConnected(ComponentName className, IBinder service) {
-			synqService = ((AttachmentSynqService.AttachmentSynqBinder) service)
-					.getService();
-		}
-
-		public void onServiceDisconnected(ComponentName className) {
-			synqService = null;
-		}
-	};
-
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		mContext = this;
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		setContentView(R.layout.gallery_slide_show);
-		setupViews();
-		onNewIntent(getIntent());
-		doBindService();
-		initThreading();
-	}
-
-	@Override
-	protected void onSaveInstanceState(Bundle outState) {
-		outState.putString(EXTRA_ACCOUNT, mAccount.getUuid());
-		outState.putString(EXTRA_FOLDER, mFolderName);
-	}
-
-	@Override
-	protected void onRestoreInstanceState(Bundle savedInstanceState) {
-		super.onRestoreInstanceState(savedInstanceState);
-		mAccount = Preferences.getPreferences(this).getAccount(
-				savedInstanceState.getString(EXTRA_ACCOUNT));
-		mFolderName = savedInstanceState.getString(EXTRA_FOLDER);
-	}
-
-	private void setupViews() {
-		mSubject = (TextView) findViewById(R.id.gallery_subject);
-		mContainer = (ViewGroup) findViewById(R.id.gallery_container);
-		mImageViewDefault = (ImageView) findViewById(R.id.gallery_attachment_picuture_default);
-		mImageViewDefault.setVisibility(View.GONE);
-		mImageViewEven = (ImageView) findViewById(R.id.gallery_attachment_picuture_even);
-		mImageViewEven.setOnClickListener(this);
-		mImageViewEven.setVisibility(View.GONE);
-		mImageViewOdd = (ImageView) findViewById(R.id.gallery_attachment_picuture_odd);
-		mImageViewOdd.setOnClickListener(this);
-		mImageViewOdd.setVisibility(View.GONE);
-	}
-
-	private void setupViewsMailDetail() {
-		mGalleryLinearLayout = (LinearLayout) findViewById(R.id.gallery_mail_picture_slide_linear_layoput);
-		mImageViewPicture = (ImageView) findViewById(R.id.gallery_mail_picuture);
-		mImageViewPicture.setVisibility(View.VISIBLE);
-		mMailSubject = (TextView) findViewById(R.id.gallery_mail_subject);
-		mMailDate = (TextView) findViewById(R.id.gallery_mail_date);
-		mAnswered = (TextView) findViewById(R.id.gallery_mail_sent_flag);
-		mAnswered.setVisibility(View.GONE);
-		mMailPre = (TextView) findViewById(R.id.gallery_mail_pre);
-		mMailPre.setOnClickListener(this);
-		mMailSeparator1 = (TextView) findViewById(R.id.gallery_mail_separator1);
-		mMailSlide = (TextView) findViewById(R.id.gallery_mail_slide);
-		mMailSlide.setOnClickListener(this);
-		mMailReply = (TextView) findViewById(R.id.gallery_mail_reply);
-		mMailReply.setOnClickListener(this);
-		mMailSeparator3 = (TextView) findViewById(R.id.gallery_mail_separator3);
-		mMailNext = (TextView) findViewById(R.id.gallery_mail_next);
-		mMailNext.setOnClickListener(this);
-		mGallery = (Gallery) findViewById(R.id.gallery_mail_picture_slide);
-	}
-
-	@Override
-	public void onNewIntent(Intent intent) {
-		intent.setClass(mContext, AttachmentSynqService.class);
-		setIntent(intent);
-		mAccount = Preferences.getPreferences(this).getAccount(
-				intent.getStringExtra(EXTRA_ACCOUNT));
-		mFolderName = intent.getStringExtra(EXTRA_FOLDER);
-	}
-
-	@Override
-	public void onResume() {
-		super.onResume();
-		createMessageListThread.start();
-		checkMailThread.start();
-	}
-
-	private void setMailInit(MessageBean message, AttachmentBean attachment) {
-		Bitmap bitmap = populateFromPart(attachment.getPart());
-		if (bitmap == null) {
-			return;
-		}
-		mImageViewEven.setVisibility(View.VISIBLE);
-		mImageViewEven.setImageBitmap(bitmap);
-		mSubject.setText(message.getSubject());
-	}
-
-	private void setMailEffect(MessageBean message, AttachmentBean attachment) {
-		Bitmap bitmap = populateFromPart(attachment.getPart());
-		if (bitmap == null) {
-			return;
-		}
-		// TODO ここは後々に外部からインジェクションして、エフェクト変更する仕組みにかえいたい
-		applyRotation(bitmap);
-		mSubject.setText(message.getSubject());
-	}
-
-	private void initThreading() {
-		handler = new Handler();
-		setMailInfo = new Runnable() {
-			@Override
-			public void run() {
-				setMailEffect(messageBean, attachmentBean);
-			}
-		};
-
-		setMailInit = new Runnable() {
-			@Override
-			public void run() {
-				setMailInit(mMessageInit, mAttachmentInit);
-			}
-		};
-
-		// XXX setMailDisp(int index)の一部と共通化できそう
-		setNewMailInfo = new Runnable() {
-			@Override
-			public void run() {
-				setContentView(R.layout.gallery_slide_show_stop);
-				setupViewsMailDetail();
-				Bitmap bitmap = populateFromPart(newAttachmentList.get(0)
-						.getPart());
-				if (bitmap == null) {
-					return;
-				}
-				mImageViewPicture.setImageBitmap(bitmap);
-				if (newAttachmentList.size() > 1) {
-					ArrayList<Bitmap> list = new ArrayList<Bitmap>();
-					for (AttachmentBean bean : newAttachmentList) {
-						list.add(populateFromPartThumbnail(bean.getPart()));
-					}
-					mImageAdapter = new ImageAdapter(mContext);
-					mImageAdapter.setImageItems(list);
-					mGallery.setAdapter(mImageAdapter);
-					mGallery.setOnItemClickListener((OnItemClickListener) mContext);
-				} else {
-					mGalleryLinearLayout.setVisibility(View.GONE);
-				}
-				mMessageUid = newMessageBean.getUid();
-				mMessageUids.add(0, mMessageUid);
-				mMessages.put(mMessageUid, newMessageBean);
-				if (0 >= mMessageUids.indexOf(mMessageUid)) {
-					mMailNext.setVisibility(View.GONE);
-					mMailSeparator3.setVisibility(View.GONE);
-				}
-				setupViewMail(newMessageBean);
-			}
-		};
-
-		createMessageList = new Runnable() {
-			@Override
-			public void run() {
-				List<MessageInfo> messageInfoList = getMessages();
-				if (messageInfoList.size() > 0) {
-					try {
-						setSlideInfo(messageInfoList);
-					} catch (MessagingException e) {
-						e.printStackTrace();
-						Log.e("rakuphotomail", "Happy!Happy!Error!", e);
-					}
-					messageSlideThread.start();
-				} else {
-					onStop();
-				}
-			}
-		};
-		createMessageListThread = new Thread(createMessageList);
-
-		messageSlide = new Runnable() {
-			@Override
-			public void run() {
-				checkMessageUid(mMessageUid);
-				mMessageInit = mMessages.get(mMessageUid);
-				mAttachmentInit = mMessageInit.getAttachments().get(0);
-				handler.post(setMailInit);
-				mDispMessageId = mMessageInit.getId();
-				mDispAttachmentId = mAttachmentInit.getId();
-				while (isSlideRepeat) {
-					// 1 メールを再取得しようぜ(アプリ起動時は2回連続だが、そこに価値がある)
-					List<MessageInfo> messageInfoList = getMessages();
-					if (messageInfoList.size() > 0) {
-						try {
-							setSlideInfo(messageInfoList);
-						} catch (MessagingException e) {
-							e.printStackTrace();
-							Log.e("rakuphotomail", "Error:" + e);
-						}
-					} else {
-						onStop();
-					}
-					// 2 ありたっけのメールが対象
-					slideShowStart();
-				}
-			}
-		};
-		messageSlideThread = new Thread(messageSlide);
-
-		checkMail = new Runnable() {
-			@Override
-			public void run() {
-				ArrayList<MessageBean> messages = null;
-				while (isCheckRepeat) {
-					sleep(30000);
-					synchronizeMailbox(mAccount, mFolderName);
-					messages = getNewMail();
-					if (messages != null && messages.size() > 0) {
-						repeatEnd();
-					}
-				}
-				if (messages != null && messages.size() > 0) {
-					slideShowNewMailStart(messages);
-				}
-			}
-		};
-		checkMailThread = new Thread(checkMail);
-	}
-
-	private ArrayList<MessageBean> getNewMail() {
-		List<MessageInfo> newMessages = getMessages();
-		ArrayList<MessageBean> messages = null;
-		if (newMessages.size() > 0) {
-			messages = new ArrayList<MessageBean>();
-			setNewMail(newMessages, messages);
-		}
-		return messages;
-	}
-
-	private void setNewMail(List<MessageInfo> src, ArrayList<MessageBean> dest) {
-		for (MessageInfo newMessage : src) {
-			String uid = newMessage.getUid();
-			if (!mMessageUids.contains(uid)) {
-				LocalMessage message = loadMessage(mAccount, mFolderName, uid);
-				MessageBean mb = setMessage(message, newMessage);
-				setNewMailAttachment(mb, message, dest);
-			}
-		}
-	}
-
-	private void setNewMailAttachment(MessageBean mb, LocalMessage message,
-			ArrayList<MessageBean> dest) {
-		if (mb.getAttachmentCount() > 0) {
-			CopyOnWriteArrayList<AttachmentBean> attachments = renderAttachmentsNewMail(message);
-			if (attachments != null && attachments.size() > 0) {
-				mb.setAttachments(attachments);
-				dest.add(mb);
-			}
-		}
-	}
-
-	private void slideShowNewMailStart(ArrayList<MessageBean> messages) {
-		// TODO 初回は新着メールが複数ない場合で実現してみる
-		newMessageBean = messages.get(0);
-		newAttachmentList = newMessageBean.getAttachments();
-		handler.post(setNewMailInfo);
-	}
-
-	private int checkMessageUid(String messageUid) {
-		int index = mMessageUids.indexOf(messageUid);
-		if (index == -1) {
-			index = 0;
-			this.mMessageUid = mMessageUids.get(index);
-		}
-		return index;
-	}
-
-	private void slideShowStart() {
-		if (mMessageUids == null || mMessageUids.size() == 0) {
-			onStop();
-		}
-		int index = checkMessageUid(mMessageUid);
-		for (; index < mMessageUids.size(); index++) {
-			if (isSlideRepeat) {
-				mMessageUid = mMessageUids.get(index);
-				messageBean = mMessages.get(mMessageUid);
-				if (messageBean != null) {
-					CopyOnWriteArrayList<AttachmentBean> attachments = messageBean
-							.getAttachments();
-					mDispAttachmentId = slideShowAttachmentLoop(attachments,
-							mDispMessageId, mDispAttachmentId);
-					mDispMessageId = messageBean.getId();
-				} else {
-					onStop();
-				}
-			} else {
-				return;
-			}
-		}
-		if (isSlideRepeat) {
-			mMessageUid = mMessageUids.get(0);
-		}
-	}
-
-	private long slideShowAttachmentLoop(
-			CopyOnWriteArrayList<AttachmentBean> attachments,
-			long dispMessageId, long dispAttachmentId) {
-		long result = 0;
-		for (AttachmentBean attachment : attachments) {
-			// 前スライドと同一データ時は切り替えない
-			if (messageBean.getId() != dispMessageId
-					&& attachment.getId() != dispAttachmentId) {
-				attachmentBean = attachment;
-				handler.post(setMailInfo);
-				result = attachment.getId();
-			}
-			sleep(10000);
-		}
-		return result;
-	}
-
-	private List<MessageInfo> getMessages() {
-		LocalStore localStore = null;
-		LocalFolder localFolder = null;
-		try {
-			localStore = mAccount.getLocalStore();
-			localFolder = localStore.getFolder(mFolderName);
-			localFolder.open(OpenMode.READ_WRITE);
-			return localStore.getMessages(localFolder.getId());
-		} catch (MessagingException e) {
-			e.printStackTrace();
-			closeFolder(localFolder);
-		}
-		return null;
-	}
-
-	private void setSlideInfo(List<MessageInfo> messageInfoList)
-			throws MessagingException {
-		mMessages.clear();
-		mMessageUids.clear();
-		for (MessageInfo messageInfo : messageInfoList) {
-			String uid = messageInfo.getUid();
-			LocalMessage message = loadMessage(mAccount, mFolderName, uid);
-			if (message == null) {
-				onDestroy();
-			}
-			if (message.getAttachmentCount() > 0) {
-				MessageBean mb = setMessage(message, messageInfo);
-				CopyOnWriteArrayList<AttachmentBean> attachments = renderAttachments(
-						message, message.getUid());
-				if (attachments.size() > 0) {
-					mb.setAttachments(attachments);
-					mMessages.put(String.valueOf(uid), mb);
-					mMessageUids.add(uid);
-				}
-			}
-		}
-	}
-
-	private MessageBean setMessage(LocalMessage message, MessageInfo messageInfo) {
-		MessageBean messageBean = new MessageBean();
-		messageBean.setId(message.getId());
-		messageBean.setSubject(message.getSubject());
-		messageBean.setUid(message.getUid());
-		messageBean.setAttachmentCount(message.getAttachmentCount());
-		messageBean.setDate(messageInfo.getDate());
-		messageBean.setTextContent(messageInfo.getTextContent());
-		messageBean.setSenderList(messageInfo.getSenderList());
-		String[] mailFromArr = messageInfo.getSenderList().split(";");
-		if (mailFromArr == null || mailFromArr.length == 0) {
-		} else if (mailFromArr.length == 1) {
-			messageBean.setSenderAddress(mailFromArr[0]);
-		} else {
-			messageBean.setSenderAddress(mailFromArr[0]);
-			messageBean.setSenderName(mailFromArr[1]);
-		}
-		messageBean.setToList(messageInfo.getToList());
-		messageBean.setCcList(messageInfo.getCcList());
-		messageBean.setBccList(messageInfo.getBccList());
-		messageBean.setMessageId(messageInfo.getMessageId());
-		messageBean.setMessage(message);
-		// TODO 他にもあるかも
-		// [X_GOT_ALL_HEADERS,X_DOWNLOADED_FULL,SEEN,ANSWERED,X_DOWNLOADED_PARTIAL,X_REMOTE_COPY_STARTED]
-		String flags = messageInfo.getFlags();
-		messageBean.setFlags(flags);
-		String[] flagList = RakuPhotoStringUtils.splitFlags(flags);
-		if (null != flagList && flagList.length != 0) {
-			setFlag(flagList, messageBean);
-		}
-		return messageBean;
-	}
-
-	/**
-	 * setFlag.
-	 * <ul>
-	 * <li>X_GOT_ALL_HEADERS</li>
-	 * <li>X_DOWNLOADED_FULL</li>
-	 * <li>SEEN</li>
-	 * <li>ANSWERED</li>
-	 * <li>X_DOWNLOADED_PARTIAL</li>
-	 * <li>X_REMOTE_COPY_STARTED</li>
-	 * </ul>
-	 * 
-	 * @param flag
-	 */
-	private void setFlag(String[] flag, MessageBean messageBean) {
-		StringBuilder builder = new StringBuilder();
-		for (String f : flag) {
-			if ("X_GOT_ALL_HEADERS".equals(f)) {
-				messageBean.setFlagXGotAllHeaders(true);
-			} else if ("SEEN".equals(f)) {
-				messageBean.setFlagSeen(true);
-			} else if ("ANSWERED".equals(f)) {
-				messageBean.setFlagAnswered(true);
-			} else if ("X_DOWNLOADED_FULL".equals(f)) {
-				messageBean.setFlagXDownLoadedFull(true);
-			} else if ("X_DOWNLOADED_PARTIAL".equals(f)) {
-				messageBean.setFlagXDownLoadedPartial(true);
-			} else if ("X_REMOTE_COPY_STARTED".equals(f)) {
-				messageBean.setFlagXRemoteCopyStarted(true);
-			} else {
-				builder.append(f + ",");
-			}
-			int len = builder.length();
-			if (0 != len) {
-				messageBean.setFlagOther(builder.delete(len - 1, len)
-						.toString());
-			}
-		}
-	}
-
-	/**
-	 * loadMessage. Mail to get the BodyPart are not stored in the SQLite.
-	 * 
-	 * @param account
-	 * @param folder
-	 * @param uid
-	 * @return
-	 * @author tooru.oguri
-	 */
-	private LocalMessage loadMessage(final Account account,
-			final String folder, final String uid) {
-		try {
-			LocalStore localStore = account.getLocalStore();
-			LocalFolder localFolder = localStore.getFolder(folder);
-			localFolder.open(OpenMode.READ_WRITE);
-			LocalMessage message = (LocalMessage) localFolder.getMessage(uid);
-
-			FetchProfile fp = new FetchProfile();
-			fp.add(FetchProfile.Item.ENVELOPE);
-			fp.add(FetchProfile.Item.BODY);
-			localFolder.fetch(new Message[] { message }, fp, null);
-			localFolder.close();
-			return message;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	public CopyOnWriteArrayList<AttachmentBean> renderAttachments(Part part,
-			String uid) throws MessagingException {
-		CopyOnWriteArrayList<AttachmentBean> attachments = null;
-		if (part.getBody() instanceof Multipart) {
-			try {
-				attachments = splitMultipart(part, uid);
-			} catch (MessagingException e) {
-				e.printStackTrace();
-			}
-		} else if (part instanceof LocalStore.LocalAttachmentBodyPart) {
-			attachments = new CopyOnWriteArrayList<AttachmentBean>();
-			AttachmentBean attachment = setAttachment(part);
-			if (isSlide(attachment)) {
-				attachments.add(attachment);
-				synqService.onDownload(mAccount, mFolderName, uid);
-			}
-		} else {
-			return new CopyOnWriteArrayList<AttachmentBean>();
-		}
-		return attachments;
-	}
-
-	public CopyOnWriteArrayList<AttachmentBean> renderAttachmentsNewMail(
-			Part part) {
-		CopyOnWriteArrayList<AttachmentBean> attachments = null;
-		if (part.getBody() instanceof Multipart) {
-			try {
-				attachments = splitMultipart(part, null);
-			} catch (MessagingException e) {
-				e.printStackTrace();
-			}
-		} else if (part instanceof LocalStore.LocalAttachmentBodyPart) {
-			attachments = new CopyOnWriteArrayList<AttachmentBean>();
-			AttachmentBean attachment = setAttachment(part);
-			if (isSlide(attachment)) {
-				attachments.add(attachment);
-			}
-		}
-		return attachments;
-	}
-
-	private CopyOnWriteArrayList<AttachmentBean> splitMultipart(Part part,
-			String uid) throws MessagingException {
-		Multipart mp = (Multipart) part.getBody();
-		CopyOnWriteArrayList<AttachmentBean> attachments = new CopyOnWriteArrayList<AttachmentBean>();
-		for (int i = 0; i < mp.getCount(); i++) {
-			if (mp.getBodyPart(i) instanceof LocalStore.LocalAttachmentBodyPart) {
-				AttachmentBean attachment = setAttachment(mp.getBodyPart(i));
-				if (isSlide(attachment)) {
-					attachments.add(setAttachment(mp.getBodyPart(i)));
-					if (null != uid) {
-						synqService.onDownload(mAccount, mFolderName, uid);
-					}
-				}
-			}
-		}
-		return attachments;
-	}
-
-	private AttachmentBean setAttachment(Part part) {
-		AttachmentBean attachment = new AttachmentBean();
-		String contentDisposition = null;
-		try {
-			contentDisposition = MimeUtility.unfoldAndDecode(part
-					.getDisposition());
-			if (contentDisposition != null
-					&& MimeUtility.getHeaderParameter(contentDisposition, null)
-							.matches("^(?i:inline)")
-					&& part.getHeader("Content-ID") != null) {
-				return null;
-			}
-		} catch (MessagingException e) {
-			e.printStackTrace();
-		}
-		LocalAttachmentBodyPart labPart = (LocalAttachmentBodyPart) part;
-		long attachmentId = labPart.getAttachmentId();
-		attachment.setId(attachmentId);
-		Attachments attachments = getAttachment(attachmentId);
-		attachment.setMimeType(attachments.getMimeType());
-		attachment.setName(attachments.getName());
-		attachment.setSize(Integer.valueOf(attachments.getSize()));
-		attachment.setPart(labPart);
-		return attachment;
-	}
-
-	private Attachments getAttachment(long attachmentId) {
-		LocalStore localStore = null;
-		try {
-			localStore = mAccount.getLocalStore();
-			return localStore.getAttachment(attachmentId);
-		} catch (UnavailableStorageException e) {
-			e.printStackTrace();
-		} catch (MessagingException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	private void closeFolder(Folder f) {
-		if (f != null) {
-			f.close();
-		}
-	}
-
-	private Bitmap populateFromPart(LocalAttachmentBodyPart part) {
-		Bitmap bitmapView = null;
-		try {
-			bitmapView = getBitmapView(part);
-		} catch (Exception e) {
-			Log.e(RakuPhotoMail.LOG_TAG, "error ", e);
-			e.printStackTrace();
-		}
-		return bitmapView;
-	}
-
-	private Bitmap populateFromPartThumbnail(LocalAttachmentBodyPart part) {
-		Bitmap bitmapView = null;
-		try {
-			bitmapView = getThumbnailBitmapView(part);
-		} catch (Exception e) {
-			Log.e(RakuPhotoMail.LOG_TAG, "error ", e);
-			e.printStackTrace();
-		}
-		return bitmapView;
-	}
-
-	private Bitmap getBitmapView(LocalAttachmentBodyPart part) {
-		try {
-			BitmapFactory.Options options = new BitmapFactory.Options();
-
-			Uri uri = AttachmentProvider.getAttachmentUri(mAccount,
-					part.getAttachmentId());
-
-			options.inJustDecodeBounds = true;
-			this.getContentResolver().openInputStream(uri);
-			BitmapFactory.decodeStream(this.getContentResolver()
-					.openInputStream(uri), null, options);
-			int displayW = getWindowManager().getDefaultDisplay().getWidth();
-			int displayH = getWindowManager().getDefaultDisplay().getHeight();
-			int scaleW = options.outWidth / displayW + 1;
-			int scaleH = options.outHeight / displayH + 1;
-			options.inJustDecodeBounds = false;
-			options.inSampleSize = Math.max(scaleW, scaleH);
-			return BitmapFactory.decodeStream(this.getContentResolver()
-					.openInputStream(uri), null, options);
-		} catch (Exception e) {
-			e.printStackTrace();
-			Log.e("rakuphotomail", "Exception:" + e);
-		}
-		return null;
-	}
-
-	private Bitmap getThumbnailBitmapView(LocalAttachmentBodyPart part) {
-		try {
-			BitmapFactory.Options options = new BitmapFactory.Options();
-			Uri uri = AttachmentProvider.getAttachmentUri(mAccount,
-					part.getAttachmentId());
-			options.inJustDecodeBounds = true;
-			this.getContentResolver().openInputStream(uri);
-			BitmapFactory.decodeStream(this.getContentResolver()
-					.openInputStream(uri), null, options);
-			// XXX 最終的にこのレイアウトサイズでOKOK？
-			int displayW = 150;
-			int displayH = 100;
-			int scaleW = options.outWidth / displayW + 1;
-			int scaleH = options.outHeight / displayH + 1;
-			options.inJustDecodeBounds = false;
-			options.inSampleSize = Math.max(scaleW, scaleH);
-			return BitmapFactory.decodeStream(this.getContentResolver()
-					.openInputStream(uri), null, options);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	private boolean isSlide(AttachmentBean attachment) {
-		String mimeType = attachment.getMimeType();
-		String fileName = attachment.getName();
-		return "image/jpeg".equals(mimeType)
-				|| "image/png".equals(mimeType)
-				|| (null != fileName && (fileName.endsWith(".png") || fileName
-						.endsWith(".JPG")));
-	}
-
-	private void sleep(long time) {
-		try {
-			Thread.sleep(time);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
-
-	@Override
-	public void onStop() {
-		super.onStop();
-		repeatEnd();
-		// FIXME これをnullにするとメール返信画面から戻ってこれないお
-		// createMessageListThread = null;
-		// messageSlideThread = null;
-		// checkMailThread = null;
-		// XXX what?
-		// finish();
-	}
-
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
-		repeatEnd();
-		createMessageListThread = null;
-		messageSlideThread = null;
-		checkMailThread = null;
-		doUnbindService();
-		// finish();
-	}
-
-	private void repeatEnd() {
-		isSlideRepeat = false;
-		isCheckRepeat = false;
-	}
-
-	private void applyRotation(Bitmap bitmap) {
-		if (mImageViewEven.getVisibility() == View.GONE) {
-			mImageViewEven.setImageBitmap(bitmap);
-			applyRotation(mContainer, 0f, 90f, 180f, 0f);
-		} else {
-			mImageViewOdd.setImageBitmap(bitmap);
-			applyRotation(mContainer, 180f, 270f, 360f, 0f);
-		}
-	}
-
-	private void applyRotation(ViewGroup view, float start, float mid,
-			float end, float depth) {
-		this.centerX = view.getWidth() / 2.0f;
-		this.centerY = view.getHeight() / 2.0f;
-		Rotate3dAnimation rot = new Rotate3dAnimation(start, mid, centerX,
-				centerY, depth, true);
-		rot.setDuration(DURATION);
-		rot.setAnimationListener(new DisplayNextView(mid, end, depth));
-		view.startAnimation(rot);
-	}
-
-	public class DisplayNextView implements AnimationListener {
-		private float mid;
-		private float end;
-		private float depth;
-
-		public DisplayNextView(float mid, float end, float depth) {
-			this.mid = mid;
-			this.end = end;
-			this.depth = depth;
-		}
-
-		@Override
-		public void onAnimationEnd(Animation animation) {
-			mContainer.post(new Runnable() {
-				@Override
-				public void run() {
-					if (mImageViewEven.getVisibility() == View.GONE) {
-						mImageViewEven.setVisibility(View.VISIBLE);
-						mImageViewOdd.setVisibility(View.GONE);
-					} else {
-						mImageViewEven.setVisibility(View.GONE);
-						mImageViewOdd.setVisibility(View.VISIBLE);
-					}
-					// XXX ここが変な反転させている所か？？？
-					Rotate3dAnimation rot = new Rotate3dAnimation(mid, end,
-							centerX, centerY, depth, false);
-					rot.setDuration(DURATION);
-					rot.setInterpolator(new AccelerateInterpolator());
-					mContainer.startAnimation(rot);
-				}
-			});
-		}
-
-		@Override
-		public void onAnimationRepeat(Animation animation) {
-		}
-
-		@Override
-		public void onAnimationStart(Animation animation) {
-		}
-	}
-
-	private void setupViewMail(MessageBean message) {
-		mMailSubject.setText(message.getSubject());
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd h:mm a");
-		mMailDate.setText(sdf.format(message.getDate()));
-		if (message.isFlagAnswered()) {
-			mAnswered.setVisibility(View.VISIBLE);
-		}
-	}
-
-	private void synchronizeMailbox(Account account, String folderName) {
-		Folder remoteFolder = null;
-		LocalFolder tLocalFolder = null;
-
-		/*
-		 * We don't ever sync the Outbox or errors folder
-		 */
-		if (folderName.equals(account.getOutboxFolderName())
-				|| folderName.equals(account.getErrorFolderName())) {
-			return;
-		}
-		try {
-			/*
-			 * Get the message list from the local store and create an index of
-			 * the uids within the list.
-			 */
-			final LocalStore localStore = account.getLocalStore();
-			tLocalFolder = localStore.getFolder(folderName);
-			final LocalFolder localFolder = tLocalFolder;
-			localFolder.open(OpenMode.READ_WRITE);
-			localFolder.updateLastUid();
-			Message[] localMessages = localFolder.getMessages(null);
-			HashMap<String, Message> localUidMap = new HashMap<String, Message>();
-			for (Message message : localMessages) {
-				localUidMap.put(message.getUid(), message);
-			}
-			Store remoteStore = account.getRemoteStore();
-			remoteFolder = remoteStore.getFolder(folderName);
-			/*
-			 * Open the remote folder. This pre-loads certain metadata like
-			 * message count.
-			 */
-			remoteFolder.open(OpenMode.READ_WRITE);
-			if (Account.EXPUNGE_ON_POLL.equals(account.getExpungePolicy())) {
-				remoteFolder.expunge();
-			}
-			/*
-			 * Get the remote message count.
-			 */
-			int remoteMessageCount = remoteFolder.getMessageCount();
-			int visibleLimit = localFolder.getVisibleLimit();
-			if (visibleLimit < 0) {
-				visibleLimit = RakuPhotoMail.DEFAULT_VISIBLE_LIMIT;
-			}
-			Message[] remoteMessageArray = new Message[0];
-			final ArrayList<Message> remoteMessages = new ArrayList<Message>();
-			HashMap<String, Message> remoteUidMap = new HashMap<String, Message>();
-			final Date earliestDate = account.getEarliestPollDate();
-			if (remoteMessageCount > 0) {
-				/* Message numbers start at 1. */
-				int remoteStart;
-				if (visibleLimit > 0) {
-					remoteStart = Math
-							.max(0, remoteMessageCount - visibleLimit) + 1;
-				} else {
-					remoteStart = 1;
-				}
-				int remoteEnd = remoteMessageCount;
-				final AtomicInteger headerProgress = new AtomicInteger(0);
-				remoteMessageArray = remoteFolder.getMessages(remoteStart,
-						remoteEnd, earliestDate, null);
-				for (Message thisMess : remoteMessageArray) {
-					headerProgress.incrementAndGet();
-					Message localMessage = localUidMap.get(thisMess.getUid());
-					if (localMessage == null
-							|| !localMessage.olderThan(earliestDate)) {
-						remoteMessages.add(thisMess);
-						remoteUidMap.put(thisMess.getUid(), thisMess);
-					}
-				}
-				remoteMessageArray = null;
-			} else if (remoteMessageCount < 0) {
-				throw new Exception("Message count " + remoteMessageCount
-						+ " for folder " + folderName);
-			}
-			/*
-			 * Remove any messages that are in the local store but no longer on
-			 * the remote store or are too old
-			 */
-			if (account.syncRemoteDeletions()) {
-				ArrayList<Message> destroyMessages = new ArrayList<Message>();
-				for (Message localMessage : localMessages) {
-					if (remoteUidMap.get(localMessage.getUid()) == null) {
-						destroyMessages.add(localMessage);
-					}
-				}
-				localFolder.destroyMessages(destroyMessages
-						.toArray(new Message[0]));
-			}
-			localMessages = null;
-			setLocalFlaggedCountToRemote(localFolder, remoteFolder);
-			/* Notify listeners that we're finally done. */
-			localFolder.setLastChecked(System.currentTimeMillis());
-			localFolder.setStatus(null);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			closeFolder(remoteFolder);
-			closeFolder(tLocalFolder);
-		}
-	}
-
-	private void setLocalFlaggedCountToRemote(LocalFolder localFolder,
-			Folder remoteFolder) throws MessagingException {
-		int remoteFlaggedMessageCount = remoteFolder.getFlaggedMessageCount();
-		if (remoteFlaggedMessageCount != -1) {
-			localFolder.setFlaggedMessageCount(remoteFlaggedMessageCount);
-		} else {
-			int flaggedCount = 0;
-			Message[] messages = localFolder.getMessages(null, false);
-			for (Message message : messages) {
-				if (message.isSet(Flag.FLAGGED) && !message.isSet(Flag.DELETED)) {
-					flaggedCount++;
-				}
-			}
-			localFolder.setFlaggedMessageCount(flaggedCount);
-		}
-	}
-
-	@Override
-	public void onClick(View v) {
-		switch (v.getId()) {
-		case R.id.gallery_mail_slide:
-			try {
-				onSlide();
-			} catch (MessagingException e) {
-				e.printStackTrace();
-				Log.e("rakuphotomail", "Hello!Hello!Error! HAHAHAHA!", e);
-			}
-			break;
-		case R.id.gallery_mail_reply:
-			onReply();
-			break;
-		case R.id.gallery_mail_pre:
-			onMailPre();
-			break;
-		case R.id.gallery_mail_next:
-			onMailNext();
-			break;
-		case R.id.gallery_attachment_picuture_default:
-			break;
-		case R.id.gallery_attachment_picuture_even:
-			// XXX りふぁくたりんぐしたい
-			try {
-				onSlideStop();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			break;
-		case R.id.gallery_attachment_picuture_odd:
-			// XXX りふぁくたりんぐしたい
-			try {
-				onSlideStop();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			break;
-		default:
-			Log.w(RakuPhotoMail.LOG_TAG, "onClick is no Action !!!!");
-		}
-	}
-
-	// TODO りふぁくたりんぐしたい
-	private void onMailCurrent() {
-		int currentIndex = mMessageUids.indexOf(mMessageUid);
-		int maxIndex = mMessageUids.size() - 1;
-		int minIndex = 0;
-		if (currentIndex >= minIndex && currentIndex <= maxIndex) {
-			setMailDisp(currentIndex);
-		} else {
-			Toast.makeText(GallerySlideShow.this, "メールが存在しません。",
-					Toast.LENGTH_SHORT);
-		}
-	}
-
-	// TODO りふぁくたりんぐしたい
-	private void onMailPre() {
-		int preIndex = mMessageUids.indexOf(mMessageUid) + 1;
-		int maxIndex = mMessageUids.size() - 1;
-		if (preIndex <= maxIndex) {
-			setMailDisp(preIndex);
-			if (preIndex == maxIndex) {
-				mMailPre.setVisibility(View.GONE);
-				mMailSeparator1.setVisibility(View.GONE);
-			}
-		} else {
-			Toast.makeText(GallerySlideShow.this, "メールが存在しません。",
-					Toast.LENGTH_SHORT);
-			mMailPre.setVisibility(View.GONE);
-			mMailSeparator1.setVisibility(View.GONE);
-		}
-	}
-
-	// TODO りふぁくたりんぐしたい
-	private void onMailNext() {
-		int nextIndex = mMessageUids.indexOf(mMessageUid) - 1;
-		int minIndex = 0;
-		if (nextIndex >= minIndex) {
-			setMailDisp(nextIndex);
-			if (nextIndex == minIndex) {
-				mMailNext.setVisibility(View.GONE);
-				mMailSeparator3.setVisibility(View.GONE);
-			}
-		} else {
-			Toast.makeText(GallerySlideShow.this, "メールが存在しません。",
-					Toast.LENGTH_SHORT);
-			mMailNext.setVisibility(View.GONE);
-			mMailSeparator3.setVisibility(View.GONE);
-		}
-	}
-
-	// TODO setNewMailInfoの一部と共通化できそう
-	private void setMailDisp(int index) {
-		setupViewsMailDetail();
-		mMessageUid = mMessageUids.get(index);
-		MessageBean message = mMessages.get(mMessageUid);
-		CopyOnWriteArrayList<AttachmentBean> attachments = message
-				.getAttachments();
-		Bitmap bitmap = populateFromPart(attachments.get(0).getPart());
-		if (bitmap == null) {
-			return;
-		}
-		mImageViewPicture.setImageBitmap(bitmap);
-		if (attachments.size() > 1) {
-			ArrayList<Bitmap> list = new ArrayList<Bitmap>();
-			for (AttachmentBean bean : attachments) {
-				list.add(populateFromPartThumbnail(bean.getPart()));
-			}
-			mImageAdapter = new ImageAdapter(mContext);
-			mImageAdapter.setImageItems(list);
-			mGallery.setAdapter(mImageAdapter);
-			mGallery.setOnItemClickListener((OnItemClickListener) mContext);
-		} else {
-			mGalleryLinearLayout.setVisibility(View.GONE);
-		}
-		int maxIndex = mMessageUids.size() - 1;
-		int minIndex = 0;
-		if (minIndex == index) {
-			mMailNext.setVisibility(View.GONE);
-			mMailSeparator3.setVisibility(View.GONE);
-		} else if (maxIndex == index) {
-			mMailPre.setVisibility(View.GONE);
-			mMailSeparator1.setVisibility(View.GONE);
-		} else {
-			// XXX none
-		}
-		setupViewMail(message);
-	}
-
-	private void onSlide() throws MessagingException {
-		if (null == mMessageUid || "".equals(mMessageUid)) {
-			mMessageUid = messageBean.getUid();
-		}
-		setContentView(R.layout.gallery_slide_show);
-		setupViews();
-		List<MessageInfo> messageInfoList = getMessages();
-		if (messageInfoList.size() > 0) {
-			setSlideInfo(messageInfoList);
-			if (!messageSlideThread.isAlive()) {
-				isSlideRepeat = true;
-				restartMesasgeSlideThread = new Thread(messageSlide);
-				restartMesasgeSlideThread.start();
-			}
-			if (null == checkMailThread) {
-				isCheckRepeat = true;
-				restartCheckMailThread = new Thread(checkMail);
-				restartCheckMailThread.start();
-			}
-		} else {
-			onStop();
-		}
-	}
-
-	private void onSlideStop() throws InterruptedException {
-		if (isSlideRepeat) {
-			repeatEnd();
-			if (null != messageSlideThread && messageSlideThread.isAlive()) {
-				messageSlideThread.join();
-			}
-			// XXX Checkhはスレッドすんのやめる予定
-			if (null != checkMailThread && checkMailThread.isAlive()) {
-				checkMailThread.join();
-			}
-			if (null != restartMesasgeSlideThread
-					&& restartMesasgeSlideThread.isAlive()) {
-				restartMesasgeSlideThread.join();
-			}
-			// XXX Checkhはスレッドすんのやめる予定
-			if (null != restartCheckMailThread
-					&& restartCheckMailThread.isAlive()) {
-				restartCheckMailThread.join();
-			}
-			onMailCurrent();
-		}
-	}
-
-	private void onReply() {
-		GallerySendingMail.actionReply(this, newMessageBean);
-	}
-
-	public class ImageAdapter extends BaseAdapter {
-		private int mGalleryItemBackground;
-		private Context mContext;
-		private ArrayList<Bitmap> mImageItems = new ArrayList<Bitmap>();
-
-		public ImageAdapter(Context c) {
-			mContext = c;
-			TypedArray a = obtainStyledAttributes(R.styleable.Gallery1);
-			mGalleryItemBackground = a.getResourceId(
-					R.styleable.Gallery1_android_galleryItemBackground, 0);
-			a.recycle();
-
-			mImageItems = setDroidList();
-		}
-
-		public int getCount() {
-			return mImageItems.size();
-		}
-
-		public Object getItem(int position) {
-			return mImageItems.get(position);
-		}
-
-		public long getItemId(int position) {
-			return position;
-		}
-
-		public View getView(int position, View convertView, ViewGroup parent) {
-			ImageView i = new ImageView(mContext);
-			Bitmap bitmap = (Bitmap) getItem(position);
-			i.setImageBitmap(bitmap);
-			i.setBackgroundResource(mGalleryItemBackground);
-
-			return i;
-		}
-
-		public void setImageItems(ArrayList<Bitmap> imageItems) {
-			this.mImageItems = imageItems;
-		}
-
-		public ArrayList<Bitmap> getImageItems() {
-			return this.mImageItems;
-		}
-
-		// XXX まさにゴミ
-		private ArrayList<Bitmap> setDroidList() {
-			return new ArrayList<Bitmap>();
-		}
-	}
-
-	@Override
-	public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-		Toast.makeText(GallerySlideShow.this, "" + position, Toast.LENGTH_SHORT)
-				.show();
-		mImageViewPicture.setImageBitmap(populateFromPart(newAttachmentList
-				.get(position).getPart()));
-	}
+public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickListener {
+
+    /**
+     * Intent get/put account uuid
+     */
+    private static final String EXTRA_ACCOUNT = "account";
+    /**
+     * Intent get/put folder name
+     */
+    private static final String EXTRA_FOLDER = "folder";
+    /**
+     * Intent get/put folder name
+     */
+    private static final String EXTRA_UID = "uid";
+    /**
+     * Bundle put/get Mail Subject
+     */
+    private static final String MESSAGE_SUBJECT = "subject";
+    /**
+     * Bundle put/get Mail Subject
+     */
+    private static final String MESSAGE_DATE = "date";
+    /**
+     * Bundle put/get Mail Subject
+     */
+    private static final String MESSAGE_ANSWERED = "answered";
+    /**
+     * R.id.gallery_attachment_picture_default
+     */
+    private static final int ID_GALLERY_ATTACHMENT_PICTURE_DEFAULT = R.id.gallery_attachment_picture_default;
+    /**
+     * R.id.gallery_attachment_picture_even
+     */
+    private static final int ID_GALLERY_ATTACHMENT_PICTURE_EVEN = R.id.gallery_attachment_picture_even;
+    /**
+     * R.id.gallery_attachment_picture_odd
+     */
+    private static final int ID_GALLERY_ATTACHMENT_PICTURE_ODD = R.id.gallery_attachment_picture_odd;
+
+    /**
+     * account
+     */
+    private Account mAccount;
+    /**
+     * folder name
+     */
+    private String mFolder;
+    /**
+     * start UID
+     */
+    private String mStartUid;
+    /**
+     * context
+     */
+    private Context mContext;
+
+    /**
+     * view subject
+     */
+    private TextView mSubject;
+    /**
+     * view layout container
+     */
+    private ViewGroup mContainer;
+    /**
+     * view slide image default
+     */
+    private ImageView mImageViewDefault;
+    /**
+     * view slide image(even)
+     */
+    private ImageView mImageViewEven;
+    /**
+     * view slide image(odd)
+     */
+    private ImageView mImageViewOdd;
+    /**
+     * service
+     */
+    private AttachmentSyncService mSyncService;
+    /**
+     * isBound
+     */
+    private boolean mIsBound = false;
+    /**
+     * receiver
+     */
+    private AttachmentSyncReceiver mAttachmentReceiver = new AttachmentSyncReceiver();
+    /**
+     * mesage uid's list
+     */
+    private ArrayList<String> mUidList = new ArrayList<String>();
+    /**
+     * Uid List is Repeat?
+     */
+    private boolean mIsRepeatUidList = true;
+    /**
+     * Handler
+     */
+    private Handler mSlideHandler;
+    /**
+     * Thread SlideShow
+     */
+    private Thread mSlideShowThread;
+    /**
+     *
+     */
+    private ProgressDialog mProgressDialog;
+    /**
+     *
+     */
+    private String mDispUid = null;
+    /**
+     * mail receive date
+     */
+    private TextView mDate;
+    /**
+     * mail sent flag
+     */
+    private TextView mAnswered;
+    /**
+     * Display Receive Date
+     */
+    private static final String DATE_FORMAT = "yyyy/MM/dd h:mm a";
+
+    /**
+     * @param context
+     * @param account
+     * @param folder
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    public static void actionSlideShow(Context context, Account account, String folder, String uid) {
+        Log.d("maguro", "GallerySlideShow#actionSlideShow start");
+        Intent intent = new Intent(context, GallerySlideShow.class);
+        if (account != null) {
+            intent.putExtra(EXTRA_ACCOUNT, account.getUuid());
+        }
+        if (folder != null) {
+            intent.putExtra(EXTRA_FOLDER, folder);
+        }
+        if (uid != null) {
+            intent.putExtra(EXTRA_UID, uid);
+        } else {
+            intent.putExtra(EXTRA_UID, "");
+        }
+        context.startActivity(intent);
+        Log.d("maguro", "GallerySlideShow#actionSlideShow end");
+    }
+
+    //TODO Timer TEST
+    Timer mTimer = null;
+
+
+    /**
+     * @param savedInstanceState
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        Log.d("maguro", "GallerySlideShow#onCreate start");
+        super.onCreate(savedInstanceState);
+        mContext = this;
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        setContentView(R.layout.gallery_slide_show);
+        mProgressDialog = new ProgressDialog(this);
+        setUpProgressDialog();
+        onNewIntent(getIntent());
+        setupViews();
+        setUidList();
+        doBindService();
+
+        //TODO Timer TEST
+        mTimer = new Timer(true);
+        mTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                // 同期処理で新着メールを見つけられた場合
+                String newMailUid = MessageSync.synchronizeMailbox(mAccount, mFolder);
+                if (null != newMailUid && !"".equals(newMailUid)) {
+                    Log.d("gunntama", "同記事に取得した新着メールがあったようです");
+                    doUnbindService();
+                    mIsRepeatUidList = false;
+                    try {
+                        mSlideShowThread.join();
+                    } catch (InterruptedException e) {
+                        //TODO どうすっか
+                        Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
+                    }
+                    Log.d("gunntama", "同期完了後の新着メールUID:" + mDispUid);
+                    GalleryNewMail.actionHandle(mContext, mAccount, mFolder, newMailUid, mDispUid);
+                }
+
+                // サーバーとつながってる状態で新着メールがローカル取り込み完了している場合
+                ArrayList<String> newUidList = getUidList();
+                for (String uid : newUidList) {
+                    if (!mUidList.contains(uid)) {
+                        Log.d("gunntama", "UID最新情報！ どうやら新着メールが既に届いているようです！");
+                        Log.d("gunntama", "UID最新情報！ UID:" + uid);
+                        doUnbindService();
+                        mIsRepeatUidList = false;
+                        try {
+                            mSlideShowThread.join();
+                        } catch (InterruptedException e) {
+                            Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
+                        }
+                        GalleryNewMail.actionHandle(mContext, mAccount, mFolder, uid, mDispUid);
+                    }
+                }
+            }
+        }, 120000L, 60000L);
+
+        Log.d("maguro", "GallerySlideShow#onCreate end");
+    }
+
+    private void setUpProgressDialog() {
+        Log.d("maguro", "GallerySlideShow#setUpProgressDialog start");
+        if (!mProgressDialog.isShowing()) {
+            Log.d("maguro", "GallerySlideShow#setUpProgressDialog 時間よ止まれ");
+            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            mProgressDialog.setMessage("処理中なんですが？");
+            mProgressDialog.setCancelable(true);
+            mProgressDialog.show();
+        }
+        Log.d("maguro", "GallerySlideShow#setUpProgressDialog end");
+    }
+
+    private void dismissProgressDialog() {
+        Log.d("maguro", "GallerySlideShow#dissmissProgressDialog start");
+        if (mProgressDialog.isShowing()) {
+            Log.d("maguro", "GallerySlideShow#setUpProgressDialog 時間よ動け");
+            mProgressDialog.dismiss();
+        }
+        Log.d("maguro", "GallerySlideShow#dissmissProgressDialog end");
+    }
+
+    /**
+     * view setup
+     */
+    private void setupViews() {
+        setImageViewDefault();
+        setImageViewEven();
+        setImageViewOdd();
+        mSubject = (TextView) findViewById(R.id.gallery_subject);
+        mContainer = (ViewGroup) findViewById(R.id.gallery_container);
+        mSlideHandler = new Handler() {
+            public void handleMessage(android.os.Message msg) {
+                Log.d("maguro", "Handler#handleMessage bitmapをmsg.objから抜いてセットしてみますね");
+                setVisibilityImageView().setImageBitmap((Bitmap) msg.obj);
+                Bundle bundle = msg.getData();
+                mSubject.setText(bundle.get(MESSAGE_SUBJECT).toString());
+                SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+                mDate.setText(sdf.format(bundle.get(MESSAGE_DATE)));
+                if ((Boolean) bundle.get(MESSAGE_ANSWERED)) {
+                    mAnswered.setVisibility(View.VISIBLE);
+                }
+            }
+
+            ;
+        };
+        mDate = (TextView) findViewById(R.id.gallery_date);
+        mAnswered = (TextView) findViewById(R.id.gallery_sent_flag);
+        mAnswered.setVisibility(View.GONE);
+    }
+
+    /**
+     * view setup
+     */
+    private void setImageViewDefault() {
+        mImageViewDefault = (ImageView) findViewById(ID_GALLERY_ATTACHMENT_PICTURE_DEFAULT);
+        if ("".equals(mStartUid)) {
+            Log.d("maguro", "Handler#setImageViewDefault VISIBLE mStartUid:" + mStartUid);
+            mImageViewDefault.setVisibility(View.VISIBLE);
+        } else {
+            Log.d("maguro", "Handler#setImageViewDefault GONE mStartUid:" + mStartUid);
+            mImageViewDefault.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * view setup
+     */
+    private void setImageViewEven() {
+        mImageViewEven = (ImageView) findViewById(ID_GALLERY_ATTACHMENT_PICTURE_EVEN);
+        mImageViewEven.setOnClickListener(this);
+        mImageViewEven.setVisibility(View.GONE);
+    }
+
+    /**
+     * view setup
+     */
+    private void setImageViewOdd() {
+        mImageViewOdd = (ImageView) findViewById(ID_GALLERY_ATTACHMENT_PICTURE_ODD);
+        mImageViewOdd.setOnClickListener(this);
+        mImageViewOdd.setVisibility(View.GONE);
+    }
+
+    /**
+     * @param intent
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    @Override
+    public void onNewIntent(Intent intent) {
+        Log.d("maguro", "GallerySlideShow#onNewIntent start");
+        mAccount = Preferences.getPreferences(this).getAccount(intent.getStringExtra(EXTRA_ACCOUNT));
+        mFolder = intent.getStringExtra(EXTRA_FOLDER);
+        mStartUid = intent.getStringExtra(EXTRA_UID);
+        intent.setClass(mContext, AttachmentSyncService.class);
+        setIntent(intent);
+        Log.d("maguro", "GallerySlideShow#onNewIntent end");
+    }
+
+    /**
+     * get Uid List
+     *
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private void setUidList() {
+        Log.d("maguro", "GallerySlideShow#setUidList start");
+        List<MessageInfo> messageInfoList = SlideMessage.getMessageInfoList(mAccount, mFolder);
+        mUidList.clear();
+        for (MessageInfo messageInfo : messageInfoList) {
+            String uid = messageInfo.getUid();
+            Log.d("maguro", "GallerySlideShow#setUidList uid:" + uid);
+            ArrayList<Attachments> attachmentsList = SlideMessage.getAttachmentList(mAccount, mFolder, uid);
+            for (Attachments attachments : attachmentsList) {
+                //追加対象はスライドする奴のみ（重複UIDは省く）
+                if (SlideCheck.isSlide(attachments) && !mUidList.contains(uid)) {
+                    Log.d("maguro", "GallerySlideShow#setUidList mUidListにuid(" + uid + ")を追加しますた");
+                    mUidList.add(uid);
+                }
+            }
+        }
+        Log.d("maguro", "GallerySlideShow#setUidList end");
+    }
+
+    private ArrayList<String> getUidList() {
+        Log.d("maguro", "GallerySlideShow#getUidList");
+        List<MessageInfo> messageInfoList = SlideMessage.getMessageInfoList(mAccount, mFolder);
+        ArrayList<String> uidList = new ArrayList<String>();
+        for (MessageInfo messageInfo : messageInfoList) {
+            String uid = messageInfo.getUid();
+            Log.d("maguro", "GallerySlideShow#setUidList uid:" + uid);
+            ArrayList<Attachments> attachmentsList = SlideMessage.getAttachmentList(mAccount, mFolder, uid);
+            for (Attachments attachments : attachmentsList) {
+                //追加対象はスライドする奴のみ（重複UIDは省く）
+                if (SlideCheck.isSlide(attachments) && !uidList.contains(uid)) {
+                    Log.d("maguro", "GallerySlideShow#getUidList uidListにuid(" + uid + ")を追加しますた");
+                    uidList.add(uid);
+                }
+            }
+        }
+        return uidList;
+    }
+
+    /**
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private void doBindService() {
+        Log.d("maguro", "GallerySlideShow#doBindService start");
+        if (!mIsBound) {
+            mIsBound = bindService(getIntent(), mConnection, Context.BIND_AUTO_CREATE);
+            IntentFilter attachmentFilter = new IntentFilter(AttachmentSyncService.ACTION_SLIDE_SHOW);
+            registerReceiver(mAttachmentReceiver, attachmentFilter);
+        }
+        Log.d("maguro", "GallerySlideShow#doBindService end");
+    }
+
+    private void doUnbindService() {
+        Log.d("maguro", "GallerySlideShow#doUnBindService start");
+        if (mIsBound) {
+            unbindService(mConnection);
+            mIsBound = false;
+            unregisterReceiver(mAttachmentReceiver);
+        }
+        Log.d("maguro", "GallerySlideShow#doUnBindService end");
+    }
+
+    /**
+     * ServiceConnection
+     */
+    private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            mSyncService = ((AttachmentSyncService.AttachmentSyncBinder) service).getService();
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            mSyncService = null;
+        }
+    };
+
+    /**
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    @Override
+    public void onResume() {
+        Log.d("maguro", "GallerySlideShow#onResume start");
+        super.onResume();
+        if (null != mUidList && 0 < mUidList.size()) {
+            onSlide();
+        }
+        Log.d("maguro", "GallerySlideShow#onResume end");
+    }
+
+    /**
+     * slide.
+     *
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private void onSlide() {
+        Log.d("maguro", "GallerySlideShow#onSlide start");
+        mSlideShowThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Log.d("maguro", "GallerySlideShow#onSlide thread start");
+                try {
+                    loopInfinite();
+                } catch (RakuRakuException e) {
+                    Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow#onSlide thread Error:" + e);
+                }
+                Log.d("maguro", "GallerySlideShow#onSlide thread end");
+            }
+        });
+        mSlideShowThread.start();
+        Log.d("maguro", "GallerySlideShow#onSlide end");
+    }
+
+    /**
+     * loooooooop.
+     *
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private void loopInfinite() throws RakuRakuException {
+        Log.d("maguro", "GallerySlideShow#loopInfinite start ");
+        while (mIsRepeatUidList) {
+            if ("".equals(mStartUid)) {
+                loop();
+            }
+            loopNumbered();
+        }
+        Log.d("maguro", "GallerySlideShow#loopInfinite end ");
+    }
+
+    /**
+     * uid loop.
+     *
+     * @throws RakuRakuException exception
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private void loop() throws RakuRakuException {
+        Log.d("maguro", "GallerySlideShow#loop start ");
+        for (Iterator i = mUidList.iterator(); i.hasNext(); ) {
+            dispSlide((String) i.next());
+        }
+        Log.d("maguro", "GallerySlideShow#loop end");
+    }
+
+    /**
+     * uid specified.
+     *
+     * @throws RakuRakuException exception
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta
+     */
+    private void loopNumbered() throws RakuRakuException {
+        boolean reset = false;
+        for (Iterator i = mUidList.iterator(); i.hasNext(); ) {
+            Log.d("maguro", "GallerySlideShow#loopNumbered start");
+            String uid = (String) i.next();
+            if (mStartUid.equals(uid)) {
+                Log.d("maguro", "GallerySlideShow#loopNumbered 一時停止した見つけた uid:" + uid);
+                reset = true;
+                mStartUid = "";
+            }
+            if (reset) {
+                dismissProgressDialog();
+                dispSlide(uid);
+            }
+        }
+        Log.d("maguro", "GallerySlideShow#loopNumbered end");
+    }
+
+    /**
+     * @param uid mail uid
+     * @throws RakuRakuException exception
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private void dispSlide(String uid) throws RakuRakuException {
+        Log.d("maguro", "GallerySlideShow#dispSlide(String) start");
+        MessageBean messageBean = SlideMessage.getMessage(mAccount, mFolder, uid);
+        if (SlideCheck.isDownloadedAttachment(messageBean)) {
+            dismissProgressDialog();
+            dispSlide(messageBean);
+        } else {
+            try {
+                if (null == mSyncService) {
+                    Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#loopUid mSyncServiceがnullでした。");
+                    return;
+                }
+                mSyncService.onDownload(mAccount, mFolder, uid, AttachmentSyncService.ACTION_SLIDE_SHOW);
+            } catch (MessagingException e) {
+                Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#loopUid 次のuid(" + uid + ")をDLしますね");
+            }
+        }
+        Log.d("maguro", "GallerySlideShow#dispSlide(String) end");
+    }
+
+    /**
+     * slide show dispppppppp.
+     *
+     * @param messageBean
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private void dispSlide(MessageBean messageBean) {
+        Log.d("maguro", "GallerySlideShow#dispSlide(MessageBean) start");
+        ArrayList<AttachmentBean> attachmentBeanList = messageBean.getAttachmentBeanList();
+        for (AttachmentBean attachmentBean : attachmentBeanList) {
+            Bitmap bitmap = SlideAttachment.getBitmap(mContext, getWindowManager().getDefaultDisplay(), mAccount, attachmentBean);
+            if (null == bitmap) {
+                Log.d("maguro", "GallerySlideShow#loopUid bitmapがnullなのでreturnしちゃいますね");
+                return;
+            }
+            Message msg = setSendMessage(messageBean);
+            msg.obj = bitmap;
+            mSlideHandler.sendMessage(msg);
+            mDispUid = messageBean.getUid();
+            // TODO いったい何分くらい停止するんですかねぇ、あ、でも表示が成功した場合だけですよ？
+            sleepSlide(1000L);
+        }
+        Log.d("maguro", "GallerySlideShow#dispSlide(MessageBean) end");
+    }
+
+    /**
+     * @param messageBean
+     * @return Message(Handler)
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private Message setSendMessage(MessageBean messageBean) {
+        Message msg = new Message();
+        Bundle bundle = new Bundle();
+        bundle.putString(MESSAGE_SUBJECT, messageBean.getSubject());
+        bundle.putLong(MESSAGE_DATE, messageBean.getDate());
+        bundle.putBoolean(MESSAGE_ANSWERED, messageBean.isFlagAnswered());
+        msg.setData(bundle);
+        return msg;
+    }
+
+    /**
+     * @param sleepTime
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private void sleepSlide(long sleepTime) {
+        Log.d("maguro", "GallerySlideShow#sleepSlide start");
+        try {
+            Thread.sleep(sleepTime);
+        } catch (InterruptedException e) {
+            Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#stopSlide error:" + e);
+        }
+        Log.d("maguro", "GallerySlideShow#sleepSlide end");
+    }
+
+    /**
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private ImageView setVisibilityImageView() {
+        Log.d("maguro", "GallerySlideShow#setVisibilityImageView");
+        ImageView imageView = null;
+        if (mImageViewEven.getVisibility() == View.GONE) {
+            mImageViewDefault.setVisibility(View.GONE);
+            mImageViewEven.setVisibility(View.VISIBLE);
+            mImageViewOdd.setVisibility(View.GONE);
+            imageView = mImageViewEven;
+        } else if (mImageViewOdd.getVisibility() == View.GONE) {
+            mImageViewDefault.setVisibility(View.GONE);
+            mImageViewEven.setVisibility(View.GONE);
+            mImageViewOdd.setVisibility(View.VISIBLE);
+            imageView = mImageViewOdd;
+        } else {
+            mImageViewDefault.setVisibility(View.GONE);
+            mImageViewEven.setVisibility(View.VISIBLE);
+            mImageViewOdd.setVisibility(View.GONE);
+            imageView = mImageViewEven;
+        }
+        return imageView;
+    }
+
+    @Override
+    public void onStop() {
+        Log.d("maguro", "GallerySlideShow#onStop start");
+        super.onStop();
+        try {
+            doUnbindService();
+            mIsRepeatUidList = false;
+            mSlideShowThread.join();
+        } catch (InterruptedException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow#onStop Error:" + e);
+            finish();
+        }
+        Log.d("maguro", "GallerySlideShow#onStop stop");
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.d("maguro", "GallerySlideShow#onDestroy start");
+        super.onDestroy();
+        mTimer.cancel();
+        mTimer = null;
+        Log.d("maguro", "GallerySlideShow#onDestroy stop");
+    }
+
+    /**
+     * @param outState
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        Log.d("maguro", "GallerySlideShow#onSaveInstanceState start");
+        outState.putString(EXTRA_ACCOUNT, mAccount.getUuid());
+        outState.putString(EXTRA_FOLDER, mFolder);
+        outState.putString(EXTRA_UID, mStartUid);
+        Log.d("maguro", "GallerySlideShow#onSaveInstanceState end");
+    }
+
+    /**
+     * @param savedInstanceState
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        Log.d("maguro", "GallerySlideShow#onRestoreInstanceState start");
+        super.onRestoreInstanceState(savedInstanceState);
+        mAccount = Preferences.getPreferences(this)
+                .getAccount(savedInstanceState.getString(EXTRA_ACCOUNT));
+        mFolder = savedInstanceState.getString(EXTRA_FOLDER);
+        mStartUid = savedInstanceState.getString(EXTRA_UID);
+        Log.d("maguro", "GallerySlideShow#onRestoreInstanceState end");
+    }
+
+    /**
+     * @param v
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case ID_GALLERY_ATTACHMENT_PICTURE_EVEN:
+                try {
+                    onSlideStop(mDispUid);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case ID_GALLERY_ATTACHMENT_PICTURE_ODD:
+                try {
+                    onSlideStop(mDispUid);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                break;
+            default:
+                Log.w(RakuPhotoMail.LOG_TAG, "onClick is no Action !!!!");
+        }
+    }
+
+    /**
+     * event slide stop
+     *
+     * @throws InterruptedException
+     */
+    private void onSlideStop(String uid) throws InterruptedException {
+        Log.d("maguro", "GallerySlideShow#onSlideStop start");
+        if (null != mDispUid) {
+            try {
+                doUnbindService();
+                mIsRepeatUidList = false;
+                mSlideShowThread.join();
+                GallerySlideStop.actionHandle(mContext, mAccount, mFolder, uid);
+                finish();
+            } catch (InterruptedException e) {
+                Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow#onStop Error:" + e);
+                finish();
+            }
+        }
+        Log.d("maguro", "GallerySlideShow#onSlideStop end");
+    }
+
 }

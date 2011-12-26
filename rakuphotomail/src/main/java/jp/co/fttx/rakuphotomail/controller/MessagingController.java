@@ -76,6 +76,7 @@ import jp.co.fttx.rakuphotomail.mail.store.LocalStore.PendingCommand;
  * it removes itself. Thus, any commands that that activity submitted are
  * removed from the queue once the activity is no longer active.
  */
+// TODO このクラスは良く読み込んで、モノにしたい
 public class MessagingController implements Runnable {
 
 	/**

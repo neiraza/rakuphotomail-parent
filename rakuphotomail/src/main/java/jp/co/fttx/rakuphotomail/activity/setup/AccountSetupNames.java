@@ -81,10 +81,13 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
 
     @Override
     protected void onNext() {
-        if (Utility.requiredFieldValid(mDescription)) {
-            mAccount.setDescription(mDescription.getText().toString());
-        }
-        mAccount.setName(mName.getText().toString());
+        //XXX 勝手にかきかえましたよ
+//        if (Utility.requiredFieldValid(mDescription)) {
+//            mAccount.setDescription(mDescription.getText().toString());
+//        }
+//        mAccount.setName(mName.getText().toString());
+        mAccount.setDescription("おぐりさん");
+        mAccount.setName("おぐりん");
         mAccount.save(Preferences.getPreferences(this));
         finish();
     }

@@ -34,7 +34,7 @@ import java.net.URLEncoder;
  * AccountSetupAccountType activity.
  */
 // XXX アカウント設定君
-public class AccountSetupBasics extends RakuPhotoActivity
+public class DummyAccountSetupBasics extends RakuPhotoActivity
         implements OnClickListener, TextWatcher {
     private final static String EXTRA_ACCOUNT = "jp.co.fttx.rakuphotomail.AccountSetupBasics.account";
     private final static int DIALOG_NOTE = 1;
@@ -53,15 +53,15 @@ public class AccountSetupBasics extends RakuPhotoActivity
     private EmailAddressValidator mEmailValidator = new EmailAddressValidator();
 
     public static void actionNewAccount(Context context) {
-        Log.d("redbull", "AccountSetupBasics#actionNewAccount start");
-        Intent i = new Intent(context, AccountSetupBasics.class);
+        Log.d("maguro", "DummyAccountSetupBasics#actionNewAccount start");
+        Intent i = new Intent(context, DummyAccountSetupBasics.class);
         context.startActivity(i);
-        Log.d("redbull", "AccountSetupBasics#actionNewAccount end");
+        Log.d("maguro", "DummyAccountSetupBasics#actionNewAccount end");
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.d("redbull", "AccountSetupBasics#onCreate start");
+        Log.d("maguro", "DummyAccountSetupBasics#onCreate start");
         super.onCreate(savedInstanceState);
         // XXX アカウント情報(EMail,Password)固定埋め込み
         setContentView(R.layout.account_setup_basics);
@@ -79,27 +79,29 @@ public class AccountSetupBasics extends RakuPhotoActivity
         mPasswordView.addTextChangedListener(this);
 
         if (mPrefs.getAccounts().length > 0) {
-            Log.d("redbull", "AccountSetupBasics#onCreate 1");
+            Log.d("maguro", "DummyAccountSetupBasics#onCreate 1");
             mDefaultView.setVisibility(View.VISIBLE);
         }
 
         if (savedInstanceState != null && savedInstanceState.containsKey(EXTRA_ACCOUNT)) {
-            Log.d("redbull", "AccountSetupBasics#onCreate 2");
+            Log.d("maguro", "DummyAccountSetupBasics#onCreate 2");
             String accountUuid = savedInstanceState.getString(EXTRA_ACCOUNT);
             mAccount = Preferences.getPreferences(this).getAccount(accountUuid);
         }
 
         if (savedInstanceState != null && savedInstanceState.containsKey(STATE_KEY_PROVIDER)) {
-            Log.d("redbull", "AccountSetupBasics#onCreate 3");
+            Log.d("maguro", "DummyAccountSetupBasics#onCreate 3");
             mProvider = (Provider) savedInstanceState.getSerializable(STATE_KEY_PROVIDER);
         }
-        Log.d("redbull", "AccountSetupBasics#onCreate start");
+        Log.d("maguro", "DummyAccountSetupBasics#onCreate start");
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        validateFields();
+        // XXX ショートカットしまーす
+        next();
+//        validateFields();
     }
 
     @Override
@@ -185,7 +187,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
     }
 
     private void finishAutoSetup() {
-        Log.d("redbull", "AccountSetupBasics#finishAutoSetup start");
+        Log.d("maguro", "DummyAccountSetupBasics#finishAutoSetup start");
         String email = mEmailView.getText().toString();
         String password = mPasswordView.getText().toString();
         String[] emailParts = splitEmail(email);
@@ -213,7 +215,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
 
 
             if (outgoingUsername != null) {
-                Log.d("redbull", "AccountSetupBasics#finishAutoSetup 1");
+                Log.d("maguro", "DummyAccountSetupBasics#finishAutoSetup 1");
                 outgoingUsername = outgoingUsername.replaceAll("\\$email", email);
                 outgoingUsername = outgoingUsername.replaceAll("\\$user", userEnc);
                 outgoingUsername = outgoingUsername.replaceAll("\\$domain", domain);
@@ -222,7 +224,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
                         null, null);
 
             } else {
-                Log.d("redbull", "AccountSetupBasics#finishAutoSetup 2");
+                Log.d("maguro", "DummyAccountSetupBasics#finishAutoSetup 2");
                 outgoingUri = new URI(outgoingUriTemplate.getScheme(),
                         null, outgoingUriTemplate.getHost(), outgoingUriTemplate.getPort(), null,
                         null, null);
@@ -242,22 +244,21 @@ public class AccountSetupBasics extends RakuPhotoActivity
             AccountSetupCheckSettings.actionCheckSettings(this, mAccount, true, true);
         } catch (UnsupportedEncodingException enc) {
             // This really shouldn't happen since the encoding is hardcoded to UTF-8
-            Log.d("redbull", "AccountSetupBasics#finishAutoSetup error UnsupportedEncodingException");
+            Log.d("maguro", "DummyAccountSetupBasics#finishAutoSetup error UnsupportedEncodingException");
             Log.e(RakuPhotoMail.LOG_TAG, "Couldn't urlencode username or password.", enc);
         } catch (URISyntaxException use) {
             /*
              * If there is some problem with the URI we give up and go on to
              * manual setup.
              */
-            Log.d("redbull", "AccountSetupBasics#finishAutoSetup error URISyntaxException");
+            Log.d("maguro", "DummyAccountSetupBasics#finishAutoSetup error URISyntaxException");
             onManualSetup();
         }
-        Log.d("redbull", "AccountSetupBasics#finishAutoSetup end");
+        Log.d("maguro", "DummyAccountSetupBasics#finishAutoSetup end");
     }
 
-    @Override
-    protected void onNext() {
-        Log.d("redbull", "AccountSetupBasics#onNext start");
+    private void next() {
+        Log.d("maguro", "DummyAccountSetupBasics#next start");
         String email = mEmailView.getText().toString();
         String[] emailParts = splitEmail(email);
         String domain = emailParts[1];
@@ -267,23 +268,49 @@ public class AccountSetupBasics extends RakuPhotoActivity
              * We don't have default settings for this account, start the manual
              * setup process.
              */
-            Log.d("redbull", "AccountSetupBasics#onNext 1");
+            Log.d("maguro", "DummyAccountSetupBasics#next 1");
+            onManualSetup();
+            return;
+        }
+
+//        if (mProvider.note != null) {
+//            Log.d("maguro", "AccountSetupBasics#next 2");
+//            showDialog(DIALOG_NOTE);
+//        } else {
+//            Log.d("maguro", "AccountSetupBasics#next 3");
+//            finishAutoSetup();
+//        }
+    }
+
+    @Override
+    protected void onNext() {
+        Log.d("maguro", "DummyAccountSetupBasics#onNext start");
+        String email = mEmailView.getText().toString();
+        String[] emailParts = splitEmail(email);
+        String domain = emailParts[1];
+        mProvider = findProviderForDomain(domain);
+        if (mProvider == null) {
+            /*
+             * We don't have default settings for this account, start the manual
+             * setup process.
+             */
+            Log.d("maguro", "DummyAccountSetupBasics#onNext 1");
             onManualSetup();
             return;
         }
 
         if (mProvider.note != null) {
-            Log.d("redbull", "AccountSetupBasics#onNext 2");
+            Log.d("maguro", "DummyAccountSetupBasics#onNext 2");
             showDialog(DIALOG_NOTE);
         } else {
-            Log.d("redbull", "AccountSetupBasics#onNext 3");
+            Log.d("maguro", "DummyAccountSetupBasics#onNext 3");
             finishAutoSetup();
         }
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d("redbull", "AccountSetupBasics#onActivityResult start");
+        Log.d("maguro", "DummyAccountSetupBasics#onActivityResult start");
 
         if (resultCode == RESULT_OK) {
             mAccount.setDescription(mAccount.getEmail());
@@ -292,15 +319,15 @@ public class AccountSetupBasics extends RakuPhotoActivity
                 Preferences.getPreferences(this).setDefaultAccount(mAccount);
             }
             RakuPhotoMail.setServicesEnabled(this);
-            AccountSetupNames.actionSetNames(this, mAccount);
+            DummyAccountSetupNames.actionSetNames(this, mAccount);
             finish();
         }
-        Log.d("redbull", "AccountSetupBasics#onActivityResult end");
+        Log.d("maguro", "DummyAccountSetupBasics#onActivityResult end");
 
     }
 
     private void onManualSetup() {
-        Log.d("redbull", "AccountSetupBasics#onManualSetup start");
+        Log.d("maguro", "DummyAccountSetupBasics#onManualSetup start");
 
         String email = mEmailView.getText().toString();
         String password = mPasswordView.getText().toString();
@@ -332,9 +359,9 @@ public class AccountSetupBasics extends RakuPhotoActivity
         mAccount.setTrashFolderName(getString(R.string.special_mailbox_name_trash));
         mAccount.setSentFolderName(getString(R.string.special_mailbox_name_sent));
 
-        AccountSetupAccountType.actionSelectAccountType(this, mAccount, mDefaultView.isChecked());
+        DummyAccountSetupAccountType.actionSelectAccountType(this, mAccount, mDefaultView.isChecked());
         finish();
-        Log.d("redbull", "AccountSetupBasics#onManualSetup end");
+        Log.d("maguro", "DummyAccountSetupBasics#onManualSetup end");
 
     }
 
@@ -358,7 +385,6 @@ public class AccountSetupBasics extends RakuPhotoActivity
      * @return
      */
     private String getXmlAttribute(XmlResourceParser xml, String name) {
-        Log.d("redbull", "AccountSetupBasics#getXmlAttribute");
 
         int resId = xml.getAttributeResourceValue(null, name, 0);
         if (resId == 0) {
@@ -369,7 +395,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
     }
 
     private Provider findProviderForDomain(String domain) {
-        Log.d("redbull", "AccountSetupBasics#findProviderForDomain");
+        Log.d("maguro", "DummyAccountSetupBasics#findProviderForDomain");
 
         try {
             XmlResourceParser xml = getResources().getXml(R.xml.providers);
@@ -407,7 +433,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
     }
 
     private String[] splitEmail(String email) {
-        Log.d("redbull", "AccountSetupBasics#splitEmail");
+        Log.d("maguro", "DummyAccountSetupBasics#splitEmail");
 
         String[] retParts = new String[2];
         String[] emailParts = email.split("@");

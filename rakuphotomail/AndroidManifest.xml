@@ -1,360 +1,390 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    android:installLocation="auto"
-    package="jp.co.fttx.rakuphotomail"
-    android:versionCode="1"
-    android:versionName="0.0.1-ALPHA1" >
+          android:installLocation="auto"
+          package="jp.co.fttx.rakuphotomail"
+          android:versionCode="1"
+          android:versionName="0.0.1-ALPHA1">
 
     <uses-sdk
-        android:minSdkVersion="9"
-        android:targetSdkVersion="9" />
+            android:minSdkVersion="9"
+            android:targetSdkVersion="9"/>
 
     <supports-screens
-        android:anyDensity="true"
-        android:largeScreens="true"
-        android:normalScreens="true"
-        android:smallScreens="true" />
+            android:anyDensity="true"
+            android:largeScreens="true"
+            android:normalScreens="true"
+            android:smallScreens="true"/>
 
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
-    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS"/>
     <!-- Needed to mark a contact as contacted -->
-    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="org.thialfihar.android.apg.permission.READ_KEY_DETAILS" />
+    <uses-permission android:name="android.permission.WRITE_CONTACTS"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="org.thialfihar.android.apg.permission.READ_KEY_DETAILS"/>
 
     <permission
-        android:description="@string/read_attachment_desc"
-        android:label="@string/read_attachment_label"
-        android:name="jp.co.fttx.rakuphotomail.permission.READ_ATTACHMENT"
-        android:permissionGroup="android.permission-group.MESSAGES"
-        android:protectionLevel="dangerous" />
+            android:description="@string/read_attachment_desc"
+            android:label="@string/read_attachment_label"
+            android:name="jp.co.fttx.rakuphotomail.permission.READ_ATTACHMENT"
+            android:permissionGroup="android.permission-group.MESSAGES"
+            android:protectionLevel="dangerous"/>
 
-    <uses-permission android:name="jp.co.fttx.rakuphotomail.permission.READ_ATTACHMENT" />
-
-    <permission
-        android:description="@string/remote_control_desc"
-        android:label="@string/remote_control_label"
-        android:name="jp.co.fttx.rakuphotomail.permission.REMOTE_CONTROL"
-        android:permissionGroup="android.permission-group.MESSAGES"
-        android:protectionLevel="dangerous" />
-
-    <uses-permission android:name="jp.co.fttx.rakuphotomail.permission.REMOTE_CONTROL" />
+    <uses-permission android:name="jp.co.fttx.rakuphotomail.permission.READ_ATTACHMENT"/>
 
     <permission
-        android:description="@string/read_messages_desc"
-        android:label="@string/read_messages_label"
-        android:name="jp.co.fttx.rakuphotomail.permission.READ_MESSAGES"
-        android:permissionGroup="android.permission-group.MESSAGES"
-        android:protectionLevel="normal" />
+            android:description="@string/remote_control_desc"
+            android:label="@string/remote_control_label"
+            android:name="jp.co.fttx.rakuphotomail.permission.REMOTE_CONTROL"
+            android:permissionGroup="android.permission-group.MESSAGES"
+            android:protectionLevel="dangerous"/>
 
-    <uses-permission android:name="jp.co.fttx.rakuphotomail.permission.READ_MESSAGES" />
+    <uses-permission android:name="jp.co.fttx.rakuphotomail.permission.REMOTE_CONTROL"/>
 
     <permission
-        android:description="@string/read_messages_desc"
-        android:label="@string/delete_messages_label"
-        android:name="jp.co.fttx.rakuphotomail.permission.DELETE_MESSAGES"
-        android:permissionGroup="android.permission-group.MESSAGES"
-        android:protectionLevel="normal" />
+            android:description="@string/read_messages_desc"
+            android:label="@string/read_messages_label"
+            android:name="jp.co.fttx.rakuphotomail.permission.READ_MESSAGES"
+            android:permissionGroup="android.permission-group.MESSAGES"
+            android:protectionLevel="normal"/>
 
-    <uses-permission android:name="jp.co.fttx.rakuphotomail.permission.DELETE_MESSAGES" />
+    <uses-permission android:name="jp.co.fttx.rakuphotomail.permission.READ_MESSAGES"/>
+
+    <permission
+            android:description="@string/read_messages_desc"
+            android:label="@string/delete_messages_label"
+            android:name="jp.co.fttx.rakuphotomail.permission.DELETE_MESSAGES"
+            android:permissionGroup="android.permission-group.MESSAGES"
+            android:protectionLevel="normal"/>
+
+    <uses-permission android:name="jp.co.fttx.rakuphotomail.permission.DELETE_MESSAGES"/>
 
     <application
-        android:allowTaskReparenting="false"
-        android:icon="@drawable/icon"
-        android:label="@string/app_name"
-        android:name="RakuPhotoMail" >
-        <meta-data
-            android:name="android.app.default_searchable"
-            android:value=".activity.Search" />
-
-        <activity
-            android:configChanges="locale"
-            android:label="らくフォトメニュー（廃止予定）"
-            android:launchMode="standard"
-            android:name="jp.co.fttx.rakuphotomail.activity.RakuPhotoMenuSelecter" >
-            <intent-filter >
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:configChanges="locale"
-            android:label="返信メッセージ作成"
-            android:launchMode="standard"
-            android:name="jp.co.fttx.rakuphotomail.activity.GallerySendingMail" >
-            <intent-filter >
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:configChanges="locale"
-            android:launchMode="standard"
-            android:name="jp.co.fttx.rakuphotomail.activity.GallerySlideShow" >
-        </activity>
-        <activity
-            android:configChanges="locale"
+            android:allowTaskReparenting="false"
+            android:icon="@drawable/icon"
             android:label="@string/app_name"
-            android:launchMode="singleTask"
-            android:name="jp.co.fttx.rakuphotomail.activity.Accounts" >
-            <intent-filter >
-                <action android:name="android.intent.action.MAIN" />
+            android:name="RakuPhotoMail">
+        <meta-data
+                android:name="android.app.default_searchable"
+                android:value=".activity.Search"/>
 
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.LAUNCHER" />
+        <activity
+                android:configChanges="locale"
+                android:label="返信メッセージ作成"
+                android:launchMode="standard"
+                android:name="jp.co.fttx.rakuphotomail.activity.GallerySendingMail">
+            <intent-filter>
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
         <activity
-            android:configChanges="locale"
-            android:label="ダミー"
-            android:launchMode="singleTask"
-            android:name="jp.co.fttx.rakuphotomail.activity.DummyAccounts" >
+                android:configChanges="locale"
+                android:launchMode="standard"
+                android:name="jp.co.fttx.rakuphotomail.activity.GallerySlideStop">
         </activity>
         <activity
-            android:configChanges="locale"
-            android:label="@string/prefs_title"
-            android:name="jp.co.fttx.rakuphotomail.activity.setup.Prefs" >
+                android:configChanges="locale"
+                android:launchMode="standard"
+                android:name="jp.co.fttx.rakuphotomail.activity.GalleryNewMail">
         </activity>
         <activity
-            android:configChanges="locale"
-            android:label="@string/font_size_settings_title"
-            android:name="jp.co.fttx.rakuphotomail.activity.setup.FontSizeSettings" >
+                android:configChanges="locale"
+                android:launchMode="standard"
+                android:name="jp.co.fttx.rakuphotomail.activity.GallerySlideShow">
         </activity>
         <activity
-            android:configChanges="locale"
-            android:label="@string/account_setup_basics_title"
-            android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupBasics" >
+                android:configChanges="locale"
+                android:label="@string/app_name"
+                android:launchMode="singleTask"
+                android:name="jp.co.fttx.rakuphotomail.activity.DummyAccounts">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
         </activity>
         <activity
-            android:configChanges="locale"
-            android:label="@string/account_setup_account_type_title"
-            android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupAccountType" >
+                android:configChanges="locale"
+                android:label="@string/prefs_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.Prefs">
         </activity>
         <activity
-            android:configChanges="locale"
-            android:label="@string/account_setup_incoming_title"
-            android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupIncoming" >
+                android:configChanges="locale"
+                android:label="@string/font_size_settings_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.FontSizeSettings">
         </activity>
         <activity
-            android:configChanges="locale"
-            android:label="@string/account_settings_composition_title"
-            android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupComposition" >
+                android:configChanges="locale"
+                android:label="@string/account_setup_basics_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupBasics">
         </activity>
         <activity
-            android:configChanges="locale"
-            android:label="@string/account_setup_outgoing_title"
-            android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupOutgoing" >
+                android:configChanges="locale"
+                android:label="@string/account_setup_basics_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupBasics">
         </activity>
         <activity
-            android:configChanges="locale"
-            android:label="@string/account_setup_options_title"
-            android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupOptions" >
+                android:configChanges="locale"
+                android:label="@string/account_setup_account_type_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupAccountType">
         </activity>
         <activity
-            android:configChanges="locale"
-            android:label="@string/account_setup_names_title"
-            android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupNames" >
+                android:configChanges="locale"
+                android:label="@string/account_setup_account_type_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupAccountType">
         </activity>
         <activity
-            android:configChanges="locale"
-            android:label="@string/choose_folder_title"
-            android:name="jp.co.fttx.rakuphotomail.activity.ChooseFolder"
-            android:theme="@style/Theme.K9Dialog" >
+                android:configChanges="locale"
+                android:label="@string/account_setup_incoming_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupIncoming">
         </activity>
         <activity
-            android:configChanges="locale"
-            android:label="@string/choose_identity_title"
-            android:name="jp.co.fttx.rakuphotomail.activity.ChooseIdentity"
-            android:theme="@style/Theme.K9Dialog" >
+                android:configChanges="locale"
+                android:label="@string/account_setup_incoming_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupIncoming">
         </activity>
         <activity
-            android:label="@string/choose_account_title"
-            android:name="jp.co.fttx.rakuphotomail.activity.ChooseAccount"
-            android:theme="@style/Theme.K9Dialog" >
+                android:configChanges="locale"
+                android:label="@string/account_settings_composition_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupComposition">
         </activity>
         <activity
-            android:configChanges="locale"
-            android:label="@string/manage_identities_title"
-            android:name="jp.co.fttx.rakuphotomail.activity.ManageIdentities" >
+                android:configChanges="locale"
+                android:label="@string/account_setup_outgoing_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupOutgoing">
         </activity>
         <activity
-            android:configChanges="locale"
-            android:label="@string/edit_identity_title"
-            android:name="jp.co.fttx.rakuphotomail.activity.EditIdentity" >
+                android:configChanges="locale"
+                android:label="@string/account_setup_outgoing_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupOutgoing">
+        </activity>
+        <activity
+                android:configChanges="locale"
+                android:label="@string/account_setup_options_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupOptions">
+        </activity>
+        <activity
+                android:configChanges="locale"
+                android:label="@string/account_setup_options_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupOptions">
+        </activity>
+        <activity
+                android:configChanges="locale"
+                android:label="@string/account_setup_names_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupNames">
+        </activity>
+        <activity
+                android:configChanges="locale"
+                android:label="@string/account_setup_names_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupNames">
+        </activity>
+        <activity
+                android:configChanges="locale"
+                android:label="@string/choose_folder_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.ChooseFolder"
+                android:theme="@style/Theme.K9Dialog">
+        </activity>
+        <activity
+                android:configChanges="locale"
+                android:label="@string/choose_identity_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.ChooseIdentity"
+                android:theme="@style/Theme.K9Dialog">
+        </activity>
+        <activity
+                android:label="@string/choose_account_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.ChooseAccount"
+                android:theme="@style/Theme.K9Dialog">
+        </activity>
+        <activity
+                android:configChanges="locale"
+                android:label="@string/manage_identities_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.ManageIdentities">
+        </activity>
+        <activity
+                android:configChanges="locale"
+                android:label="@string/edit_identity_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.EditIdentity">
         </activity>
         <!--
              XXX Note: this activity is hacked to ignore config changes, since 
 			it doesn't currently handle them correctly in code.
         -->
         <activity
-            android:configChanges="keyboardHidden|orientation|locale"
-            android:label="@string/account_setup_check_settings_title"
-            android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupCheckSettings" >
+                android:configChanges="keyboardHidden|orientation|locale"
+                android:label="@string/account_setup_check_settings_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupCheckSettings">
         </activity>
         <activity
-            android:configChanges="locale"
-            android:label="@string/account_settings_title_fmt"
-            android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSettings" >
+                android:configChanges="keyboardHidden|orientation|locale"
+                android:label="@string/account_setup_check_settings_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupCheckSettings">
         </activity>
         <activity
-            android:configChanges="locale"
-            android:label="@string/folder_settings_title"
-            android:name="jp.co.fttx.rakuphotomail.activity.setup.FolderSettings"
-            android:theme="@android:style/Theme.Dialog" >
+                android:configChanges="locale"
+                android:label="@string/account_settings_title_fmt"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSettings">
         </activity>
         <activity
-            android:configChanges="locale"
-            android:launchMode="standard"
-            android:name="jp.co.fttx.rakuphotomail.activity.FolderList" >
-            <intent-filter >
+                android:configChanges="locale"
+                android:label="@string/folder_settings_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.setup.FolderSettings"
+                android:theme="@android:style/Theme.Dialog">
+        </activity>
+        <activity
+                android:configChanges="locale"
+                android:launchMode="standard"
+                android:name="jp.co.fttx.rakuphotomail.activity.FolderList">
+            <intent-filter>
 
                 <!-- This action is only to allow an entry point for launcher shortcuts -->
             </intent-filter>
         </activity>
         <activity
-            android:configChanges="locale"
-            android:launchMode="singleTask"
-            android:name="jp.co.fttx.rakuphotomail.activity.MessageList" >
-            <intent-filter >
-                <category android:name="android.intent.category.DEFAULT" />
+                android:configChanges="locale"
+                android:launchMode="singleTask"
+                android:name="jp.co.fttx.rakuphotomail.activity.MessageList">
+            <intent-filter>
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
         <activity
-            android:configChanges="locale"
-            android:launchMode="standard"
-            android:name="jp.co.fttx.rakuphotomail.activity.MessageView"
-            android:theme="@android:style/Theme.Light" >
-            <intent-filter >
-                <action android:name="android.intent.action.VIEW" />
+                android:configChanges="locale"
+                android:launchMode="standard"
+                android:name="jp.co.fttx.rakuphotomail.activity.MessageView"
+                android:theme="@android:style/Theme.Light">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
 
                 <data
-                    android:host="messages"
-                    android:scheme="email" />
+                        android:host="messages"
+                        android:scheme="email"/>
 
-                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
         <activity
-            android:configChanges="locale"
-            android:enabled="false"
-            android:label="@string/app_name"
-            android:name="jp.co.fttx.rakuphotomail.activity.MessageCompose" >
-            <intent-filter >
-                <action android:name="android.intent.action.SENDTO" />
+                android:configChanges="locale"
+                android:enabled="false"
+                android:label="@string/app_name"
+                android:name="jp.co.fttx.rakuphotomail.activity.MessageCompose">
+            <intent-filter>
+                <action android:name="android.intent.action.SENDTO"/>
 
-                <data android:scheme="mailto" />
+                <data android:scheme="mailto"/>
 
-                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
-            <intent-filter >
-                <action android:name="android.intent.action.SEND" />
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
 
-                <data android:mimeType="*/*" />
+                <data android:mimeType="*/*"/>
 
-                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
-            <intent-filter >
-                <action android:name="android.intent.action.SEND_MULTIPLE" />
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE"/>
 
-                <data android:mimeType="*/*" />
+                <data android:mimeType="*/*"/>
 
-                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
-            <intent-filter >
-                <action android:name="android.intent.action.VIEW" />
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
 
-                <data android:scheme="mailto" />
+                <data android:scheme="mailto"/>
 
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
             </intent-filter>
         </activity>
         <!-- Search Activity - searchable -->
         <activity
-            android:configChanges="locale"
-            android:label="@string/search_action"
-            android:name="jp.co.fttx.rakuphotomail.activity.Search" >
-            <intent-filter >
-                <action android:name="android.intent.action.SEARCH" />
+                android:configChanges="locale"
+                android:label="@string/search_action"
+                android:name="jp.co.fttx.rakuphotomail.activity.Search">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH"/>
 
-                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
 
             <meta-data
-                android:name="android.app.searchable"
-                android:resource="@xml/searchable" />
+                    android:name="android.app.searchable"
+                    android:resource="@xml/searchable"/>
         </activity>
         <activity
-            android:configChanges="locale"
-            android:label="@string/shortcuts_title"
-            android:name="jp.co.fttx.rakuphotomail.activity.LauncherShortcuts" >
-            <intent-filter >
-                <action android:name="android.intent.action.CREATE_SHORTCUT" />
+                android:configChanges="locale"
+                android:label="@string/shortcuts_title"
+                android:name="jp.co.fttx.rakuphotomail.activity.LauncherShortcuts">
+            <intent-filter>
+                <action android:name="android.intent.action.CREATE_SHORTCUT"/>
 
-                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
-        <activity android:name="jp.co.fttx.rakuphotomail.activity.AccessibleEmailContentActivity" >
+        <activity android:name="jp.co.fttx.rakuphotomail.activity.AccessibleEmailContentActivity">
         </activity>
 
-        <receiver android:name="jp.co.fttx.rakuphotomail.service.AttachmentSynqReceiver" >
-            <intent-filter >
-                <action android:name="jp.co.fttx.rakuphotomail.service.AttachmentSynqService.action" />
+        <receiver android:name=".service.AttachmentSyncReceiver">
+            <intent-filter>
+                <action android:name="jp.co.fttx.rakuphotomail.service.AttachmentSyncService.action.SLIDE_SHOW"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="jp.co.fttx.rakuphotomail.service.AttachmentSyncService.action.SLIDE_SHOW_STOP"/>
             </intent-filter>
         </receiver>
         <receiver
-            android:enabled="true"
-            android:name="jp.co.fttx.rakuphotomail.service.BootReceiver" >
-            <intent-filter >
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                android:enabled="true"
+                android:name="jp.co.fttx.rakuphotomail.service.BootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
-            <intent-filter >
-                <action android:name="android.intent.action.DEVICE_STORAGE_LOW" />
+            <intent-filter>
+                <action android:name="android.intent.action.DEVICE_STORAGE_LOW"/>
             </intent-filter>
-            <intent-filter >
-                <action android:name="android.intent.action.DEVICE_STORAGE_OK" />
+            <intent-filter>
+                <action android:name="android.intent.action.DEVICE_STORAGE_OK"/>
             </intent-filter>
-            <intent-filter >
-                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
             </intent-filter>
-            <intent-filter >
-                <action android:name="android.net.conn.BACKGROUND_DATA_SETTING_CHANGED" />
+            <intent-filter>
+                <action android:name="android.net.conn.BACKGROUND_DATA_SETTING_CHANGED"/>
             </intent-filter>
-            <intent-filter >
-                <action android:name="com.android.sync.SYNC_CONN_STATUS_CHANGED" />
+            <intent-filter>
+                <action android:name="com.android.sync.SYNC_CONN_STATUS_CHANGED"/>
             </intent-filter>
-            <intent-filter >
-                <action android:name="jp.co.fttx.rakuphotomail.service.BroadcastReceiver.scheduleIntent" />
-            </intent-filter>
-        </receiver>
-        <receiver
-            android:enabled="true"
-            android:name="jp.co.fttx.rakuphotomail.service.RemoteControlReceiver"
-            android:permission="jp.co.fttx.rakuphotomail.permission.REMOTE_CONTROL" >
-            <intent-filter >
-                <action android:name="jp.co.fttx.rakuphotomail.K9RemoteControl.set" />
-            </intent-filter>
-            <intent-filter >
-                <action android:name="jp.co.fttx.rakuphotomail.K9RemoteControl.requestAccounts" />
+            <intent-filter>
+                <action android:name="jp.co.fttx.rakuphotomail.service.BroadcastReceiver.scheduleIntent"/>
             </intent-filter>
         </receiver>
         <receiver
-            android:enabled="true"
-            android:name="jp.co.fttx.rakuphotomail.service.CoreReceiver" >
-            <intent-filter >
-                <action android:name="jp.co.fttx.rakuphotomail.service.CoreReceiver.wakeLockRelease" />
+                android:enabled="true"
+                android:name="jp.co.fttx.rakuphotomail.service.RemoteControlReceiver"
+                android:permission="jp.co.fttx.rakuphotomail.permission.REMOTE_CONTROL">
+            <intent-filter>
+                <action android:name="jp.co.fttx.rakuphotomail.K9RemoteControl.set"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="jp.co.fttx.rakuphotomail.K9RemoteControl.requestAccounts"/>
             </intent-filter>
         </receiver>
         <receiver
-            android:enabled="true"
-            android:name="jp.co.fttx.rakuphotomail.service.StorageReceiver" >
-            <intent-filter >
+                android:enabled="true"
+                android:name="jp.co.fttx.rakuphotomail.service.CoreReceiver">
+            <intent-filter>
+                <action android:name="jp.co.fttx.rakuphotomail.service.CoreReceiver.wakeLockRelease"/>
+            </intent-filter>
+        </receiver>
+        <receiver
+                android:enabled="true"
+                android:name="jp.co.fttx.rakuphotomail.service.StorageReceiver">
+            <intent-filter>
 
                 <!--
                      android.intent.action.MEDIA_MOUNTED * Broadcast Action: External 
@@ -363,59 +393,55 @@
 					Intent contains an extra with name "read-only" and Boolean value to indicate 
 					if the * media was mounted read only.
                 -->
-                <action android:name="android.intent.action.MEDIA_MOUNTED" />
+                <action android:name="android.intent.action.MEDIA_MOUNTED"/>
                 <!--
                      MEDIA_EJECT and MEDIA_UNMOUNTED are not defined here: they have 
 					to be dynamically registered otherwise it would make app start at the wrong 
 					time
                 -->
-                <data android:scheme="file" />
+                <data android:scheme="file"/>
             </intent-filter>
         </receiver>
 
         <service
-            android:enabled="true"
-            android:name="jp.co.fttx.rakuphotomail.service.AttachmentSynqService" >
+                android:enabled="true"
+                android:name=".service.AttachmentSyncService">
         </service>
         <service
-            android:enabled="true"
-            android:name="jp.co.fttx.rakuphotomail.service.HogeService" >
+                android:enabled="true"
+                android:name="jp.co.fttx.rakuphotomail.service.MailService">
         </service>
         <service
-            android:enabled="true"
-            android:name="jp.co.fttx.rakuphotomail.service.MailService" >
+                android:enabled="true"
+                android:name="jp.co.fttx.rakuphotomail.service.PushService">
         </service>
         <service
-            android:enabled="true"
-            android:name="jp.co.fttx.rakuphotomail.service.PushService" >
+                android:enabled="true"
+                android:name="jp.co.fttx.rakuphotomail.service.PollService">
         </service>
         <service
-            android:enabled="true"
-            android:name="jp.co.fttx.rakuphotomail.service.PollService" >
+                android:enabled="true"
+                android:name="jp.co.fttx.rakuphotomail.service.RemoteControlService"
+                android:permission="jp.co.fttx.rakuphotomail.permission.REMOTE_CONTROL">
         </service>
         <service
-            android:enabled="true"
-            android:name="jp.co.fttx.rakuphotomail.service.RemoteControlService"
-            android:permission="jp.co.fttx.rakuphotomail.permission.REMOTE_CONTROL" >
-        </service>
-        <service
-            android:enabled="true"
-            android:name="jp.co.fttx.rakuphotomail.service.SleepService" >
+                android:enabled="true"
+                android:name="jp.co.fttx.rakuphotomail.service.SleepService">
         </service>
 
         <provider
-            android:authorities="jp.co.fttx.rakuphotomail.attachmentprovider"
-            android:grantUriPermissions="true"
-            android:multiprocess="true"
-            android:name="jp.co.fttx.rakuphotomail.provider.AttachmentProvider"
-            android:readPermission="jp.co.fttx.rakuphotomail.permission.READ_ATTACHMENT" />
+                android:authorities="jp.co.fttx.rakuphotomail.attachmentprovider"
+                android:grantUriPermissions="true"
+                android:multiprocess="true"
+                android:name="jp.co.fttx.rakuphotomail.provider.AttachmentProvider"
+                android:readPermission="jp.co.fttx.rakuphotomail.permission.READ_ATTACHMENT"/>
         <provider
-            android:authorities="jp.co.fttx.rakuphotomail.messageprovider"
-            android:grantUriPermissions="true"
-            android:multiprocess="true"
-            android:name="jp.co.fttx.rakuphotomail.provider.MessageProvider"
-            android:readPermission="jp.co.fttx.rakuphotomail.permission.READ_MESSAGES"
-            android:writePermission="jp.co.fttx.rakuphotomail.permission.DELETE_MESSAGES" />
+                android:authorities="jp.co.fttx.rakuphotomail.messageprovider"
+                android:grantUriPermissions="true"
+                android:multiprocess="true"
+                android:name="jp.co.fttx.rakuphotomail.provider.MessageProvider"
+                android:readPermission="jp.co.fttx.rakuphotomail.permission.READ_MESSAGES"
+                android:writePermission="jp.co.fttx.rakuphotomail.permission.DELETE_MESSAGES"/>
     </application>
 
 </manifest>
