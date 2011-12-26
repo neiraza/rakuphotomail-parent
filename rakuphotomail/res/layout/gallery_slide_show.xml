@@ -6,16 +6,16 @@
         android:layout_height="fill_parent" android:background="#000000">
 
     <ImageView
-            android:id="@+id/gallery_attachment_picuture_default"
+            android:id="@+id/gallery_attachment_picture_default"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:src="@drawable/ucom_logo"/>
     <ImageView
-            android:id="@+id/gallery_attachment_picuture_even"
+            android:id="@+id/gallery_attachment_picture_even"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"/>
     <ImageView
-            android:id="@+id/gallery_attachment_picuture_odd"
+            android:id="@+id/gallery_attachment_picture_odd"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"/>
     <LinearLayout

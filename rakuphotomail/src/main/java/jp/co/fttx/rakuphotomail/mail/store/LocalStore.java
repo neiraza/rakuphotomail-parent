@@ -2734,6 +2734,7 @@ public class LocalStore extends Store implements Serializable {
          */
         @Override
         public void appendMessages(Message[] messages) throws MessagingException {
+            Log.d("gunntama", "appendMessages(Message[] messages)");
             appendMessages(messages, false);
         }
 
@@ -2777,6 +2778,7 @@ public class LocalStore extends Store implements Serializable {
          */
         private void appendMessages(final Message[] messages, final boolean copy)
                 throws MessagingException {
+            Log.d("gunntama", "appendMessages(final Message[] messages, final boolean copy)");
             open(OpenMode.READ_WRITE);
             try {
                 database.execute(true, new DbCallback<Void>() {
@@ -2784,6 +2786,7 @@ public class LocalStore extends Store implements Serializable {
                     public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
                             UnavailableStorageException {
                         try {
+                            Log.d("gunntama", "appendMessages(final Message[] messages, final boolean copy) for文前");
                             for (Message message : messages) {
                                 if (!(message instanceof MimeMessage)) {
                                     throw new Error(
@@ -2890,7 +2893,9 @@ public class LocalStore extends Store implements Serializable {
                                         cv.put("message_id", messageId);
                                     }
                                     long messageUid;
+                                    Log.d("gunntama", "appendMessages(final Message[] messages, final boolean copy) insert文前");
                                     messageUid = db.insert("messages", "uid", cv);
+                                    Log.d("gunntama", "appendMessages(final Message[] messages, final boolean copy) messageUid:" + messageUid);
                                     for (Part attachment : attachments) {
                                         saveAttachment(messageUid, attachment, copy);
                                     }

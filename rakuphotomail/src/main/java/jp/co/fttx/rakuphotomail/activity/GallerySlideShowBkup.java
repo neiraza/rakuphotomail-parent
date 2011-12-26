@@ -484,7 +484,7 @@ public class GallerySlideShowBkup {
 //
 //    private ArrayList<MessageBean> getNewMail() {
 //        Log.d("maguro", "GallerySlideShow#getNewMail start");
-//        List<MessageInfo> newMessages = getMessages();
+    //        List<MessageInfo> newMessages = getMessages();
 //        ArrayList<MessageBean> messages = new ArrayList<MessageBean>();
 //        if (newMessages.size() > 0) {
 //            try {

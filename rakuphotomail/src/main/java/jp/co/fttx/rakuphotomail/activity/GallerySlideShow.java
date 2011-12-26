@@ -68,17 +68,17 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     private static final String MESSAGE_ANSWERED = "answered";
     /**
-     * R.id.gallery_attachment_picuture_default
+     * R.id.gallery_attachment_picture_default
      */
-    private static final int ID_GALLERY_ATTACHMENT_PICTURE_DEFAULT = R.id.gallery_attachment_picuture_default;
+    private static final int ID_GALLERY_ATTACHMENT_PICTURE_DEFAULT = R.id.gallery_attachment_picture_default;
     /**
-     * R.id.gallery_attachment_picuture_even
+     * R.id.gallery_attachment_picture_even
      */
-    private static final int ID_GALLERY_ATTACHMENT_PICTURE_EVEN = R.id.gallery_attachment_picuture_even;
+    private static final int ID_GALLERY_ATTACHMENT_PICTURE_EVEN = R.id.gallery_attachment_picture_even;
     /**
-     * R.id.gallery_attachment_picuture_odd
+     * R.id.gallery_attachment_picture_odd
      */
-    private static final int ID_GALLERY_ATTACHMENT_PICTURE_ODD = R.id.gallery_attachment_picuture_odd;
+    private static final int ID_GALLERY_ATTACHMENT_PICTURE_ODD = R.id.gallery_attachment_picture_odd;
 
     /**
      * account
@@ -192,7 +192,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     }
 
     //TODO Timer TEST
-    Timer mTimer   = null;
+    Timer mTimer = null;
 
 
     /**
@@ -216,22 +216,43 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
         //TODO Timer TEST
         mTimer = new Timer(true);
-        mTimer.schedule( new TimerTask(){
+        mTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
-                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
-                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
-                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
-                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
-                MessageSync.synchronizeMailbox(mAccount,mFolder);
-                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
-                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
-                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
-                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
-                Log.d("maguro", "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
+                // 同期処理で新着メールを見つけられた場合
+                String newMailUid = MessageSync.synchronizeMailbox(mAccount, mFolder);
+                if (null != newMailUid && !"".equals(newMailUid)) {
+                    Log.d("gunntama", "同記事に取得した新着メールがあったようです");
+                    doUnbindService();
+                    mIsRepeatUidList = false;
+                    try {
+                        mSlideShowThread.join();
+                    } catch (InterruptedException e) {
+                        //TODO どうすっか
+                        Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
+                    }
+                    Log.d("gunntama", "同期完了後の新着メールUID:" + mDispUid);
+                    GalleryNewMail.actionHandle(mContext, mAccount, mFolder, newMailUid, mDispUid);
+                }
+
+                // サーバーとつながってる状態で新着メールがローカル取り込み完了している場合
+                ArrayList<String> newUidList = getUidList();
+                for (String uid : newUidList) {
+                    if (!mUidList.contains(uid)) {
+                        Log.d("gunntama", "UID最新情報！ どうやら新着メールが既に届いているようです！");
+                        Log.d("gunntama", "UID最新情報！ UID:" + uid);
+                        doUnbindService();
+                        mIsRepeatUidList = false;
+                        try {
+                            mSlideShowThread.join();
+                        } catch (InterruptedException e) {
+                            Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
+                        }
+                        GalleryNewMail.actionHandle(mContext, mAccount, mFolder, uid, mDispUid);
+                    }
+                }
             }
-        }, 60000L, 60000L);
+        }, 120000L, 60000L);
 
         Log.d("maguro", "GallerySlideShow#onCreate end");
     }
@@ -357,6 +378,25 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             }
         }
         Log.d("maguro", "GallerySlideShow#setUidList end");
+    }
+
+    private ArrayList<String> getUidList() {
+        Log.d("maguro", "GallerySlideShow#getUidList");
+        List<MessageInfo> messageInfoList = SlideMessage.getMessageInfoList(mAccount, mFolder);
+        ArrayList<String> uidList = new ArrayList<String>();
+        for (MessageInfo messageInfo : messageInfoList) {
+            String uid = messageInfo.getUid();
+            Log.d("maguro", "GallerySlideShow#setUidList uid:" + uid);
+            ArrayList<Attachments> attachmentsList = SlideMessage.getAttachmentList(mAccount, mFolder, uid);
+            for (Attachments attachments : attachmentsList) {
+                //追加対象はスライドする奴のみ（重複UIDは省く）
+                if (SlideCheck.isSlide(attachments) && !uidList.contains(uid)) {
+                    Log.d("maguro", "GallerySlideShow#getUidList uidListにuid(" + uid + ")を追加しますた");
+                    uidList.add(uid);
+                }
+            }
+        }
+        return uidList;
     }
 
     /**

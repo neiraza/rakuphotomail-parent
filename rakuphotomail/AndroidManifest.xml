@@ -89,6 +89,11 @@
         <activity
                 android:configChanges="locale"
                 android:launchMode="standard"
+                android:name="jp.co.fttx.rakuphotomail.activity.GalleryNewMail">
+        </activity>
+        <activity
+                android:configChanges="locale"
+                android:launchMode="standard"
                 android:name="jp.co.fttx.rakuphotomail.activity.GallerySlideShow">
         </activity>
         <activity

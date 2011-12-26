@@ -147,7 +147,9 @@ public class AttachmentSyncService extends Service {
     private void download(final Account account, final String folder, final String uid)
             throws MessagingException {
         Log.d("maguro", "AttachmentSyncService#download start");
+        Log.d("gunntama", "AttachmentSyncService#download start");
         Log.d("maguro", "AttachmentSyncService#download uid:" + uid);
+        Log.d("gunntama", "AttachmentSyncService#download uid:" + uid);
         Folder remoteFolder = null;
         LocalFolder localFolder = null;
         try {
@@ -165,6 +167,7 @@ public class AttachmentSyncService extends Service {
                 localFolder.fetch(new Message[]{message}, fp, null);
             } else {
                 Log.d("maguro", "AttachmentSyncService#download NOT X_DOWNLOADED_FULL");
+                Log.d("gunntama", "AttachmentSyncService#download NOT X_DOWNLOADED_FULL");
                 Store remoteStore = account.getRemoteStore();
                 remoteFolder = remoteStore.getFolder(folder);
                 remoteFolder.open(OpenMode.READ_WRITE);
@@ -194,4 +197,5 @@ public class AttachmentSyncService extends Service {
             f.close();
         }
     }
+    
 }
