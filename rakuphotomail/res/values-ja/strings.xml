@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="app_name">らくフォトメール</string>
-    <string name="beta_app_name">らくフォトメール BETA</string>
+    <string name="app_name">らくフォト</string>
+    <string name="beta_app_name">らくフォト BETA</string>
     <string name="app_authors">UCOM</string>
     <string name="app_copyright_fmt">Copyright 2011-<xliff:g>%s</xliff:g> UCOM Corporation and/or its affiliates. All rights reserved. <xliff:g>%s</xliff:g> the Android Open Source Project.</string>
     <string name="app_license">Licensed under the Apache License, Version 2.0.</string>

@@ -502,6 +502,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         Log.d("maguro", "GallerySlideShow#loop start ");
         for (Iterator i = mUidList.iterator(); i.hasNext(); ) {
             dispSlide((String) i.next());
+            if (!mIsRepeatUidList) {
+                return;
+            }
         }
         Log.d("maguro", "GallerySlideShow#loop end");
     }

@@ -303,7 +303,7 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
         }
         mMessageBean = messageBean;
         //Thumbnail
-        ArrayList<AttachmentBean> attachmentBeanList = messageBean.getAttachmentBeanList();
+        ArrayList<AttachmentBean> attachmentBeanList = mMessageBean.getAttachmentBeanList();
         if (1 < attachmentBeanList.size()) {
             mGalleryThumbnailLayout.setVisibility(View.VISIBLE);
             ThumbnailImageAdapter thumbnailAdapter = new ThumbnailImageAdapter(mContext);
@@ -314,10 +314,10 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
         }
 
         //ここはThumnailから選択できるように変更する予定
-        setImageViewPicture(messageBean.getAttachmentBeanList(), 0);
+        setImageViewPicture(mMessageBean.getAttachmentBeanList(), 0);
 
-        mMailSubject.setText(messageBean.getSubject());
-        setDate(messageBean.getDate());
+        mMailSubject.setText(mMessageBean.getSubject());
+        setDate(mMessageBean.getDate());
         dissmissProgressDialog();
         Log.d("maguro", "GalleryNewMail#onDisp end");
     }
@@ -515,5 +515,6 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Log.d("maguro", "GalleryNewMail#onItemClick id:" + id);
+        setImageViewPicture(mMessageBean.getAttachmentBeanList(), (int)id);
     }
 }
