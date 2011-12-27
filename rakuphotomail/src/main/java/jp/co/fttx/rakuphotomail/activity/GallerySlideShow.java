@@ -213,6 +213,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         setupViews();
         setUidList();
         doBindService();
+        setupSlideShowThread();
 
         //TODO Timer TEST
         mTimer = new Timer(true);
@@ -222,11 +223,15 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 // 同期処理で新着メールを見つけられた場合
                 String newMailUid = MessageSync.synchronizeMailbox(mAccount, mFolder);
                 if (null != newMailUid && !"".equals(newMailUid)) {
-                    Log.d("gunntama", "同記事に取得した新着メールがあったようです");
+                    Log.d("gunntama", "同期時に取得した新着メールがあったようです newMailUid:" + newMailUid);
                     doUnbindService();
                     mIsRepeatUidList = false;
                     try {
-                        mSlideShowThread.join();
+                        if (mSlideShowThread.isAlive()) {
+                            mSlideShowThread.join();
+                        } else {
+                            mDispUid = newMailUid;
+                        }
                     } catch (InterruptedException e) {
                         //TODO どうすっか
                         Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
@@ -240,12 +245,16 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 ArrayList<String> newUidList = getUidList();
                 for (String uid : newUidList) {
                     if (!mUidList.contains(uid)) {
-                        Log.d("gunntama", "UID最新情報！ どうやら新着メールが既に届いているようです！");
+                        Log.d("gunntama", "UID最新情報！ どうやら新着メールが既に届いているようです！ uid:" + uid);
                         Log.d("gunntama", "UID最新情報！ UID:" + uid);
                         doUnbindService();
                         mIsRepeatUidList = false;
                         try {
-                            mSlideShowThread.join();
+                            if (mSlideShowThread.isAlive()) {
+                                mSlideShowThread.join();
+                            } else {
+                                mDispUid = uid;
+                            }
                         } catch (InterruptedException e) {
                             Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
                         }
@@ -299,6 +308,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 mDate.setText(sdf.format(bundle.get(MESSAGE_DATE)));
                 if ((Boolean) bundle.get(MESSAGE_ANSWERED)) {
                     mAnswered.setVisibility(View.VISIBLE);
+                } else {
+                    mAnswered.setVisibility(View.GONE);
                 }
             }
 
@@ -366,6 +377,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     private void setUidList() {
         Log.d("maguro", "GallerySlideShow#setUidList start");
         List<MessageInfo> messageInfoList = SlideMessage.getMessageInfoList(mAccount, mFolder);
+        if (null == messageInfoList || 0 == messageInfoList.size()) {
+            Log.w(RakuPhotoMail.LOG_TAG, "現在、サーバー上に受信メールが存在しません");
+            dismissProgressDialog();
+            return;
+        }
         mUidList.clear();
         for (MessageInfo messageInfo : messageInfoList) {
             String uid = messageInfo.getUid();
@@ -438,6 +454,21 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         }
     };
 
+    private void setupSlideShowThread() {
+        mSlideShowThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Log.d("daruma", "GallerySlideShow#onSlide thread start");
+                try {
+                    loopInfinite();
+                } catch (RakuRakuException e) {
+                    Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow#onSlide thread Error:" + e);
+                }
+                Log.d("daruma", "GallerySlideShow#onSlide thread end");
+            }
+        });
+    }
+
     /**
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
@@ -460,18 +491,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     private void onSlide() {
         Log.d("daruma", "GallerySlideShow#onSlide start");
-        mSlideShowThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Log.d("daruma", "GallerySlideShow#onSlide thread start");
-                try {
-                    loopInfinite();
-                } catch (RakuRakuException e) {
-                    Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow#onSlide thread Error:" + e);
-                }
-                Log.d("daruma", "GallerySlideShow#onSlide thread end");
-            }
-        });
         mSlideShowThread.start();
         Log.d("daruma", "GallerySlideShow#onSlide end");
     }
