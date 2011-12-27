@@ -400,6 +400,7 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
     private void onSlide() {
         Log.d("maguro", "GalleryNewMail#onSlide");
         GallerySlideShow.actionSlideShow(this, mAccount, mFolder, mStopUid);
+        finish();
     }
 
     private void onReply() {
