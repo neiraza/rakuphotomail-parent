@@ -10,7 +10,6 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.Log;
 import android.view.Display;
-import android.view.WindowManager;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.provider.AttachmentProvider;
