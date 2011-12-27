@@ -33,20 +33,8 @@ public class SlideCheck {
     }
 
     /**
-     * @param attachment AttachmentBean
-     * @return slide OK/NG
-     * @author tooru.oguri
-     * @since rakuphoto 0.1-beta1
-     */
-    public static boolean isSlide(AttachmentBean attachment) {
-        String mimeType = attachment.getMimeType();
-        String fileName = attachment.getName();
-        return isSlide(mimeType, fileName);
-    }
-
-    /**
-     * @param messageBean
-     * @return
+     * @param messageBean message
+     * @return download attachment ?
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */

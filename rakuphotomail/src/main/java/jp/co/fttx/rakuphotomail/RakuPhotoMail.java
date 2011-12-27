@@ -143,7 +143,7 @@ public class RakuPhotoMail extends Application {
      * to the development team.
      */
     public static boolean ENABLE_ERROR_FOLDER = true;
-    public static String ERROR_FOLDER_NAME = "K9mail-errors";
+    public static String ERROR_FOLDER_NAME = "rakuphotomail-errors";
 
     private static boolean mAnimations = true;
 
@@ -216,11 +216,11 @@ public class RakuPhotoMail extends Application {
      */
     public static final String FOLDER_NONE = "-NONE-";
 
-    public static final String LOCAL_UID_PREFIX = "K9LOCAL:";
+    public static final String LOCAL_UID_PREFIX = "RAKUPHOTO_LOCAL:";
 
-    public static final String REMOTE_UID_PREFIX = "K9REMOTE:";
+    public static final String REMOTE_UID_PREFIX = "RAKUPHOTO_REMOTE:";
 
-    public static final String IDENTITY_HEADER = "X-K9mail-Identity";
+    public static final String IDENTITY_HEADER = "X-rakuphotomail-Identity";
 
     /**
      * Specifies how many messages will be shown in a folder by default. This number is set

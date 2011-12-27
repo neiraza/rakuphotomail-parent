@@ -202,10 +202,10 @@ public class SlideMessage {
     /**
      * 次のメールが有る場合はtrue、無い場合はfalse.
      *
-     * @param account
-     * @param folder
-     * @param uid
-     * @return
+     * @param account account info
+     * @param folder  receive mail folder name
+     * @param uid     message uid
+     * @return next Message?
      */
     public static boolean isNextMessage(final Account account, final String folder, final String uid) {
         Log.d("maguro", "SlideMessage#isNextMessage start");
@@ -217,11 +217,7 @@ public class SlideMessage {
             int count = localStore.isNextMessage(uid, localFolder.getId());
             Log.d("maguro", "SlideMessage#isNextMessage uid:" + uid);
             Log.d("maguro", "SlideMessage#isNextMessage count:" + count);
-            if (0 < count) {
-                return true;
-            } else {
-                return false;
-            }
+            return 0 < count;
         } catch (MessagingException e) {
             Log.e(RakuPhotoMail.LOG_TAG, "SlideMessage#isNextMessage error:" + e);
         } finally {
@@ -234,10 +230,10 @@ public class SlideMessage {
     /**
      * 前のメールが有る場合はtrue、無い場合はfalse.
      *
-     * @param account
-     * @param folder
-     * @param uid
-     * @return
+     * @param account account info
+     * @param folder  receive mail folder name
+     * @param uid     message uid
+     * @return next Message?
      */
     public static boolean isPreMessage(final Account account, final String folder, final String uid) {
         Log.d("maguro", "SlideMessage#isPreMessage start");
@@ -249,11 +245,7 @@ public class SlideMessage {
             int count = localStore.isPreMessage(uid, localFolder.getId());
             Log.d("maguro", "SlideMessage#isNextMessage uid:" + uid);
             Log.d("maguro", "SlideMessage#isNextMessage count:" + count);
-            if (0 < count) {
-                return true;
-            } else {
-                return false;
-            }
+            return 0 < count;
         } catch (MessagingException e) {
             Log.e(RakuPhotoMail.LOG_TAG, "SlideMessage#isPreMessage error:" + e);
         } finally {
@@ -363,8 +355,8 @@ public class SlideMessage {
     }
 
     /**
-     * @param localMessage
-     * @param messageInfo
+     * @param localMessage local message
+     * @param messageInfo  message info
      * @return MessageBean
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1

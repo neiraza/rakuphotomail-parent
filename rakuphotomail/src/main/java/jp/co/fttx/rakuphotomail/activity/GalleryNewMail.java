@@ -142,28 +142,28 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
      */
     private AttachmentSyncReceiver mAttachmentReceiver = new AttachmentSyncReceiver();
     /**
-     *
+     * thumbnail
      */
     private LinearLayout mGalleryThumbnailInfoLayout;
     /**
-     *
+     * thumbnail
      */
     private TextView mGalleryThumbnailInfo;
     /**
-     *
+     * thumbnail
      */
     private LinearLayout mGalleryThumbnailLayout;
     /**
-     *
+     * thumbnail
      */
     private Gallery mGalleryThumbnail;
 
     /**
-     * @param context
-     * @param account
-     * @param folder
-     * @param newMailUid
-     * @param stopUid
+     * @param context    context
+     * @param account    account info
+     * @param folder     receive mail folder name
+     * @param newMailUid new mail message uid
+     * @param stopUid    stop mail message uid
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -173,7 +173,6 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
         if (null == account || null == folder || newMailUid == null || stopUid == null) {
             Log.w(RakuPhotoMail.LOG_TAG, "GalleryNewMail#actionHandle account:" + account + " folder:"
                     + folder + " newMailUid:" + newMailUid + "stopUid:" + stopUid);
-            // TODO 呼び出し側の対応を後で考える
             return;
         }
         intent.putExtra(EXTRA_ACCOUNT, account.getUuid());
@@ -185,7 +184,7 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
     }
 
     /**
-     * @param outState
+     * @param outState bundle
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -200,7 +199,7 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
     }
 
     /**
-     * @param savedInstanceState
+     * @param savedInstanceState saved
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -217,7 +216,7 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
     }
 
     /**
-     * @param savedInstanceState
+     * @param savedInstanceState saved
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -231,7 +230,6 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
         setupViews();
         setUpProgressDialog();
         onNewIntent(getIntent());
-        //TODO この新着メールよりも新しいものなら表示しても良いけど・・・
         setMailMoveVisibility(mNewMailUid);
         try {
             onDisp(null);
@@ -282,7 +280,7 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
     }
 
     /**
-     * @param intent
+     * @param intent intent
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -313,7 +311,6 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
             mGalleryThumbnailLayout.setVisibility(View.GONE);
         }
 
-        //ここはThumnailから選択できるように変更する予定
         setImageViewPicture(mMessageBean.getAttachmentBeanList(), 0);
 
         mMailSubject.setText(mMessageBean.getSubject());
@@ -516,6 +513,6 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Log.d("maguro", "GalleryNewMail#onItemClick id:" + id);
-        setImageViewPicture(mMessageBean.getAttachmentBeanList(), (int)id);
+        setImageViewPicture(mMessageBean.getAttachmentBeanList(), (int) id);
     }
 }

@@ -138,11 +138,11 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      */
     private AttachmentSyncReceiver mAttachmentReceiver = new AttachmentSyncReceiver();
     /**
-     *
+     * thumbnail
      */
     private LinearLayout mGalleryThumbnailInfoLayout;
     /**
-     *
+     * thumbnail
      */
     private TextView mGalleryThumbnailInfo;
     /**
@@ -155,10 +155,10 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     private Gallery mGalleryThumbnail;
 
     /**
-     * @param context
-     * @param account
-     * @param folder
-     * @param uid
+     * @param context context
+     * @param account account info
+     * @param folder  receive mail folder name
+     * @param uid     message uid
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -167,7 +167,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         Intent intent = new Intent(context, GallerySlideStop.class);
         if (null == account || null == folder || uid == null) {
             Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideStop#actionHandle account:" + account + " folder:" + folder + " uid:" + uid);
-            // TODO 呼び出し側の対応を後で考える
             return;
         }
         intent.putExtra(EXTRA_ACCOUNT, account.getUuid());
@@ -178,7 +177,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     /**
-     * @param outState
+     * @param outState bundle
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -192,7 +191,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     /**
-     * @param savedInstanceState
+     * @param savedInstanceState save
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -208,7 +207,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     /**
-     * @param savedInstanceState
+     * @param savedInstanceState save
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -274,7 +273,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     /**
-     * @param intent
+     * @param intent intent
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -402,7 +401,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void onReply() {
-        Log.d("maguro", "GallerySlideStop#onReply");
+        Log.d("daruma", "GallerySlideStop#onReply");
         if (null != mMessageBean) {
             GallerySendingMail.actionReply(this, mMessageBean);
         } else {
@@ -412,7 +411,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void onMailNext() {
-        Log.d("maguro", "GallerySlideStop#onMailNext");
+        Log.d("daruma", "GallerySlideStop#onMailNext");
         try {
             MessageBean messageBean = SlideMessage.getNextMessage(mAccount, mFolder, mMessageBean.getUid());
             dispSlide(messageBean);
@@ -424,7 +423,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void onMailPre() {
-        Log.d("maguro", "GallerySlideStop#onMailPre");
+        Log.d("daruma", "GallerySlideStop#onMailPre");
         try {
             MessageBean messageBean = SlideMessage.getPreMessage(mAccount, mFolder, mMessageBean.getUid());
             dispSlide(messageBean);
@@ -513,6 +512,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Log.d("maguro", "GallerySlideStop#onItemClick id:" + id);
-        setImageViewPicture(mMessageBean.getAttachmentBeanList(), (int)id);
+        setImageViewPicture(mMessageBean.getAttachmentBeanList(), (int) id);
     }
 }

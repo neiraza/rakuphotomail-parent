@@ -6,12 +6,12 @@ package jp.co.fttx.rakuphotomail.rakuraku.photomail;
 
 import android.util.Log;
 import jp.co.fttx.rakuphotomail.Account;
-import jp.co.fttx.rakuphotomail.AccountStats;
-import jp.co.fttx.rakuphotomail.Preferences;
-import jp.co.fttx.rakuphotomail.RakuPhotoMail;
-import jp.co.fttx.rakuphotomail.controller.MessageRemovalListener;
-import jp.co.fttx.rakuphotomail.controller.MessagingListener;
-import jp.co.fttx.rakuphotomail.mail.*;
+import jp.co.fttx.rakuphotomail.mail.FetchProfile;
+import jp.co.fttx.rakuphotomail.mail.Flag;
+import jp.co.fttx.rakuphotomail.mail.Folder;
+import jp.co.fttx.rakuphotomail.mail.Message;
+import jp.co.fttx.rakuphotomail.mail.MessagingException;
+import jp.co.fttx.rakuphotomail.mail.Store;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
 
 import java.util.*;
@@ -50,23 +50,16 @@ public class MessageSync {
             int remoteMessageCount = remoteFolder.getMessageCount();
 
             Message[] remoteMessageArray = new Message[0];
-//            final ArrayList<Message> remoteMessages = new ArrayList<Message>();
             HashMap<String, Message> remoteUidMap = new HashMap<String, Message>();
 
             if (remoteMessageCount > 0) {
                 int remoteStart = 1;
                 int remoteEnd = remoteMessageCount;
-                final AtomicInteger headerProgress = new AtomicInteger(0); // 使わない？
                 remoteMessageArray = remoteFolder.getMessages(remoteStart, remoteEnd, null, null);
 
                 for (Message thisMessage : remoteMessageArray) {
                     Log.d("gunntama", "MessageSync#synchronizeMailbox thisMessage:" + thisMessage.getUid());
-
-//                    headerProgress.incrementAndGet(); // 使わない？
-
                     Message localMessage = localUidMap.get(thisMessage.getUid()); // このUIDは更新前もあるかなー？
-
-//                    remoteMessages.add(thisMessage); // 新規に増えたやつかな, 使いどころがみえないな
                     remoteUidMap.put(thisMessage.getUid(), thisMessage); // 新規に増えたやつかな
                     if (localMessage == null) {
                         Log.d("gunntama", "MessageSync#synchronizeMailbox 新着メールのUID:" + thisMessage.getUid());

@@ -13,7 +13,6 @@ import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -96,15 +95,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * context
      */
     private Context mContext;
-
     /**
      * view subject
      */
     private TextView mSubject;
-    /**
-     * view layout container
-     */
-    private ViewGroup mContainer;
     /**
      * view slide image default
      */
@@ -165,11 +159,16 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * Display Receive Date
      */
     private static final String DATE_FORMAT = "yyyy/MM/dd h:mm a";
+    /**
+     * polling timer
+     */
+    private Timer mTimer;
 
     /**
-     * @param context
-     * @param account
-     * @param folder
+     * @param context context
+     * @param account account info
+     * @param folder  receive folder name
+     * @param uid     message uid
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -191,12 +190,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         Log.d("daruma", "GallerySlideShow#actionSlideShow end");
     }
 
-    //TODO Timer TEST
-    Timer mTimer = null;
-
-
     /**
-     * @param savedInstanceState
+     * @param savedInstanceState saved
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -215,7 +210,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         doBindService();
         setupSlideShowThread();
 
-        //TODO Timer TEST
         mTimer = new Timer(true);
         mTimer.schedule(new TimerTask() {
             @Override
@@ -233,7 +227,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                             mDispUid = newMailUid;
                         }
                     } catch (InterruptedException e) {
-                        //TODO どうすっか
                         Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
                     }
                     Log.d("gunntama", "同期完了後の新着メールUID:" + mDispUid);
@@ -271,7 +264,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     private void setUpProgressDialog() {
         Log.d("maguro", "GallerySlideShow#setUpProgressDialog start");
         if (!mProgressDialog.isShowing()) {
-            Log.d("maguro", "GallerySlideShow#setUpProgressDialog 時間よ止まれ");
             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             mProgressDialog.setMessage("処理中なんですが？");
             mProgressDialog.setCancelable(true);
@@ -283,7 +275,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     private void dismissProgressDialog() {
         Log.d("maguro", "GallerySlideShow#dissmissProgressDialog start");
         if (mProgressDialog.isShowing()) {
-            Log.d("maguro", "GallerySlideShow#setUpProgressDialog 時間よ動け");
             mProgressDialog.dismiss();
         }
         Log.d("maguro", "GallerySlideShow#dissmissProgressDialog end");
@@ -297,7 +288,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         setImageViewEven();
         setImageViewOdd();
         mSubject = (TextView) findViewById(R.id.gallery_subject);
-        mContainer = (ViewGroup) findViewById(R.id.gallery_container);
         mSlideHandler = new Handler() {
             public void handleMessage(android.os.Message msg) {
                 Log.d("maguro", "Handler#handleMessage bitmapをmsg.objから抜いてセットしてみますね");
@@ -312,8 +302,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                     mAnswered.setVisibility(View.GONE);
                 }
             }
-
-            ;
         };
         mDate = (TextView) findViewById(R.id.gallery_date);
         mAnswered = (TextView) findViewById(R.id.gallery_sent_flag);
@@ -353,7 +341,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     }
 
     /**
-     * @param intent
+     * @param intent intent
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -498,6 +486,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     /**
      * loooooooop.
      *
+     * @throws RakuRakuException rakuraku!
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -522,8 +511,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     private void loop() throws RakuRakuException {
         Log.d("daruma", "GallerySlideShow#loop start ");
-        for (Iterator i = mUidList.iterator(); i.hasNext(); ) {
-            dispSlide((String) i.next());
+        for (String uid : mUidList) {
+            dispSlide(uid);
             if (!mIsRepeatUidList) {
                 Log.d("daruma", "GallerySlideShow#loop mIsRepeatUidList:" + mIsRepeatUidList);
                 return;
@@ -541,9 +530,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     private void loopNumbered() throws RakuRakuException {
         boolean reset = false;
-        for (Iterator i = mUidList.iterator(); i.hasNext(); ) {
+        for (String uid : mUidList) {
             Log.d("maguro", "GallerySlideShow#loopNumbered start");
-            String uid = (String) i.next();
             if (mStartUid.equals(uid)) {
                 Log.d("maguro", "GallerySlideShow#loopNumbered 一時停止した見つけた uid:" + uid);
                 reset = true;
@@ -590,7 +578,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     /**
      * slide show dispppppppp.
      *
-     * @param messageBean
+     * @param messageBean MessageBean
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -607,14 +595,14 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             msg.obj = bitmap;
             mSlideHandler.sendMessage(msg);
             mDispUid = messageBean.getUid();
-            // TODO いったい何分くらい停止するんですかねぇ、あ、でも表示が成功した場合だけですよ？
+            // TODO 停止時間はアカウントクラスで保持する方針でいく
             sleepSlide(1000L);
         }
         Log.d("maguro", "GallerySlideShow#dispSlide(MessageBean) end");
     }
 
     /**
-     * @param messageBean
+     * @param messageBean MesasgeBean
      * @return Message(Handler)
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
@@ -630,7 +618,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     }
 
     /**
-     * @param sleepTime
+     * @param sleepTime sleep
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -645,12 +633,13 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     }
 
     /**
+     * @return imageView
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
     private ImageView setVisibilityImageView() {
         Log.d("maguro", "GallerySlideShow#setVisibilityImageView");
-        ImageView imageView = null;
+        ImageView imageView;
         if (mImageViewEven.getVisibility() == View.GONE) {
             mImageViewDefault.setVisibility(View.GONE);
             mImageViewEven.setVisibility(View.VISIBLE);
@@ -695,7 +684,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     }
 
     /**
-     * @param outState
+     * @param outState Bundle
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -709,7 +698,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     }
 
     /**
-     * @param savedInstanceState
+     * @param savedInstanceState saved
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -725,7 +714,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     }
 
     /**
-     * @param v
+     * @param v view
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
@@ -754,19 +743,18 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     /**
      * event slide stop
      *
-     * @throws InterruptedException
+     * @param uid message uid
+     * @throws InterruptedException InterruptedException
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
      */
     private void onSlideStop(String uid) throws InterruptedException {
         Log.d("daruma", "GallerySlideShow#onSlideStop start");
         if (null != mDispUid) {
             try {
-                Log.d("daruma", "GallerySlideShow#onSlideStop 1");
                 doUnbindService();
-                Log.d("daruma", "GallerySlideShow#onSlideStop 2");
                 mIsRepeatUidList = false;
-                Log.d("daruma", "GallerySlideShow#onSlideStop 3");
                 mSlideShowThread.join();
-                Log.d("daruma", "GallerySlideShow#onSlideStop 4");
                 GallerySlideStop.actionHandle(mContext, mAccount, mFolder, uid);
                 finish();
             } catch (InterruptedException e) {
@@ -776,5 +764,4 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         }
         Log.d("daruma", "GallerySlideShow#onSlideStop end");
     }
-
 }
