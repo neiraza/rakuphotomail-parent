@@ -163,7 +163,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     public static void actionHandle(Context context, Account account, String folder, String uid) {
-        Log.d("maguro", "GallerySlideStop#actionHandlerFolder start");
+        Log.d("daruma", "GallerySlideStop#actionHandlerFolder start");
         Intent intent = new Intent(context, GallerySlideStop.class);
         if (null == account || null == folder || uid == null) {
             Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideStop#actionHandle account:" + account + " folder:" + folder + " uid:" + uid);
@@ -174,7 +174,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         intent.putExtra(EXTRA_FOLDER, folder);
         intent.putExtra(EXTRA_UID, uid);
         context.startActivity(intent);
-        Log.d("maguro", "GallerySlideStop#actionHandlerFolder end");
+        Log.d("daruma", "GallerySlideStop#actionHandlerFolder end");
     }
 
     /**
@@ -396,8 +396,9 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void onSlide() {
-        Log.d("maguro", "GallerySlideStop#onSlide");
+        Log.d("daruma", "GallerySlideStop#onSlide");
         GallerySlideShow.actionSlideShow(this, mAccount, mFolder, mMessageBean.getUid());
+        finish();
     }
 
     private void onReply() {
