@@ -294,7 +294,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         }
         mMessageBean = messageBean;
         //Thumbnail
-        ArrayList<AttachmentBean> attachmentBeanList = messageBean.getAttachmentBeanList();
+        ArrayList<AttachmentBean> attachmentBeanList = mMessageBean.getAttachmentBeanList();
         if (1 < attachmentBeanList.size()) {
             mGalleryThumbnailLayout.setVisibility(View.VISIBLE);
             ThumbnailImageAdapter thumbnailAdapter = new ThumbnailImageAdapter(mContext);
@@ -305,11 +305,11 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         }
 
         //ここはThumnailから選択できるように変更する予定
-        setImageViewPicture(messageBean.getAttachmentBeanList(), 0);
+        setImageViewPicture(mMessageBean.getAttachmentBeanList(), 0);
 
-        mMailSubject.setText(messageBean.getSubject());
-        setDate(messageBean.getDate());
-        setAnswered(messageBean.isFlagAnswered());
+        mMailSubject.setText(mMessageBean.getSubject());
+        setDate(mMessageBean.getDate());
+        setAnswered(mMessageBean.isFlagAnswered());
         dissmissProgressDialog();
         Log.d("maguro", "GallerySlideStop#onDisp end");
     }
@@ -512,5 +512,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Log.d("maguro", "GallerySlideStop#onItemClick id:" + id);
+        setImageViewPicture(mMessageBean.getAttachmentBeanList(), (int)id);
     }
 }
