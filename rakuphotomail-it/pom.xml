@@ -60,17 +60,21 @@
 				<artifactId>cobertura-maven-plugin</artifactId>
 				<version>2.5.1</version>
 				<configuration>
-					<excludes>
-						<exclude>**/*Test.class</exclude>
-					</excludes>
+                    <formats>
+                        <format>html</format>
+                        <format>xml</format>
+                    </formats>
+					<!--<excludes>-->
+						<!--<exclude>**/*Test.class</exclude>-->
+					<!--</excludes>-->
 				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>clean</goal>
-						</goals>
-					</execution>
-				</executions>
+				<!--<executions>-->
+					<!--<execution>-->
+						<!--<goals>-->
+							<!--<goal>clean</goal>-->
+						<!--</goals>-->
+					<!--</execution>-->
+				<!--</executions>-->
 			</plugin>
 		</plugins>
 	</build>
@@ -106,6 +110,17 @@
 							</sign>
 						</configuration>
 					</plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>cobertura-maven-plugin</artifactId>
+                        <version>2.5.1</version>
+                        <configuration>
+                            <formats>
+                                <format>html</format>
+                                <format>xml</format>
+                            </formats>
+                        </configuration>
+                    </plugin>
 				</plugins>
 			</build>
 		</profile>
@@ -124,6 +139,7 @@
 				<configuration>
 					<formats>
 						<format>html</format>
+                        <format>xml</format>
 					</formats>
 				</configuration>
 			</plugin>

@@ -51,7 +51,7 @@
 				<plugin>
 					<groupId>com.jayway.maven.plugins.android.generation2</groupId>
 					<artifactId>android-maven-plugin</artifactId>
-					<version>3.0.0-alpha-14</version>
+					<version>3.0.0</version>
 					<configuration>
 						<androidManifestFile>${project.basedir}/AndroidManifest.xml</androidManifestFile>
 						<assetsDirectory>${project.basedir}/assets</assetsDirectory>
@@ -63,6 +63,7 @@
                         </sdk>
 						<undeployBeforeDeploy>true</undeployBeforeDeploy>
 					</configuration>
+                    <extensions>true</extensions>
 				</plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -104,7 +105,7 @@
 						<keypass>${sign.keypass}</keypass>
 					</configuration>
 				</plugin>
-                <plugin>
+                <!--<plugin>
 					<groupId>com.pyx4me</groupId>
 					<artifactId>proguard-maven-plugin</artifactId>
 					<version>2.0.4</version>
@@ -119,7 +120,7 @@
 					<configuration>
 						<proguardVersion>4.4</proguardVersion>
 					</configuration>
-                </plugin>
+                </plugin> -->
 			</plugins>
 		</pluginManagement>
 	</build>
