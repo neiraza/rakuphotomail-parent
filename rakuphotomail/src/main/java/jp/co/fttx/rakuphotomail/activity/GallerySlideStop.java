@@ -302,10 +302,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         } else {
             mGalleryThumbnailLayout.setVisibility(View.GONE);
         }
-
-        //ここはThumnailから選択できるように変更する予定
         setImageViewPicture(mMessageBean.getAttachmentBeanList(), 0);
-
         mMailSubject.setText(mMessageBean.getSubject());
         setDate(mMessageBean.getDate());
         setAnswered(mMessageBean.isFlagAnswered());
@@ -339,6 +336,8 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     private void setAnswered(boolean isFlagAnswered) {
         if (isFlagAnswered) {
             mAnswered.setVisibility(View.VISIBLE);
+        }else{
+            mAnswered.setVisibility(View.GONE);
         }
     }
 
