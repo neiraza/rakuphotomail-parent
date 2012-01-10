@@ -306,6 +306,7 @@ public class SlideMessage {
             throw new RakuRakuException("SlideMessage#getNextMessage messageInfo is null...");
         }
         MessageBean messageBean = setMessageBean(localMessage, messageInfo);
+
         ArrayList<LocalStore.Attachments> attachmentsList = getAttachmentList(account, folder, messageBean.getUid());
         ArrayList<AttachmentBean> list = new ArrayList<AttachmentBean>();
         for (LocalStore.Attachments attachments : attachmentsList) {

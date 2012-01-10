@@ -1022,10 +1022,10 @@
     <string name="attachment_save_title">添付ファイルの保存先</string>
     <string name="attachment_save_desc">ファイルブラウザがインストールされていません。添付ファイルの保存場所を直接入力してください。</string>
 
-    <string name="gallery_pre">"前"</string>
+    <string name="gallery_pre">"古いメール"</string>
     <string name="gallery_slide">"スライド"</string>
     <string name="gallery_reply">"返信"</string>
-    <string name="gallery_next">"次"</string>
+    <string name="gallery_next">"新しいメール"</string>
     <string name="gallery_sent_flg">"返信済み！"</string>
 
     <string name="gallery_mail_detail_subject">"件名："</string>
