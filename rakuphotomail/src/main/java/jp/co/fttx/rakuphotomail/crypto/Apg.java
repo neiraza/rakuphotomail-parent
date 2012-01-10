@@ -1,9 +1,5 @@
 package jp.co.fttx.rakuphotomail.crypto;
 
-import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentUris;
@@ -12,15 +8,17 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
 import android.net.Uri;
+import android.util.Log;
 import android.widget.Toast;
-
 import jp.co.fttx.rakuphotomail.R;
-import jp.co.fttx.rakuphotomail.activity.MessageCompose;
-import jp.co.fttx.rakuphotomail.activity.MessageView;
 import jp.co.fttx.rakuphotomail.mail.Message;
 import jp.co.fttx.rakuphotomail.mail.MessagingException;
 import jp.co.fttx.rakuphotomail.mail.Part;
 import jp.co.fttx.rakuphotomail.mail.internet.MimeUtility;
+
+import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * APG integration.
@@ -281,28 +279,33 @@ public class Apg extends CryptoProvider {
                                     android.content.Intent data, PgpData pgpData) {
         switch (requestCode) {
         case Apg.SELECT_SECRET_KEY:
+            Log.d("campus", "onActivityResult SELECT_SECRET_KEY");
             if (resultCode != Activity.RESULT_OK || data == null) {
                 break;
             }
             pgpData.setSignatureKeyId(data.getLongExtra(Apg.EXTRA_KEY_ID, 0));
             pgpData.setSignatureUserId(data.getStringExtra(Apg.EXTRA_USER_ID));
-            ((MessageCompose) activity).updateEncryptLayout();
+//            ((MessageCompose) activity).updateEncryptLayout();
             break;
 
         case Apg.SELECT_PUBLIC_KEYS:
+            Log.d("campus", "onActivityResult SELECT_PUBLIC_KEYS");
+
             if (resultCode != Activity.RESULT_OK || data == null) {
                 pgpData.setEncryptionKeys(null);
-                ((MessageCompose) activity).onEncryptionKeySelectionDone();
+//                ((MessageCompose) activity).onEncryptionKeySelectionDone();
                 break;
             }
             pgpData.setEncryptionKeys(data.getLongArrayExtra(Apg.EXTRA_SELECTION));
-            ((MessageCompose) activity).onEncryptionKeySelectionDone();
+//            ((MessageCompose) activity).onEncryptionKeySelectionDone();
             break;
 
         case Apg.ENCRYPT_MESSAGE:
+            Log.d("campus", "onActivityResult ENCRYPT_MESSAGE");
+
             if (resultCode != Activity.RESULT_OK || data == null) {
                 pgpData.setEncryptionKeys(null);
-                ((MessageCompose) activity).onEncryptDone();
+//                ((MessageCompose) activity).onEncryptDone();
                 break;
             }
             pgpData.setEncryptedData(data.getStringExtra(Apg.EXTRA_ENCRYPTED_MESSAGE));
@@ -312,7 +315,7 @@ public class Apg extends CryptoProvider {
                 pgpData.setEncryptedData(data.getStringExtra(Apg.EXTRA_DECRYPTED_MESSAGE));
             }
             if (pgpData.getEncryptedData() != null) {
-                ((MessageCompose) activity).onEncryptDone();
+//                ((MessageCompose) activity).onEncryptDone();
             }
             break;
 
@@ -327,7 +330,7 @@ public class Apg extends CryptoProvider {
             pgpData.setSignatureUnknown(data.getBooleanExtra(Apg.EXTRA_SIGNATURE_UNKNOWN, false));
 
             pgpData.setDecryptedData(data.getStringExtra(Apg.EXTRA_DECRYPTED_MESSAGE));
-            ((MessageView) activity).onDecryptDone(pgpData);
+//            ((MessageView) activity).onDecryptDone(pgpData);
 
             break;
 

@@ -3,6 +3,7 @@ package jp.co.fttx.rakuphotomail.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +19,7 @@ import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 
-public class LauncherShortcuts extends K9ListActivity implements OnItemClickListener {
+public class LauncherShortcuts extends RakuphotoListActivity implements OnItemClickListener {
     private AccountsAdapter mAdapter;
     private FontSizes mFontSizes = RakuPhotoMail.getFontSizes();
 
@@ -48,10 +49,11 @@ public class LauncherShortcuts extends K9ListActivity implements OnItemClickList
     }
 
     private void setupShortcut(Account account) {
-        final Intent shortcutIntent = FolderList.actionHandleAccountIntent(this, account, null, true);
+        Log.d("campus", "setupShortcut");
+//        final Intent shortcutIntent = FolderList.actionHandleAccountIntent(this, account, null, true);
 
         Intent intent = new Intent();
-        intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
+//        intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
         String description = account.getDescription();
         if (description == null || description.length() == 0) {
             description = account.getEmail();

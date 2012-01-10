@@ -25,9 +25,9 @@ import java.util.List;
 /**
  * Activity displaying list of accounts/identity for user choice
  * 
- * @see K9ExpandableListActivity
+ * @see RakuphotoExpandableListActivity
  */
-public class ChooseAccount extends K9ExpandableListActivity {
+public class ChooseAccount extends RakuphotoExpandableListActivity {
 
 	/**
 	 * {@link Intent} extended data name for storing {@link Account#getUuid()

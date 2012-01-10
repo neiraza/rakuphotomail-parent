@@ -25,7 +25,6 @@ import android.text.format.Time;
 import android.text.style.AbsoluteSizeSpan;
 import android.util.Log;
 
-import jp.co.fttx.rakuphotomail.activity.MessageCompose;
 import jp.co.fttx.rakuphotomail.controller.MessagingController;
 import jp.co.fttx.rakuphotomail.controller.MessagingListener;
 import jp.co.fttx.rakuphotomail.mail.Address;
@@ -330,21 +329,6 @@ public class RakuPhotoMail extends Application {
              * so we'll reschedule to kill off any existing alarms.
              */
             MailService.actionReset(context, wakeLockId);
-        }
-        Class<?>[] classes = {MessageCompose.class, BootReceiver.class, MailService.class};
-
-        for (Class<?> clazz : classes) {
-
-            boolean alreadyEnabled = pm.getComponentEnabledSetting(new ComponentName(context, clazz)) ==
-                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
-
-            if (enabled != alreadyEnabled) {
-                pm.setComponentEnabledSetting(
-                        new ComponentName(context, clazz),
-                        enabled ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED :
-                                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                        PackageManager.DONT_KILL_APP);
-            }
         }
 
         if (enabled && pm.getComponentEnabledSetting(new ComponentName(context, MailService.class)) ==

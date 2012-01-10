@@ -28,7 +28,7 @@ import jp.co.fttx.rakuphotomail.mail.Folder;
 import jp.co.fttx.rakuphotomail.activity.ChooseFolder;
 import jp.co.fttx.rakuphotomail.activity.ChooseIdentity;
 import jp.co.fttx.rakuphotomail.activity.ColorPickerDialog;
-import jp.co.fttx.rakuphotomail.activity.K9PreferenceActivity;
+import jp.co.fttx.rakuphotomail.activity.RakuphotoPreferenceActivity;
 import jp.co.fttx.rakuphotomail.activity.ManageIdentities;
 import jp.co.fttx.rakuphotomail.crypto.Apg;
 import jp.co.fttx.rakuphotomail.mail.Store;
@@ -38,7 +38,7 @@ import jp.co.fttx.rakuphotomail.mail.store.StorageManager;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore.LocalFolder;
 
 
-public class AccountSettings extends K9PreferenceActivity {
+public class AccountSettings extends RakuphotoPreferenceActivity {
     private static final String EXTRA_ACCOUNT = "account";
 
     private static final int SELECT_AUTO_EXPAND_FOLDER = 1;

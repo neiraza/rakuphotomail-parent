@@ -24,7 +24,7 @@ import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.activity.Accounts;
 import jp.co.fttx.rakuphotomail.activity.ColorPickerDialog;
-import jp.co.fttx.rakuphotomail.activity.K9PreferenceActivity;
+import jp.co.fttx.rakuphotomail.activity.RakuphotoPreferenceActivity;
 import jp.co.fttx.rakuphotomail.helper.DateFormatter;
 import jp.co.fttx.rakuphotomail.helper.FileBrowserHelper;
 import jp.co.fttx.rakuphotomail.helper.FileBrowserHelper.FileBrowserFailOverCallback;
@@ -34,7 +34,7 @@ import jp.co.fttx.rakuphotomail.preferences.TimePickerPreference;
 import jp.co.fttx.rakuphotomail.service.MailService;
 
 
-public class Prefs extends K9PreferenceActivity {
+public class Prefs extends RakuphotoPreferenceActivity {
 
     /**
      * Immutable empty {@link CharSequence} array

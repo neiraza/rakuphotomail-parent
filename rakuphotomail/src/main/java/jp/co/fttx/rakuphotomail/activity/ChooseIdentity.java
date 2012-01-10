@@ -15,7 +15,7 @@ import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 import java.util.List;
 
-public class ChooseIdentity extends K9ListActivity {
+public class ChooseIdentity extends RakuphotoListActivity {
     Account mAccount;
     String mUID;
     ArrayAdapter<String> adapter;

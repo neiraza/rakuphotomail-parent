@@ -9,7 +9,7 @@ import android.os.Bundle;
 import android.preference.*;
 import android.view.KeyEvent;
 import jp.co.fttx.rakuphotomail.*;
-import jp.co.fttx.rakuphotomail.activity.K9PreferenceActivity;
+import jp.co.fttx.rakuphotomail.activity.RakuphotoPreferenceActivity;
 
 /**
  * Activity to configure the font size of the information displayed in the
@@ -17,7 +17,7 @@ import jp.co.fttx.rakuphotomail.activity.K9PreferenceActivity;
  *
  * @see FontSizes
  */
-public class FontSizeSettings extends K9PreferenceActivity {
+public class FontSizeSettings extends RakuphotoPreferenceActivity {
     /*
      * Keys of the preferences defined in res/xml/font_preferences.xml
      */

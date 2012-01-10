@@ -8,7 +8,7 @@ import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 /**
  * @see ExpandableListActivity
  */
-public class K9ExpandableListActivity extends ExpandableListActivity {
+public class RakuphotoExpandableListActivity extends ExpandableListActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

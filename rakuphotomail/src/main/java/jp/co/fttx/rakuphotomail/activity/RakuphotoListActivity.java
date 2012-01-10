@@ -9,7 +9,7 @@ import android.os.Bundle;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.helper.DateFormatter;
 
-public class K9ListActivity extends ListActivity {
+public class RakuphotoListActivity extends ListActivity {
     @Override
     public void onCreate(Bundle icicle) {
         RakuPhotoActivity.setLanguage(this, RakuPhotoMail.getRakuPhotoLanguage());

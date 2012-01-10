@@ -1,43 +1,14 @@
 package jp.co.fttx.rakuphotomail.provider;
 
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import android.content.ContentProvider;
-import android.content.ContentResolver;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.UriMatcher;
-import android.database.CharArrayBuffer;
-import android.database.ContentObserver;
-import android.database.CrossProcessCursor;
-import android.database.Cursor;
-import android.database.CursorWindow;
-import android.database.DataSetObserver;
-import android.database.MatrixCursor;
+import android.content.*;
+import android.database.*;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.BaseColumns;
 import android.util.Log;
-
-import jp.co.fttx.rakuphotomail.Account;
-import jp.co.fttx.rakuphotomail.AccountStats;
-import jp.co.fttx.rakuphotomail.RakuPhotoMail;
-import jp.co.fttx.rakuphotomail.Preferences;
-import jp.co.fttx.rakuphotomail.SearchAccount;
+import jp.co.fttx.rakuphotomail.*;
 import jp.co.fttx.rakuphotomail.activity.FolderInfoHolder;
 import jp.co.fttx.rakuphotomail.activity.MessageInfoHolder;
-import jp.co.fttx.rakuphotomail.activity.MessageList;
 import jp.co.fttx.rakuphotomail.controller.MessagingController;
 import jp.co.fttx.rakuphotomail.controller.MessagingListener;
 import jp.co.fttx.rakuphotomail.helper.MessageHelper;
@@ -45,6 +16,13 @@ import jp.co.fttx.rakuphotomail.mail.Folder;
 import jp.co.fttx.rakuphotomail.mail.Message;
 import jp.co.fttx.rakuphotomail.mail.MessagingException;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
+
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MessageProvider extends ContentProvider {
 
@@ -251,8 +229,8 @@ public class MessageProvider extends ContentProvider {
 			final List<MessageInfoHolder> holders = queue.take();
 
 			// TODO add sort order parameter
-			Collections.sort(holders, new MessageList.ReverseComparator<MessageInfoHolder>(
-					new MessageList.DateComparator()));
+//			Collections.sort(holders, new MessageList.ReverseComparator<MessageInfoHolder>(
+//					new MessageList.DateComparator()));
 
 			final String[] projectionToUse;
 			if (projection == null) {
