@@ -7,7 +7,7 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 
 
-public class K9PreferenceActivity extends PreferenceActivity {
+public class RakuphotoPreferenceActivity extends PreferenceActivity {
     @Override
     public void onCreate(Bundle icicle) {
         RakuPhotoActivity.setLanguage(this, RakuPhotoMail.getRakuPhotoLanguage());

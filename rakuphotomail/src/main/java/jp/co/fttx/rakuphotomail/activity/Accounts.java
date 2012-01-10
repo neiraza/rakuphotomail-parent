@@ -57,7 +57,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class Accounts extends K9ListActivity implements OnItemClickListener,
+public class Accounts extends RakuphotoListActivity implements OnItemClickListener,
 		OnClickListener {
 
 	/**
@@ -536,7 +536,7 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 		Account defaultAccount = Preferences.getPreferences(this)
 				.getDefaultAccount();
 		if (defaultAccount != null) {
-			MessageCompose.actionCompose(this, defaultAccount);
+//			MessageCompose.actionCompose(this, defaultAccount);
 		} else {
 			onAddNewAccount();
 		}
@@ -556,8 +556,8 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 			Log.d("fujiyama", "Accounts#onOpenAccount 1");
 			SearchAccount searchAccount = (SearchAccount) account;
 			// TODO ここは「統合フォルダ」、「全メッセージ」を開くときに使ってたよ by toguri
-			MessageList.actionHandle(this, searchAccount.getDescription(),
-					searchAccount);
+//			MessageList.actionHandle(this, searchAccount.getDescription(),
+//					searchAccount);
 		} else {
 			Log.d("fujiyama", "Accounts#onOpenAccount 2");
 			Account realAccount = (Account) account;
@@ -598,7 +598,7 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 			Account realAccount = (Account) mAdapter.getItem(2);
 			if (RakuPhotoMail.FOLDER_NONE.equals(realAccount
 					.getAutoExpandFolderName())) {
-				FolderList.actionHandleAccount(this, realAccount);
+//				FolderList.actionHandleAccount(this, realAccount);
 			}
 		}
 	}
@@ -1070,8 +1070,8 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 				holder.folders.setVisibility(View.VISIBLE);
 				holder.folders.setOnClickListener(new OnClickListener() {
 					public void onClick(View v) {
-						FolderList.actionHandleAccount(Accounts.this,
-								(Account) account);
+//						FolderList.actionHandleAccount(Accounts.this,
+//								(Account) account);
 					}
 				});
 			}
@@ -1121,15 +1121,15 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 					account.getDescription(), getString(searchModifier.resId));
 			if (account instanceof SearchAccount) {
 				SearchAccount searchAccount = (SearchAccount) account;
-				MessageList.actionHandle(
-						Accounts.this,
-						description,
-						"",
-						searchAccount.isIntegrate(),
-						combine(searchAccount.getRequiredFlags(),
-								searchModifier.requiredFlags),
-						combine(searchAccount.getForbiddenFlags(),
-								searchModifier.forbiddenFlags));
+//				MessageList.actionHandle(
+//						Accounts.this,
+//						description,
+//						"",
+//						searchAccount.isIntegrate(),
+//						combine(searchAccount.getRequiredFlags(),
+//								searchModifier.requiredFlags),
+//						combine(searchAccount.getForbiddenFlags(),
+//								searchModifier.forbiddenFlags));
 			} else {
 				SearchSpecification searchSpec = new SearchSpecification() {
 					@Override
@@ -1164,8 +1164,8 @@ public class Accounts extends K9ListActivity implements OnItemClickListener,
 
 				};
 				// 彼はスターを見つけたらしい
-				MessageList
-						.actionHandle(Accounts.this, description, searchSpec);
+//				MessageList
+//						.actionHandle(Accounts.this, description, searchSpec);
 			}
 		}
 

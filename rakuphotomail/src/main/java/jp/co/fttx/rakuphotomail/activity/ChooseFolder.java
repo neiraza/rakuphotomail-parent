@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-public class ChooseFolder extends K9ListActivity {
+public class ChooseFolder extends RakuphotoListActivity {
     String mFolder;
     String mSelectFolder;
     Account mAccount;

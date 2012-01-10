@@ -10,7 +10,7 @@ import android.preference.Preference;
 import android.util.Log;
 import android.view.KeyEvent;
 import jp.co.fttx.rakuphotomail.*;
-import jp.co.fttx.rakuphotomail.activity.K9PreferenceActivity;
+import jp.co.fttx.rakuphotomail.activity.RakuphotoPreferenceActivity;
 import jp.co.fttx.rakuphotomail.mail.Folder.FolderClass;
 import jp.co.fttx.rakuphotomail.mail.Folder.OpenMode;
 import jp.co.fttx.rakuphotomail.mail.MessagingException;
@@ -19,7 +19,7 @@ import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore.LocalFolder;
 import jp.co.fttx.rakuphotomail.service.MailService;
 
-public class FolderSettings extends K9PreferenceActivity {
+public class FolderSettings extends RakuphotoPreferenceActivity {
 
     private static final String EXTRA_FOLDER_NAME = "jp.co.fttx.rakuphotomail.folderName";
     private static final String EXTRA_ACCOUNT = "jp.co.fttx.rakuphotomail.account";
