@@ -67,30 +67,30 @@ public class AttachmentSyncService extends Service {
     @Override
     public void onStart(Intent intent, int startId) {
         super.onStart(intent, startId);
-        Log.d("maguro", "AttachmentSyncService#onStart");
+        Log.d("refs1961", "AttachmentSyncService#onStart");
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d("maguro", "AttachmentSyncService#onBind");
+        Log.d("refs1961", "AttachmentSyncService#onBind");
         return mBinder;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-        Log.d("maguro", "AttachmentSyncService#onUnbind");
+        Log.d("refs1961", "AttachmentSyncService#onUnbind");
         return super.onUnbind(intent);
     }
 
     @Override
     public void onDestroy() {
-        Log.d("maguro", "AttachmentSyncService#onDestroy");
+        Log.d("refs1961", "AttachmentSyncService#onDestroy");
         super.onDestroy();
     }
 
     public class AttachmentSyncBinder extends Binder {
         public AttachmentSyncService getService() {
-            Log.d("maguro", "AttachmentSyncBinder#getService");
+            Log.d("refs1961", "AttachmentSyncBinder#getService");
             return AttachmentSyncService.this;
         }
     }
@@ -112,10 +112,7 @@ public class AttachmentSyncService extends Service {
      */
     public void onDownload(final Account account, final String folder, final String uid, final String action)
             throws MessagingException {
-        Log.d("maguro", "AttachmentSyncService#onDownload start");
-        Log.d("maguro", "AttachmentSyncService#onDownload uid:" + uid);
-        Log.d("maguro",
-                "AttachmentSyncService#onDownload downloadList.contains(uid):" + downloadList.contains(uid));
+        Log.d("refs1961", "AttachmentSyncService#onDownload start");
         if (!downloadList.contains(uid)) {
             download(account, folder, uid);
             downloadList.add(uid);
@@ -133,7 +130,7 @@ public class AttachmentSyncService extends Service {
             }
             sendBroadcast(intent);
         }
-        Log.d("maguro", "AttachmentSyncService#onDownload end");
+        Log.d("refs1961", "AttachmentSyncService#onDownload end");
     }
 
     /**
@@ -146,10 +143,6 @@ public class AttachmentSyncService extends Service {
      */
     private void download(final Account account, final String folder, final String uid)
             throws MessagingException {
-        Log.d("maguro", "AttachmentSyncService#download start");
-        Log.d("gunntama", "AttachmentSyncService#download start");
-        Log.d("maguro", "AttachmentSyncService#download uid:" + uid);
-        Log.d("gunntama", "AttachmentSyncService#download uid:" + uid);
         Folder remoteFolder = null;
         LocalFolder localFolder = null;
         try {
@@ -160,14 +153,11 @@ public class AttachmentSyncService extends Service {
             Message message = localFolder.getMessage(uid);
 
             if (message.isSet(Flag.X_DOWNLOADED_FULL)) {
-                Log.d("maguro", "AttachmentSyncService#download X_DOWNLOADED_FULL");
                 FetchProfile fp = new FetchProfile();
                 fp.add(FetchProfile.Item.ENVELOPE);
                 fp.add(FetchProfile.Item.BODY);
                 localFolder.fetch(new Message[]{message}, fp, null);
             } else {
-                Log.d("maguro", "AttachmentSyncService#download NOT X_DOWNLOADED_FULL");
-                Log.d("gunntama", "AttachmentSyncService#download NOT X_DOWNLOADED_FULL");
                 Store remoteStore = account.getRemoteStore();
                 remoteFolder = remoteStore.getFolder(folder);
                 remoteFolder.open(OpenMode.READ_WRITE);
@@ -185,11 +175,9 @@ public class AttachmentSyncService extends Service {
                 message.setFlag(Flag.X_DOWNLOADED_FULL, true);
             }
         } finally {
-            Log.d("maguro", "AttachmentSyncService#download finally");
             closeFolder(remoteFolder);
             closeFolder(localFolder);
         }
-        Log.d("maguro", "AttachmentSyncService#download end");
     }
 
     private void closeFolder(Folder f) {

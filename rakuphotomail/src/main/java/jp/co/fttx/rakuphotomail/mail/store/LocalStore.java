@@ -2632,6 +2632,8 @@ public class LocalStore extends Store implements Serializable {
 
             final LocalFolder lDestFolder = (LocalFolder) destFolder;
 
+            Log.d("refs1961", "LocalFolder#moveMessages start");
+
             try {
                 database.execute(false, new DbCallback<Void>() {
                     @Override
@@ -2654,6 +2656,7 @@ public class LocalStore extends Store implements Serializable {
                                 }
 
                                 String oldUID = message.getUid();
+                                Log.d("refs1961", "LocalFolder#moveMessages oldUID:"+oldUID);
 
                                 if (RakuPhotoMail.DEBUG)
                                     Log.d(RakuPhotoMail.LOG_TAG,
@@ -2663,6 +2666,10 @@ public class LocalStore extends Store implements Serializable {
 
                                 message.setUid(RakuPhotoMail.LOCAL_UID_PREFIX
                                         + UUID.randomUUID().toString());
+
+                                Log.d("refs1961", "LocalFolder#moveMessages UUID.randomUUID().toString():"+UUID.randomUUID().toString());
+                                Log.d("refs1961", "LocalFolder#moveMessages UUID.randomUUID().toString():"+UUID.fromString("12345").toString());
+
 
                                 db.execSQL("UPDATE messages " + "SET folder_id = ?, uid = ? "
                                         + "WHERE id = ?", new Object[]{lDestFolder.getId(),
@@ -2893,9 +2900,7 @@ public class LocalStore extends Store implements Serializable {
                                         cv.put("message_id", messageId);
                                     }
                                     long messageUid;
-                                    Log.d("gunntama", "appendMessages(final Message[] messages, final boolean copy) insert文前");
                                     messageUid = db.insert("messages", "uid", cv);
-                                    Log.d("gunntama", "appendMessages(final Message[] messages, final boolean copy) messageUid:" + messageUid);
                                     for (Part attachment : attachments) {
                                         saveAttachment(messageUid, attachment, copy);
                                     }

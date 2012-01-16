@@ -30,6 +30,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+import jp.co.fttx.rakuphotomail.rakuraku.photomail.MessageSync;
 
 /**
  * @author tooru.oguri
@@ -280,12 +281,14 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
      * @since 0.1-beta1
      */
     private void onSend() {
+        Log.d("refs1961", "GallerySendingMail#onSend start");
         sendMessage();
         final Account account = Preferences.getPreferences(this).getAccount(mMessageReference.accountUuid);
         final String folderName = mMessageReference.folderName;
         final String sourceMessageUid = mMessageReference.uid;
         MessagingController.getInstance(getApplication()).setFlag(account, folderName,
                 new String[]{sourceMessageUid}, mMessageReference.flag, true);
+        Log.d("refs1961", "GallerySendingMail#onSend end");
     }
 
     /**
@@ -307,6 +310,8 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
     private class SendMessageTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
+            Log.d("refs1961", "SendMessageTask#doInBackground start");
+
             /*
              * Create the message from all the data the user has entered.
              */
@@ -318,8 +323,11 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
                 throw new RuntimeException("Failed to create a new message for send or save.", me);
             }
 
-            MessagingController.getInstance(getApplication()).sendMessage(mAccount, message, null);
+//            MessagingController.getInstance(getApplication()).sendMessage(mAccount, message, null);
+            //TODO 変更したぞこら
+            MessagingController.getInstance(getApplication()).sendMessage(mAccount, message);
 
+            Log.d("refs1961", "SendMessageTask#doInBackground end");
             return null;
         }
     }
