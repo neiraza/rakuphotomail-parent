@@ -2262,6 +2262,8 @@ public class MessagingController implements Runnable {
 	 */
 	private void processPendingAppend(PendingCommand command, Account account)
 			throws MessagingException {
+        Log.d("SendTest","MessagingController#processPendingAppend start");
+
 		Folder remoteFolder = null;
 		LocalFolder localFolder = null;
 		try {
@@ -2277,6 +2279,8 @@ public class MessagingController implements Runnable {
 			localFolder = localStore.getFolder(folder);
 			LocalMessage localMessage = (LocalMessage) localFolder
 					.getMessage(uid);
+            Log.d("SendTest","MessagingController#processPendingAppend uid:"+uid);
+
 
 			if (localMessage == null) {
 				return;
@@ -2301,7 +2305,11 @@ public class MessagingController implements Runnable {
 			}
 
 			if (remoteMessage == null) {
+                Log.d("SendTest","MessagingController#processPendingAppend remoteMessage null?:"+remoteMessage);
+                Log.d("SendTest","MessagingController#processPendingAppend remoteMessage localMessage.isSet(Flag.X_REMOTE_COPY_STARTED):" + localMessage.isSet(Flag.X_REMOTE_COPY_STARTED));
+
 				if (localMessage.isSet(Flag.X_REMOTE_COPY_STARTED)) {
+
 					Log.w(RakuPhotoMail.LOG_TAG, "Local message with uid "
 							+ localMessage.getUid() + " has flag "
 							+ Flag.X_REMOTE_COPY_STARTED
@@ -2309,6 +2317,8 @@ public class MessagingController implements Runnable {
 							+ " same message id");
 					String rUid = remoteFolder
 							.getUidFromMessageId(localMessage);
+                    Log.d("SendTest","MessagingController#processPendingAppend remoteMessage rUid:"+rUid);
+
 					if (rUid != null) {
 						Log.w(RakuPhotoMail.LOG_TAG,
 								"Local message has flag "
@@ -2319,6 +2329,8 @@ public class MessagingController implements Runnable {
 										+ ", assuming message was already copied and aborting this copy");
 
 						String oldUid = localMessage.getUid();
+                        Log.d("SendTest","MessagingController#processPendingAppend remoteMessage oldUid:"+oldUid);
+
 						localMessage.setUid(rUid);
 						localFolder.changeUid(localMessage);
 						for (MessagingListener l : getListeners()) {
@@ -2332,6 +2344,7 @@ public class MessagingController implements Runnable {
 					}
 				}
 
+
 				/*
 				 * If the message does not exist remotely we just upload it and
 				 * then update our local copy with the new uid.
@@ -2341,6 +2354,7 @@ public class MessagingController implements Runnable {
 				localFolder.fetch(new Message[] { localMessage }, fp, null);
 				String oldUid = localMessage.getUid();
 				localMessage.setFlag(Flag.X_REMOTE_COPY_STARTED, true);
+
 				remoteFolder.appendMessages(new Message[] { localMessage });
 
 				localFolder.changeUid(localMessage);
@@ -2349,6 +2363,8 @@ public class MessagingController implements Runnable {
 							localMessage.getUid());
 				}
 			} else {
+                Log.d("SendTest","MessagingController#processPendingAppend remoteMessage is not null");
+
 				/*
 				 * If the remote message exists we need to determine which copy
 				 * to keep.
@@ -2367,12 +2383,18 @@ public class MessagingController implements Runnable {
 					 * delete ours and move on. A sync will get the server
 					 * message if we need to be able to see it.
 					 */
+                    Log.d("SendTest","MessagingController#processPendingAppend localMessage.destroy()");
+
 					localMessage.destroy();
 				} else {
 					/*
 					 * Otherwise we'll upload our message and then delete the
 					 * remote message.
 					 */
+
+                    Log.d("SendTest","MessagingController#processPendingAppend ああああ？");
+
+
 					fp.clear();
 					fp = new FetchProfile();
 					fp.add(FetchProfile.Item.BODY);
@@ -3324,15 +3346,20 @@ public class MessagingController implements Runnable {
 	 */
 	public void sendMessage(final Account account, final Message message,
 			MessagingListener listener) {
+        Log.d("SendTest","MessagingController#sendMessage start");
+
 		try {
 			LocalStore localStore = account.getLocalStore();
 			LocalFolder localFolder = localStore.getFolder(account
 					.getOutboxFolderName());
 			localFolder.open(OpenMode.READ_WRITE);
+
 			localFolder.appendMessages(new Message[] { message });
+
 			Message localMessage = localFolder.getMessage(message.getUid());
 			localMessage.setFlag(Flag.X_DOWNLOADED_FULL, true);
 			localFolder.close();
+
 			sendPendingMessages(account, listener);
 		} catch (Exception e) {
 			/*
@@ -3342,6 +3369,7 @@ public class MessagingController implements Runnable {
 			addErrorMessage(account, null, e);
 
 		}
+        Log.d("SendTest","MessagingController#sendMessage end");
 	}
 
 	public void sendPendingMessages(MessagingListener listener) {
@@ -3361,6 +3389,8 @@ public class MessagingController implements Runnable {
 	 */
 	public void sendPendingMessages(final Account account,
 			MessagingListener listener) {
+        Log.d("SendTest","MessagingController#sendPendingMessages start");
+
 		putBackground("sendPendingMessages", listener, new Runnable() {
 			@Override
 			public void run() {
@@ -3379,6 +3409,8 @@ public class MessagingController implements Runnable {
 				}
 			}
 		});
+        Log.d("SendTest","MessagingController#sendPendingMessages end");
+
 	}
 
 	private void cancelNotification(int id) {
@@ -3529,6 +3561,8 @@ public class MessagingController implements Runnable {
 	 * @param account
 	 */
 	public void sendPendingMessagesSynchronous(final Account account) {
+        Log.d("SendTest","MessagingController#sendPendingMessagesSynchronous start");
+
 		Folder localFolder = null;
 		Exception lastFailure = null;
 		try {
@@ -3593,7 +3627,10 @@ public class MessagingController implements Runnable {
 						continue;
 					}
 
+                    Log.d("SendTest","MessagingController#sendPendingMessagesSynchronous fetch前:message.getUid():"+message.getUid());
 					localFolder.fetch(new Message[] { message }, fp, null);
+                    Log.d("SendTest","MessagingController#sendPendingMessagesSynchronous fetch後:message.getUid():"+message.getUid());
+
 					try {
 
 						if (message.getHeader(RakuPhotoMail.IDENTITY_HEADER) != null) {
@@ -3609,7 +3646,12 @@ public class MessagingController implements Runnable {
 							Log.i(RakuPhotoMail.LOG_TAG,
 									"Sending message with UID "
 											+ message.getUid());
+
+                        Log.d("SendTest","MessagingController#sendPendingMessagesSynchronous transport.sendMessage前:message.getUid():"+message.getUid());
 						transport.sendMessage(message);
+                        Log.d("SendTest","MessagingController#sendPendingMessagesSynchronous transport.sendMessage後:message.getUid():"+message.getUid());
+
+
 						message.setFlag(Flag.X_SEND_IN_PROGRESS, false);
 						message.setFlag(Flag.SEEN, true);
 						progress++;
@@ -3636,8 +3678,10 @@ public class MessagingController implements Runnable {
 												+ localSentFolder.getId()
 												+ ") ");
 
+                            Log.d("SendTest","MessagingController#sendPendingMessagesSynchronous localFolder.moveMessages前:message.getUid():"+message.getUid());
 							localFolder.moveMessages(new Message[] { message },
 									localSentFolder);
+                            Log.d("SendTest","MessagingController#sendPendingMessagesSynchronous localFolder.moveMessages後:message.getUid():"+message.getUid());
 
 							if (RakuPhotoMail.DEBUG)
 								Log.i(RakuPhotoMail.LOG_TAG,
@@ -3716,6 +3760,7 @@ public class MessagingController implements Runnable {
 			}
 			closeFolder(localFolder);
 		}
+        Log.d("SendTest","MessagingController#sendPendingMessagesSynchronous end");
 	}
 
 	public void getAccountStats(final Context context, final Account account,

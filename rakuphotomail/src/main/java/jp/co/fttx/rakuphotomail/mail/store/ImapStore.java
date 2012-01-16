@@ -1631,6 +1631,8 @@ public class ImapStore extends Store {
 		 */
 		@Override
 		public void appendMessages(Message[] messages) throws MessagingException {
+            Log.d("SendTest", "ImapStore#appendMessages(Message[] messages) start");
+
 			checkOpen();
 			try {
 				for (Message message : messages) {
@@ -1651,8 +1653,12 @@ public class ImapStore extends Store {
 						while (response.more());
 					} while (response.mTag == null);
 
+                    Log.d("SendTest", "ImapStore#appendMessages(Message[] messages) message.getUid():" + message.getUid());
 					String newUid = getUidFromMessageId(message);
-					if (RakuPhotoMail.DEBUG)
+                    Log.d("SendTest", "ImapStore#appendMessages(Message[] messages) newUid:" + newUid);
+
+
+                    if (RakuPhotoMail.DEBUG)
 						Log.d(RakuPhotoMail.LOG_TAG, "Got UID " + newUid + " for message for " + getLogId());
 
 					if (newUid != null) {
@@ -1663,10 +1669,14 @@ public class ImapStore extends Store {
 			} catch (IOException ioe) {
 				throw ioExceptionHandler(mConnection, ioe);
 			}
+            Log.d("SendTest", "ImapStore#appendMessages(Message[] messages) end");
+
 		}
 
 		@Override
 		public String getUidFromMessageId(Message message) throws MessagingException {
+            Log.d("SendTest", "ImapStore#getUidFromMessageId start");
+
 			try {
 				/*
 				 * Try to find the UID of the message we just appended using the
@@ -1694,6 +1704,8 @@ public class ImapStore extends Store {
 						return response1.getString(1);
 					}
 				}
+                Log.d("SendTest", "ImapStore#getUidFromMessageId end");
+
 				return null;
 			} catch (IOException ioe) {
 				throw new MessagingException("Could not find UID for message based on Message-ID", ioe);

@@ -2734,7 +2734,8 @@ public class LocalStore extends Store implements Serializable {
          */
         @Override
         public void appendMessages(Message[] messages) throws MessagingException {
-            Log.d("gunntama", "appendMessages(Message[] messages)");
+            Log.d("SendTest", "LocalFolder#appendMessages(Message[] messages)");
+
             appendMessages(messages, false);
         }
 
@@ -2778,7 +2779,7 @@ public class LocalStore extends Store implements Serializable {
          */
         private void appendMessages(final Message[] messages, final boolean copy)
                 throws MessagingException {
-            Log.d("gunntama", "appendMessages(final Message[] messages, final boolean copy)");
+            Log.d("SendTest", "LocalFolder#appendMessages(final Message[] messages, final boolean copy)");
             open(OpenMode.READ_WRITE);
             try {
                 database.execute(true, new DbCallback<Void>() {
@@ -2786,7 +2787,7 @@ public class LocalStore extends Store implements Serializable {
                     public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
                             UnavailableStorageException {
                         try {
-                            Log.d("gunntama", "appendMessages(final Message[] messages, final boolean copy) for文前");
+                            Log.d("SendTest", "LocalFolder#appendMessages(final Message[] messages, final boolean copy) for文前");
                             for (Message message : messages) {
                                 if (!(message instanceof MimeMessage)) {
                                     throw new Error(
@@ -2893,9 +2894,9 @@ public class LocalStore extends Store implements Serializable {
                                         cv.put("message_id", messageId);
                                     }
                                     long messageUid;
-                                    Log.d("gunntama", "appendMessages(final Message[] messages, final boolean copy) insert文前");
+                                    Log.d("SendTest", "LocalFolder#appendMessages(final Message[] messages, final boolean copy) insert文前");
                                     messageUid = db.insert("messages", "uid", cv);
-                                    Log.d("gunntama", "appendMessages(final Message[] messages, final boolean copy) messageUid:" + messageUid);
+                                    Log.d("SendTest", "LocalFolder#appendMessages(final Message[] messages, final boolean copy) messageUid:" + messageUid);
                                     for (Part attachment : attachments) {
                                         saveAttachment(messageUid, attachment, copy);
                                     }
@@ -3266,17 +3267,23 @@ public class LocalStore extends Store implements Serializable {
          *
          */
         public void changeUid(final LocalMessage message) throws MessagingException {
+            Log.d("SendTest","LocalFolder#changeUid start");
+
             open(OpenMode.READ_WRITE);
             final ContentValues cv = new ContentValues();
+
+            Log.d("SendTest","LocalFolder#changeUid message.getUid():" + message.getUid());
             cv.put("uid", message.getUid());
             database.execute(false, new DbCallback<Void>() {
                 @Override
                 public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
                         UnavailableStorageException {
                     db.update("messages", cv, "id = ?", new String[]{Long.toString(message.mId)});
+                    Log.d("SendTest","LocalFolder#changeUid update後 cv.get(\"uid\"):" + cv.get("uid"));
                     return null;
                 }
             });
+            Log.d("SendTest","LocalFolder#changeUid end");
         }
 
         @Override

@@ -280,12 +280,15 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
      * @since 0.1-beta1
      */
     private void onSend() {
+        Log.d("SendTest","GallerySendingMail#onSend start");
         sendMessage();
         final Account account = Preferences.getPreferences(this).getAccount(mMessageReference.accountUuid);
         final String folderName = mMessageReference.folderName;
         final String sourceMessageUid = mMessageReference.uid;
+        Log.d("SendTest","GallerySendingMail#onSend mMessageReference.uid:" + mMessageReference.uid);
         MessagingController.getInstance(getApplication()).setFlag(account, folderName,
                 new String[]{sourceMessageUid}, mMessageReference.flag, true);
+        Log.d("SendTest","GallerySendingMail#onSend end");
     }
 
     /**
@@ -307,6 +310,8 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
     private class SendMessageTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
+            Log.d("SendTest","SendMessageTask#doInBackground start");
+
             /*
              * Create the message from all the data the user has entered.
              */
@@ -318,8 +323,10 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
                 throw new RuntimeException("Failed to create a new message for send or save.", me);
             }
 
+            Log.d("SendTest","SendMessageTask#doInBackground 送信前:message.getUid():" + message.getUid());
             MessagingController.getInstance(getApplication()).sendMessage(mAccount, message, null);
 
+            Log.d("SendTest","SendMessageTask#doInBackground end");
             return null;
         }
     }
