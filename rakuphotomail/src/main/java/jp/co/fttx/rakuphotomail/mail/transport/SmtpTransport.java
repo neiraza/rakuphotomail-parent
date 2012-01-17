@@ -311,6 +311,7 @@ public class SmtpTransport extends Transport {
 
     @Override
     public void sendMessage(Message message) throws MessagingException {
+
         ArrayList<Address> addresses = new ArrayList<Address>();
         {
             addresses.addAll(Arrays.asList(message.getRecipients(RecipientType.TO)));
@@ -388,9 +389,6 @@ public class SmtpTransport extends Transport {
         } finally {
             close();
         }
-
-
-
     }
 
     @Override

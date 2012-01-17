@@ -24,8 +24,25 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MessageSync {
 
     // こいつを解析する
+    //TODO 一件しか取得できない？？
+
+    /**
+     * @param account    User Account Info(Account Class)
+     * @param folderName Folder Name(String)
+     *                   <p>Ex.Folder Name</p>
+     *                   <ul>
+     *                   <li>account.getInboxFolderName()</li>
+     *                   <li>account.getOutboxFolderName()</li>
+     *                   <li>account.getSentFolderName()</li>
+     *                   <li>account.getArchiveFolderName()</li>
+     *                   <li>account.getAutoExpandFolderName()</li>
+     *                   </ul>
+     * @return String NewMail Uid
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
     public static String synchronizeMailbox(Account account, String folderName) {
-        Log.d("gunntama", "MessageSync#synchronizeMailbox start");
+        Log.d("refs1961", "MessageSync#synchronizeMailbox start");
 
         String newMailUid = null;
 
@@ -36,7 +53,7 @@ public class MessageSync {
             localFolder = account.getLocalStore().getFolder(folderName);
             localFolder.open(Folder.OpenMode.READ_WRITE);
             localFolder.updateLastUid(); //こいつで一番最後のUIDを保持（localFolder.getLastUid();で取得）
-            Log.d("gunntama", "MessageSync#synchronizeMailbox localFolder.getLastUid():" + localFolder.getLastUid());
+            Log.d("refs1961", "MessageSync#synchronizeMailbox localFolder.getLastUid():" + localFolder.getLastUid());
 
             Message[] localMessages = localFolder.getMessages(null);
             HashMap<String, Message> localUidMap = new HashMap<String, Message>();
@@ -58,11 +75,11 @@ public class MessageSync {
                 remoteMessageArray = remoteFolder.getMessages(remoteStart, remoteEnd, null, null);
 
                 for (Message thisMessage : remoteMessageArray) {
-                    Log.d("gunntama", "MessageSync#synchronizeMailbox thisMessage:" + thisMessage.getUid());
+                    Log.d("refs1961", "MessageSync#synchronizeMailbox thisMessage:" + thisMessage.getUid());
                     Message localMessage = localUidMap.get(thisMessage.getUid()); // このUIDは更新前もあるかなー？
                     remoteUidMap.put(thisMessage.getUid(), thisMessage); // 新規に増えたやつかな
                     if (localMessage == null) {
-                        Log.d("gunntama", "MessageSync#synchronizeMailbox 新着メールのUID:" + thisMessage.getUid());
+                        Log.d("refs1961", "MessageSync#synchronizeMailbox 新着メールのUID:" + thisMessage.getUid());
                         FetchProfile fp = new FetchProfile();
                         fp.add(FetchProfile.Item.BODY);
                         remoteFolder.fetch(new Message[]{thisMessage}, fp, null);
@@ -75,7 +92,7 @@ public class MessageSync {
                         lMessage.setFlag(Flag.X_DOWNLOADED_FULL, true);
 
                         newMailUid = thisMessage.getUid();
-                        Log.d("gunntama", "MessageSync#synchronizeMailbox 新着メールのダウンロードおわった？");
+                        Log.d("refs1961", "MessageSync#synchronizeMailbox 新着メールのダウンロードおわった？");
                     }
                 }
                 remoteMessageArray = null;
@@ -87,8 +104,8 @@ public class MessageSync {
             ArrayList<Message> destroyMessages = new ArrayList<Message>();
             for (Message localMessage : localMessages) {
                 if (remoteUidMap.get(localMessage.getUid()) == null) {
-                    Log.d("gunntama", "MessageSync#synchronizeMailbox さよならするメールのUID:" + localMessage.getUid());
-                    Log.d("gunntama", "MessageSync#synchronizeMailbox さよならするメールの件名:" + localMessage.getSubject());
+                    Log.d("refs1961", "MessageSync#synchronizeMailbox さよならするメールのUID:" + localMessage.getUid());
+                    Log.d("refs1961", "MessageSync#synchronizeMailbox さよならするメールの件名:" + localMessage.getSubject());
                     destroyMessages.add(localMessage);
                 }
             }
@@ -99,7 +116,7 @@ public class MessageSync {
 
             localFolder.setLastChecked(System.currentTimeMillis());
             localFolder.setStatus(null);
-            Log.d("gunntama", "MessageSync#synchronizeMailbox end");
+            Log.d("refs1961", "MessageSync#synchronizeMailbox end");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -108,6 +125,67 @@ public class MessageSync {
             closeFolder(localFolder);
         }
         return newMailUid;
+    }
+
+    /**
+     * @param account        User Account Info(Account Class)
+     * @param folderName     Folder Name(String)
+     * @param sentMessageUid sent message's UID
+     * @throws MessagingException exception
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    public static void sentMessageAfter(Account account, String folderName, String sentMessageUid) throws MessagingException {
+        Log.d("refs1961", "MessageSync#sentMessageAfter");
+
+        if (account.getErrorFolderName().equals(folderName)) {
+            return;
+        }
+
+        Folder remoteFolder = null;
+        LocalStore.LocalFolder localFolder = null;
+
+        try {
+            LocalStore localStore = account.getLocalStore();
+
+            localFolder = localStore.getFolder(folderName);
+            LocalStore.LocalMessage localMessage = (LocalStore.LocalMessage) localFolder
+                    .getMessage(sentMessageUid);
+
+            if (localMessage == null) {
+                Log.d("refs1961", "MessageSync#sentMessageAfter localMessage is null");
+                return;
+            }
+
+            Store remoteStore = account.getRemoteStore();
+            remoteFolder = remoteStore.getFolder(folderName);
+            Log.d("refs1961", "MessageSync#sentMessageAfter !remoteFolder.exists():"+!remoteFolder.exists());
+            if (!remoteFolder.exists()) {
+                if (!remoteFolder.create(Folder.FolderType.HOLDS_MESSAGES)) {
+                    Log.d("refs1961", "MessageSync#sentMessageAfter FolderType?");
+                    return;
+                }
+            }
+
+            remoteFolder.open(Folder.OpenMode.READ_WRITE);
+            if (remoteFolder.getMode() != Folder.OpenMode.READ_WRITE) {
+                Log.d("refs1961", "MessageSync#sentMessageAfter remoteFolder.getMode():"+remoteFolder.getMode());
+                return;
+            }
+
+            FetchProfile fp = new FetchProfile();
+            fp.add(FetchProfile.Item.BODY);
+            localFolder.fetch(new Message[]{localMessage}, fp, null);
+            localMessage.setFlag(Flag.X_REMOTE_COPY_STARTED, true);
+
+            remoteFolder.appendMessages(new Message[]{localMessage});
+
+            localFolder.changeUid(localMessage);
+
+        } finally {
+            closeFolder(remoteFolder);
+            closeFolder(localFolder);
+        }
     }
 
     //ローカルに落とした証でもマーキングしてんのか？

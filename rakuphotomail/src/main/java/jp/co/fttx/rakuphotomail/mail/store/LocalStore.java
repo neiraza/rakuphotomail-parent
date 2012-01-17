@@ -2626,11 +2626,14 @@ public class LocalStore extends Store implements Serializable {
 
         @Override
         public void moveMessages(final Message[] msgs, final Folder destFolder) throws MessagingException {
+            Log.d("refs1961", "LocalFolder#moveMessages");
+
             if (!(destFolder instanceof LocalFolder)) {
                 throw new MessagingException("moveMessages called with non-LocalFolder");
             }
 
             final LocalFolder lDestFolder = (LocalFolder) destFolder;
+            Log.d("refs1961", "LocalFolder#moveMessages lDestFolder.getName():" + lDestFolder.getName());
 
             try {
                 database.execute(false, new DbCallback<Void>() {
@@ -2654,6 +2657,7 @@ public class LocalStore extends Store implements Serializable {
                                 }
 
                                 String oldUID = message.getUid();
+                                Log.d("refs1961", "LocalFolder#moveMessages oldUID:" + oldUID);
 
                                 if (RakuPhotoMail.DEBUG)
                                     Log.d(RakuPhotoMail.LOG_TAG,
@@ -2663,6 +2667,8 @@ public class LocalStore extends Store implements Serializable {
 
                                 message.setUid(RakuPhotoMail.LOCAL_UID_PREFIX
                                         + UUID.randomUUID().toString());
+                                Log.d("refs1961", "LocalFolder#moveMessages newUID:" + message.getUid());
+
 
                                 db.execSQL("UPDATE messages " + "SET folder_id = ?, uid = ? "
                                         + "WHERE id = ?", new Object[]{lDestFolder.getId(),
@@ -2734,7 +2740,6 @@ public class LocalStore extends Store implements Serializable {
          */
         @Override
         public void appendMessages(Message[] messages) throws MessagingException {
-            Log.d("gunntama", "appendMessages(Message[] messages)");
             appendMessages(messages, false);
         }
 
@@ -2778,7 +2783,6 @@ public class LocalStore extends Store implements Serializable {
          */
         private void appendMessages(final Message[] messages, final boolean copy)
                 throws MessagingException {
-            Log.d("gunntama", "appendMessages(final Message[] messages, final boolean copy)");
             open(OpenMode.READ_WRITE);
             try {
                 database.execute(true, new DbCallback<Void>() {
@@ -2786,7 +2790,6 @@ public class LocalStore extends Store implements Serializable {
                     public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
                             UnavailableStorageException {
                         try {
-                            Log.d("gunntama", "appendMessages(final Message[] messages, final boolean copy) for文前");
                             for (Message message : messages) {
                                 if (!(message instanceof MimeMessage)) {
                                     throw new Error(
@@ -2811,6 +2814,7 @@ public class LocalStore extends Store implements Serializable {
                                      * The message may already exist in this
                                      * Folder, so delete it first.
                                      */
+
                                     deleteAttachments(message.getUid());
                                     db.execSQL("DELETE FROM messages WHERE folder_id = ? AND uid = ?",
                                             new Object[]{mFolderId, message.getUid()});
@@ -2893,9 +2897,8 @@ public class LocalStore extends Store implements Serializable {
                                         cv.put("message_id", messageId);
                                     }
                                     long messageUid;
-                                    Log.d("gunntama", "appendMessages(final Message[] messages, final boolean copy) insert文前");
                                     messageUid = db.insert("messages", "uid", cv);
-                                    Log.d("gunntama", "appendMessages(final Message[] messages, final boolean copy) messageUid:" + messageUid);
+
                                     for (Part attachment : attachments) {
                                         saveAttachment(messageUid, attachment, copy);
                                     }
@@ -3266,6 +3269,7 @@ public class LocalStore extends Store implements Serializable {
          *
          */
         public void changeUid(final LocalMessage message) throws MessagingException {
+            Log.d("refs1961", "LocalFolder#changeUid message.getUid():" + message.getUid());
             open(OpenMode.READ_WRITE);
             final ContentValues cv = new ContentValues();
             cv.put("uid", message.getUid());

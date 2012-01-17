@@ -304,8 +304,8 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
             mGalleryThumbnailLayout.setVisibility(View.GONE);
         }
         setImageViewPicture(mMessageBean.getAttachmentBeanList(), 0);
-        //TODO 140文字に制限します
-        mMailSubject.setText(RakuPhotoStringUtils.limitMessage(mMessageBean.getSubject(), 50));
+        //TODO 140文字に制限します(config)
+        mMailSubject.setText(RakuPhotoStringUtils.limitMessage(mMessageBean.getSubject(), 140));
         setDate(mMessageBean.getDate());
         setAnswered(mMessageBean.isFlagAnswered());
         dissmissProgressDialog();
