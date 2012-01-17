@@ -307,9 +307,7 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
         try {
             Log.d("refs1961", "GallerySendingMail#onSendAfter folderName:" + folderName);
             Log.d("refs1961", "GallerySendingMail#onSendAfter uid:" + uid);
-
-            //TODO
-            MessageSync.sentMessageAfter(account, account.getOutboxFolderName(), uid);
+            MessageSync.sentMessageAfter(account, folderName, uid);
         } catch (MessagingException e) {
             Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
         }
@@ -386,11 +384,12 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
                 Log.e(RakuPhotoMail.LOG_TAG, "Failed to create new message for send or save.", me);
                 throw new RuntimeException("Failed to create a new message for send or save.", me);
             }
-            MessagingController.getInstance(getApplication()).sendMessage(mAccount, message);
+            Log.d("refs1961", "SendMessageTask#doInBackground MessagingController#sendMessage前 message.getUid():" + message.getUid());
+            String sendTempUid = MessagingController.getInstance(getApplication()).sendMessage(mAccount, message);
+            Log.d("refs1961", "SendMessageTask#doInBackground MessagingController#sendMessage後 message.getUid():" + message.getUid());
             publishProgress(60);
 
-            Log.d("refs1961", "SendMessageTask#doInBackground message.getUid():" + message.getUid());
-            onSendAfter(mAccount, mAccount.getSentFolderName(), message.getUid());
+            onSendAfter(mAccount, mAccount.getSentFolderName(), sendTempUid);
             publishProgress(100);
             Log.d("refs1961", "SendMessageTask#doInBackground end");
             return null;

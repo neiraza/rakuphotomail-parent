@@ -3225,13 +3225,13 @@ public class MessagingController implements Runnable {
      * @param account
      * @param message //     * @param listener
      */
-    public void sendMessage(final Account account, final Message message) {
-        Log.d("refs1961", "MessagingController#sendMessage(Account, Message) start");
+    public String sendMessage(final Account account, final Message message) {
+        Log.d("refs1961", "MessagingController#sendMessage(Account, Message)");
 
+        LocalStore localStore = null;
         try {
-            // local <-:
-            // local <-:
-            LocalStore localStore = account.getLocalStore();
+            localStore = account.getLocalStore();
+
             LocalFolder localFolder = localStore.getFolder(account
                     .getOutboxFolderName());
             localFolder.open(OpenMode.READ_WRITE);
@@ -3239,17 +3239,11 @@ public class MessagingController implements Runnable {
             Message localMessage = localFolder.getMessage(message.getUid());
             localMessage.setFlag(Flag.X_DOWNLOADED_FULL, true);
             localFolder.close();
-            sendMessage(account);
-
-        } catch (Exception e) {
-            /*
-			 * for (MessagingListener l : getListeners()) { // TODO general
-			 * failed }
-			 */
-            addErrorMessage(account, null, e);
-
+            return sendMessage(account);
+        } catch (MessagingException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
         }
-        Log.d("refs1961", "MessagingController#sendMessage(Account, Message) end");
+        return null;
     }
 
     //TODO 新規作成
@@ -3257,15 +3251,12 @@ public class MessagingController implements Runnable {
     /**
      * @param account
      */
-    private void sendMessage(final Account account) {
-        Log.d("refs1961", "MessagingController#sendMessage(Account) start");
+    private String sendMessage(final Account account) {
+        Log.d("refs1961", "MessagingController#sendMessage(Account)");
         if (!account.isAvailable(mApplication)) {
             throw new UnavailableAccountException();
         }
-        if (messagesPendingSend(account)) {
-            sendMessagesSynchronous(account);
-        }
-        Log.d("refs1961", "MessagingController#sendMessage(Account) end");
+        return sendMessagesSynchronous(account);
     }
 
     //TODO 新規作成
@@ -3273,7 +3264,7 @@ public class MessagingController implements Runnable {
     /**
      * @param account
      */
-    private void sendMessagesSynchronous(final Account account) {
+    private String sendMessagesSynchronous(final Account account) {
         Log.d("refs1961", "MessagingController#sendMessagesSynchronous start");
         Folder localFolder = null;
         try {
@@ -3281,7 +3272,7 @@ public class MessagingController implements Runnable {
             localFolder = localStore.getFolder(account.getOutboxFolderName());
             if (!localFolder.exists()) {
                 Log.d("refs1961", "MessagingController#sendMessagesSynchronous localFolder is exists...");
-                return;
+                return null;
             }
             localFolder.open(OpenMode.READ_WRITE);
 
@@ -3346,14 +3337,15 @@ public class MessagingController implements Runnable {
 //                        } else {
 
                         LocalFolder localSentFolder = (LocalFolder) localStore
-                                .getFolder(account.getOutboxFolderName());
-//                        .getFolder(account.getSentFolderName());
+                                .getFolder(account.getSentFolderName());
 
+                        Log.d("refs1961", "MessagingController#sendMessagesSynchronous moveMessages前 message.getUid:" + message.getUid());
                         localFolder.moveMessages(new Message[]{message},
                                 localSentFolder);
-//
-//  }
+                        Log.d("refs1961", "MessagingController#sendMessagesSynchronous moveMessages後 message.getUid:" + message.getUid());
 
+//  }
+                        return message.getUid();
 
                         //TODO クソみたいな実装だな、死ねよ
                     } catch (Exception e) {
@@ -3394,6 +3386,7 @@ public class MessagingController implements Runnable {
         } finally {
             closeFolder(localFolder);
         }
+        return null;
     }
 
     public void sendPendingMessages(MessagingListener listener) {

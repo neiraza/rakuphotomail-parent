@@ -2740,9 +2740,7 @@ public class LocalStore extends Store implements Serializable {
          */
         @Override
         public void appendMessages(Message[] messages) throws MessagingException {
-            Log.d("refs1961", "LocalFolder#appendMessages start");
             appendMessages(messages, false);
-            Log.d("refs1961", "LocalFolder#appendMessages end");
         }
 
         public void destroyMessages(final Message[] messages) throws MessagingException {
