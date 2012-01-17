@@ -2626,6 +2626,8 @@ public class LocalStore extends Store implements Serializable {
 
         @Override
         public void moveMessages(final Message[] msgs, final Folder destFolder) throws MessagingException {
+            Log.d("SendTest", "LocalFolder#moveMessages destFolder:" + destFolder.getName());
+
             if (!(destFolder instanceof LocalFolder)) {
                 throw new MessagingException("moveMessages called with non-LocalFolder");
             }
@@ -2654,6 +2656,7 @@ public class LocalStore extends Store implements Serializable {
                                 }
 
                                 String oldUID = message.getUid();
+                                Log.d("SendTest", "LocalFolder#moveMessages oldUID:" + oldUID);
 
                                 if (RakuPhotoMail.DEBUG)
                                     Log.d(RakuPhotoMail.LOG_TAG,
@@ -2663,6 +2666,7 @@ public class LocalStore extends Store implements Serializable {
 
                                 message.setUid(RakuPhotoMail.LOCAL_UID_PREFIX
                                         + UUID.randomUUID().toString());
+                                Log.d("SendTest", "LocalFolder#moveMessages newUID:" + message.getUid());
 
                                 db.execSQL("UPDATE messages " + "SET folder_id = ?, uid = ? "
                                         + "WHERE id = ?", new Object[]{lDestFolder.getId(),
@@ -2671,6 +2675,7 @@ public class LocalStore extends Store implements Serializable {
                                 LocalMessage placeHolder = new LocalMessage(oldUID, LocalFolder.this);
                                 placeHolder.setFlagInternal(Flag.DELETED, true);
                                 placeHolder.setFlagInternal(Flag.SEEN, true);
+                                Log.d("SendTest", "LocalFolder#moveMessages newUID:" + message.getUid());
                                 appendMessages(new Message[]{placeHolder});
                             }
                         } catch (MessagingException e) {
@@ -3267,23 +3272,23 @@ public class LocalStore extends Store implements Serializable {
          *
          */
         public void changeUid(final LocalMessage message) throws MessagingException {
-            Log.d("SendTest","LocalFolder#changeUid start");
+            Log.d("SendTest", "LocalFolder#changeUid start");
 
             open(OpenMode.READ_WRITE);
             final ContentValues cv = new ContentValues();
 
-            Log.d("SendTest","LocalFolder#changeUid message.getUid():" + message.getUid());
+            Log.d("SendTest", "LocalFolder#changeUid message.getUid():" + message.getUid());
             cv.put("uid", message.getUid());
             database.execute(false, new DbCallback<Void>() {
                 @Override
                 public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
                         UnavailableStorageException {
                     db.update("messages", cv, "id = ?", new String[]{Long.toString(message.mId)});
-                    Log.d("SendTest","LocalFolder#changeUid update後 cv.get(\"uid\"):" + cv.get("uid"));
+                    Log.d("SendTest", "LocalFolder#changeUid update後 cv.get(\"uid\"):" + cv.get("uid"));
                     return null;
                 }
             });
-            Log.d("SendTest","LocalFolder#changeUid end");
+            Log.d("SendTest", "LocalFolder#changeUid end");
         }
 
         @Override

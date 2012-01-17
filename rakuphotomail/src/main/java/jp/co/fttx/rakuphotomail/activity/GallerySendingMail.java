@@ -285,7 +285,8 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
         final Account account = Preferences.getPreferences(this).getAccount(mMessageReference.accountUuid);
         final String folderName = mMessageReference.folderName;
         final String sourceMessageUid = mMessageReference.uid;
-        Log.d("SendTest","GallerySendingMail#onSend mMessageReference.uid:" + mMessageReference.uid);
+        Log.d("SendTest","GallerySendingMail#onSend folderName:" + folderName);
+        Log.d("SendTest","GallerySendingMail#onSend sourceMessageUid:" + sourceMessageUid);
         MessagingController.getInstance(getApplication()).setFlag(account, folderName,
                 new String[]{sourceMessageUid}, mMessageReference.flag, true);
         Log.d("SendTest","GallerySendingMail#onSend end");

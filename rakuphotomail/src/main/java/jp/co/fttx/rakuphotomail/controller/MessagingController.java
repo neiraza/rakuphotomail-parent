@@ -79,959 +79,953 @@ import jp.co.fttx.rakuphotomail.mail.store.LocalStore.PendingCommand;
 // TODO このクラスは良く読み込んで、モノにしたい
 public class MessagingController implements Runnable {
 
-	/**
-	 * Immutable empty {@link String} array
-	 */
-	private static final String[] EMPTY_STRING_ARRAY = new String[0];
+    /**
+     * Immutable empty {@link String} array
+     */
+    private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
-	/**
-	 * Immutable empty {@link Message} array
-	 */
-	private static final Message[] EMPTY_MESSAGE_ARRAY = new Message[0];
+    /**
+     * Immutable empty {@link Message} array
+     */
+    private static final Message[] EMPTY_MESSAGE_ARRAY = new Message[0];
 
-	/**
-	 * Immutable empty {@link Folder} array
-	 */
-	private static final Folder[] EMPTY_FOLDER_ARRAY = new Folder[0];
+    /**
+     * Immutable empty {@link Folder} array
+     */
+    private static final Folder[] EMPTY_FOLDER_ARRAY = new Folder[0];
 
-	/**
-	 * The maximum message size that we'll consider to be "small". A small
-	 * message is downloaded in full immediately instead of in pieces. Anything
-	 * over this size will be downloaded in pieces with attachments being left
-	 * off completely and downloaded on demand.
-	 * <p/>
-	 * <p/>
-	 * 25k for a "small" message was picked by educated trial and error.
-	 * http://answers.google.com/answers/threadview?id=312463 claims that the
-	 * average size of an email is 59k, which I feel is too large for our blind
-	 * download. The following tests were performed on a download of 25 random
-	 * messages.
-	 * 
-	 * <pre>
-	 * 5k - 61 seconds,
-	 * 25k - 51 seconds,
-	 * 55k - 53 seconds,
-	 * </pre>
-	 * 
-	 * So 25k gives good performance and a reasonable data footprint. Sounds
-	 * good to me.
-	 */
+    /**
+     * The maximum message size that we'll consider to be "small". A small
+     * message is downloaded in full immediately instead of in pieces. Anything
+     * over this size will be downloaded in pieces with attachments being left
+     * off completely and downloaded on demand.
+     * <p/>
+     * <p/>
+     * 25k for a "small" message was picked by educated trial and error.
+     * http://answers.google.com/answers/threadview?id=312463 claims that the
+     * average size of an email is 59k, which I feel is too large for our blind
+     * download. The following tests were performed on a download of 25 random
+     * messages.
+     * <p/>
+     * <pre>
+     * 5k - 61 seconds,
+     * 25k - 51 seconds,
+     * 55k - 53 seconds,
+     * </pre>
+     * <p/>
+     * So 25k gives good performance and a reasonable data footprint. Sounds
+     * good to me.
+     */
 
-	private static final String PENDING_COMMAND_MOVE_OR_COPY = "jp.co.fttx.rakuphotomail.MessagingController.moveOrCopy";
-	private static final String PENDING_COMMAND_MOVE_OR_COPY_BULK = "jp.co.fttx.rakuphotomail.MessagingController.moveOrCopyBulk";
-	private static final String PENDING_COMMAND_EMPTY_TRASH = "jp.co.fttx.rakuphotomail.MessagingController.emptyTrash";
-	private static final String PENDING_COMMAND_SET_FLAG_BULK = "jp.co.fttx.rakuphotomail.MessagingController.setFlagBulk";
-	private static final String PENDING_COMMAND_SET_FLAG = "jp.co.fttx.rakuphotomail.MessagingController.setFlag";
-	private static final String PENDING_COMMAND_APPEND = "jp.co.fttx.rakuphotomail.MessagingController.append";
-	private static final String PENDING_COMMAND_MARK_ALL_AS_READ = "jp.co.fttx.rakuphotomail.MessagingController.markAllAsRead";
-	private static final String PENDING_COMMAND_EXPUNGE = "jp.co.fttx.rakuphotomail.MessagingController.expunge";
+    private static final String PENDING_COMMAND_MOVE_OR_COPY = "jp.co.fttx.rakuphotomail.MessagingController.moveOrCopy";
+    private static final String PENDING_COMMAND_MOVE_OR_COPY_BULK = "jp.co.fttx.rakuphotomail.MessagingController.moveOrCopyBulk";
+    private static final String PENDING_COMMAND_EMPTY_TRASH = "jp.co.fttx.rakuphotomail.MessagingController.emptyTrash";
+    private static final String PENDING_COMMAND_SET_FLAG_BULK = "jp.co.fttx.rakuphotomail.MessagingController.setFlagBulk";
+    private static final String PENDING_COMMAND_SET_FLAG = "jp.co.fttx.rakuphotomail.MessagingController.setFlag";
+    private static final String PENDING_COMMAND_APPEND = "jp.co.fttx.rakuphotomail.MessagingController.append";
+    private static final String PENDING_COMMAND_MARK_ALL_AS_READ = "jp.co.fttx.rakuphotomail.MessagingController.markAllAsRead";
+    private static final String PENDING_COMMAND_EXPUNGE = "jp.co.fttx.rakuphotomail.MessagingController.expunge";
 
-	/**
-	 * Maximum number of unsynced messages to store at once
-	 */
-	private static final int UNSYNC_CHUNK_SIZE = 5;
+    /**
+     * Maximum number of unsynced messages to store at once
+     */
+    private static final int UNSYNC_CHUNK_SIZE = 5;
 
-	private static MessagingController inst = null;
-	private BlockingQueue<Command> mCommands = new PriorityBlockingQueue<Command>();
+    private static MessagingController inst = null;
+    private BlockingQueue<Command> mCommands = new PriorityBlockingQueue<Command>();
 
-	private Thread mThread;
-	private Set<MessagingListener> mListeners = new CopyOnWriteArraySet<MessagingListener>();
+    private Thread mThread;
+    private Set<MessagingListener> mListeners = new CopyOnWriteArraySet<MessagingListener>();
 
-	private HashMap<SORT_TYPE, Boolean> sortAscending = new HashMap<SORT_TYPE, Boolean>();
+    private HashMap<SORT_TYPE, Boolean> sortAscending = new HashMap<SORT_TYPE, Boolean>();
 
-	private final ConcurrentHashMap<String, AtomicInteger> sendCount = new ConcurrentHashMap<String, AtomicInteger>();
+    private final ConcurrentHashMap<String, AtomicInteger> sendCount = new ConcurrentHashMap<String, AtomicInteger>();
 
-	ConcurrentHashMap<Account, Pusher> pushers = new ConcurrentHashMap<Account, Pusher>();
+    ConcurrentHashMap<Account, Pusher> pushers = new ConcurrentHashMap<Account, Pusher>();
 
-	private final ExecutorService threadPool = Executors.newCachedThreadPool();
+    private final ExecutorService threadPool = Executors.newCachedThreadPool();
 
-	public enum SORT_TYPE {
-		SORT_DATE(R.string.sort_earliest_first, R.string.sort_latest_first,
-				false), SORT_SUBJECT(R.string.sort_subject_alpha,
-				R.string.sort_subject_re_alpha, true), SORT_SENDER(
-				R.string.sort_sender_alpha, R.string.sort_sender_re_alpha, true), SORT_UNREAD(
-				R.string.sort_unread_first, R.string.sort_unread_last, true), SORT_FLAGGED(
-				R.string.sort_flagged_first, R.string.sort_flagged_last, true), SORT_ATTACHMENT(
-				R.string.sort_attach_first, R.string.sort_unattached_first,
-				true);
+    public enum SORT_TYPE {
+        SORT_DATE(R.string.sort_earliest_first, R.string.sort_latest_first,
+                false), SORT_SUBJECT(R.string.sort_subject_alpha,
+                R.string.sort_subject_re_alpha, true), SORT_SENDER(
+                R.string.sort_sender_alpha, R.string.sort_sender_re_alpha, true), SORT_UNREAD(
+                R.string.sort_unread_first, R.string.sort_unread_last, true), SORT_FLAGGED(
+                R.string.sort_flagged_first, R.string.sort_flagged_last, true), SORT_ATTACHMENT(
+                R.string.sort_attach_first, R.string.sort_unattached_first,
+                true);
 
-		private int ascendingToast;
-		private int descendingToast;
-		private boolean defaultAscending;
+        private int ascendingToast;
+        private int descendingToast;
+        private boolean defaultAscending;
 
-		SORT_TYPE(int ascending, int descending, boolean ndefaultAscending) {
-			ascendingToast = ascending;
-			descendingToast = descending;
-			defaultAscending = ndefaultAscending;
-		}
+        SORT_TYPE(int ascending, int descending, boolean ndefaultAscending) {
+            ascendingToast = ascending;
+            descendingToast = descending;
+            defaultAscending = ndefaultAscending;
+        }
 
-		public int getToast(boolean ascending) {
-			if (ascending) {
-				return ascendingToast;
-			} else {
-				return descendingToast;
-			}
-		}
+        public int getToast(boolean ascending) {
+            if (ascending) {
+                return ascendingToast;
+            } else {
+                return descendingToast;
+            }
+        }
 
-		public boolean isDefaultAscending() {
-			return defaultAscending;
-		}
-	}
+        public boolean isDefaultAscending() {
+            return defaultAscending;
+        }
+    }
 
-	private SORT_TYPE sortType = SORT_TYPE.SORT_DATE;
+    private SORT_TYPE sortType = SORT_TYPE.SORT_DATE;
 
-	private MessagingListener checkMailListener = null;
+    private MessagingListener checkMailListener = null;
 
-	private MemorizingListener memorizingListener = new MemorizingListener();
+    private MemorizingListener memorizingListener = new MemorizingListener();
 
-	private boolean mBusy;
+    private boolean mBusy;
 
-	/**
-	 * {@link RakuPhotoMail}
-	 */
-	private Application mApplication;
+    /**
+     * {@link RakuPhotoMail}
+     */
+    private Application mApplication;
 
-	// Key is accountUuid:folderName:messageUid , value is unimportant
-	private ConcurrentHashMap<String, String> deletedUids = new ConcurrentHashMap<String, String>();
+    // Key is accountUuid:folderName:messageUid , value is unimportant
+    private ConcurrentHashMap<String, String> deletedUids = new ConcurrentHashMap<String, String>();
 
-	private String createMessageKey(Account account, String folder,
-			Message message) {
-		return createMessageKey(account, folder, message.getUid());
-	}
+    private String createMessageKey(Account account, String folder,
+                                    Message message) {
+        return createMessageKey(account, folder, message.getUid());
+    }
 
-	private String createMessageKey(Account account, String folder, String uid) {
-		return account.getUuid() + ":" + folder + ":" + uid;
-	}
+    private String createMessageKey(Account account, String folder, String uid) {
+        return account.getUuid() + ":" + folder + ":" + uid;
+    }
 
-	private void suppressMessage(Account account, String folder, Message message) {
+    private void suppressMessage(Account account, String folder, Message message) {
 
-		if (account == null || folder == null || message == null) {
-			return;
-		}
-		String messKey = createMessageKey(account, folder, message);
-		deletedUids.put(messKey, "true");
-	}
+        if (account == null || folder == null || message == null) {
+            return;
+        }
+        String messKey = createMessageKey(account, folder, message);
+        deletedUids.put(messKey, "true");
+    }
 
-	private void unsuppressMessage(Account account, String folder, String uid) {
-		if (account == null || folder == null || uid == null) {
-			return;
-		}
-		String messKey = createMessageKey(account, folder, uid);
-		deletedUids.remove(messKey);
-	}
+    private void unsuppressMessage(Account account, String folder, String uid) {
+        if (account == null || folder == null || uid == null) {
+            return;
+        }
+        String messKey = createMessageKey(account, folder, uid);
+        deletedUids.remove(messKey);
+    }
 
-	private boolean isMessageSuppressed(Account account, String folder,
-			Message message) {
-		if (account == null || folder == null || message == null) {
-			return false;
-		}
-		String messKey = createMessageKey(account, folder, message);
+    private boolean isMessageSuppressed(Account account, String folder,
+                                        Message message) {
+        if (account == null || folder == null || message == null) {
+            return false;
+        }
+        String messKey = createMessageKey(account, folder, message);
 
-		if (deletedUids.containsKey(messKey)) {
-			return true;
-		}
+        if (deletedUids.containsKey(messKey)) {
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	/**
-	 * @param application
-	 *            {@link RakuPhotoMail}
-	 */
-	private MessagingController(Application application) {
-		mApplication = application;
-		mThread = new Thread(this);
-		mThread.setName("MessagingController");
-		mThread.start();
-		if (memorizingListener != null) {
-			addListener(memorizingListener);
-		}
-	}
+    /**
+     * @param application {@link RakuPhotoMail}
+     */
+    private MessagingController(Application application) {
+        mApplication = application;
+        mThread = new Thread(this);
+        mThread.setName("MessagingController");
+        mThread.start();
+        if (memorizingListener != null) {
+            addListener(memorizingListener);
+        }
+    }
 
-	/**
-	 * Gets or creates the singleton instance of MessagingController.
-	 * Application is used to provide a Context to classes that need it.
-	 * 
-	 * @param application
-	 *            {@link RakuPhotoMail}
-	 * @return
-	 */
-	public synchronized static MessagingController getInstance(
-			Application application) {
-		if (inst == null) {
-			inst = new MessagingController(application);
-		}
-		return inst;
-	}
+    /**
+     * Gets or creates the singleton instance of MessagingController.
+     * Application is used to provide a Context to classes that need it.
+     *
+     * @param application {@link RakuPhotoMail}
+     * @return
+     */
+    public synchronized static MessagingController getInstance(
+            Application application) {
+        if (inst == null) {
+            inst = new MessagingController(application);
+        }
+        return inst;
+    }
 
-	public boolean isBusy() {
-		return mBusy;
-	}
+    public boolean isBusy() {
+        return mBusy;
+    }
 
-	@Override
-	public void run() {
-		Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
-		while (true) {
-			String commandDescription = null;
-			try {
-				final Command command = mCommands.take();
+    @Override
+    public void run() {
+        Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+        while (true) {
+            String commandDescription = null;
+            try {
+                final Command command = mCommands.take();
 
-				if (command != null) {
-					commandDescription = command.description;
+                if (command != null) {
+                    commandDescription = command.description;
 
-					if (RakuPhotoMail.DEBUG)
-						Log.i(RakuPhotoMail.LOG_TAG, "Running "
-								+ (command.isForeground ? "Foreground"
-										: "Background") + " command '"
-								+ command.description + "', seq = "
-								+ command.sequence);
+                    if (RakuPhotoMail.DEBUG)
+                        Log.i(RakuPhotoMail.LOG_TAG, "Running "
+                                + (command.isForeground ? "Foreground"
+                                : "Background") + " command '"
+                                + command.description + "', seq = "
+                                + command.sequence);
 
-					mBusy = true;
-					try {
-						command.runnable.run();
-					} catch (UnavailableAccountException e) {
-						// retry later
-						new Thread() {
-							@Override
-							public void run() {
-								try {
-									sleep(30 * 1000);
-									mCommands.put(command);
-								} catch (InterruptedException e) {
-									Log.e(RakuPhotoMail.LOG_TAG,
-											"interrupted while putting a pending command for"
-													+ " an unavailable account back into the queue."
-													+ " THIS SHOULD NEVER HAPPEN.");
-								}
-							}
-						}.start();
-					}
+                    mBusy = true;
+                    try {
+                        command.runnable.run();
+                    } catch (UnavailableAccountException e) {
+                        // retry later
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                try {
+                                    sleep(30 * 1000);
+                                    mCommands.put(command);
+                                } catch (InterruptedException e) {
+                                    Log.e(RakuPhotoMail.LOG_TAG,
+                                            "interrupted while putting a pending command for"
+                                                    + " an unavailable account back into the queue."
+                                                    + " THIS SHOULD NEVER HAPPEN.");
+                                }
+                            }
+                        }.start();
+                    }
 
-					if (RakuPhotoMail.DEBUG)
-						Log.i(RakuPhotoMail.LOG_TAG,
-								(command.isForeground ? "Foreground"
-										: "Background")
-										+ " Command '"
-										+ command.description + "' completed");
+                    if (RakuPhotoMail.DEBUG)
+                        Log.i(RakuPhotoMail.LOG_TAG,
+                                (command.isForeground ? "Foreground"
+                                        : "Background")
+                                        + " Command '"
+                                        + command.description + "' completed");
 
-					for (MessagingListener l : getListeners(command.listener)) {
-						l.controllerCommandCompleted(mCommands.size() > 0);
-					}
-				}
-			} catch (Exception e) {
-				Log.e(RakuPhotoMail.LOG_TAG, "Error running command '"
-						+ commandDescription + "'", e);
-			}
-			mBusy = false;
-		}
-	}
+                    for (MessagingListener l : getListeners(command.listener)) {
+                        l.controllerCommandCompleted(mCommands.size() > 0);
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(RakuPhotoMail.LOG_TAG, "Error running command '"
+                        + commandDescription + "'", e);
+            }
+            mBusy = false;
+        }
+    }
 
-	private void put(String description, MessagingListener listener,
-			Runnable runnable) {
-		putCommand(mCommands, description, listener, runnable, true);
-	}
+    private void put(String description, MessagingListener listener,
+                     Runnable runnable) {
+        putCommand(mCommands, description, listener, runnable, true);
+    }
 
-	private void putBackground(String description, MessagingListener listener,
-			Runnable runnable) {
-		putCommand(mCommands, description, listener, runnable, false);
-	}
+    private void putBackground(String description, MessagingListener listener,
+                               Runnable runnable) {
+        putCommand(mCommands, description, listener, runnable, false);
+    }
 
-	private void putCommand(BlockingQueue<Command> queue, String description,
-			MessagingListener listener, Runnable runnable, boolean isForeground) {
-		Log.v(RakuPhotoMail.LOG_TAG, "MessaginController#putCommand " + queue
-				+ ":" + description);
+    private void putCommand(BlockingQueue<Command> queue, String description,
+                            MessagingListener listener, Runnable runnable, boolean isForeground) {
+        Log.v(RakuPhotoMail.LOG_TAG, "MessaginController#putCommand " + queue
+                + ":" + description);
 
-		int retries = 10;
-		Exception e = null;
-		while (retries-- > 0) {
-			try {
-				Command command = new Command();
-				command.listener = listener;
-				command.runnable = runnable;
-				command.description = description;
-				command.isForeground = isForeground;
-				queue.put(command);
-				return;
-			} catch (InterruptedException ie) {
-				try {
-					Thread.sleep(200);
-				} catch (InterruptedException ne) {
-				}
-				e = ie;
-			}
-		}
-		throw new Error(e);
-	}
+        int retries = 10;
+        Exception e = null;
+        while (retries-- > 0) {
+            try {
+                Command command = new Command();
+                command.listener = listener;
+                command.runnable = runnable;
+                command.description = description;
+                command.isForeground = isForeground;
+                queue.put(command);
+                return;
+            } catch (InterruptedException ie) {
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException ne) {
+                }
+                e = ie;
+            }
+        }
+        throw new Error(e);
+    }
 
-	public void addListener(MessagingListener listener) {
-		mListeners.add(listener);
-		refreshListener(listener);
-	}
+    public void addListener(MessagingListener listener) {
+        mListeners.add(listener);
+        refreshListener(listener);
+    }
 
-	public void refreshListener(MessagingListener listener) {
-		if (memorizingListener != null && listener != null) {
-			memorizingListener.refreshOther(listener);
-		}
-	}
+    public void refreshListener(MessagingListener listener) {
+        if (memorizingListener != null && listener != null) {
+            memorizingListener.refreshOther(listener);
+        }
+    }
 
-	public void removeListener(MessagingListener listener) {
-		mListeners.remove(listener);
-	}
+    public void removeListener(MessagingListener listener) {
+        mListeners.remove(listener);
+    }
 
-	public Set<MessagingListener> getListeners() {
-		return mListeners;
-	}
+    public Set<MessagingListener> getListeners() {
+        return mListeners;
+    }
 
-	public Set<MessagingListener> getListeners(MessagingListener listener) {
-		if (listener == null) {
-			return mListeners;
-		}
+    public Set<MessagingListener> getListeners(MessagingListener listener) {
+        if (listener == null) {
+            return mListeners;
+        }
 
-		Set<MessagingListener> listeners = new HashSet<MessagingListener>(
-				mListeners);
-		listeners.add(listener);
-		return listeners;
+        Set<MessagingListener> listeners = new HashSet<MessagingListener>(
+                mListeners);
+        listeners.add(listener);
+        return listeners;
 
-	}
+    }
 
-	/**
-	 * Lists folders that are available locally and remotely. This method calls
-	 * listFoldersCallback for local folders before it returns, and then for
-	 * remote folders at some later point. If there are no local folders
-	 * includeRemote is forced by this method. This method should be called from
-	 * a Thread as it may take several seconds to list the local folders. TODO
-	 * this needs to cache the remote folder list
-	 * 
-	 * @param account
-	 * @param listener
-	 * @throws MessagingException
-	 */
-	public void listFolders(final Account account, final boolean refreshRemote,
-			final MessagingListener listener) {
-		threadPool.execute(new Runnable() {
-			@Override
-			public void run() {
-				listFoldersSynchronous(account, refreshRemote, listener);
-			}
-		});
-	}
+    /**
+     * Lists folders that are available locally and remotely. This method calls
+     * listFoldersCallback for local folders before it returns, and then for
+     * remote folders at some later point. If there are no local folders
+     * includeRemote is forced by this method. This method should be called from
+     * a Thread as it may take several seconds to list the local folders. TODO
+     * this needs to cache the remote folder list
+     *
+     * @param account
+     * @param listener
+     * @throws MessagingException
+     */
+    public void listFolders(final Account account, final boolean refreshRemote,
+                            final MessagingListener listener) {
+        threadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                listFoldersSynchronous(account, refreshRemote, listener);
+            }
+        });
+    }
 
-	/**
-	 * Lists folders that are available locally and remotely. This method calls
-	 * listFoldersCallback for local folders before it returns, and then for
-	 * remote folders at some later point. If there are no local folders
-	 * includeRemote is forced by this method. This method is called in the
-	 * foreground. TODO this needs to cache the remote folder list
-	 * 
-	 * @param account
-	 * @param listener
-	 * @throws MessagingException
-	 */
-	public void listFoldersSynchronous(final Account account,
-			final boolean refreshRemote, final MessagingListener listener) {
-		for (MessagingListener l : getListeners(listener)) {
-			l.listFoldersStarted(account);
-		}
-		List<? extends Folder> localFolders = null;
-		if (!account.isAvailable(mApplication)) {
-			Log.i(RakuPhotoMail.LOG_TAG,
-					"not listing folders of unavailable account");
-		} else {
-			try {
-				Store localStore = account.getLocalStore();
-				localFolders = localStore.getPersonalNamespaces(false);
+    /**
+     * Lists folders that are available locally and remotely. This method calls
+     * listFoldersCallback for local folders before it returns, and then for
+     * remote folders at some later point. If there are no local folders
+     * includeRemote is forced by this method. This method is called in the
+     * foreground. TODO this needs to cache the remote folder list
+     *
+     * @param account
+     * @param listener
+     * @throws MessagingException
+     */
+    public void listFoldersSynchronous(final Account account,
+                                       final boolean refreshRemote, final MessagingListener listener) {
+        for (MessagingListener l : getListeners(listener)) {
+            l.listFoldersStarted(account);
+        }
+        List<? extends Folder> localFolders = null;
+        if (!account.isAvailable(mApplication)) {
+            Log.i(RakuPhotoMail.LOG_TAG,
+                    "not listing folders of unavailable account");
+        } else {
+            try {
+                Store localStore = account.getLocalStore();
+                localFolders = localStore.getPersonalNamespaces(false);
 
-				Folder[] folderArray = localFolders.toArray(EMPTY_FOLDER_ARRAY);
+                Folder[] folderArray = localFolders.toArray(EMPTY_FOLDER_ARRAY);
 
-				if (refreshRemote || localFolders.size() == 0) {
-					doRefreshRemote(account, listener);
-					return;
-				}
+                if (refreshRemote || localFolders.size() == 0) {
+                    doRefreshRemote(account, listener);
+                    return;
+                }
 
-				for (MessagingListener l : getListeners(listener)) {
-					l.listFolders(account, folderArray);
-				}
-			} catch (Exception e) {
-				for (MessagingListener l : getListeners(listener)) {
-					l.listFoldersFailed(account, e.getMessage());
-				}
+                for (MessagingListener l : getListeners(listener)) {
+                    l.listFolders(account, folderArray);
+                }
+            } catch (Exception e) {
+                for (MessagingListener l : getListeners(listener)) {
+                    l.listFoldersFailed(account, e.getMessage());
+                }
 
-				addErrorMessage(account, null, e);
-				return;
-			} finally {
-				if (localFolders != null) {
-					for (Folder localFolder : localFolders) {
-						closeFolder(localFolder);
-					}
-				}
-			}
-		}
+                addErrorMessage(account, null, e);
+                return;
+            } finally {
+                if (localFolders != null) {
+                    for (Folder localFolder : localFolders) {
+                        closeFolder(localFolder);
+                    }
+                }
+            }
+        }
 
-		for (MessagingListener l : getListeners(listener)) {
-			l.listFoldersFinished(account);
-		}
-	}
+        for (MessagingListener l : getListeners(listener)) {
+            l.listFoldersFinished(account);
+        }
+    }
 
-	private void doRefreshRemote(final Account account,
-			MessagingListener listener) {
-		put("doRefreshRemote", listener, new Runnable() {
-			@Override
-			public void run() {
-				List<? extends Folder> localFolders = null;
-				try {
-					Store store = account.getRemoteStore();
+    private void doRefreshRemote(final Account account,
+                                 MessagingListener listener) {
+        put("doRefreshRemote", listener, new Runnable() {
+            @Override
+            public void run() {
+                List<? extends Folder> localFolders = null;
+                try {
+                    Store store = account.getRemoteStore();
 
-					List<? extends Folder> remoteFolders = store
-							.getPersonalNamespaces(false);
+                    List<? extends Folder> remoteFolders = store
+                            .getPersonalNamespaces(false);
 
-					LocalStore localStore = account.getLocalStore();
-					HashSet<String> remoteFolderNames = new HashSet<String>();
-					List<LocalFolder> foldersToCreate = new LinkedList<LocalFolder>();
+                    LocalStore localStore = account.getLocalStore();
+                    HashSet<String> remoteFolderNames = new HashSet<String>();
+                    List<LocalFolder> foldersToCreate = new LinkedList<LocalFolder>();
 
-					localFolders = localStore.getPersonalNamespaces(false);
-					HashSet<String> localFolderNames = new HashSet<String>();
-					for (Folder localFolder : localFolders) {
-						localFolderNames.add(localFolder.getName());
-					}
-					for (Folder remoteFolder : remoteFolders) {
-						if (localFolderNames.contains(remoteFolder.getName()) == false) {
-							LocalFolder localFolder = localStore
-									.getFolder(remoteFolder.getName());
-							foldersToCreate.add(localFolder);
-						}
-						remoteFolderNames.add(remoteFolder.getName());
-					}
-					localStore.createFolders(foldersToCreate,
-							account.getDisplayCount());
+                    localFolders = localStore.getPersonalNamespaces(false);
+                    HashSet<String> localFolderNames = new HashSet<String>();
+                    for (Folder localFolder : localFolders) {
+                        localFolderNames.add(localFolder.getName());
+                    }
+                    for (Folder remoteFolder : remoteFolders) {
+                        if (localFolderNames.contains(remoteFolder.getName()) == false) {
+                            LocalFolder localFolder = localStore
+                                    .getFolder(remoteFolder.getName());
+                            foldersToCreate.add(localFolder);
+                        }
+                        remoteFolderNames.add(remoteFolder.getName());
+                    }
+                    localStore.createFolders(foldersToCreate,
+                            account.getDisplayCount());
 
-					localFolders = localStore.getPersonalNamespaces(false);
+                    localFolders = localStore.getPersonalNamespaces(false);
 
-					/*
+                    /*
 					 * Clear out any folders that are no longer on the remote
 					 * store.
 					 */
-					for (Folder localFolder : localFolders) {
-						String localFolderName = localFolder.getName();
-						if (!account.isSpecialFolder(localFolderName)
-								&& !remoteFolderNames.contains(localFolderName)) {
-							localFolder.delete(false);
-						}
-					}
+                    for (Folder localFolder : localFolders) {
+                        String localFolderName = localFolder.getName();
+                        if (!account.isSpecialFolder(localFolderName)
+                                && !remoteFolderNames.contains(localFolderName)) {
+                            localFolder.delete(false);
+                        }
+                    }
 
-					localFolders = localStore.getPersonalNamespaces(false);
-					Folder[] folderArray = localFolders
-							.toArray(EMPTY_FOLDER_ARRAY);
+                    localFolders = localStore.getPersonalNamespaces(false);
+                    Folder[] folderArray = localFolders
+                            .toArray(EMPTY_FOLDER_ARRAY);
 
-					for (MessagingListener l : getListeners()) {
-						l.listFolders(account, folderArray);
-					}
-					for (MessagingListener l : getListeners()) {
-						l.listFoldersFinished(account);
-					}
-				} catch (Exception e) {
-					for (MessagingListener l : getListeners()) {
-						l.listFoldersFailed(account, "");
-					}
-					addErrorMessage(account, null, e);
-				} finally {
-					if (localFolders != null) {
-						for (Folder localFolder : localFolders) {
-							closeFolder(localFolder);
-						}
-					}
-				}
-			}
-		});
-	}
+                    for (MessagingListener l : getListeners()) {
+                        l.listFolders(account, folderArray);
+                    }
+                    for (MessagingListener l : getListeners()) {
+                        l.listFoldersFinished(account);
+                    }
+                } catch (Exception e) {
+                    for (MessagingListener l : getListeners()) {
+                        l.listFoldersFailed(account, "");
+                    }
+                    addErrorMessage(account, null, e);
+                } finally {
+                    if (localFolders != null) {
+                        for (Folder localFolder : localFolders) {
+                            closeFolder(localFolder);
+                        }
+                    }
+                }
+            }
+        });
+    }
 
-	/**
-	 * List the messages in the local message store for the given folder
-	 * asynchronously.
-	 * 
-	 * @param account
-	 * @param folder
-	 * @param listener
-	 * @throws MessagingException
-	 */
-	public void listLocalMessages(final Account account, final String folder,
-			final MessagingListener listener) {
-		threadPool.execute(new Runnable() {
-			@Override
-			public void run() {
-				listLocalMessagesSynchronous(account, folder, listener);
-			}
-		});
-	}
+    /**
+     * List the messages in the local message store for the given folder
+     * asynchronously.
+     *
+     * @param account
+     * @param folder
+     * @param listener
+     * @throws MessagingException
+     */
+    public void listLocalMessages(final Account account, final String folder,
+                                  final MessagingListener listener) {
+        threadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                listLocalMessagesSynchronous(account, folder, listener);
+            }
+        });
+    }
 
-	/**
-	 * List the messages in the local message store for the given folder
-	 * synchronously.
-	 * 
-	 * @param account
-	 * @param folder
-	 * @param listener
-	 * @throws MessagingException
-	 */
-	public void listLocalMessagesSynchronous(final Account account,
-			final String folder, final MessagingListener listener) {
+    /**
+     * List the messages in the local message store for the given folder
+     * synchronously.
+     *
+     * @param account
+     * @param folder
+     * @param listener
+     * @throws MessagingException
+     */
+    public void listLocalMessagesSynchronous(final Account account,
+                                             final String folder, final MessagingListener listener) {
 
-		for (MessagingListener l : getListeners(listener)) {
-			l.listLocalMessagesStarted(account, folder);
-		}
+        for (MessagingListener l : getListeners(listener)) {
+            l.listLocalMessagesStarted(account, folder);
+        }
 
-		Folder localFolder = null;
-		MessageRetrievalListener retrievalListener = new MessageRetrievalListener() {
-			List<Message> pendingMessages = new ArrayList<Message>();
+        Folder localFolder = null;
+        MessageRetrievalListener retrievalListener = new MessageRetrievalListener() {
+            List<Message> pendingMessages = new ArrayList<Message>();
 
-			int totalDone = 0;
+            int totalDone = 0;
 
-			@Override
-			public void messageStarted(String message, int number, int ofTotal) {
-			}
+            @Override
+            public void messageStarted(String message, int number, int ofTotal) {
+            }
 
-			@Override
-			public void messageFinished(Message message, int number, int ofTotal) {
+            @Override
+            public void messageFinished(Message message, int number, int ofTotal) {
 
-				if (!isMessageSuppressed(account, folder, message)) {
-					pendingMessages.add(message);
-					totalDone++;
-					if (pendingMessages.size() > 10) {
-						addPendingMessages();
-					}
+                if (!isMessageSuppressed(account, folder, message)) {
+                    pendingMessages.add(message);
+                    totalDone++;
+                    if (pendingMessages.size() > 10) {
+                        addPendingMessages();
+                    }
 
-				} else {
-					for (MessagingListener l : getListeners(listener)) {
-						l.listLocalMessagesRemoveMessage(account, folder,
-								message);
-					}
-				}
-			}
+                } else {
+                    for (MessagingListener l : getListeners(listener)) {
+                        l.listLocalMessagesRemoveMessage(account, folder,
+                                message);
+                    }
+                }
+            }
 
-			@Override
-			public void messagesFinished(int number) {
-				addPendingMessages();
-			}
+            @Override
+            public void messagesFinished(int number) {
+                addPendingMessages();
+            }
 
-			private void addPendingMessages() {
-				for (MessagingListener l : getListeners(listener)) {
-					l.listLocalMessagesAddMessages(account, folder,
-							pendingMessages);
-				}
-				pendingMessages.clear();
-			}
-		};
+            private void addPendingMessages() {
+                for (MessagingListener l : getListeners(listener)) {
+                    l.listLocalMessagesAddMessages(account, folder,
+                            pendingMessages);
+                }
+                pendingMessages.clear();
+            }
+        };
 
-		try {
-			Store localStore = account.getLocalStore();
-			localFolder = localStore.getFolder(folder);
-			localFolder.open(OpenMode.READ_WRITE);
+        try {
+            Store localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folder);
+            localFolder.open(OpenMode.READ_WRITE);
 
-			localFolder.getMessages(retrievalListener, false // Skip deleted
-																// messages
-					);
-			if (RakuPhotoMail.DEBUG)
-				Log.v(RakuPhotoMail.LOG_TAG,
-						"Got ack that callbackRunner finished");
+            localFolder.getMessages(retrievalListener, false // Skip deleted
+                    // messages
+            );
+            if (RakuPhotoMail.DEBUG)
+                Log.v(RakuPhotoMail.LOG_TAG,
+                        "Got ack that callbackRunner finished");
 
-			for (MessagingListener l : getListeners(listener)) {
-				l.listLocalMessagesFinished(account, folder);
-			}
-		} catch (Exception e) {
-			for (MessagingListener l : getListeners(listener)) {
-				l.listLocalMessagesFailed(account, folder, e.getMessage());
-			}
-			addErrorMessage(account, null, e);
-		} finally {
-			closeFolder(localFolder);
-		}
-	}
+            for (MessagingListener l : getListeners(listener)) {
+                l.listLocalMessagesFinished(account, folder);
+            }
+        } catch (Exception e) {
+            for (MessagingListener l : getListeners(listener)) {
+                l.listLocalMessagesFailed(account, folder, e.getMessage());
+            }
+            addErrorMessage(account, null, e);
+        } finally {
+            closeFolder(localFolder);
+        }
+    }
 
-	public void searchLocalMessages(SearchSpecification searchSpecification,
-			final Message[] messages, final MessagingListener listener) {
-		searchLocalMessages(searchSpecification.getAccountUuids(),
-				searchSpecification.getFolderNames(), messages,
-				searchSpecification.getQuery(),
-				searchSpecification.isIntegrate(),
-				searchSpecification.getRequiredFlags(),
-				searchSpecification.getForbiddenFlags(), listener);
-	}
+    public void searchLocalMessages(SearchSpecification searchSpecification,
+                                    final Message[] messages, final MessagingListener listener) {
+        searchLocalMessages(searchSpecification.getAccountUuids(),
+                searchSpecification.getFolderNames(), messages,
+                searchSpecification.getQuery(),
+                searchSpecification.isIntegrate(),
+                searchSpecification.getRequiredFlags(),
+                searchSpecification.getForbiddenFlags(), listener);
+    }
 
-	/**
-	 * Find all messages in any local account which match the query 'query'
-	 * 
-	 * @throws MessagingException
-	 */
-	public void searchLocalMessages(final String[] accountUuids,
-			final String[] folderNames, final Message[] messages,
-			final String query, final boolean integrate,
-			final Flag[] requiredFlags, final Flag[] forbiddenFlags,
-			final MessagingListener listener) {
-		if (RakuPhotoMail.DEBUG) {
-			Log.i(RakuPhotoMail.LOG_TAG,
-					"searchLocalMessages (" + "accountUuids="
-							+ Utility.combine(accountUuids, ',')
-							+ ", folderNames = "
-							+ Utility.combine(folderNames, ',')
-							+ ", messages.size() = "
-							+ (messages != null ? messages.length : null)
-							+ ", query = " + query + ", integrate = "
-							+ integrate + ", requiredFlags = "
-							+ Utility.combine(requiredFlags, ',')
-							+ ", forbiddenFlags = "
-							+ Utility.combine(forbiddenFlags, ',') + ")");
-		}
+    /**
+     * Find all messages in any local account which match the query 'query'
+     *
+     * @throws MessagingException
+     */
+    public void searchLocalMessages(final String[] accountUuids,
+                                    final String[] folderNames, final Message[] messages,
+                                    final String query, final boolean integrate,
+                                    final Flag[] requiredFlags, final Flag[] forbiddenFlags,
+                                    final MessagingListener listener) {
+        if (RakuPhotoMail.DEBUG) {
+            Log.i(RakuPhotoMail.LOG_TAG,
+                    "searchLocalMessages (" + "accountUuids="
+                            + Utility.combine(accountUuids, ',')
+                            + ", folderNames = "
+                            + Utility.combine(folderNames, ',')
+                            + ", messages.size() = "
+                            + (messages != null ? messages.length : null)
+                            + ", query = " + query + ", integrate = "
+                            + integrate + ", requiredFlags = "
+                            + Utility.combine(requiredFlags, ',')
+                            + ", forbiddenFlags = "
+                            + Utility.combine(forbiddenFlags, ',') + ")");
+        }
 
-		threadPool.execute(new Runnable() {
-			@Override
-			public void run() {
-				searchLocalMessagesSynchronous(accountUuids, folderNames,
-						messages, query, integrate, requiredFlags,
-						forbiddenFlags, listener);
-			}
-		});
-	}
+        threadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                searchLocalMessagesSynchronous(accountUuids, folderNames,
+                        messages, query, integrate, requiredFlags,
+                        forbiddenFlags, listener);
+            }
+        });
+    }
 
-	public void searchLocalMessagesSynchronous(final String[] accountUuids,
-			final String[] folderNames, final Message[] messages,
-			final String query, final boolean integrate,
-			final Flag[] requiredFlags, final Flag[] forbiddenFlags,
-			final MessagingListener listener) {
+    public void searchLocalMessagesSynchronous(final String[] accountUuids,
+                                               final String[] folderNames, final Message[] messages,
+                                               final String query, final boolean integrate,
+                                               final Flag[] requiredFlags, final Flag[] forbiddenFlags,
+                                               final MessagingListener listener) {
 
-		final AccountStats stats = new AccountStats();
-		final Set<String> accountUuidsSet = new HashSet<String>();
-		if (accountUuids != null) {
-			accountUuidsSet.addAll(Arrays.asList(accountUuids));
-		}
-		final Preferences prefs = Preferences.getPreferences(mApplication
-				.getApplicationContext());
-		Account[] accounts = prefs.getAccounts();
-		List<LocalFolder> foldersToSearch = null;
-		boolean displayableOnly = false;
-		boolean noSpecialFolders = true;
-		for (final Account account : accounts) {
-			if (!account.isAvailable(mApplication)) {
-				Log.d(RakuPhotoMail.LOG_TAG,
-						"searchLocalMessagesSynchronous() ignores account that is not available");
-				continue;
-			}
-			if (accountUuids != null
-					&& !accountUuidsSet.contains(account.getUuid())) {
-				continue;
-			}
+        final AccountStats stats = new AccountStats();
+        final Set<String> accountUuidsSet = new HashSet<String>();
+        if (accountUuids != null) {
+            accountUuidsSet.addAll(Arrays.asList(accountUuids));
+        }
+        final Preferences prefs = Preferences.getPreferences(mApplication
+                .getApplicationContext());
+        Account[] accounts = prefs.getAccounts();
+        List<LocalFolder> foldersToSearch = null;
+        boolean displayableOnly = false;
+        boolean noSpecialFolders = true;
+        for (final Account account : accounts) {
+            if (!account.isAvailable(mApplication)) {
+                Log.d(RakuPhotoMail.LOG_TAG,
+                        "searchLocalMessagesSynchronous() ignores account that is not available");
+                continue;
+            }
+            if (accountUuids != null
+                    && !accountUuidsSet.contains(account.getUuid())) {
+                continue;
+            }
 
-			if (accountUuids != null
-					&& accountUuidsSet.contains(account.getUuid())) {
-				displayableOnly = true;
-				noSpecialFolders = true;
-			} else if (!integrate && folderNames == null) {
-				Account.Searchable searchableFolders = account
-						.getSearchableFolders();
-				switch (searchableFolders) {
-				case NONE:
-					continue;
-				case DISPLAYABLE:
-					displayableOnly = true;
-					break;
+            if (accountUuids != null
+                    && accountUuidsSet.contains(account.getUuid())) {
+                displayableOnly = true;
+                noSpecialFolders = true;
+            } else if (!integrate && folderNames == null) {
+                Account.Searchable searchableFolders = account
+                        .getSearchableFolders();
+                switch (searchableFolders) {
+                    case NONE:
+                        continue;
+                    case DISPLAYABLE:
+                        displayableOnly = true;
+                        break;
 
-				}
-			}
-			List<Message> messagesToSearch = null;
-			if (messages != null) {
-				messagesToSearch = new LinkedList<Message>();
-				for (Message message : messages) {
-					if (message.getFolder().getAccount().getUuid()
-							.equals(account.getUuid())) {
-						messagesToSearch.add(message);
-					}
-				}
-				if (messagesToSearch.isEmpty()) {
-					continue;
-				}
-			}
-			if (listener != null) {
-				listener.listLocalMessagesStarted(account, null);
-			}
+                }
+            }
+            List<Message> messagesToSearch = null;
+            if (messages != null) {
+                messagesToSearch = new LinkedList<Message>();
+                for (Message message : messages) {
+                    if (message.getFolder().getAccount().getUuid()
+                            .equals(account.getUuid())) {
+                        messagesToSearch.add(message);
+                    }
+                }
+                if (messagesToSearch.isEmpty()) {
+                    continue;
+                }
+            }
+            if (listener != null) {
+                listener.listLocalMessagesStarted(account, null);
+            }
 
-			if (integrate || displayableOnly || folderNames != null
-					|| noSpecialFolders) {
-				List<LocalFolder> tmpFoldersToSearch = new LinkedList<LocalFolder>();
-				try {
-					LocalStore store = account.getLocalStore();
-					List<? extends Folder> folders = store
-							.getPersonalNamespaces(false);
-					Set<String> folderNameSet = null;
-					if (folderNames != null) {
-						folderNameSet = new HashSet<String>();
-						folderNameSet.addAll(Arrays.asList(folderNames));
-					}
-					for (Folder folder : folders) {
-						LocalFolder localFolder = (LocalFolder) folder;
-						boolean include = true;
-						folder.refresh(prefs);
-						String localFolderName = localFolder.getName();
-						if (integrate) {
-							include = localFolder.isIntegrate();
-						} else {
-							if (folderNameSet != null) {
-								if (!folderNameSet.contains(localFolderName))
+            if (integrate || displayableOnly || folderNames != null
+                    || noSpecialFolders) {
+                List<LocalFolder> tmpFoldersToSearch = new LinkedList<LocalFolder>();
+                try {
+                    LocalStore store = account.getLocalStore();
+                    List<? extends Folder> folders = store
+                            .getPersonalNamespaces(false);
+                    Set<String> folderNameSet = null;
+                    if (folderNames != null) {
+                        folderNameSet = new HashSet<String>();
+                        folderNameSet.addAll(Arrays.asList(folderNames));
+                    }
+                    for (Folder folder : folders) {
+                        LocalFolder localFolder = (LocalFolder) folder;
+                        boolean include = true;
+                        folder.refresh(prefs);
+                        String localFolderName = localFolder.getName();
+                        if (integrate) {
+                            include = localFolder.isIntegrate();
+                        } else {
+                            if (folderNameSet != null) {
+                                if (!folderNameSet.contains(localFolderName))
 
-								{
-									include = false;
-								}
-							}
-							// Never exclude the INBOX (see issue 1817)
-							else if (noSpecialFolders
-									&& !localFolderName
-											.equalsIgnoreCase(account
-													.getInboxFolderName())
-									&& !localFolderName.equals(account
-											.getArchiveFolderName())
-									&& account.isSpecialFolder(localFolderName)) {
-								include = false;
-							} else if (displayableOnly
-									&& modeMismatch(
-											account.getFolderDisplayMode(),
-											folder.getDisplayClass())) {
-								include = false;
-							}
-						}
+                                {
+                                    include = false;
+                                }
+                            }
+                            // Never exclude the INBOX (see issue 1817)
+                            else if (noSpecialFolders
+                                    && !localFolderName
+                                    .equalsIgnoreCase(account
+                                            .getInboxFolderName())
+                                    && !localFolderName.equals(account
+                                    .getArchiveFolderName())
+                                    && account.isSpecialFolder(localFolderName)) {
+                                include = false;
+                            } else if (displayableOnly
+                                    && modeMismatch(
+                                    account.getFolderDisplayMode(),
+                                    folder.getDisplayClass())) {
+                                include = false;
+                            }
+                        }
 
-						if (include) {
-							tmpFoldersToSearch.add(localFolder);
-						}
-					}
-					if (tmpFoldersToSearch.size() < 1) {
-						continue;
-					}
-					foldersToSearch = tmpFoldersToSearch;
-				} catch (MessagingException me) {
-					Log.e(RakuPhotoMail.LOG_TAG,
-							"Unable to restrict search folders in Account "
-									+ account.getDescription()
-									+ ", searching all", me);
-					addErrorMessage(account, null, me);
-				}
+                        if (include) {
+                            tmpFoldersToSearch.add(localFolder);
+                        }
+                    }
+                    if (tmpFoldersToSearch.size() < 1) {
+                        continue;
+                    }
+                    foldersToSearch = tmpFoldersToSearch;
+                } catch (MessagingException me) {
+                    Log.e(RakuPhotoMail.LOG_TAG,
+                            "Unable to restrict search folders in Account "
+                                    + account.getDescription()
+                                    + ", searching all", me);
+                    addErrorMessage(account, null, me);
+                }
 
-			}
+            }
 
-			MessageRetrievalListener retrievalListener = new MessageRetrievalListener() {
-				@Override
-				public void messageStarted(String message, int number,
-						int ofTotal) {
-				}
+            MessageRetrievalListener retrievalListener = new MessageRetrievalListener() {
+                @Override
+                public void messageStarted(String message, int number,
+                                           int ofTotal) {
+                }
 
-				@Override
-				public void messageFinished(Message message, int number,
-						int ofTotal) {
-					if (!isMessageSuppressed(message.getFolder().getAccount(),
-							message.getFolder().getName(), message)) {
-						List<Message> messages = new ArrayList<Message>();
+                @Override
+                public void messageFinished(Message message, int number,
+                                            int ofTotal) {
+                    if (!isMessageSuppressed(message.getFolder().getAccount(),
+                            message.getFolder().getName(), message)) {
+                        List<Message> messages = new ArrayList<Message>();
 
-						messages.add(message);
-						stats.unreadMessageCount += (!message.isSet(Flag.SEEN)) ? 1
-								: 0;
-						stats.flaggedMessageCount += (message
-								.isSet(Flag.FLAGGED)) ? 1 : 0;
-						if (listener != null) {
-							listener.listLocalMessagesAddMessages(account,
-									null, messages);
-						}
-					}
+                        messages.add(message);
+                        stats.unreadMessageCount += (!message.isSet(Flag.SEEN)) ? 1
+                                : 0;
+                        stats.flaggedMessageCount += (message
+                                .isSet(Flag.FLAGGED)) ? 1 : 0;
+                        if (listener != null) {
+                            listener.listLocalMessagesAddMessages(account,
+                                    null, messages);
+                        }
+                    }
 
-				}
+                }
 
-				@Override
-				public void messagesFinished(int number) {
+                @Override
+                public void messagesFinished(int number) {
 
-				}
-			};
+                }
+            };
 
-			try {
-				String[] queryFields = { "html_content", "subject",
-						"sender_list" };
-				LocalStore localStore = account.getLocalStore();
-				localStore.searchForMessages(
-						retrievalListener,
-						queryFields,
-						query,
-						foldersToSearch,
-						messagesToSearch == null ? null : messagesToSearch
-								.toArray(EMPTY_MESSAGE_ARRAY), requiredFlags,
-						forbiddenFlags);
+            try {
+                String[] queryFields = {"html_content", "subject",
+                        "sender_list"};
+                LocalStore localStore = account.getLocalStore();
+                localStore.searchForMessages(
+                        retrievalListener,
+                        queryFields,
+                        query,
+                        foldersToSearch,
+                        messagesToSearch == null ? null : messagesToSearch
+                                .toArray(EMPTY_MESSAGE_ARRAY), requiredFlags,
+                        forbiddenFlags);
 
-			} catch (Exception e) {
-				if (listener != null) {
-					listener.listLocalMessagesFailed(account, null,
-							e.getMessage());
-				}
-				addErrorMessage(account, null, e);
-			} finally {
-				if (listener != null) {
-					listener.listLocalMessagesFinished(account, null);
-				}
-			}
-		}
-		if (listener != null) {
-			listener.searchStats(stats);
-		}
-	}
+            } catch (Exception e) {
+                if (listener != null) {
+                    listener.listLocalMessagesFailed(account, null,
+                            e.getMessage());
+                }
+                addErrorMessage(account, null, e);
+            } finally {
+                if (listener != null) {
+                    listener.listLocalMessagesFinished(account, null);
+                }
+            }
+        }
+        if (listener != null) {
+            listener.searchStats(stats);
+        }
+    }
 
-	public void loadMoreMessages(Account account, String folder,
-			MessagingListener listener) {
-		try {
-			LocalStore localStore = account.getLocalStore();
-			LocalFolder localFolder = localStore.getFolder(folder);
-			if (localFolder.getVisibleLimit() > 0) {
-				localFolder.setVisibleLimit(localFolder.getVisibleLimit()
-						+ localFolder.getMessageCount());
-			}
-			synchronizeMailbox(account, folder, listener, null);
-		} catch (MessagingException me) {
-			addErrorMessage(account, null, me);
+    public void loadMoreMessages(Account account, String folder,
+                                 MessagingListener listener) {
+        try {
+            LocalStore localStore = account.getLocalStore();
+            LocalFolder localFolder = localStore.getFolder(folder);
+            if (localFolder.getVisibleLimit() > 0) {
+                localFolder.setVisibleLimit(localFolder.getVisibleLimit()
+                        + localFolder.getMessageCount());
+            }
+            synchronizeMailbox(account, folder, listener, null);
+        } catch (MessagingException me) {
+            addErrorMessage(account, null, me);
 
-			throw new RuntimeException("Unable to set visible limit on folder",
-					me);
-		}
-	}
+            throw new RuntimeException("Unable to set visible limit on folder",
+                    me);
+        }
+    }
 
-	public void resetVisibleLimits(Collection<Account> accounts) {
-		for (Account account : accounts) {
-			account.resetVisibleLimits();
-		}
-	}
+    public void resetVisibleLimits(Collection<Account> accounts) {
+        for (Account account : accounts) {
+            account.resetVisibleLimits();
+        }
+    }
 
-	/**
-	 * Start background synchronization of the specified folder.
-	 * 
-	 * @param account
-	 * @param folder
-	 * @param listener
-	 * @param providedRemoteFolder
-	 *            TODO
-	 */
-	public void synchronizeMailbox(final Account account, final String folder,
-			final MessagingListener listener, final Folder providedRemoteFolder) {
-		putBackground("synchronizeMailbox", listener, new Runnable() {
-			@Override
-			public void run() {
-				synchronizeMailboxSynchronous(account, folder, listener,
-						providedRemoteFolder);
-			}
-		});
-	}
+    /**
+     * Start background synchronization of the specified folder.
+     *
+     * @param account
+     * @param folder
+     * @param listener
+     * @param providedRemoteFolder TODO
+     */
+    public void synchronizeMailbox(final Account account, final String folder,
+                                   final MessagingListener listener, final Folder providedRemoteFolder) {
+        putBackground("synchronizeMailbox", listener, new Runnable() {
+            @Override
+            public void run() {
+                synchronizeMailboxSynchronous(account, folder, listener,
+                        providedRemoteFolder);
+            }
+        });
+    }
 
-	/**
-	 * Start foreground synchronization of the specified folder.
-	 * 
-	 * @param account
-	 * @param folder
-	 * @param listener
-	 * @param providedRemoteFolder
-	 *            TODO
-	 */
-	public void synchronizeMailboxForegound(final Account account,
-			final String folder, final MessagingListener listener,
-			final Folder providedRemoteFolder) {
-		synchronizeMailboxSynchronous(account, folder, listener,
-				providedRemoteFolder);
-	}
+    /**
+     * Start foreground synchronization of the specified folder.
+     *
+     * @param account
+     * @param folder
+     * @param listener
+     * @param providedRemoteFolder TODO
+     */
+    public void synchronizeMailboxForegound(final Account account,
+                                            final String folder, final MessagingListener listener,
+                                            final Folder providedRemoteFolder) {
+        synchronizeMailboxSynchronous(account, folder, listener,
+                providedRemoteFolder);
+    }
 
-	/**
-	 * Start foreground synchronization of the specified folder. This is
-	 * generally only called by synchronizeMailbox.
-	 * 
-	 * @param account
-	 * @param folder
-	 *            TODO Break this method up into smaller chunks.
-	 * @param providedRemoteFolder
-	 *            TODO
-	 */
-	private void synchronizeMailboxSynchronous(final Account account,
-			final String folder, final MessagingListener listener,
-			Folder providedRemoteFolder) {
+    /**
+     * Start foreground synchronization of the specified folder. This is
+     * generally only called by synchronizeMailbox.
+     *
+     * @param account
+     * @param folder               TODO Break this method up into smaller chunks.
+     * @param providedRemoteFolder TODO
+     */
+    private void synchronizeMailboxSynchronous(final Account account,
+                                               final String folder, final MessagingListener listener,
+                                               Folder providedRemoteFolder) {
 
-		Folder remoteFolder = null;
-		LocalFolder tLocalFolder = null;
+        Folder remoteFolder = null;
+        LocalFolder tLocalFolder = null;
 
-		if (RakuPhotoMail.DEBUG)
-			Log.i(RakuPhotoMail.LOG_TAG,
-					"Synchronizing folder " + account.getDescription() + ":"
-							+ folder);
+        if (RakuPhotoMail.DEBUG)
+            Log.i(RakuPhotoMail.LOG_TAG,
+                    "Synchronizing folder " + account.getDescription() + ":"
+                            + folder);
 
-		for (MessagingListener l : getListeners(listener)) {
-			l.synchronizeMailboxStarted(account, folder);
-		}
-		/*
+        for (MessagingListener l : getListeners(listener)) {
+            l.synchronizeMailboxStarted(account, folder);
+        }
+        /*
 		 * We don't ever sync the Outbox or errors folder
 		 */
-		if (folder.equals(account.getOutboxFolderName())
-				|| folder.equals(account.getErrorFolderName())) {
-			for (MessagingListener l : getListeners(listener)) {
-				l.synchronizeMailboxFinished(account, folder, 0, 0);
-			}
+        if (folder.equals(account.getOutboxFolderName())
+                || folder.equals(account.getErrorFolderName())) {
+            for (MessagingListener l : getListeners(listener)) {
+                l.synchronizeMailboxFinished(account, folder, 0, 0);
+            }
 
-			return;
-		}
+            return;
+        }
 
-		Exception commandException = null;
-		try {
-			if (RakuPhotoMail.DEBUG)
-				Log.d(RakuPhotoMail.LOG_TAG,
-						"SYNC: About to process pending commands for account "
-								+ account.getDescription());
+        Exception commandException = null;
+        try {
+            if (RakuPhotoMail.DEBUG)
+                Log.d(RakuPhotoMail.LOG_TAG,
+                        "SYNC: About to process pending commands for account "
+                                + account.getDescription());
 
-			try {
-				processPendingCommandsSynchronous(account);
-			} catch (Exception e) {
-				addErrorMessage(account, null, e);
+            try {
+                processPendingCommandsSynchronous(account);
+            } catch (Exception e) {
+                addErrorMessage(account, null, e);
 
-				Log.e(RakuPhotoMail.LOG_TAG,
-						"Failure processing command, but allow message sync attempt",
-						e);
-				commandException = e;
-			}
+                Log.e(RakuPhotoMail.LOG_TAG,
+                        "Failure processing command, but allow message sync attempt",
+                        e);
+                commandException = e;
+            }
 
-			/*
+            /*
 			 * Get the message list from the local store and create an index of
 			 * the uids within the list.
 			 */
-			if (RakuPhotoMail.DEBUG)
-				Log.v(RakuPhotoMail.LOG_TAG, "SYNC: About to get local folder "
-						+ folder);
+            if (RakuPhotoMail.DEBUG)
+                Log.v(RakuPhotoMail.LOG_TAG, "SYNC: About to get local folder "
+                        + folder);
 
-			final LocalStore localStore = account.getLocalStore();
-			tLocalFolder = localStore.getFolder(folder);
-			final LocalFolder localFolder = tLocalFolder;
-			localFolder.open(OpenMode.READ_WRITE);
-			localFolder.updateLastUid();
-			Message[] localMessages = localFolder.getMessages(null);
-			HashMap<String, Message> localUidMap = new HashMap<String, Message>();
-			for (Message message : localMessages) {
-				localUidMap.put(message.getUid(), message);
-				Log.v(RakuPhotoMail.LOG_TAG,
-						"MessageingController#synchronizeMailboxSynchronous "
-								+ "message:" + message.toString());
-			}
+            final LocalStore localStore = account.getLocalStore();
+            tLocalFolder = localStore.getFolder(folder);
+            final LocalFolder localFolder = tLocalFolder;
+            localFolder.open(OpenMode.READ_WRITE);
+            localFolder.updateLastUid();
+            Message[] localMessages = localFolder.getMessages(null);
+            HashMap<String, Message> localUidMap = new HashMap<String, Message>();
+            for (Message message : localMessages) {
+                localUidMap.put(message.getUid(), message);
+                Log.v(RakuPhotoMail.LOG_TAG,
+                        "MessageingController#synchronizeMailboxSynchronous "
+                                + "message:" + message.toString());
+            }
 
-			if (providedRemoteFolder != null) {
-				if (RakuPhotoMail.DEBUG)
-					Log.v(RakuPhotoMail.LOG_TAG,
-							"SYNC: using providedRemoteFolder " + folder);
-				remoteFolder = providedRemoteFolder;
-			} else {
-				Store remoteStore = account.getRemoteStore();
+            if (providedRemoteFolder != null) {
+                if (RakuPhotoMail.DEBUG)
+                    Log.v(RakuPhotoMail.LOG_TAG,
+                            "SYNC: using providedRemoteFolder " + folder);
+                remoteFolder = providedRemoteFolder;
+            } else {
+                Store remoteStore = account.getRemoteStore();
 
-				if (RakuPhotoMail.DEBUG)
-					Log.v(RakuPhotoMail.LOG_TAG,
-							"SYNC: About to get remote folder " + folder);
-				remoteFolder = remoteStore.getFolder(folder);
+                if (RakuPhotoMail.DEBUG)
+                    Log.v(RakuPhotoMail.LOG_TAG,
+                            "SYNC: About to get remote folder " + folder);
+                remoteFolder = remoteStore.getFolder(folder);
 
-				if (!verifyOrCreateRemoteSpecialFolder(account, folder,
-						remoteFolder, listener)) {
-					return;
-				}
+                if (!verifyOrCreateRemoteSpecialFolder(account, folder,
+                        remoteFolder, listener)) {
+                    return;
+                }
 
-				/*
+                /*
 				 * Synchronization process:
 				 * 
 				 * Open the folder Upload any local messages that are marked as
@@ -1051,4425 +1045,4412 @@ public class MessagingController implements Runnable {
 				 * (Optional) Download small attachments in the background.
 				 */
 
-				/*
+                /*
 				 * Open the remote folder. This pre-loads certain metadata like
 				 * message count.
 				 */
-				if (RakuPhotoMail.DEBUG)
-					Log.v(RakuPhotoMail.LOG_TAG,
-							"SYNC: About to open remote folder " + folder);
+                if (RakuPhotoMail.DEBUG)
+                    Log.v(RakuPhotoMail.LOG_TAG,
+                            "SYNC: About to open remote folder " + folder);
 
-				remoteFolder.open(OpenMode.READ_WRITE);
-				if (Account.EXPUNGE_ON_POLL.equals(account.getExpungePolicy())) {
-					if (RakuPhotoMail.DEBUG)
-						Log.d(RakuPhotoMail.LOG_TAG, "SYNC: Expunging folder "
-								+ account.getDescription() + ":" + folder);
-					remoteFolder.expunge();
-				}
+                remoteFolder.open(OpenMode.READ_WRITE);
+                if (Account.EXPUNGE_ON_POLL.equals(account.getExpungePolicy())) {
+                    if (RakuPhotoMail.DEBUG)
+                        Log.d(RakuPhotoMail.LOG_TAG, "SYNC: Expunging folder "
+                                + account.getDescription() + ":" + folder);
+                    remoteFolder.expunge();
+                }
 
-			}
+            }
 
-			/*
+            /*
 			 * Get the remote message count.
 			 */
-			int remoteMessageCount = remoteFolder.getMessageCount();
+            int remoteMessageCount = remoteFolder.getMessageCount();
 
-			int visibleLimit = localFolder.getVisibleLimit();
+            int visibleLimit = localFolder.getVisibleLimit();
 
-			if (visibleLimit < 0) {
-				visibleLimit = RakuPhotoMail.DEFAULT_VISIBLE_LIMIT;
-			}
+            if (visibleLimit < 0) {
+                visibleLimit = RakuPhotoMail.DEFAULT_VISIBLE_LIMIT;
+            }
 
-			Message[] remoteMessageArray = EMPTY_MESSAGE_ARRAY;
-			final ArrayList<Message> remoteMessages = new ArrayList<Message>();
-			HashMap<String, Message> remoteUidMap = new HashMap<String, Message>();
+            Message[] remoteMessageArray = EMPTY_MESSAGE_ARRAY;
+            final ArrayList<Message> remoteMessages = new ArrayList<Message>();
+            HashMap<String, Message> remoteUidMap = new HashMap<String, Message>();
 
-			if (RakuPhotoMail.DEBUG)
-				Log.v(RakuPhotoMail.LOG_TAG,
-						"SYNC: Remote message count for folder " + folder
-								+ " is " + remoteMessageCount);
-			final Date earliestDate = account.getEarliestPollDate();
+            if (RakuPhotoMail.DEBUG)
+                Log.v(RakuPhotoMail.LOG_TAG,
+                        "SYNC: Remote message count for folder " + folder
+                                + " is " + remoteMessageCount);
+            final Date earliestDate = account.getEarliestPollDate();
 
-			if (remoteMessageCount > 0) {
-				/* Message numbers start at 1. */
-				int remoteStart;
-				if (visibleLimit > 0) {
-					remoteStart = Math
-							.max(0, remoteMessageCount - visibleLimit) + 1;
-				} else {
-					remoteStart = 1;
-				}
-				int remoteEnd = remoteMessageCount;
+            if (remoteMessageCount > 0) {
+                /* Message numbers start at 1. */
+                int remoteStart;
+                if (visibleLimit > 0) {
+                    remoteStart = Math
+                            .max(0, remoteMessageCount - visibleLimit) + 1;
+                } else {
+                    remoteStart = 1;
+                }
+                int remoteEnd = remoteMessageCount;
 
-				if (RakuPhotoMail.DEBUG)
-					Log.v(RakuPhotoMail.LOG_TAG, "SYNC: About to get messages "
-							+ remoteStart + " through " + remoteEnd
-							+ " for folder " + folder);
+                if (RakuPhotoMail.DEBUG)
+                    Log.v(RakuPhotoMail.LOG_TAG, "SYNC: About to get messages "
+                            + remoteStart + " through " + remoteEnd
+                            + " for folder " + folder);
 
-				final AtomicInteger headerProgress = new AtomicInteger(0);
-				for (MessagingListener l : getListeners(listener)) {
-					l.synchronizeMailboxHeadersStarted(account, folder);
-				}
+                final AtomicInteger headerProgress = new AtomicInteger(0);
+                for (MessagingListener l : getListeners(listener)) {
+                    l.synchronizeMailboxHeadersStarted(account, folder);
+                }
 
-				remoteMessageArray = remoteFolder.getMessages(remoteStart,
-						remoteEnd, earliestDate, null);
+                remoteMessageArray = remoteFolder.getMessages(remoteStart,
+                        remoteEnd, earliestDate, null);
 
-				int messageCount = remoteMessageArray.length;
+                int messageCount = remoteMessageArray.length;
 
-				for (Message thisMess : remoteMessageArray) {
-					headerProgress.incrementAndGet();
-					for (MessagingListener l : getListeners(listener)) {
-						l.synchronizeMailboxHeadersProgress(account, folder,
-								headerProgress.get(), messageCount);
-					}
-					Message localMessage = localUidMap.get(thisMess.getUid());
-					if (localMessage == null
-							|| !localMessage.olderThan(earliestDate)) {
-						remoteMessages.add(thisMess);
-						remoteUidMap.put(thisMess.getUid(), thisMess);
-					}
-				}
-				if (RakuPhotoMail.DEBUG)
-					Log.v(RakuPhotoMail.LOG_TAG,
-							"SYNC: Got " + remoteUidMap.size()
-									+ " messages for folder " + folder);
+                for (Message thisMess : remoteMessageArray) {
+                    headerProgress.incrementAndGet();
+                    for (MessagingListener l : getListeners(listener)) {
+                        l.synchronizeMailboxHeadersProgress(account, folder,
+                                headerProgress.get(), messageCount);
+                    }
+                    Message localMessage = localUidMap.get(thisMess.getUid());
+                    if (localMessage == null
+                            || !localMessage.olderThan(earliestDate)) {
+                        remoteMessages.add(thisMess);
+                        remoteUidMap.put(thisMess.getUid(), thisMess);
+                    }
+                }
+                if (RakuPhotoMail.DEBUG)
+                    Log.v(RakuPhotoMail.LOG_TAG,
+                            "SYNC: Got " + remoteUidMap.size()
+                                    + " messages for folder " + folder);
 
-				remoteMessageArray = null;
-				for (MessagingListener l : getListeners(listener)) {
-					l.synchronizeMailboxHeadersFinished(account, folder,
-							headerProgress.get(), remoteUidMap.size());
-				}
+                remoteMessageArray = null;
+                for (MessagingListener l : getListeners(listener)) {
+                    l.synchronizeMailboxHeadersFinished(account, folder,
+                            headerProgress.get(), remoteUidMap.size());
+                }
 
-			} else if (remoteMessageCount < 0) {
-				throw new Exception("Message count " + remoteMessageCount
-						+ " for folder " + folder);
-			}
+            } else if (remoteMessageCount < 0) {
+                throw new Exception("Message count " + remoteMessageCount
+                        + " for folder " + folder);
+            }
 
-			/*
+            /*
 			 * Remove any messages that are in the local store but no longer on
 			 * the remote store or are too old
 			 */
-			if (account.syncRemoteDeletions()) {
-				ArrayList<Message> destroyMessages = new ArrayList<Message>();
-				for (Message localMessage : localMessages) {
-					if (remoteUidMap.get(localMessage.getUid()) == null) {
-						destroyMessages.add(localMessage);
-					}
-				}
+            if (account.syncRemoteDeletions()) {
+                ArrayList<Message> destroyMessages = new ArrayList<Message>();
+                for (Message localMessage : localMessages) {
+                    if (remoteUidMap.get(localMessage.getUid()) == null) {
+                        destroyMessages.add(localMessage);
+                    }
+                }
 
-				localFolder.destroyMessages(destroyMessages
-						.toArray(EMPTY_MESSAGE_ARRAY));
+                localFolder.destroyMessages(destroyMessages
+                        .toArray(EMPTY_MESSAGE_ARRAY));
 
-				for (Message destroyMessage : destroyMessages) {
-					for (MessagingListener l : getListeners(listener)) {
-						l.synchronizeMailboxRemovedMessage(account, folder,
-								destroyMessage);
-					}
-				}
-			}
-			localMessages = null;
+                for (Message destroyMessage : destroyMessages) {
+                    for (MessagingListener l : getListeners(listener)) {
+                        l.synchronizeMailboxRemovedMessage(account, folder,
+                                destroyMessage);
+                    }
+                }
+            }
+            localMessages = null;
 
-			/*
+            /*
 			 * Now we download the actual content of messages.
 			 */
-			int newMessages = downloadMessages(account, remoteFolder,
-					localFolder, remoteMessages, false);
+            int newMessages = downloadMessages(account, remoteFolder,
+                    localFolder, remoteMessages, false);
 
-			int unreadMessageCount = setLocalUnreadCountToRemote(localFolder,
-					remoteFolder, newMessages);
-			setLocalFlaggedCountToRemote(localFolder, remoteFolder);
+            int unreadMessageCount = setLocalUnreadCountToRemote(localFolder,
+                    remoteFolder, newMessages);
+            setLocalFlaggedCountToRemote(localFolder, remoteFolder);
 
-			for (MessagingListener l : getListeners()) {
-				l.folderStatusChanged(account, folder, unreadMessageCount);
-			}
+            for (MessagingListener l : getListeners()) {
+                l.folderStatusChanged(account, folder, unreadMessageCount);
+            }
 
-			/* Notify listeners that we're finally done. */
+            /* Notify listeners that we're finally done. */
 
-			localFolder.setLastChecked(System.currentTimeMillis());
-			localFolder.setStatus(null);
+            localFolder.setLastChecked(System.currentTimeMillis());
+            localFolder.setStatus(null);
 
-			if (RakuPhotoMail.DEBUG)
-				Log.d(RakuPhotoMail.LOG_TAG, "Done synchronizing folder "
-						+ account.getDescription() + ":" + folder + " @ "
-						+ new Date() + " with " + newMessages + " new messages");
+            if (RakuPhotoMail.DEBUG)
+                Log.d(RakuPhotoMail.LOG_TAG, "Done synchronizing folder "
+                        + account.getDescription() + ":" + folder + " @ "
+                        + new Date() + " with " + newMessages + " new messages");
 
-			for (MessagingListener l : getListeners(listener)) {
-				l.synchronizeMailboxFinished(account, folder,
-						remoteMessageCount, newMessages);
-			}
+            for (MessagingListener l : getListeners(listener)) {
+                l.synchronizeMailboxFinished(account, folder,
+                        remoteMessageCount, newMessages);
+            }
 
-			if (commandException != null) {
-				String rootMessage = getRootCauseMessage(commandException);
-				Log.e(RakuPhotoMail.LOG_TAG,
-						"Root cause failure in " + account.getDescription()
-								+ ":" + tLocalFolder.getName() + " was '"
-								+ rootMessage + "'");
-				localFolder.setStatus(rootMessage);
-				for (MessagingListener l : getListeners(listener)) {
-					l.synchronizeMailboxFailed(account, folder, rootMessage);
-				}
-			}
+            if (commandException != null) {
+                String rootMessage = getRootCauseMessage(commandException);
+                Log.e(RakuPhotoMail.LOG_TAG,
+                        "Root cause failure in " + account.getDescription()
+                                + ":" + tLocalFolder.getName() + " was '"
+                                + rootMessage + "'");
+                localFolder.setStatus(rootMessage);
+                for (MessagingListener l : getListeners(listener)) {
+                    l.synchronizeMailboxFailed(account, folder, rootMessage);
+                }
+            }
 
-			if (RakuPhotoMail.DEBUG)
-				Log.i(RakuPhotoMail.LOG_TAG, "Done synchronizing folder "
-						+ account.getDescription() + ":" + folder);
+            if (RakuPhotoMail.DEBUG)
+                Log.i(RakuPhotoMail.LOG_TAG, "Done synchronizing folder "
+                        + account.getDescription() + ":" + folder);
 
-		} catch (Exception e) {
-			Log.e(RakuPhotoMail.LOG_TAG, "synchronizeMailbox", e);
-			// If we don't set the last checked, it can try too often during
-			// failure conditions
-			String rootMessage = getRootCauseMessage(e);
-			if (tLocalFolder != null) {
-				try {
-					tLocalFolder.setStatus(rootMessage);
-					tLocalFolder.setLastChecked(System.currentTimeMillis());
-				} catch (MessagingException me) {
-					Log.e(RakuPhotoMail.LOG_TAG,
-							"Could not set last checked on folder "
-									+ account.getDescription() + ":"
-									+ tLocalFolder.getName(), e);
-				}
-			}
+        } catch (Exception e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "synchronizeMailbox", e);
+            // If we don't set the last checked, it can try too often during
+            // failure conditions
+            String rootMessage = getRootCauseMessage(e);
+            if (tLocalFolder != null) {
+                try {
+                    tLocalFolder.setStatus(rootMessage);
+                    tLocalFolder.setLastChecked(System.currentTimeMillis());
+                } catch (MessagingException me) {
+                    Log.e(RakuPhotoMail.LOG_TAG,
+                            "Could not set last checked on folder "
+                                    + account.getDescription() + ":"
+                                    + tLocalFolder.getName(), e);
+                }
+            }
 
-			for (MessagingListener l : getListeners(listener)) {
-				l.synchronizeMailboxFailed(account, folder, rootMessage);
-			}
-			addErrorMessage(account, null, e);
-			Log.e(RakuPhotoMail.LOG_TAG, "Failed synchronizing folder "
-					+ account.getDescription() + ":" + folder + " @ "
-					+ new Date());
+            for (MessagingListener l : getListeners(listener)) {
+                l.synchronizeMailboxFailed(account, folder, rootMessage);
+            }
+            addErrorMessage(account, null, e);
+            Log.e(RakuPhotoMail.LOG_TAG, "Failed synchronizing folder "
+                    + account.getDescription() + ":" + folder + " @ "
+                    + new Date());
 
-		} finally {
-			if (providedRemoteFolder == null) {
-				closeFolder(remoteFolder);
-			}
+        } finally {
+            if (providedRemoteFolder == null) {
+                closeFolder(remoteFolder);
+            }
 
-			closeFolder(tLocalFolder);
-		}
+            closeFolder(tLocalFolder);
+        }
 
-	}
+    }
 
-	private void closeFolder(Folder f) {
-		if (f != null) {
-			f.close();
-		}
-	}
+    private void closeFolder(Folder f) {
+        if (f != null) {
+            f.close();
+        }
+    }
 
-	/*
+    /*
 	 * If the folder is a "special" folder we need to see if it exists on the
 	 * remote server. It if does not exist we'll try to create it. If we can't
 	 * create we'll abort. This will happen on every single Pop3 folder as
 	 * designed and on Imap folders during error conditions. This allows us to
 	 * treat Pop3 and Imap the same in this code.
 	 */
-	private boolean verifyOrCreateRemoteSpecialFolder(final Account account,
-			final String folder, final Folder remoteFolder,
-			final MessagingListener listener) throws MessagingException {
-		if (folder.equals(account.getTrashFolderName())
-				|| folder.equals(account.getSentFolderName())
-				|| folder.equals(account.getDraftsFolderName())) {
-			if (!remoteFolder.exists()) {
-				if (!remoteFolder.create(FolderType.HOLDS_MESSAGES)) {
-					for (MessagingListener l : getListeners(listener)) {
-						l.synchronizeMailboxFinished(account, folder, 0, 0);
-					}
-					if (RakuPhotoMail.DEBUG)
-						Log.i(RakuPhotoMail.LOG_TAG,
-								"Done synchronizing folder " + folder);
+    private boolean verifyOrCreateRemoteSpecialFolder(final Account account,
+                                                      final String folder, final Folder remoteFolder,
+                                                      final MessagingListener listener) throws MessagingException {
+        if (folder.equals(account.getTrashFolderName())
+                || folder.equals(account.getSentFolderName())
+                || folder.equals(account.getDraftsFolderName())) {
+            if (!remoteFolder.exists()) {
+                if (!remoteFolder.create(FolderType.HOLDS_MESSAGES)) {
+                    for (MessagingListener l : getListeners(listener)) {
+                        l.synchronizeMailboxFinished(account, folder, 0, 0);
+                    }
+                    if (RakuPhotoMail.DEBUG)
+                        Log.i(RakuPhotoMail.LOG_TAG,
+                                "Done synchronizing folder " + folder);
 
-					return false;
-				}
-			}
-		}
-		return true;
-	}
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 
-	private int setLocalUnreadCountToRemote(LocalFolder localFolder,
-			Folder remoteFolder, int newMessageCount) throws MessagingException {
-		int remoteUnreadMessageCount = remoteFolder.getUnreadMessageCount();
-		if (remoteUnreadMessageCount != -1) {
-			localFolder.setUnreadMessageCount(remoteUnreadMessageCount);
-		} else {
-			int unreadCount = 0;
-			Message[] messages = localFolder.getMessages(null, false);
-			for (Message message : messages) {
-				if (!message.isSet(Flag.SEEN) && !message.isSet(Flag.DELETED)) {
-					unreadCount++;
-				}
-			}
-			localFolder.setUnreadMessageCount(unreadCount);
-		}
-		return localFolder.getUnreadMessageCount();
-	}
+    private int setLocalUnreadCountToRemote(LocalFolder localFolder,
+                                            Folder remoteFolder, int newMessageCount) throws MessagingException {
+        int remoteUnreadMessageCount = remoteFolder.getUnreadMessageCount();
+        if (remoteUnreadMessageCount != -1) {
+            localFolder.setUnreadMessageCount(remoteUnreadMessageCount);
+        } else {
+            int unreadCount = 0;
+            Message[] messages = localFolder.getMessages(null, false);
+            for (Message message : messages) {
+                if (!message.isSet(Flag.SEEN) && !message.isSet(Flag.DELETED)) {
+                    unreadCount++;
+                }
+            }
+            localFolder.setUnreadMessageCount(unreadCount);
+        }
+        return localFolder.getUnreadMessageCount();
+    }
 
-	private void setLocalFlaggedCountToRemote(LocalFolder localFolder,
-			Folder remoteFolder) throws MessagingException {
-		int remoteFlaggedMessageCount = remoteFolder.getFlaggedMessageCount();
-		if (remoteFlaggedMessageCount != -1) {
-			localFolder.setFlaggedMessageCount(remoteFlaggedMessageCount);
-		} else {
-			int flaggedCount = 0;
-			Message[] messages = localFolder.getMessages(null, false);
-			for (Message message : messages) {
-				if (message.isSet(Flag.FLAGGED) && !message.isSet(Flag.DELETED)) {
-					flaggedCount++;
-				}
-			}
-			localFolder.setFlaggedMessageCount(flaggedCount);
-		}
-	}
+    private void setLocalFlaggedCountToRemote(LocalFolder localFolder,
+                                              Folder remoteFolder) throws MessagingException {
+        int remoteFlaggedMessageCount = remoteFolder.getFlaggedMessageCount();
+        if (remoteFlaggedMessageCount != -1) {
+            localFolder.setFlaggedMessageCount(remoteFlaggedMessageCount);
+        } else {
+            int flaggedCount = 0;
+            Message[] messages = localFolder.getMessages(null, false);
+            for (Message message : messages) {
+                if (message.isSet(Flag.FLAGGED) && !message.isSet(Flag.DELETED)) {
+                    flaggedCount++;
+                }
+            }
+            localFolder.setFlaggedMessageCount(flaggedCount);
+        }
+    }
 
-	public int downloadMessages(final Account account,
-			final Folder remoteFolder, final LocalFolder localFolder,
-			List<Message> inputMessages) throws MessagingException {
-		return downloadMessages(account, remoteFolder, localFolder,
-				inputMessages, false);
-	}
+    public int downloadMessages(final Account account,
+                                final Folder remoteFolder, final LocalFolder localFolder,
+                                List<Message> inputMessages) throws MessagingException {
+        return downloadMessages(account, remoteFolder, localFolder,
+                inputMessages, false);
+    }
 
-	/**
-	 * Fetches the messages described by inputMessages from the remote store and
-	 * writes them to local storage.
-	 * 
-	 * @param account
-	 *            The account the remote store belongs to.
-	 * @param remoteFolder
-	 *            The remote folder to download messages from.
-	 * @param localFolder
-	 *            The {@link LocalFolder} instance corresponding to the remote
-	 *            folder.
-	 * @param inputMessages
-	 *            A list of messages objects that store the UIDs of which
-	 *            messages to download.
-	 * @param flagSyncOnly
-	 *            Only flags will be fetched from the remote store if this is
-	 *            {@code true}.
-	 * @return The number of downloaded messages that are not flagged as
-	 *         {@link Flag#SEEN}.
-	 * @throws MessagingException
-	 */
-	private int downloadMessages(final Account account,
-			final Folder remoteFolder, final LocalFolder localFolder,
-			List<Message> inputMessages, boolean flagSyncOnly)
-			throws MessagingException {
+    /**
+     * Fetches the messages described by inputMessages from the remote store and
+     * writes them to local storage.
+     *
+     * @param account       The account the remote store belongs to.
+     * @param remoteFolder  The remote folder to download messages from.
+     * @param localFolder   The {@link LocalFolder} instance corresponding to the remote
+     *                      folder.
+     * @param inputMessages A list of messages objects that store the UIDs of which
+     *                      messages to download.
+     * @param flagSyncOnly  Only flags will be fetched from the remote store if this is
+     *                      {@code true}.
+     * @return The number of downloaded messages that are not flagged as
+     *         {@link Flag#SEEN}.
+     * @throws MessagingException
+     */
+    private int downloadMessages(final Account account,
+                                 final Folder remoteFolder, final LocalFolder localFolder,
+                                 List<Message> inputMessages, boolean flagSyncOnly)
+            throws MessagingException {
 
-		final Date earliestDate = account.getEarliestPollDate();
-		Date downloadStarted = new Date(); // now
+        final Date earliestDate = account.getEarliestPollDate();
+        Date downloadStarted = new Date(); // now
 
-		if (earliestDate != null) {
-			if (RakuPhotoMail.DEBUG) {
-				Log.d(RakuPhotoMail.LOG_TAG, "Only syncing messages after "
-						+ earliestDate);
-			}
-		}
-		final String folder = remoteFolder.getName();
+        if (earliestDate != null) {
+            if (RakuPhotoMail.DEBUG) {
+                Log.d(RakuPhotoMail.LOG_TAG, "Only syncing messages after "
+                        + earliestDate);
+            }
+        }
+        final String folder = remoteFolder.getName();
 
-		int unreadBeforeStart = 0;
-		try {
-			AccountStats stats = account.getStats(mApplication);
-			unreadBeforeStart = stats.unreadMessageCount;
+        int unreadBeforeStart = 0;
+        try {
+            AccountStats stats = account.getStats(mApplication);
+            unreadBeforeStart = stats.unreadMessageCount;
 
-		} catch (MessagingException e) {
-			Log.e(RakuPhotoMail.LOG_TAG,
-					"Unable to getUnreadMessageCount for account: " + account,
-					e);
-		}
+        } catch (MessagingException e) {
+            Log.e(RakuPhotoMail.LOG_TAG,
+                    "Unable to getUnreadMessageCount for account: " + account,
+                    e);
+        }
 
-		ArrayList<Message> syncFlagMessages = new ArrayList<Message>();
-		List<Message> unsyncedMessages = new ArrayList<Message>();
-		final AtomicInteger newMessages = new AtomicInteger(0);
+        ArrayList<Message> syncFlagMessages = new ArrayList<Message>();
+        List<Message> unsyncedMessages = new ArrayList<Message>();
+        final AtomicInteger newMessages = new AtomicInteger(0);
 
-		List<Message> messages = new ArrayList<Message>(inputMessages);
+        List<Message> messages = new ArrayList<Message>(inputMessages);
 
-		for (Message message : messages) {
-			evaluateMessageForDownload(message, folder, localFolder,
-					remoteFolder, account, unsyncedMessages, syncFlagMessages,
-					flagSyncOnly);
-		}
+        for (Message message : messages) {
+            evaluateMessageForDownload(message, folder, localFolder,
+                    remoteFolder, account, unsyncedMessages, syncFlagMessages,
+                    flagSyncOnly);
+        }
 
-		final AtomicInteger progress = new AtomicInteger(0);
-		final int todo = unsyncedMessages.size() + syncFlagMessages.size();
-		for (MessagingListener l : getListeners()) {
-			l.synchronizeMailboxProgress(account, folder, progress.get(), todo);
-		}
+        final AtomicInteger progress = new AtomicInteger(0);
+        final int todo = unsyncedMessages.size() + syncFlagMessages.size();
+        for (MessagingListener l : getListeners()) {
+            l.synchronizeMailboxProgress(account, folder, progress.get(), todo);
+        }
 
-		if (RakuPhotoMail.DEBUG)
-			Log.d(RakuPhotoMail.LOG_TAG,
-					"SYNC: Have " + unsyncedMessages.size()
-							+ " unsynced messages");
+        if (RakuPhotoMail.DEBUG)
+            Log.d(RakuPhotoMail.LOG_TAG,
+                    "SYNC: Have " + unsyncedMessages.size()
+                            + " unsynced messages");
 
-		messages.clear();
-		final ArrayList<Message> largeMessages = new ArrayList<Message>();
-		final ArrayList<Message> smallMessages = new ArrayList<Message>();
-		if (unsyncedMessages.size() > 0) {
+        messages.clear();
+        final ArrayList<Message> largeMessages = new ArrayList<Message>();
+        final ArrayList<Message> smallMessages = new ArrayList<Message>();
+        if (unsyncedMessages.size() > 0) {
 
-			/*
+            /*
 			 * Reverse the order of the messages. Depending on the server this
 			 * may get us fetch results for newest to oldest. If not, no harm
 			 * done.
 			 */
-			Collections.reverse(unsyncedMessages);
-			int visibleLimit = localFolder.getVisibleLimit();
-			int listSize = unsyncedMessages.size();
+            Collections.reverse(unsyncedMessages);
+            int visibleLimit = localFolder.getVisibleLimit();
+            int listSize = unsyncedMessages.size();
 
-			if ((visibleLimit > 0) && (listSize > visibleLimit)) {
-				unsyncedMessages = unsyncedMessages.subList(listSize
-						- visibleLimit, listSize);
-			}
+            if ((visibleLimit > 0) && (listSize > visibleLimit)) {
+                unsyncedMessages = unsyncedMessages.subList(listSize
+                        - visibleLimit, listSize);
+            }
 
-			FetchProfile fp = new FetchProfile();
-			if (remoteFolder.supportsFetchingFlags()) {
-				fp.add(FetchProfile.Item.FLAGS);
-			}
-			fp.add(FetchProfile.Item.ENVELOPE);
+            FetchProfile fp = new FetchProfile();
+            if (remoteFolder.supportsFetchingFlags()) {
+                fp.add(FetchProfile.Item.FLAGS);
+            }
+            fp.add(FetchProfile.Item.ENVELOPE);
 
-			if (RakuPhotoMail.DEBUG)
-				Log.d(RakuPhotoMail.LOG_TAG, "SYNC: About to fetch "
-						+ unsyncedMessages.size()
-						+ " unsynced messages for folder " + folder);
+            if (RakuPhotoMail.DEBUG)
+                Log.d(RakuPhotoMail.LOG_TAG, "SYNC: About to fetch "
+                        + unsyncedMessages.size()
+                        + " unsynced messages for folder " + folder);
 
-			fetchUnsyncedMessages(account, remoteFolder, localFolder,
-					unsyncedMessages, smallMessages, largeMessages, progress,
-					todo, fp);
+            fetchUnsyncedMessages(account, remoteFolder, localFolder,
+                    unsyncedMessages, smallMessages, largeMessages, progress,
+                    todo, fp);
 
-			// If a message didn't exist, messageFinished won't be called, but
-			// we shouldn't try again
-			// If we got here, nothing failed
-			for (Message message : unsyncedMessages) {
-				String newPushState = remoteFolder.getNewPushState(
-						localFolder.getPushState(), message);
-				if (newPushState != null) {
-					localFolder.setPushState(newPushState);
-				}
-			}
-			if (RakuPhotoMail.DEBUG) {
-				Log.d(RakuPhotoMail.LOG_TAG,
-						"SYNC: Synced unsynced messages for folder " + folder);
-			}
+            // If a message didn't exist, messageFinished won't be called, but
+            // we shouldn't try again
+            // If we got here, nothing failed
+            for (Message message : unsyncedMessages) {
+                String newPushState = remoteFolder.getNewPushState(
+                        localFolder.getPushState(), message);
+                if (newPushState != null) {
+                    localFolder.setPushState(newPushState);
+                }
+            }
+            if (RakuPhotoMail.DEBUG) {
+                Log.d(RakuPhotoMail.LOG_TAG,
+                        "SYNC: Synced unsynced messages for folder " + folder);
+            }
 
-		}
+        }
 
-		if (RakuPhotoMail.DEBUG)
-			Log.d(RakuPhotoMail.LOG_TAG, "SYNC: Have " + largeMessages.size()
-					+ " large messages and " + smallMessages.size()
-					+ " small messages out of " + unsyncedMessages.size()
-					+ " unsynced messages");
+        if (RakuPhotoMail.DEBUG)
+            Log.d(RakuPhotoMail.LOG_TAG, "SYNC: Have " + largeMessages.size()
+                    + " large messages and " + smallMessages.size()
+                    + " small messages out of " + unsyncedMessages.size()
+                    + " unsynced messages");
 
-		unsyncedMessages.clear();
+        unsyncedMessages.clear();
 
-		/*
+        /*
 		 * Grab the content of the small messages first. This is going to be
 		 * very fast and at very worst will be a single up of a few bytes and a
 		 * single download of 625k.
 		 */
-		FetchProfile fp = new FetchProfile();
-		fp.add(FetchProfile.Item.BODY);
-		// fp.add(FetchProfile.Item.FLAGS);
-		// fp.add(FetchProfile.Item.ENVELOPE);
+        FetchProfile fp = new FetchProfile();
+        fp.add(FetchProfile.Item.BODY);
+        // fp.add(FetchProfile.Item.FLAGS);
+        // fp.add(FetchProfile.Item.ENVELOPE);
 
-		downloadSmallMessages(account, remoteFolder, localFolder,
-				smallMessages, progress, unreadBeforeStart, newMessages, todo,
-				fp);
-		smallMessages.clear();
+        downloadSmallMessages(account, remoteFolder, localFolder,
+                smallMessages, progress, unreadBeforeStart, newMessages, todo,
+                fp);
+        smallMessages.clear();
 
-		/*
+        /*
 		 * Now do the large messages that require more round trips.
 		 */
-		fp.clear();
-		fp.add(FetchProfile.Item.STRUCTURE);
-		downloadLargeMessages(account, remoteFolder, localFolder,
-				largeMessages, progress, unreadBeforeStart, newMessages, todo,
-				fp);
-		largeMessages.clear();
+        fp.clear();
+        fp.add(FetchProfile.Item.STRUCTURE);
+        downloadLargeMessages(account, remoteFolder, localFolder,
+                largeMessages, progress, unreadBeforeStart, newMessages, todo,
+                fp);
+        largeMessages.clear();
 
-		/*
+        /*
 		 * Refresh the flags for any messages in the local store that we didn't
 		 * just download.
 		 */
 
-		refreshLocalMessageFlags(account, remoteFolder, localFolder,
-				syncFlagMessages, progress, todo);
+        refreshLocalMessageFlags(account, remoteFolder, localFolder,
+                syncFlagMessages, progress, todo);
 
-		if (RakuPhotoMail.DEBUG)
-			Log.d(RakuPhotoMail.LOG_TAG,
-					"SYNC: Synced remote messages for folder " + folder + ", "
-							+ newMessages.get() + " new messages");
+        if (RakuPhotoMail.DEBUG)
+            Log.d(RakuPhotoMail.LOG_TAG,
+                    "SYNC: Synced remote messages for folder " + folder + ", "
+                            + newMessages.get() + " new messages");
 
-		localFolder.purgeToVisibleLimit(new MessageRemovalListener() {
-			@Override
-			public void messageRemoved(Message message) {
-				for (MessagingListener l : getListeners()) {
-					l.synchronizeMailboxRemovedMessage(account, folder, message);
-				}
-			}
+        localFolder.purgeToVisibleLimit(new MessageRemovalListener() {
+            @Override
+            public void messageRemoved(Message message) {
+                for (MessagingListener l : getListeners()) {
+                    l.synchronizeMailboxRemovedMessage(account, folder, message);
+                }
+            }
 
-		});
+        });
 
-		// If the oldest message seen on this sync is newer than
-		// the oldest message seen on the previous sync, then
-		// we want to move our high-water mark forward
-		// this is all here just for pop which only syncs inbox
-		// this would be a little wrong for IMAP (we'd want a folder-level pref,
-		// not an account level pref.)
-		// fortunately, we just don't care.
-		Long oldestMessageTime = localFolder.getOldestMessageDate();
+        // If the oldest message seen on this sync is newer than
+        // the oldest message seen on the previous sync, then
+        // we want to move our high-water mark forward
+        // this is all here just for pop which only syncs inbox
+        // this would be a little wrong for IMAP (we'd want a folder-level pref,
+        // not an account level pref.)
+        // fortunately, we just don't care.
+        Long oldestMessageTime = localFolder.getOldestMessageDate();
 
-		if (oldestMessageTime != null) {
-			Date oldestExtantMessage = new Date(oldestMessageTime);
-			if (oldestExtantMessage.before(downloadStarted)
-					&& oldestExtantMessage.after(new Date(account
-							.getLatestOldMessageSeenTime()))) {
-				account.setLatestOldMessageSeenTime(oldestExtantMessage
-						.getTime());
-				account.save(Preferences.getPreferences(mApplication
-						.getApplicationContext()));
-			}
+        if (oldestMessageTime != null) {
+            Date oldestExtantMessage = new Date(oldestMessageTime);
+            if (oldestExtantMessage.before(downloadStarted)
+                    && oldestExtantMessage.after(new Date(account
+                    .getLatestOldMessageSeenTime()))) {
+                account.setLatestOldMessageSeenTime(oldestExtantMessage
+                        .getTime());
+                account.save(Preferences.getPreferences(mApplication
+                        .getApplicationContext()));
+            }
 
-		}
-		return newMessages.get();
-	}
+        }
+        return newMessages.get();
+    }
 
-	private void evaluateMessageForDownload(final Message message,
-			final String folder, final LocalFolder localFolder,
-			final Folder remoteFolder, final Account account,
-			final List<Message> unsyncedMessages,
-			final ArrayList<Message> syncFlagMessages, boolean flagSyncOnly)
-			throws MessagingException {
-		if (message.isSet(Flag.DELETED)) {
-			syncFlagMessages.add(message);
-			return;
-		} else if (isMessageSuppressed(account, folder, message)) {
-			return;
-		}
+    private void evaluateMessageForDownload(final Message message,
+                                            final String folder, final LocalFolder localFolder,
+                                            final Folder remoteFolder, final Account account,
+                                            final List<Message> unsyncedMessages,
+                                            final ArrayList<Message> syncFlagMessages, boolean flagSyncOnly)
+            throws MessagingException {
+        if (message.isSet(Flag.DELETED)) {
+            syncFlagMessages.add(message);
+            return;
+        } else if (isMessageSuppressed(account, folder, message)) {
+            return;
+        }
 
-		Message localMessage = localFolder.getMessage(message.getUid());
+        Message localMessage = localFolder.getMessage(message.getUid());
 
-		if (localMessage == null) {
-			if (!flagSyncOnly) {
-				if (!message.isSet(Flag.X_DOWNLOADED_FULL)
-						&& !message.isSet(Flag.X_DOWNLOADED_PARTIAL)) {
-					if (RakuPhotoMail.DEBUG)
-						Log.v(RakuPhotoMail.LOG_TAG, "Message with uid "
-								+ message.getUid()
-								+ " has not yet been downloaded");
+        if (localMessage == null) {
+            if (!flagSyncOnly) {
+                if (!message.isSet(Flag.X_DOWNLOADED_FULL)
+                        && !message.isSet(Flag.X_DOWNLOADED_PARTIAL)) {
+                    if (RakuPhotoMail.DEBUG)
+                        Log.v(RakuPhotoMail.LOG_TAG, "Message with uid "
+                                + message.getUid()
+                                + " has not yet been downloaded");
 
-					unsyncedMessages.add(message);
-				} else {
-					if (RakuPhotoMail.DEBUG)
-						Log.v(RakuPhotoMail.LOG_TAG, "Message with uid "
-								+ message.getUid()
-								+ " is partially or fully downloaded");
+                    unsyncedMessages.add(message);
+                } else {
+                    if (RakuPhotoMail.DEBUG)
+                        Log.v(RakuPhotoMail.LOG_TAG, "Message with uid "
+                                + message.getUid()
+                                + " is partially or fully downloaded");
 
-					// Store the updated message locally
-					localFolder.appendMessages(new Message[] { message });
+                    // Store the updated message locally
+                    localFolder.appendMessages(new Message[]{message});
 
-					localMessage = localFolder.getMessage(message.getUid());
+                    localMessage = localFolder.getMessage(message.getUid());
 
-					localMessage.setFlag(Flag.X_DOWNLOADED_FULL,
-							message.isSet(Flag.X_DOWNLOADED_FULL));
-					localMessage.setFlag(Flag.X_DOWNLOADED_PARTIAL,
-							message.isSet(Flag.X_DOWNLOADED_PARTIAL));
+                    localMessage.setFlag(Flag.X_DOWNLOADED_FULL,
+                            message.isSet(Flag.X_DOWNLOADED_FULL));
+                    localMessage.setFlag(Flag.X_DOWNLOADED_PARTIAL,
+                            message.isSet(Flag.X_DOWNLOADED_PARTIAL));
 
-					for (MessagingListener l : getListeners()) {
-						l.synchronizeMailboxAddOrUpdateMessage(account, folder,
-								localMessage);
-						if (!localMessage.isSet(Flag.SEEN)) {
-							l.synchronizeMailboxNewMessage(account, folder,
-									localMessage);
-						}
-					}
-				}
-			}
-		} else if (!localMessage.isSet(Flag.DELETED)) {
-			if (RakuPhotoMail.DEBUG)
-				Log.v(RakuPhotoMail.LOG_TAG,
-						"Message with uid " + message.getUid()
-								+ " is present in the local store");
+                    for (MessagingListener l : getListeners()) {
+                        l.synchronizeMailboxAddOrUpdateMessage(account, folder,
+                                localMessage);
+                        if (!localMessage.isSet(Flag.SEEN)) {
+                            l.synchronizeMailboxNewMessage(account, folder,
+                                    localMessage);
+                        }
+                    }
+                }
+            }
+        } else if (!localMessage.isSet(Flag.DELETED)) {
+            if (RakuPhotoMail.DEBUG)
+                Log.v(RakuPhotoMail.LOG_TAG,
+                        "Message with uid " + message.getUid()
+                                + " is present in the local store");
 
-			if (!localMessage.isSet(Flag.X_DOWNLOADED_FULL)
-					&& !localMessage.isSet(Flag.X_DOWNLOADED_PARTIAL)) {
-				if (RakuPhotoMail.DEBUG)
-					Log.v(RakuPhotoMail.LOG_TAG,
-							"Message with uid "
-									+ message.getUid()
-									+ " is not downloaded, even partially; trying again");
+            if (!localMessage.isSet(Flag.X_DOWNLOADED_FULL)
+                    && !localMessage.isSet(Flag.X_DOWNLOADED_PARTIAL)) {
+                if (RakuPhotoMail.DEBUG)
+                    Log.v(RakuPhotoMail.LOG_TAG,
+                            "Message with uid "
+                                    + message.getUid()
+                                    + " is not downloaded, even partially; trying again");
 
-				unsyncedMessages.add(message);
-			} else {
-				String newPushState = remoteFolder.getNewPushState(
-						localFolder.getPushState(), message);
-				if (newPushState != null) {
-					localFolder.setPushState(newPushState);
-				}
-				syncFlagMessages.add(message);
-			}
-		}
-	}
+                unsyncedMessages.add(message);
+            } else {
+                String newPushState = remoteFolder.getNewPushState(
+                        localFolder.getPushState(), message);
+                if (newPushState != null) {
+                    localFolder.setPushState(newPushState);
+                }
+                syncFlagMessages.add(message);
+            }
+        }
+    }
 
-	private void fetchUnsyncedMessages(final Account account,
-			final Folder remoteFolder, final LocalFolder localFolder,
-			List<Message> unsyncedMessages,
-			final ArrayList<Message> smallMessages,
-			final ArrayList<Message> largeMessages,
-			final AtomicInteger progress, final int todo, FetchProfile fp)
-			throws MessagingException {
-		final String folder = remoteFolder.getName();
+    private void fetchUnsyncedMessages(final Account account,
+                                       final Folder remoteFolder, final LocalFolder localFolder,
+                                       List<Message> unsyncedMessages,
+                                       final ArrayList<Message> smallMessages,
+                                       final ArrayList<Message> largeMessages,
+                                       final AtomicInteger progress, final int todo, FetchProfile fp)
+            throws MessagingException {
+        final String folder = remoteFolder.getName();
 
-		final Date earliestDate = account.getEarliestPollDate();
+        final Date earliestDate = account.getEarliestPollDate();
 
-		/*
+        /*
 		 * Messages to be batch written
 		 */
-		final List<Message> chunk = new ArrayList<Message>(UNSYNC_CHUNK_SIZE);
+        final List<Message> chunk = new ArrayList<Message>(UNSYNC_CHUNK_SIZE);
 
-		remoteFolder.fetch(unsyncedMessages.toArray(EMPTY_MESSAGE_ARRAY), fp,
-				new MessageRetrievalListener() {
-					@Override
-					public void messageFinished(Message message, int number,
-							int ofTotal) {
-						try {
-							String newPushState = remoteFolder.getNewPushState(
-									localFolder.getPushState(), message);
-							if (newPushState != null) {
-								localFolder.setPushState(newPushState);
-							}
-							if (message.isSet(Flag.DELETED)
-									|| message.olderThan(earliestDate)) {
+        remoteFolder.fetch(unsyncedMessages.toArray(EMPTY_MESSAGE_ARRAY), fp,
+                new MessageRetrievalListener() {
+                    @Override
+                    public void messageFinished(Message message, int number,
+                                                int ofTotal) {
+                        try {
+                            String newPushState = remoteFolder.getNewPushState(
+                                    localFolder.getPushState(), message);
+                            if (newPushState != null) {
+                                localFolder.setPushState(newPushState);
+                            }
+                            if (message.isSet(Flag.DELETED)
+                                    || message.olderThan(earliestDate)) {
 
-								if (RakuPhotoMail.DEBUG) {
-									if (message.isSet(Flag.DELETED)) {
-										Log.v(RakuPhotoMail.LOG_TAG,
-												"Newly downloaded message "
-														+ account
-														+ ":"
-														+ folder
-														+ ":"
-														+ message.getUid()
-														+ " was marked deleted on server, skipping");
-									} else {
-										Log.d(RakuPhotoMail.LOG_TAG,
-												"Newly downloaded message "
-														+ message.getUid()
-														+ " is older than "
-														+ earliestDate
-														+ ", skipping");
-									}
-								}
-								progress.incrementAndGet();
-								for (MessagingListener l : getListeners()) {
-									l.synchronizeMailboxProgress(account,
-											folder, progress.get(), todo);
-								}
-								return;
-							}
+                                if (RakuPhotoMail.DEBUG) {
+                                    if (message.isSet(Flag.DELETED)) {
+                                        Log.v(RakuPhotoMail.LOG_TAG,
+                                                "Newly downloaded message "
+                                                        + account
+                                                        + ":"
+                                                        + folder
+                                                        + ":"
+                                                        + message.getUid()
+                                                        + " was marked deleted on server, skipping");
+                                    } else {
+                                        Log.d(RakuPhotoMail.LOG_TAG,
+                                                "Newly downloaded message "
+                                                        + message.getUid()
+                                                        + " is older than "
+                                                        + earliestDate
+                                                        + ", skipping");
+                                    }
+                                }
+                                progress.incrementAndGet();
+                                for (MessagingListener l : getListeners()) {
+                                    l.synchronizeMailboxProgress(account,
+                                            folder, progress.get(), todo);
+                                }
+                                return;
+                            }
 
-							if (message.getSize() > account
-									.getMaximumAutoDownloadMessageSize()) {
-								largeMessages.add(message);
-							} else {
-								smallMessages.add(message);
-							}
+                            if (message.getSize() > account
+                                    .getMaximumAutoDownloadMessageSize()) {
+                                largeMessages.add(message);
+                            } else {
+                                smallMessages.add(message);
+                            }
 
-							// And include it in the view
-							if (message.getSubject() != null
-									&& message.getFrom() != null) {
-								/*
+                            // And include it in the view
+                            if (message.getSubject() != null
+                                    && message.getFrom() != null) {
+                                /*
 								 * We check to make sure that we got something
 								 * worth showing (subject and from) because some
 								 * protocols (POP) may not be able to give us
 								 * headers for ENVELOPE, only size.
 								 */
-								if (!isMessageSuppressed(account, folder,
-										message)) {
-									// keep message for delayed storing
-									chunk.add(message);
+                                if (!isMessageSuppressed(account, folder,
+                                        message)) {
+                                    // keep message for delayed storing
+                                    chunk.add(message);
 
-									if (chunk.size() >= UNSYNC_CHUNK_SIZE) {
-										writeUnsyncedMessages(chunk,
-												localFolder, account, folder);
-										chunk.clear();
-									}
-								}
-							}
-						} catch (Exception e) {
-							Log.e(RakuPhotoMail.LOG_TAG,
-									"Error while storing downloaded message.",
-									e);
-							addErrorMessage(account, null, e);
-						}
-					}
+                                    if (chunk.size() >= UNSYNC_CHUNK_SIZE) {
+                                        writeUnsyncedMessages(chunk,
+                                                localFolder, account, folder);
+                                        chunk.clear();
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            Log.e(RakuPhotoMail.LOG_TAG,
+                                    "Error while storing downloaded message.",
+                                    e);
+                            addErrorMessage(account, null, e);
+                        }
+                    }
 
-					@Override
-					public void messageStarted(String uid, int number,
-							int ofTotal) {
-					}
+                    @Override
+                    public void messageStarted(String uid, int number,
+                                               int ofTotal) {
+                    }
 
-					@Override
-					public void messagesFinished(int total) {
-						// FIXME this method is almost never invoked by various
-						// Stores!
-						// Don't rely on it unless fixed!!
-					}
+                    @Override
+                    public void messagesFinished(int total) {
+                        // FIXME this method is almost never invoked by various
+                        // Stores!
+                        // Don't rely on it unless fixed!!
+                    }
 
-				});
-		if (chunk.size() > 0) {
-			writeUnsyncedMessages(chunk, localFolder, account, folder);
-			chunk.clear();
-		}
-	}
+                });
+        if (chunk.size() > 0) {
+            writeUnsyncedMessages(chunk, localFolder, account, folder);
+            chunk.clear();
+        }
+    }
 
-	/**
-	 * Actual storing of messages
-	 * <p/>
-	 * <br>
-	 * FIXME: <strong>This method should really be moved in the above
-	 * MessageRetrievalListener once
-	 * {@link MessageRetrievalListener#messagesFinished(int)} is properly
-	 * invoked by various stores</strong>
-	 * 
-	 * @param messages
-	 *            Never <code>null</code>.
-	 * @param localFolder
-	 * @param account
-	 * @param folder
-	 */
-	private void writeUnsyncedMessages(final List<Message> messages,
-			final LocalFolder localFolder, final Account account,
-			final String folder) {
-		if (RakuPhotoMail.DEBUG) {
-			Log.v(RakuPhotoMail.LOG_TAG,
-					"Batch writing " + Integer.toString(messages.size())
-							+ " messages");
-		}
-		try {
-			// Store the new message locally
-			localFolder.appendMessages(messages.toArray(new Message[messages
-					.size()]));
+    /**
+     * Actual storing of messages
+     * <p/>
+     * <br>
+     * FIXME: <strong>This method should really be moved in the above
+     * MessageRetrievalListener once
+     * {@link MessageRetrievalListener#messagesFinished(int)} is properly
+     * invoked by various stores</strong>
+     *
+     * @param messages    Never <code>null</code>.
+     * @param localFolder
+     * @param account
+     * @param folder
+     */
+    private void writeUnsyncedMessages(final List<Message> messages,
+                                       final LocalFolder localFolder, final Account account,
+                                       final String folder) {
+        if (RakuPhotoMail.DEBUG) {
+            Log.v(RakuPhotoMail.LOG_TAG,
+                    "Batch writing " + Integer.toString(messages.size())
+                            + " messages");
+        }
+        try {
+            // Store the new message locally
+            localFolder.appendMessages(messages.toArray(new Message[messages
+                    .size()]));
 
-			for (final Message message : messages) {
-				final Message localMessage = localFolder.getMessage(message
-						.getUid());
-				syncFlags(localMessage, message);
-				if (RakuPhotoMail.DEBUG)
-					Log.v(RakuPhotoMail.LOG_TAG,
-							"About to notify listeners that we got a new unsynced message "
-									+ account + ":" + folder + ":"
-									+ message.getUid());
-				for (final MessagingListener l : getListeners()) {
-					l.synchronizeMailboxAddOrUpdateMessage(account, folder,
-							localMessage);
-				}
-			}
-		} catch (final Exception e) {
-			Log.e(RakuPhotoMail.LOG_TAG,
-					"Error while storing downloaded message.", e);
-			addErrorMessage(account, null, e);
-		}
-	}
+            for (final Message message : messages) {
+                final Message localMessage = localFolder.getMessage(message
+                        .getUid());
+                syncFlags(localMessage, message);
+                if (RakuPhotoMail.DEBUG)
+                    Log.v(RakuPhotoMail.LOG_TAG,
+                            "About to notify listeners that we got a new unsynced message "
+                                    + account + ":" + folder + ":"
+                                    + message.getUid());
+                for (final MessagingListener l : getListeners()) {
+                    l.synchronizeMailboxAddOrUpdateMessage(account, folder,
+                            localMessage);
+                }
+            }
+        } catch (final Exception e) {
+            Log.e(RakuPhotoMail.LOG_TAG,
+                    "Error while storing downloaded message.", e);
+            addErrorMessage(account, null, e);
+        }
+    }
 
-	private boolean shouldImportMessage(final Account account,
-			final String folder, final Message message,
-			final AtomicInteger progress, final Date earliestDate) {
+    private boolean shouldImportMessage(final Account account,
+                                        final String folder, final Message message,
+                                        final AtomicInteger progress, final Date earliestDate) {
 
-		if (isMessageSuppressed(account, folder, message)) {
-			if (RakuPhotoMail.DEBUG) {
-				Log.d(RakuPhotoMail.LOG_TAG,
-						"Message "
-								+ message.getUid()
-								+ " was suppressed "
-								+ "but just downloaded. "
-								+ "The race condition means we wasted some bandwidth. Oh well.");
-			}
-			return false;
+        if (isMessageSuppressed(account, folder, message)) {
+            if (RakuPhotoMail.DEBUG) {
+                Log.d(RakuPhotoMail.LOG_TAG,
+                        "Message "
+                                + message.getUid()
+                                + " was suppressed "
+                                + "but just downloaded. "
+                                + "The race condition means we wasted some bandwidth. Oh well.");
+            }
+            return false;
 
-		}
-		if (message.olderThan(earliestDate)) {
-			if (RakuPhotoMail.DEBUG) {
-				Log.d(RakuPhotoMail.LOG_TAG, "Message " + message.getUid()
-						+ " is older than " + earliestDate
-						+ ", hence not saving");
-			}
-			return false;
-		}
-		return true;
-	}
+        }
+        if (message.olderThan(earliestDate)) {
+            if (RakuPhotoMail.DEBUG) {
+                Log.d(RakuPhotoMail.LOG_TAG, "Message " + message.getUid()
+                        + " is older than " + earliestDate
+                        + ", hence not saving");
+            }
+            return false;
+        }
+        return true;
+    }
 
-	private void downloadSmallMessages(final Account account,
-			final Folder remoteFolder, final LocalFolder localFolder,
-			ArrayList<Message> smallMessages, final AtomicInteger progress,
-			final int unreadBeforeStart, final AtomicInteger newMessages,
-			final int todo, FetchProfile fp) throws MessagingException {
-		final String folder = remoteFolder.getName();
+    private void downloadSmallMessages(final Account account,
+                                       final Folder remoteFolder, final LocalFolder localFolder,
+                                       ArrayList<Message> smallMessages, final AtomicInteger progress,
+                                       final int unreadBeforeStart, final AtomicInteger newMessages,
+                                       final int todo, FetchProfile fp) throws MessagingException {
+        final String folder = remoteFolder.getName();
 
-		final Date earliestDate = account.getEarliestPollDate();
+        final Date earliestDate = account.getEarliestPollDate();
 
-		if (RakuPhotoMail.DEBUG)
-			Log.d(RakuPhotoMail.LOG_TAG,
-					"SYNC: Fetching small messages for folder " + folder);
+        if (RakuPhotoMail.DEBUG)
+            Log.d(RakuPhotoMail.LOG_TAG,
+                    "SYNC: Fetching small messages for folder " + folder);
 
-		remoteFolder.fetch(
-				smallMessages.toArray(new Message[smallMessages.size()]), fp,
-				new MessageRetrievalListener() {
-					@Override
-					public void messageFinished(final Message message,
-							int number, int ofTotal) {
-						try {
+        remoteFolder.fetch(
+                smallMessages.toArray(new Message[smallMessages.size()]), fp,
+                new MessageRetrievalListener() {
+                    @Override
+                    public void messageFinished(final Message message,
+                                                int number, int ofTotal) {
+                        try {
 
-							if (!shouldImportMessage(account, folder, message,
-									progress, earliestDate)) {
-								progress.incrementAndGet();
+                            if (!shouldImportMessage(account, folder, message,
+                                    progress, earliestDate)) {
+                                progress.incrementAndGet();
 
-								return;
-							}
+                                return;
+                            }
 
-							// Store the updated message locally
-							final Message localMessage = localFolder
-									.storeSmallMessage(message, new Runnable() {
-										@Override
-										public void run() {
-											progress.incrementAndGet();
-										}
-									});
+                            // Store the updated message locally
+                            final Message localMessage = localFolder
+                                    .storeSmallMessage(message, new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            progress.incrementAndGet();
+                                        }
+                                    });
 
-							// Increment the number of "new messages" if the
-							// newly downloaded message is
-							// not marked as read.
-							if (!localMessage.isSet(Flag.SEEN)) {
-								newMessages.incrementAndGet();
-							}
+                            // Increment the number of "new messages" if the
+                            // newly downloaded message is
+                            // not marked as read.
+                            if (!localMessage.isSet(Flag.SEEN)) {
+                                newMessages.incrementAndGet();
+                            }
 
-							if (RakuPhotoMail.DEBUG)
-								Log.v(RakuPhotoMail.LOG_TAG,
-										"About to notify listeners that we got a new small message "
-												+ account + ":" + folder + ":"
-												+ message.getUid());
+                            if (RakuPhotoMail.DEBUG)
+                                Log.v(RakuPhotoMail.LOG_TAG,
+                                        "About to notify listeners that we got a new small message "
+                                                + account + ":" + folder + ":"
+                                                + message.getUid());
 
-							// Update the listener with what we've found
-							for (MessagingListener l : getListeners()) {
-								l.synchronizeMailboxAddOrUpdateMessage(account,
-										folder, localMessage);
-								l.synchronizeMailboxProgress(account, folder,
-										progress.get(), todo);
-								if (!localMessage.isSet(Flag.SEEN)) {
-									l.synchronizeMailboxNewMessage(account,
-											folder, localMessage);
-								}
-							}
-							// Send a notification of this message
+                            // Update the listener with what we've found
+                            for (MessagingListener l : getListeners()) {
+                                l.synchronizeMailboxAddOrUpdateMessage(account,
+                                        folder, localMessage);
+                                l.synchronizeMailboxProgress(account, folder,
+                                        progress.get(), todo);
+                                if (!localMessage.isSet(Flag.SEEN)) {
+                                    l.synchronizeMailboxNewMessage(account,
+                                            folder, localMessage);
+                                }
+                            }
+                            // Send a notification of this message
 
-							if (shouldNotifyForMessage(account, localFolder,
-									message)) {
-								notifyAccount(mApplication, account, message,
-										unreadBeforeStart, newMessages);
-							}
+                            if (shouldNotifyForMessage(account, localFolder,
+                                    message)) {
+                                notifyAccount(mApplication, account, message,
+                                        unreadBeforeStart, newMessages);
+                            }
 
-						} catch (MessagingException me) {
-							addErrorMessage(account, null, me);
-							Log.e(RakuPhotoMail.LOG_TAG,
-									"SYNC: fetch small messages", me);
-						}
-					}
+                        } catch (MessagingException me) {
+                            addErrorMessage(account, null, me);
+                            Log.e(RakuPhotoMail.LOG_TAG,
+                                    "SYNC: fetch small messages", me);
+                        }
+                    }
 
-					@Override
-					public void messageStarted(String uid, int number,
-							int ofTotal) {
-					}
+                    @Override
+                    public void messageStarted(String uid, int number,
+                                               int ofTotal) {
+                    }
 
-					@Override
-					public void messagesFinished(int total) {
-					}
-				});
+                    @Override
+                    public void messagesFinished(int total) {
+                    }
+                });
 
-		if (RakuPhotoMail.DEBUG)
-			Log.d(RakuPhotoMail.LOG_TAG,
-					"SYNC: Done fetching small messages for folder " + folder);
-	}
+        if (RakuPhotoMail.DEBUG)
+            Log.d(RakuPhotoMail.LOG_TAG,
+                    "SYNC: Done fetching small messages for folder " + folder);
+    }
 
-	private void downloadLargeMessages(final Account account,
-			final Folder remoteFolder, final LocalFolder localFolder,
-			ArrayList<Message> largeMessages, final AtomicInteger progress,
-			final int unreadBeforeStart, final AtomicInteger newMessages,
-			final int todo, FetchProfile fp) throws MessagingException {
-		final String folder = remoteFolder.getName();
+    private void downloadLargeMessages(final Account account,
+                                       final Folder remoteFolder, final LocalFolder localFolder,
+                                       ArrayList<Message> largeMessages, final AtomicInteger progress,
+                                       final int unreadBeforeStart, final AtomicInteger newMessages,
+                                       final int todo, FetchProfile fp) throws MessagingException {
+        final String folder = remoteFolder.getName();
 
-		final Date earliestDate = account.getEarliestPollDate();
+        final Date earliestDate = account.getEarliestPollDate();
 
-		if (RakuPhotoMail.DEBUG)
-			Log.d(RakuPhotoMail.LOG_TAG,
-					"SYNC: Fetching large messages for folder " + folder);
+        if (RakuPhotoMail.DEBUG)
+            Log.d(RakuPhotoMail.LOG_TAG,
+                    "SYNC: Fetching large messages for folder " + folder);
 
-		remoteFolder.fetch(
-				largeMessages.toArray(new Message[largeMessages.size()]), fp,
-				null);
-		for (Message message : largeMessages) {
+        remoteFolder.fetch(
+                largeMessages.toArray(new Message[largeMessages.size()]), fp,
+                null);
+        for (Message message : largeMessages) {
 
-			if (!shouldImportMessage(account, folder, message, progress,
-					earliestDate)) {
-				progress.incrementAndGet();
-				continue;
-			}
+            if (!shouldImportMessage(account, folder, message, progress,
+                    earliestDate)) {
+                progress.incrementAndGet();
+                continue;
+            }
 
-			if (message.getBody() == null) {
-				/*
+            if (message.getBody() == null) {
+                /*
 				 * The provider was unable to get the structure of the message,
 				 * so we'll download a reasonable portion of the messge and mark
 				 * it as incomplete so the entire thing can be downloaded later
 				 * if the user wishes to download it.
 				 */
-				fp.clear();
-				fp.add(FetchProfile.Item.BODY_SANE);
-				/*
+                fp.clear();
+                fp.add(FetchProfile.Item.BODY_SANE);
+                /*
 				 * TODO a good optimization here would be to make sure that all
 				 * Stores set the proper size after this fetch and compare the
 				 * before and after size. If they equal we can mark this
 				 * SYNCHRONIZED instead of PARTIALLY_SYNCHRONIZED
 				 */
 
-				remoteFolder.fetch(new Message[] { message }, fp, null);
+                remoteFolder.fetch(new Message[]{message}, fp, null);
 
-				// Store the updated message locally
-				localFolder.appendMessages(new Message[] { message });
+                // Store the updated message locally
+                localFolder.appendMessages(new Message[]{message});
 
-				Message localMessage = localFolder.getMessage(message.getUid());
+                Message localMessage = localFolder.getMessage(message.getUid());
 
-				// Certain (POP3) servers give you the whole message even when
-				// you ask for only the first x Kb
-				if (!message.isSet(Flag.X_DOWNLOADED_FULL)) {
-					/*
+                // Certain (POP3) servers give you the whole message even when
+                // you ask for only the first x Kb
+                if (!message.isSet(Flag.X_DOWNLOADED_FULL)) {
+                    /*
 					 * Mark the message as fully downloaded if the message size
 					 * is smaller than the account's autodownload size limit,
 					 * otherwise mark as only a partial download. This will
 					 * prevent the system from downloading the same message
 					 * twice.
 					 */
-					if (message.getSize() < account
-							.getMaximumAutoDownloadMessageSize()) {
-						localMessage.setFlag(Flag.X_DOWNLOADED_FULL, true);
-					} else {
-						// Set a flag indicating that the message has been
-						// partially downloaded and
-						// is ready for view.
-						localMessage.setFlag(Flag.X_DOWNLOADED_PARTIAL, true);
-					}
-				}
-			} else {
-				/*
+                    if (message.getSize() < account
+                            .getMaximumAutoDownloadMessageSize()) {
+                        localMessage.setFlag(Flag.X_DOWNLOADED_FULL, true);
+                    } else {
+                        // Set a flag indicating that the message has been
+                        // partially downloaded and
+                        // is ready for view.
+                        localMessage.setFlag(Flag.X_DOWNLOADED_PARTIAL, true);
+                    }
+                }
+            } else {
+                /*
 				 * We have a structure to deal with, from which we can pull down
 				 * the parts we want to actually store. Build a list of parts we
 				 * are interested in. Text parts will be downloaded right now,
 				 * attachments will be left for later.
 				 */
 
-				ArrayList<Part> viewables = new ArrayList<Part>();
-				ArrayList<Part> attachments = new ArrayList<Part>();
-				MimeUtility.collectParts(message, viewables, attachments);
+                ArrayList<Part> viewables = new ArrayList<Part>();
+                ArrayList<Part> attachments = new ArrayList<Part>();
+                MimeUtility.collectParts(message, viewables, attachments);
 
-				/*
+                /*
 				 * Now download the parts we're interested in storing.
 				 */
-				for (Part part : viewables) {
-					remoteFolder.fetchPart(message, part, null);
-				}
-				// Store the updated message locally
-				localFolder.appendMessages(new Message[] { message });
+                for (Part part : viewables) {
+                    remoteFolder.fetchPart(message, part, null);
+                }
+                // Store the updated message locally
+                localFolder.appendMessages(new Message[]{message});
 
-				Message localMessage = localFolder.getMessage(message.getUid());
+                Message localMessage = localFolder.getMessage(message.getUid());
 
-				// Set a flag indicating this message has been fully downloaded
-				// and can be
-				// viewed.
-				localMessage.setFlag(Flag.X_DOWNLOADED_PARTIAL, true);
-			}
-			if (RakuPhotoMail.DEBUG)
-				Log.v(RakuPhotoMail.LOG_TAG,
-						"About to notify listeners that we got a new large message "
-								+ account + ":" + folder + ":"
-								+ message.getUid());
+                // Set a flag indicating this message has been fully downloaded
+                // and can be
+                // viewed.
+                localMessage.setFlag(Flag.X_DOWNLOADED_PARTIAL, true);
+            }
+            if (RakuPhotoMail.DEBUG)
+                Log.v(RakuPhotoMail.LOG_TAG,
+                        "About to notify listeners that we got a new large message "
+                                + account + ":" + folder + ":"
+                                + message.getUid());
 
-			// Update the listener with what we've found
-			progress.incrementAndGet();
-			Message localMessage = localFolder.getMessage(message.getUid());
+            // Update the listener with what we've found
+            progress.incrementAndGet();
+            Message localMessage = localFolder.getMessage(message.getUid());
 
-			// Increment the number of "new messages" if the newly downloaded
-			// message is
-			// not marked as read.
-			if (!localMessage.isSet(Flag.SEEN)) {
-				newMessages.incrementAndGet();
-			}
+            // Increment the number of "new messages" if the newly downloaded
+            // message is
+            // not marked as read.
+            if (!localMessage.isSet(Flag.SEEN)) {
+                newMessages.incrementAndGet();
+            }
 
-			for (MessagingListener l : getListeners()) {
-				l.synchronizeMailboxAddOrUpdateMessage(account, folder,
-						localMessage);
-				l.synchronizeMailboxProgress(account, folder, progress.get(),
-						todo);
-				if (!localMessage.isSet(Flag.SEEN)) {
-					l.synchronizeMailboxNewMessage(account, folder,
-							localMessage);
-				}
-			}
+            for (MessagingListener l : getListeners()) {
+                l.synchronizeMailboxAddOrUpdateMessage(account, folder,
+                        localMessage);
+                l.synchronizeMailboxProgress(account, folder, progress.get(),
+                        todo);
+                if (!localMessage.isSet(Flag.SEEN)) {
+                    l.synchronizeMailboxNewMessage(account, folder,
+                            localMessage);
+                }
+            }
 
-			// Send a notification of this message
-			if (shouldNotifyForMessage(account, localFolder, message)) {
-				notifyAccount(mApplication, account, message,
-						unreadBeforeStart, newMessages);
-			}
+            // Send a notification of this message
+            if (shouldNotifyForMessage(account, localFolder, message)) {
+                notifyAccount(mApplication, account, message,
+                        unreadBeforeStart, newMessages);
+            }
 
-		}// for large messsages
-		if (RakuPhotoMail.DEBUG)
-			Log.d(RakuPhotoMail.LOG_TAG,
-					"SYNC: Done fetching large messages for folder " + folder);
+        }// for large messsages
+        if (RakuPhotoMail.DEBUG)
+            Log.d(RakuPhotoMail.LOG_TAG,
+                    "SYNC: Done fetching large messages for folder " + folder);
 
-	}
+    }
 
-	private void refreshLocalMessageFlags(final Account account,
-			final Folder remoteFolder, final LocalFolder localFolder,
-			ArrayList<Message> syncFlagMessages, final AtomicInteger progress,
-			final int todo) throws MessagingException {
+    private void refreshLocalMessageFlags(final Account account,
+                                          final Folder remoteFolder, final LocalFolder localFolder,
+                                          ArrayList<Message> syncFlagMessages, final AtomicInteger progress,
+                                          final int todo) throws MessagingException {
 
-		final String folder = remoteFolder.getName();
-		if (remoteFolder.supportsFetchingFlags()) {
-			if (RakuPhotoMail.DEBUG)
-				Log.d(RakuPhotoMail.LOG_TAG, "SYNC: About to sync flags for "
-						+ syncFlagMessages.size()
-						+ " remote messages for folder " + folder);
+        final String folder = remoteFolder.getName();
+        if (remoteFolder.supportsFetchingFlags()) {
+            if (RakuPhotoMail.DEBUG)
+                Log.d(RakuPhotoMail.LOG_TAG, "SYNC: About to sync flags for "
+                        + syncFlagMessages.size()
+                        + " remote messages for folder " + folder);
 
-			FetchProfile fp = new FetchProfile();
-			fp.add(FetchProfile.Item.FLAGS);
+            FetchProfile fp = new FetchProfile();
+            fp.add(FetchProfile.Item.FLAGS);
 
-			List<Message> undeletedMessages = new LinkedList<Message>();
-			for (Message message : syncFlagMessages) {
-				if (!message.isSet(Flag.DELETED)) {
-					undeletedMessages.add(message);
-				}
-			}
+            List<Message> undeletedMessages = new LinkedList<Message>();
+            for (Message message : syncFlagMessages) {
+                if (!message.isSet(Flag.DELETED)) {
+                    undeletedMessages.add(message);
+                }
+            }
 
-			remoteFolder.fetch(undeletedMessages.toArray(EMPTY_MESSAGE_ARRAY),
-					fp, null);
-			for (Message remoteMessage : syncFlagMessages) {
-				Message localMessage = localFolder.getMessage(remoteMessage
-						.getUid());
-				boolean messageChanged = syncFlags(localMessage, remoteMessage);
-				if (messageChanged) {
-					if (localMessage.isSet(Flag.DELETED)
-							|| isMessageSuppressed(account, folder,
-									localMessage)) {
-						for (MessagingListener l : getListeners()) {
-							l.synchronizeMailboxRemovedMessage(account, folder,
-									localMessage);
-						}
-					} else {
-						for (MessagingListener l : getListeners()) {
-							l.synchronizeMailboxAddOrUpdateMessage(account,
-									folder, localMessage);
-						}
-					}
+            remoteFolder.fetch(undeletedMessages.toArray(EMPTY_MESSAGE_ARRAY),
+                    fp, null);
+            for (Message remoteMessage : syncFlagMessages) {
+                Message localMessage = localFolder.getMessage(remoteMessage
+                        .getUid());
+                boolean messageChanged = syncFlags(localMessage, remoteMessage);
+                if (messageChanged) {
+                    if (localMessage.isSet(Flag.DELETED)
+                            || isMessageSuppressed(account, folder,
+                            localMessage)) {
+                        for (MessagingListener l : getListeners()) {
+                            l.synchronizeMailboxRemovedMessage(account, folder,
+                                    localMessage);
+                        }
+                    } else {
+                        for (MessagingListener l : getListeners()) {
+                            l.synchronizeMailboxAddOrUpdateMessage(account,
+                                    folder, localMessage);
+                        }
+                    }
 
-				}
-				progress.incrementAndGet();
-				for (MessagingListener l : getListeners()) {
-					l.synchronizeMailboxProgress(account, folder,
-							progress.get(), todo);
-				}
-			}
-		}
-	}
+                }
+                progress.incrementAndGet();
+                for (MessagingListener l : getListeners()) {
+                    l.synchronizeMailboxProgress(account, folder,
+                            progress.get(), todo);
+                }
+            }
+        }
+    }
 
-	private boolean syncFlags(Message localMessage, Message remoteMessage)
-			throws MessagingException {
-		boolean messageChanged = false;
-		if (localMessage == null || localMessage.isSet(Flag.DELETED)) {
-			return false;
-		}
-		if (remoteMessage.isSet(Flag.DELETED)) {
-			if (localMessage.getFolder().getAccount().syncRemoteDeletions()) {
-				localMessage.setFlag(Flag.DELETED, true);
-				messageChanged = true;
-			}
-		} else {
-			for (Flag flag : new Flag[] { Flag.SEEN, Flag.FLAGGED,
-					Flag.ANSWERED }) {
-				if (remoteMessage.isSet(flag) != localMessage.isSet(flag)) {
-					localMessage.setFlag(flag, remoteMessage.isSet(flag));
-					messageChanged = true;
-				}
-			}
-		}
-		return messageChanged;
-	}
+    private boolean syncFlags(Message localMessage, Message remoteMessage)
+            throws MessagingException {
+        boolean messageChanged = false;
+        if (localMessage == null || localMessage.isSet(Flag.DELETED)) {
+            return false;
+        }
+        if (remoteMessage.isSet(Flag.DELETED)) {
+            if (localMessage.getFolder().getAccount().syncRemoteDeletions()) {
+                localMessage.setFlag(Flag.DELETED, true);
+                messageChanged = true;
+            }
+        } else {
+            for (Flag flag : new Flag[]{Flag.SEEN, Flag.FLAGGED,
+                    Flag.ANSWERED}) {
+                if (remoteMessage.isSet(flag) != localMessage.isSet(flag)) {
+                    localMessage.setFlag(flag, remoteMessage.isSet(flag));
+                    messageChanged = true;
+                }
+            }
+        }
+        return messageChanged;
+    }
 
-	private String getRootCauseMessage(Throwable t) {
-		Throwable rootCause = t;
-		Throwable nextCause = rootCause;
-		do {
-			nextCause = rootCause.getCause();
-			if (nextCause != null) {
-				rootCause = nextCause;
-			}
-		} while (nextCause != null);
-		if (rootCause instanceof MessagingException) {
-			return rootCause.getMessage();
-		} else {
-			return rootCause.toString();
-		}
-	}
+    private String getRootCauseMessage(Throwable t) {
+        Throwable rootCause = t;
+        Throwable nextCause = rootCause;
+        do {
+            nextCause = rootCause.getCause();
+            if (nextCause != null) {
+                rootCause = nextCause;
+            }
+        } while (nextCause != null);
+        if (rootCause instanceof MessagingException) {
+            return rootCause.getMessage();
+        } else {
+            return rootCause.toString();
+        }
+    }
 
-	private void queuePendingCommand(Account account, PendingCommand command) {
-		try {
-			LocalStore localStore = account.getLocalStore();
-			localStore.addPendingCommand(command);
-		} catch (Exception e) {
-			addErrorMessage(account, null, e);
+    private void queuePendingCommand(Account account, PendingCommand command) {
+        try {
+            LocalStore localStore = account.getLocalStore();
+            localStore.addPendingCommand(command);
+        } catch (Exception e) {
+            addErrorMessage(account, null, e);
 
-			throw new RuntimeException("Unable to enqueue pending command", e);
-		}
-	}
+            throw new RuntimeException("Unable to enqueue pending command", e);
+        }
+    }
 
-	private void processPendingCommands(final Account account) {
-		putBackground("processPendingCommands", null, new Runnable() {
-			@Override
-			public void run() {
-				try {
-					processPendingCommandsSynchronous(account);
-				} catch (UnavailableStorageException e) {
-					Log.i(RakuPhotoMail.LOG_TAG,
-							"Failed to process pending command because storage is not available - trying again later.");
-					throw new UnavailableAccountException(e);
-				} catch (MessagingException me) {
-					Log.e(RakuPhotoMail.LOG_TAG, "processPendingCommands", me);
+    private void processPendingCommands(final Account account) {
+        putBackground("processPendingCommands", null, new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    processPendingCommandsSynchronous(account);
+                } catch (UnavailableStorageException e) {
+                    Log.i(RakuPhotoMail.LOG_TAG,
+                            "Failed to process pending command because storage is not available - trying again later.");
+                    throw new UnavailableAccountException(e);
+                } catch (MessagingException me) {
+                    Log.e(RakuPhotoMail.LOG_TAG, "processPendingCommands", me);
 
-					addErrorMessage(account, null, me);
+                    addErrorMessage(account, null, me);
 
-					/*
+                    /*
 					 * Ignore any exceptions from the commands. Commands will be
 					 * processed on the next round.
 					 */
-				}
-			}
-		});
-	}
+                }
+            }
+        });
+    }
 
-	private void processPendingCommandsSynchronous(Account account)
-			throws MessagingException {
-		Log.v(RakuPhotoMail.LOG_TAG,
-				"MessageingController#processPendingCommandsSynchronous");
-		LocalStore localStore = account.getLocalStore();
-		ArrayList<PendingCommand> commands = localStore.getPendingCommands();
+    private void processPendingCommandsSynchronous(Account account)
+            throws MessagingException {
+        Log.v(RakuPhotoMail.LOG_TAG,
+                "MessageingController#processPendingCommandsSynchronous");
+        LocalStore localStore = account.getLocalStore();
+        ArrayList<PendingCommand> commands = localStore.getPendingCommands();
 
-		int progress = 0;
-		int todo = commands.size();
-		if (todo == 0) {
-			return;
-		}
-		Log.v(RakuPhotoMail.LOG_TAG,
-				"MessageingController#processPendingCommandsSynchronous "
-						+ commands.toString());
+        int progress = 0;
+        int todo = commands.size();
+        if (todo == 0) {
+            return;
+        }
+        Log.v(RakuPhotoMail.LOG_TAG,
+                "MessageingController#processPendingCommandsSynchronous "
+                        + commands.toString());
 
-		for (MessagingListener l : getListeners()) {
-			l.pendingCommandsProcessing(account);
-			l.synchronizeMailboxProgress(account, null, progress, todo);
-		}
+        for (MessagingListener l : getListeners()) {
+            l.pendingCommandsProcessing(account);
+            l.synchronizeMailboxProgress(account, null, progress, todo);
+        }
 
-		PendingCommand processingCommand = null;
-		try {
-			for (PendingCommand command : commands) {
-				processingCommand = command;
-				if (RakuPhotoMail.DEBUG)
-					Log.d(RakuPhotoMail.LOG_TAG, "Processing pending command '"
-							+ command + "'");
+        PendingCommand processingCommand = null;
+        try {
+            for (PendingCommand command : commands) {
+                processingCommand = command;
+                if (RakuPhotoMail.DEBUG)
+                    Log.d(RakuPhotoMail.LOG_TAG, "Processing pending command '"
+                            + command + "'");
 
-				String[] components = command.command.split("\\.");
-				String commandTitle = components[components.length - 1];
-				for (MessagingListener l : getListeners()) {
-					l.pendingCommandStarted(account, commandTitle);
-				}
-				/*
+                String[] components = command.command.split("\\.");
+                String commandTitle = components[components.length - 1];
+                for (MessagingListener l : getListeners()) {
+                    l.pendingCommandStarted(account, commandTitle);
+                }
+                /*
 				 * We specifically do not catch any exceptions here. If a
 				 * command fails it is most likely due to a server or IO error
 				 * and it must be retried before any other command processes.
 				 * This maintains the order of the commands.
 				 */
-				try {
-					if (PENDING_COMMAND_APPEND.equals(command.command)) {
-						processPendingAppend(command, account);
-					} else if (PENDING_COMMAND_SET_FLAG_BULK
-							.equals(command.command)) {
-						processPendingSetFlag(command, account);
-					} else if (PENDING_COMMAND_SET_FLAG.equals(command.command)) {
-						processPendingSetFlagOld(command, account);
-					} else if (PENDING_COMMAND_MARK_ALL_AS_READ
-							.equals(command.command)) {
-						processPendingMarkAllAsRead(command, account);
-					} else if (PENDING_COMMAND_MOVE_OR_COPY_BULK
-							.equals(command.command)) {
-						processPendingMoveOrCopy(command, account);
-					} else if (PENDING_COMMAND_MOVE_OR_COPY
-							.equals(command.command)) {
-						processPendingMoveOrCopyOld(command, account);
-					} else if (PENDING_COMMAND_EMPTY_TRASH
-							.equals(command.command)) {
-						processPendingEmptyTrash(command, account);
-					} else if (PENDING_COMMAND_EXPUNGE.equals(command.command)) {
-						processPendingExpunge(command, account);
-					}
-					localStore.removePendingCommand(command);
-					if (RakuPhotoMail.DEBUG)
-						Log.d(RakuPhotoMail.LOG_TAG,
-								"Done processing pending command '" + command
-										+ "'");
-				} catch (MessagingException me) {
-					if (me.isPermanentFailure()) {
-						addErrorMessage(account, null, me);
-						Log.e(RakuPhotoMail.LOG_TAG,
-								"Failure of command '"
-										+ command
-										+ "' was permanent, removing command from queue");
-						localStore.removePendingCommand(processingCommand);
-					} else {
-						throw me;
-					}
-				} finally {
-					progress++;
-					for (MessagingListener l : getListeners()) {
-						l.synchronizeMailboxProgress(account, null, progress,
-								todo);
-						l.pendingCommandCompleted(account, commandTitle);
-					}
-				}
-			}
-		} catch (MessagingException me) {
-			addErrorMessage(account, null, me);
-			Log.e(RakuPhotoMail.LOG_TAG, "Could not process command '"
-					+ processingCommand + "'", me);
-			throw me;
-		} finally {
-			for (MessagingListener l : getListeners()) {
-				l.pendingCommandsFinished(account);
-			}
-		}
-	}
+                try {
+                    if (PENDING_COMMAND_APPEND.equals(command.command)) {
+                        processPendingAppend(command, account);
+                    } else if (PENDING_COMMAND_SET_FLAG_BULK
+                            .equals(command.command)) {
+                        processPendingSetFlag(command, account);
+                    } else if (PENDING_COMMAND_SET_FLAG.equals(command.command)) {
+                        processPendingSetFlagOld(command, account);
+                    } else if (PENDING_COMMAND_MARK_ALL_AS_READ
+                            .equals(command.command)) {
+                        processPendingMarkAllAsRead(command, account);
+                    } else if (PENDING_COMMAND_MOVE_OR_COPY_BULK
+                            .equals(command.command)) {
+                        processPendingMoveOrCopy(command, account);
+                    } else if (PENDING_COMMAND_MOVE_OR_COPY
+                            .equals(command.command)) {
+                        processPendingMoveOrCopyOld(command, account);
+                    } else if (PENDING_COMMAND_EMPTY_TRASH
+                            .equals(command.command)) {
+                        processPendingEmptyTrash(command, account);
+                    } else if (PENDING_COMMAND_EXPUNGE.equals(command.command)) {
+                        processPendingExpunge(command, account);
+                    }
+                    localStore.removePendingCommand(command);
+                    if (RakuPhotoMail.DEBUG)
+                        Log.d(RakuPhotoMail.LOG_TAG,
+                                "Done processing pending command '" + command
+                                        + "'");
+                } catch (MessagingException me) {
+                    if (me.isPermanentFailure()) {
+                        addErrorMessage(account, null, me);
+                        Log.e(RakuPhotoMail.LOG_TAG,
+                                "Failure of command '"
+                                        + command
+                                        + "' was permanent, removing command from queue");
+                        localStore.removePendingCommand(processingCommand);
+                    } else {
+                        throw me;
+                    }
+                } finally {
+                    progress++;
+                    for (MessagingListener l : getListeners()) {
+                        l.synchronizeMailboxProgress(account, null, progress,
+                                todo);
+                        l.pendingCommandCompleted(account, commandTitle);
+                    }
+                }
+            }
+        } catch (MessagingException me) {
+            addErrorMessage(account, null, me);
+            Log.e(RakuPhotoMail.LOG_TAG, "Could not process command '"
+                    + processingCommand + "'", me);
+            throw me;
+        } finally {
+            for (MessagingListener l : getListeners()) {
+                l.pendingCommandsFinished(account);
+            }
+        }
+    }
 
-	/**
-	 * Process a pending append message command. This command uploads a local
-	 * message to the server, first checking to be sure that the server message
-	 * is not newer than the local message. Once the local message is
-	 * successfully processed it is deleted so that the server message will be
-	 * synchronized down without an additional copy being created. TODO update
-	 * the local message UID instead of deleteing it
-	 * 
-	 * @param command
-	 *            arguments = (String folder, String uid)
-	 * @param account
-	 * @throws MessagingException
-	 */
-	private void processPendingAppend(PendingCommand command, Account account)
-			throws MessagingException {
-        Log.d("SendTest","MessagingController#processPendingAppend start");
+    /**
+     * Process a pending append message command. This command uploads a local
+     * message to the server, first checking to be sure that the server message
+     * is not newer than the local message. Once the local message is
+     * successfully processed it is deleted so that the server message will be
+     * synchronized down without an additional copy being created. TODO update
+     * the local message UID instead of deleteing it
+     *
+     * @param command arguments = (String folder, String uid)
+     * @param account
+     * @throws MessagingException
+     */
+    private void processPendingAppend(PendingCommand command, Account account)
+            throws MessagingException {
+        Log.d("SendTest", "MessagingController#processPendingAppend start");
 
-		Folder remoteFolder = null;
-		LocalFolder localFolder = null;
-		try {
+        Folder remoteFolder = null;
+        LocalFolder localFolder = null;
+        try {
 
-			String folder = command.arguments[0];
-			String uid = command.arguments[1];
+            String folder = command.arguments[0];
+            String uid = command.arguments[1];
 
-			if (account.getErrorFolderName().equals(folder)) {
-				return;
-			}
+            if (account.getErrorFolderName().equals(folder)) {
+                return;
+            }
 
-			LocalStore localStore = account.getLocalStore();
-			localFolder = localStore.getFolder(folder);
-			LocalMessage localMessage = (LocalMessage) localFolder
-					.getMessage(uid);
-            Log.d("SendTest","MessagingController#processPendingAppend uid:"+uid);
-
-
-			if (localMessage == null) {
-				return;
-			}
-
-			Store remoteStore = account.getRemoteStore();
-			remoteFolder = remoteStore.getFolder(folder);
-			if (!remoteFolder.exists()) {
-				if (!remoteFolder.create(FolderType.HOLDS_MESSAGES)) {
-					return;
-				}
-			}
-			remoteFolder.open(OpenMode.READ_WRITE);
-			if (remoteFolder.getMode() != OpenMode.READ_WRITE) {
-				return;
-			}
-
-			Message remoteMessage = null;
-			if (!localMessage.getUid().startsWith(
-					RakuPhotoMail.LOCAL_UID_PREFIX)) {
-				remoteMessage = remoteFolder.getMessage(localMessage.getUid());
-			}
-
-			if (remoteMessage == null) {
-                Log.d("SendTest","MessagingController#processPendingAppend remoteMessage null?:"+remoteMessage);
-                Log.d("SendTest","MessagingController#processPendingAppend remoteMessage localMessage.isSet(Flag.X_REMOTE_COPY_STARTED):" + localMessage.isSet(Flag.X_REMOTE_COPY_STARTED));
-
-				if (localMessage.isSet(Flag.X_REMOTE_COPY_STARTED)) {
-
-					Log.w(RakuPhotoMail.LOG_TAG, "Local message with uid "
-							+ localMessage.getUid() + " has flag "
-							+ Flag.X_REMOTE_COPY_STARTED
-							+ " already set, checking for remote message with "
-							+ " same message id");
-					String rUid = remoteFolder
-							.getUidFromMessageId(localMessage);
-                    Log.d("SendTest","MessagingController#processPendingAppend remoteMessage rUid:"+rUid);
-
-					if (rUid != null) {
-						Log.w(RakuPhotoMail.LOG_TAG,
-								"Local message has flag "
-										+ Flag.X_REMOTE_COPY_STARTED
-										+ " already set, and there is a remote message with "
-										+ " uid "
-										+ rUid
-										+ ", assuming message was already copied and aborting this copy");
-
-						String oldUid = localMessage.getUid();
-                        Log.d("SendTest","MessagingController#processPendingAppend remoteMessage oldUid:"+oldUid);
-
-						localMessage.setUid(rUid);
-						localFolder.changeUid(localMessage);
-						for (MessagingListener l : getListeners()) {
-							l.messageUidChanged(account, folder, oldUid,
-									localMessage.getUid());
-						}
-						return;
-					} else {
-						Log.w(RakuPhotoMail.LOG_TAG,
-								"No remote message with message-id found, proceeding with append");
-					}
-				}
+            LocalStore localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folder);
+            LocalMessage localMessage = (LocalMessage) localFolder
+                    .getMessage(uid);
+            Log.d("SendTest", "MessagingController#processPendingAppend uid:" + uid);
 
 
-				/*
+            if (localMessage == null) {
+                return;
+            }
+
+            Store remoteStore = account.getRemoteStore();
+            remoteFolder = remoteStore.getFolder(folder);
+            if (!remoteFolder.exists()) {
+                if (!remoteFolder.create(FolderType.HOLDS_MESSAGES)) {
+                    return;
+                }
+            }
+            remoteFolder.open(OpenMode.READ_WRITE);
+            if (remoteFolder.getMode() != OpenMode.READ_WRITE) {
+                return;
+            }
+
+            Message remoteMessage = null;
+            if (!localMessage.getUid().startsWith(
+                    RakuPhotoMail.LOCAL_UID_PREFIX)) {
+                remoteMessage = remoteFolder.getMessage(localMessage.getUid());
+            }
+
+            if (remoteMessage == null) {
+                Log.d("SendTest", "MessagingController#processPendingAppend remoteMessage null?:" + remoteMessage);
+                Log.d("SendTest", "MessagingController#processPendingAppend remoteMessage localMessage.isSet(Flag.X_REMOTE_COPY_STARTED):" + localMessage.isSet(Flag.X_REMOTE_COPY_STARTED));
+
+                if (localMessage.isSet(Flag.X_REMOTE_COPY_STARTED)) {
+
+                    Log.w(RakuPhotoMail.LOG_TAG, "Local message with uid "
+                            + localMessage.getUid() + " has flag "
+                            + Flag.X_REMOTE_COPY_STARTED
+                            + " already set, checking for remote message with "
+                            + " same message id");
+                    String rUid = remoteFolder
+                            .getUidFromMessageId(localMessage);
+                    Log.d("SendTest", "MessagingController#processPendingAppend remoteMessage rUid:" + rUid);
+
+                    if (rUid != null) {
+                        Log.w(RakuPhotoMail.LOG_TAG,
+                                "Local message has flag "
+                                        + Flag.X_REMOTE_COPY_STARTED
+                                        + " already set, and there is a remote message with "
+                                        + " uid "
+                                        + rUid
+                                        + ", assuming message was already copied and aborting this copy");
+
+                        String oldUid = localMessage.getUid();
+                        Log.d("SendTest", "MessagingController#processPendingAppend remoteMessage oldUid:" + oldUid);
+
+                        localMessage.setUid(rUid);
+                        localFolder.changeUid(localMessage);
+                        for (MessagingListener l : getListeners()) {
+                            l.messageUidChanged(account, folder, oldUid,
+                                    localMessage.getUid());
+                        }
+                        return;
+                    } else {
+                        Log.w(RakuPhotoMail.LOG_TAG,
+                                "No remote message with message-id found, proceeding with append");
+                    }
+                }
+
+
+                /*
 				 * If the message does not exist remotely we just upload it and
 				 * then update our local copy with the new uid.
 				 */
-				FetchProfile fp = new FetchProfile();
-				fp.add(FetchProfile.Item.BODY);
-				localFolder.fetch(new Message[] { localMessage }, fp, null);
-				String oldUid = localMessage.getUid();
-				localMessage.setFlag(Flag.X_REMOTE_COPY_STARTED, true);
+                FetchProfile fp = new FetchProfile();
+                fp.add(FetchProfile.Item.BODY);
+                localFolder.fetch(new Message[]{localMessage}, fp, null);
+                String oldUid = localMessage.getUid();
+                localMessage.setFlag(Flag.X_REMOTE_COPY_STARTED, true);
 
-				remoteFolder.appendMessages(new Message[] { localMessage });
+                Log.d("SendTest", "MessagingController#processPendingAppend localMessage.getUid():" + localMessage.getUid());
+                Log.d("SendTest", "MessagingController#processPendingAppend localMessage.getFolder().getName():" + localMessage.getFolder().getName());
+                Log.d("SendTest", "MessagingController#processPendingAppend localMessage.getSubject():" + localMessage.getSubject());
+                remoteFolder.appendMessages(new Message[]{localMessage});
 
-				localFolder.changeUid(localMessage);
-				for (MessagingListener l : getListeners()) {
-					l.messageUidChanged(account, folder, oldUid,
-							localMessage.getUid());
-				}
-			} else {
-                Log.d("SendTest","MessagingController#processPendingAppend remoteMessage is not null");
+                localFolder.changeUid(localMessage);
+                for (MessagingListener l : getListeners()) {
+                    l.messageUidChanged(account, folder, oldUid,
+                            localMessage.getUid());
+                }
+            } else {
+                Log.d("SendTest", "MessagingController#processPendingAppend remoteMessage is not null");
 
-				/*
+                /*
 				 * If the remote message exists we need to determine which copy
 				 * to keep.
 				 */
-				/*
+                /*
 				 * See if the remote message is newer than ours.
 				 */
-				FetchProfile fp = new FetchProfile();
-				fp.add(FetchProfile.Item.ENVELOPE);
-				remoteFolder.fetch(new Message[] { remoteMessage }, fp, null);
-				Date localDate = localMessage.getInternalDate();
-				Date remoteDate = remoteMessage.getInternalDate();
-				if (remoteDate != null && remoteDate.compareTo(localDate) > 0) {
-					/*
+                FetchProfile fp = new FetchProfile();
+                fp.add(FetchProfile.Item.ENVELOPE);
+                remoteFolder.fetch(new Message[]{remoteMessage}, fp, null);
+                Date localDate = localMessage.getInternalDate();
+                Date remoteDate = remoteMessage.getInternalDate();
+                if (remoteDate != null && remoteDate.compareTo(localDate) > 0) {
+                    /*
 					 * If the remote message is newer than ours we'll just
 					 * delete ours and move on. A sync will get the server
 					 * message if we need to be able to see it.
 					 */
-                    Log.d("SendTest","MessagingController#processPendingAppend localMessage.destroy()");
+                    Log.d("SendTest", "MessagingController#processPendingAppend localMessage.destroy()");
 
-					localMessage.destroy();
-				} else {
-					/*
+                    localMessage.destroy();
+                } else {
+                    /*
 					 * Otherwise we'll upload our message and then delete the
 					 * remote message.
 					 */
 
-                    Log.d("SendTest","MessagingController#processPendingAppend ああああ？");
-
-
-					fp.clear();
-					fp = new FetchProfile();
-					fp.add(FetchProfile.Item.BODY);
-					localFolder.fetch(new Message[] { localMessage }, fp, null);
-					String oldUid = localMessage.getUid();
-
-					localMessage.setFlag(Flag.X_REMOTE_COPY_STARTED, true);
-
-					remoteFolder.appendMessages(new Message[] { localMessage });
-					localFolder.changeUid(localMessage);
-					for (MessagingListener l : getListeners()) {
-						l.messageUidChanged(account, folder, oldUid,
-								localMessage.getUid());
-					}
-					if (remoteDate != null) {
-						remoteMessage.setFlag(Flag.DELETED, true);
-						if (Account.EXPUNGE_IMMEDIATELY.equals(account
-								.getExpungePolicy())) {
-							remoteFolder.expunge();
-						}
-					}
-				}
-			}
-		} finally {
-			closeFolder(remoteFolder);
-			closeFolder(localFolder);
-		}
-	}
-
-	private void queueMoveOrCopy(Account account, String srcFolder,
-			String destFolder, boolean isCopy, String uids[]) {
-		if (account.getErrorFolderName().equals(srcFolder)) {
-			return;
-		}
-		PendingCommand command = new PendingCommand();
-		command.command = PENDING_COMMAND_MOVE_OR_COPY_BULK;
-
-		int length = 3 + uids.length;
-		command.arguments = new String[length];
-		command.arguments[0] = srcFolder;
-		command.arguments[1] = destFolder;
-		command.arguments[2] = Boolean.toString(isCopy);
-		System.arraycopy(uids, 0, command.arguments, 3, uids.length);
-		queuePendingCommand(account, command);
-	}
-
-	/**
-	 * Process a pending trash message command.
-	 * 
-	 * @param command
-	 *            arguments = (String folder, String uid)
-	 * @param account
-	 * @throws MessagingException
-	 */
-	private void processPendingMoveOrCopy(PendingCommand command,
-			Account account) throws MessagingException {
-		Folder remoteSrcFolder = null;
-		Folder remoteDestFolder = null;
-		try {
-			String srcFolder = command.arguments[0];
-			if (account.getErrorFolderName().equals(srcFolder)) {
-				return;
-			}
-			String destFolder = command.arguments[1];
-			String isCopyS = command.arguments[2];
-			Store remoteStore = account.getRemoteStore();
-			remoteSrcFolder = remoteStore.getFolder(srcFolder);
-
-			List<Message> messages = new ArrayList<Message>();
-			for (int i = 3; i < command.arguments.length; i++) {
-				String uid = command.arguments[i];
-				if (!uid.startsWith(RakuPhotoMail.LOCAL_UID_PREFIX)) {
-					messages.add(remoteSrcFolder.getMessage(uid));
-				}
-			}
-
-			boolean isCopy = false;
-			if (isCopyS != null) {
-				isCopy = Boolean.parseBoolean(isCopyS);
-			}
-
-			if (!remoteSrcFolder.exists()) {
-				throw new MessagingException(
-						"processingPendingMoveOrCopy: remoteFolder "
-								+ srcFolder + " does not exist", true);
-			}
-			remoteSrcFolder.open(OpenMode.READ_WRITE);
-			if (remoteSrcFolder.getMode() != OpenMode.READ_WRITE) {
-				throw new MessagingException(
-						"processingPendingMoveOrCopy: could not open remoteSrcFolder "
-								+ srcFolder + " read/write", true);
-			}
-
-			if (RakuPhotoMail.DEBUG)
-				Log.d(RakuPhotoMail.LOG_TAG,
-						"processingPendingMoveOrCopy: source folder = "
-								+ srcFolder + ", " + messages.size()
-								+ " messages, destination folder = "
-								+ destFolder + ", isCopy = " + isCopy);
-
-			if (!isCopy && destFolder.equals(account.getTrashFolderName())) {
-				if (RakuPhotoMail.DEBUG)
-					Log.d(RakuPhotoMail.LOG_TAG,
-							"processingPendingMoveOrCopy doing special case for deleting message");
-
-				String destFolderName = destFolder;
-				if (RakuPhotoMail.FOLDER_NONE.equals(destFolderName)) {
-					destFolderName = null;
-				}
-				remoteSrcFolder.delete(messages.toArray(EMPTY_MESSAGE_ARRAY),
-						destFolderName);
-			} else {
-				remoteDestFolder = remoteStore.getFolder(destFolder);
-
-				if (isCopy) {
-					remoteSrcFolder.copyMessages(
-							messages.toArray(EMPTY_MESSAGE_ARRAY),
-							remoteDestFolder);
-				} else {
-					remoteSrcFolder.moveMessages(
-							messages.toArray(EMPTY_MESSAGE_ARRAY),
-							remoteDestFolder);
-				}
-			}
-			if (!isCopy
-					&& Account.EXPUNGE_IMMEDIATELY.equals(account
-							.getExpungePolicy())) {
-				if (RakuPhotoMail.DEBUG)
-					Log.i(RakuPhotoMail.LOG_TAG,
-							"processingPendingMoveOrCopy expunging folder "
-									+ account.getDescription() + ":"
-									+ srcFolder);
-
-				remoteSrcFolder.expunge();
-			}
-		} finally {
-			closeFolder(remoteSrcFolder);
-			closeFolder(remoteDestFolder);
-		}
-
-	}
-
-	private void queueSetFlag(final Account account, final String folderName,
-			final String newState, final String flag, final String[] uids) {
-
-		putBackground("queueSetFlag " + account.getDescription() + ":"
-				+ folderName, null, new Runnable() {
-			@Override
-			public void run() {
-				PendingCommand command = new PendingCommand();
-				command.command = PENDING_COMMAND_SET_FLAG_BULK;
-				int length = 3 + uids.length;
-				command.arguments = new String[length];
-				command.arguments[0] = folderName;
-				command.arguments[1] = newState;
-				command.arguments[2] = flag;
-				System.arraycopy(uids, 0, command.arguments, 3, uids.length);
-				queuePendingCommand(account, command);
-				processPendingCommands(account);
-			}
-		});
-	}
-
-	/**
-	 * Processes a pending mark read or unread command.
-	 * 
-	 * @param command
-	 *            arguments = (String folder, String uid, boolean read)
-	 * @param account
-	 */
-	private void processPendingSetFlag(PendingCommand command, Account account)
-			throws MessagingException {
-		String folder = command.arguments[0];
-
-		if (account.getErrorFolderName().equals(folder)) {
-			return;
-		}
-
-		boolean newState = Boolean.parseBoolean(command.arguments[1]);
-
-		Flag flag = Flag.valueOf(command.arguments[2]);
-
-		Store remoteStore = account.getRemoteStore();
-		Folder remoteFolder = remoteStore.getFolder(folder);
-		if (!remoteFolder.exists() || !remoteFolder.isFlagSupported(flag)) {
-			return;
-		}
-
-		try {
-			remoteFolder.open(OpenMode.READ_WRITE);
-			if (remoteFolder.getMode() != OpenMode.READ_WRITE) {
-				return;
-			}
-			List<Message> messages = new ArrayList<Message>();
-			for (int i = 3; i < command.arguments.length; i++) {
-				String uid = command.arguments[i];
-				if (!uid.startsWith(RakuPhotoMail.LOCAL_UID_PREFIX)) {
-					messages.add(remoteFolder.getMessage(uid));
-				}
-			}
-
-			if (messages.size() == 0) {
-				return;
-			}
-			remoteFolder.setFlags(messages.toArray(EMPTY_MESSAGE_ARRAY),
-					new Flag[] { flag }, newState);
-		} finally {
-			closeFolder(remoteFolder);
-		}
-	}
-
-	// Eventually, it should be removed
-	private void processPendingSetFlagOld(PendingCommand command,
-			Account account) throws MessagingException {
-		String folder = command.arguments[0];
-		String uid = command.arguments[1];
-
-		if (account.getErrorFolderName().equals(folder)) {
-			return;
-		}
-		if (RakuPhotoMail.DEBUG)
-			Log.d(RakuPhotoMail.LOG_TAG, "processPendingSetFlagOld: folder = "
-					+ folder + ", uid = " + uid);
-
-		boolean newState = Boolean.parseBoolean(command.arguments[2]);
-
-		Flag flag = Flag.valueOf(command.arguments[3]);
-		Folder remoteFolder = null;
-		try {
-			Store remoteStore = account.getRemoteStore();
-			remoteFolder = remoteStore.getFolder(folder);
-			if (!remoteFolder.exists()) {
-				return;
-			}
-			remoteFolder.open(OpenMode.READ_WRITE);
-			if (remoteFolder.getMode() != OpenMode.READ_WRITE) {
-				return;
-			}
-			Message remoteMessage = null;
-			if (!uid.startsWith(RakuPhotoMail.LOCAL_UID_PREFIX)) {
-				remoteMessage = remoteFolder.getMessage(uid);
-			}
-			if (remoteMessage == null) {
-				return;
-			}
-			remoteMessage.setFlag(flag, newState);
-		} finally {
-			closeFolder(remoteFolder);
-		}
-	}
-
-	private void queueExpunge(final Account account, final String folderName) {
-		putBackground("queueExpunge " + account.getDescription() + ":"
-				+ folderName, null, new Runnable() {
-			@Override
-			public void run() {
-				PendingCommand command = new PendingCommand();
-				command.command = PENDING_COMMAND_EXPUNGE;
-
-				command.arguments = new String[1];
-
-				command.arguments[0] = folderName;
-				queuePendingCommand(account, command);
-				processPendingCommands(account);
-			}
-		});
-	}
-
-	private void processPendingExpunge(PendingCommand command, Account account)
-			throws MessagingException {
-		String folder = command.arguments[0];
-
-		if (account.getErrorFolderName().equals(folder)) {
-			return;
-		}
-		if (RakuPhotoMail.DEBUG)
-			Log.d(RakuPhotoMail.LOG_TAG, "processPendingExpunge: folder = "
-					+ folder);
-
-		Store remoteStore = account.getRemoteStore();
-		Folder remoteFolder = remoteStore.getFolder(folder);
-		try {
-			if (!remoteFolder.exists()) {
-				return;
-			}
-			remoteFolder.open(OpenMode.READ_WRITE);
-			if (remoteFolder.getMode() != OpenMode.READ_WRITE) {
-				return;
-			}
-			remoteFolder.expunge();
-			if (RakuPhotoMail.DEBUG)
-				Log.d(RakuPhotoMail.LOG_TAG,
-						"processPendingExpunge: complete for folder = "
-								+ folder);
-		} finally {
-			closeFolder(remoteFolder);
-		}
-	}
-
-	// Eventually, it should be removed
-	private void processPendingMoveOrCopyOld(PendingCommand command,
-			Account account) throws MessagingException {
-		String srcFolder = command.arguments[0];
-		String uid = command.arguments[1];
-		String destFolder = command.arguments[2];
-		String isCopyS = command.arguments[3];
-
-		boolean isCopy = false;
-		if (isCopyS != null) {
-			isCopy = Boolean.parseBoolean(isCopyS);
-		}
-
-		if (account.getErrorFolderName().equals(srcFolder)) {
-			return;
-		}
-
-		Store remoteStore = account.getRemoteStore();
-		Folder remoteSrcFolder = remoteStore.getFolder(srcFolder);
-		Folder remoteDestFolder = remoteStore.getFolder(destFolder);
-
-		if (!remoteSrcFolder.exists()) {
-			throw new MessagingException(
-					"processPendingMoveOrCopyOld: remoteFolder " + srcFolder
-							+ " does not exist", true);
-		}
-		remoteSrcFolder.open(OpenMode.READ_WRITE);
-		if (remoteSrcFolder.getMode() != OpenMode.READ_WRITE) {
-			throw new MessagingException(
-					"processPendingMoveOrCopyOld: could not open remoteSrcFolder "
-							+ srcFolder + " read/write", true);
-		}
-
-		Message remoteMessage = null;
-		if (!uid.startsWith(RakuPhotoMail.LOCAL_UID_PREFIX)) {
-			remoteMessage = remoteSrcFolder.getMessage(uid);
-		}
-		if (remoteMessage == null) {
-			throw new MessagingException(
-					"processPendingMoveOrCopyOld: remoteMessage " + uid
-							+ " does not exist", true);
-		}
-
-		if (RakuPhotoMail.DEBUG)
-			Log.d(RakuPhotoMail.LOG_TAG,
-					"processPendingMoveOrCopyOld: source folder = " + srcFolder
-							+ ", uid = " + uid + ", destination folder = "
-							+ destFolder + ", isCopy = " + isCopy);
-
-		if (!isCopy && destFolder.equals(account.getTrashFolderName())) {
-			if (RakuPhotoMail.DEBUG)
-				Log.d(RakuPhotoMail.LOG_TAG,
-						"processPendingMoveOrCopyOld doing special case for deleting message");
-
-			remoteMessage.delete(account.getTrashFolderName());
-			remoteSrcFolder.close();
-			return;
-		}
-
-		remoteDestFolder.open(OpenMode.READ_WRITE);
-		if (remoteDestFolder.getMode() != OpenMode.READ_WRITE) {
-			throw new MessagingException(
-					"processPendingMoveOrCopyOld: could not open remoteDestFolder "
-							+ srcFolder + " read/write", true);
-		}
-
-		if (isCopy) {
-			remoteSrcFolder.copyMessages(new Message[] { remoteMessage },
-					remoteDestFolder);
-		} else {
-			remoteSrcFolder.moveMessages(new Message[] { remoteMessage },
-					remoteDestFolder);
-		}
-		remoteSrcFolder.close();
-		remoteDestFolder.close();
-	}
-
-	private void processPendingMarkAllAsRead(PendingCommand command,
-			Account account) throws MessagingException {
-		String folder = command.arguments[0];
-		Folder remoteFolder = null;
-		LocalFolder localFolder = null;
-		try {
-			Store localStore = account.getLocalStore();
-			localFolder = (LocalFolder) localStore.getFolder(folder);
-			localFolder.open(OpenMode.READ_WRITE);
-			Message[] messages = localFolder.getMessages(null, false);
-			for (Message message : messages) {
-				if (!message.isSet(Flag.SEEN)) {
-					message.setFlag(Flag.SEEN, true);
-					for (MessagingListener l : getListeners()) {
-						l.listLocalMessagesUpdateMessage(account, folder,
-								message);
-					}
-				}
-			}
-			localFolder.setUnreadMessageCount(0);
-			for (MessagingListener l : getListeners()) {
-				l.folderStatusChanged(account, folder, 0);
-			}
-
-			if (account.getErrorFolderName().equals(folder)) {
-				return;
-			}
-
-			Store remoteStore = account.getRemoteStore();
-			remoteFolder = remoteStore.getFolder(folder);
-
-			if (!remoteFolder.exists()
-					|| !remoteFolder.isFlagSupported(Flag.SEEN)) {
-				return;
-			}
-			remoteFolder.open(OpenMode.READ_WRITE);
-			if (remoteFolder.getMode() != OpenMode.READ_WRITE) {
-				return;
-			}
-
-			remoteFolder.setFlags(new Flag[] { Flag.SEEN }, true);
-			remoteFolder.close();
-		} catch (UnsupportedOperationException uoe) {
-			Log.w(RakuPhotoMail.LOG_TAG,
-					"Could not mark all server-side as read because store doesn't support operation",
-					uoe);
-		} finally {
-			closeFolder(localFolder);
-			closeFolder(remoteFolder);
-		}
-	}
-
-	static long uidfill = 0;
-	static AtomicBoolean loopCatch = new AtomicBoolean();
-
-	public void addErrorMessage(Account account, String subject, Throwable t) {
-		if (!loopCatch.compareAndSet(false, true)) {
-			return;
-		}
-		try {
-			if (t == null) {
-				return;
-			}
-
-			CharArrayWriter baos = new CharArrayWriter(
-					t.getStackTrace().length * 10);
-			PrintWriter ps = new PrintWriter(baos);
-			t.printStackTrace(ps);
-			ps.close();
-
-			if (subject == null) {
-				subject = getRootCauseMessage(t);
-			}
-
-			addErrorMessage(account, subject, baos.toString());
-		} catch (Throwable it) {
-			Log.e(RakuPhotoMail.LOG_TAG, "Could not save error message to "
-					+ account.getErrorFolderName(), it);
-		} finally {
-			loopCatch.set(false);
-		}
-	}
-
-	public void addErrorMessage(Account account, String subject, String body) {
-		if (!RakuPhotoMail.ENABLE_ERROR_FOLDER) {
-			return;
-		}
-		if (!loopCatch.compareAndSet(false, true)) {
-			return;
-		}
-		try {
-			if (body == null || body.length() < 1) {
-				return;
-			}
-
-			Store localStore = account.getLocalStore();
-			LocalFolder localFolder = (LocalFolder) localStore
-					.getFolder(account.getErrorFolderName());
-			Message[] messages = new Message[1];
-			MimeMessage message = new MimeMessage();
-
-			message.setBody(new TextBody(body));
-			message.setFlag(Flag.X_DOWNLOADED_FULL, true);
-			message.setSubject(subject);
-
-			long nowTime = System.currentTimeMillis();
-			Date nowDate = new Date(nowTime);
-			message.setInternalDate(nowDate);
-			message.addSentDate(nowDate);
-			message.setFrom(new Address(account.getEmail(), "K9mail internal"));
-			messages[0] = message;
-
-			localFolder.appendMessages(messages);
-
-			localFolder.clearMessagesOlderThan(nowTime - (15 * 60 * 1000));
-
-		} catch (Throwable it) {
-			Log.e(RakuPhotoMail.LOG_TAG, "Could not save error message to "
-					+ account.getErrorFolderName(), it);
-		} finally {
-			loopCatch.set(false);
-		}
-	}
-
-	public void markAllMessagesRead(final Account account, final String folder) {
-
-		if (RakuPhotoMail.DEBUG)
-			Log.i(RakuPhotoMail.LOG_TAG,
-					"Marking all messages in " + account.getDescription() + ":"
-							+ folder + " as read");
-		List<String> args = new ArrayList<String>();
-		args.add(folder);
-		PendingCommand command = new PendingCommand();
-		command.command = PENDING_COMMAND_MARK_ALL_AS_READ;
-		command.arguments = args.toArray(EMPTY_STRING_ARRAY);
-		queuePendingCommand(account, command);
-		processPendingCommands(account);
-	}
-
-	public void setFlag(final Message[] messages, final Flag flag,
-			final boolean newState) {
-		actOnMessages(messages, new MessageActor() {
-			@Override
-			public void act(final Account account, final Folder folder,
-					final List<Message> messages) {
-				String[] uids = new String[messages.size()];
-				for (int i = 0; i < messages.size(); i++) {
-					uids[i] = messages.get(i).getUid();
-				}
-				setFlag(account, folder.getName(), uids, flag, newState);
-			}
-
-		});
-
-	}
-
-	public void setFlag(final Account account, final String folderName,
-			final String[] uids, final Flag flag, final boolean newState) {
-		Folder localFolder = null;
-		try {
-			Store localStore = account.getLocalStore();
-			localFolder = localStore.getFolder(folderName);
-			localFolder.open(OpenMode.READ_WRITE);
-			ArrayList<Message> messages = new ArrayList<Message>();
-			for (String uid : uids) {
-				// Allows for re-allowing sending of messages that could not be
-				// sent
-				if (flag == Flag.FLAGGED && !newState && uid != null
-						&& account.getOutboxFolderName().equals(folderName)) {
-					sendCount.remove(uid);
-				}
-				Message msg = localFolder.getMessage(uid);
-				if (msg != null) {
-					messages.add(msg);
-				}
-			}
-
-			localFolder.setFlags(messages.toArray(EMPTY_MESSAGE_ARRAY),
-					new Flag[] { flag }, newState);
-
-			for (MessagingListener l : getListeners()) {
-				l.folderStatusChanged(account, folderName,
-						localFolder.getUnreadMessageCount());
-			}
-
-			if (account.getErrorFolderName().equals(folderName)) {
-				return;
-			}
-
-			queueSetFlag(account, folderName, Boolean.toString(newState),
-					flag.toString(), uids);
-			processPendingCommands(account);
-		} catch (MessagingException me) {
-			addErrorMessage(account, null, me);
-
-			throw new RuntimeException(me);
-		} finally {
-			closeFolder(localFolder);
-		}
-	}// setMesssageFlag
-
-	public void clearAllPending(final Account account) {
-		try {
-			Log.w(RakuPhotoMail.LOG_TAG, "Clearing pending commands!");
-			LocalStore localStore = account.getLocalStore();
-			localStore.removePendingCommands();
-		} catch (MessagingException me) {
-			Log.e(RakuPhotoMail.LOG_TAG, "Unable to clear pending command", me);
-			addErrorMessage(account, null, me);
-		}
-	}
-
-	public void loadMessageForViewRemote(final Account account,
-			final String folder, final String uid,
-			final MessagingListener listener) {
-		put("loadMessageForViewRemote", listener, new Runnable() {
-			@Override
-			public void run() {
-				// XXX 画像DL対応箇所と思われ
-				Folder remoteFolder = null;
-				LocalFolder localFolder = null;
-				try {
-					LocalStore localStore = account.getLocalStore();
-					localFolder = localStore.getFolder(folder);
-					localFolder.open(OpenMode.READ_WRITE);
-
-					Message message = localFolder.getMessage(uid);
-
-					if (message.isSet(Flag.X_DOWNLOADED_FULL)) {
-						/*
+                    Log.d("SendTest", "MessagingController#processPendingAppend ああああ？");
+
+
+                    fp.clear();
+                    fp = new FetchProfile();
+                    fp.add(FetchProfile.Item.BODY);
+                    localFolder.fetch(new Message[]{localMessage}, fp, null);
+                    String oldUid = localMessage.getUid();
+
+                    localMessage.setFlag(Flag.X_REMOTE_COPY_STARTED, true);
+
+                    remoteFolder.appendMessages(new Message[]{localMessage});
+                    localFolder.changeUid(localMessage);
+                    for (MessagingListener l : getListeners()) {
+                        l.messageUidChanged(account, folder, oldUid,
+                                localMessage.getUid());
+                    }
+                    if (remoteDate != null) {
+                        remoteMessage.setFlag(Flag.DELETED, true);
+                        if (Account.EXPUNGE_IMMEDIATELY.equals(account
+                                .getExpungePolicy())) {
+                            remoteFolder.expunge();
+                        }
+                    }
+                }
+            }
+        } finally {
+            closeFolder(remoteFolder);
+            closeFolder(localFolder);
+        }
+    }
+
+    private void queueMoveOrCopy(Account account, String srcFolder,
+                                 String destFolder, boolean isCopy, String uids[]) {
+        if (account.getErrorFolderName().equals(srcFolder)) {
+            return;
+        }
+        PendingCommand command = new PendingCommand();
+        command.command = PENDING_COMMAND_MOVE_OR_COPY_BULK;
+
+        int length = 3 + uids.length;
+        command.arguments = new String[length];
+        command.arguments[0] = srcFolder;
+        command.arguments[1] = destFolder;
+        command.arguments[2] = Boolean.toString(isCopy);
+        System.arraycopy(uids, 0, command.arguments, 3, uids.length);
+        queuePendingCommand(account, command);
+    }
+
+    /**
+     * Process a pending trash message command.
+     *
+     * @param command arguments = (String folder, String uid)
+     * @param account
+     * @throws MessagingException
+     */
+    private void processPendingMoveOrCopy(PendingCommand command,
+                                          Account account) throws MessagingException {
+        Folder remoteSrcFolder = null;
+        Folder remoteDestFolder = null;
+        try {
+            String srcFolder = command.arguments[0];
+            if (account.getErrorFolderName().equals(srcFolder)) {
+                return;
+            }
+            String destFolder = command.arguments[1];
+            String isCopyS = command.arguments[2];
+            Store remoteStore = account.getRemoteStore();
+            remoteSrcFolder = remoteStore.getFolder(srcFolder);
+
+            List<Message> messages = new ArrayList<Message>();
+            for (int i = 3; i < command.arguments.length; i++) {
+                String uid = command.arguments[i];
+                if (!uid.startsWith(RakuPhotoMail.LOCAL_UID_PREFIX)) {
+                    messages.add(remoteSrcFolder.getMessage(uid));
+                }
+            }
+
+            boolean isCopy = false;
+            if (isCopyS != null) {
+                isCopy = Boolean.parseBoolean(isCopyS);
+            }
+
+            if (!remoteSrcFolder.exists()) {
+                throw new MessagingException(
+                        "processingPendingMoveOrCopy: remoteFolder "
+                                + srcFolder + " does not exist", true);
+            }
+            remoteSrcFolder.open(OpenMode.READ_WRITE);
+            if (remoteSrcFolder.getMode() != OpenMode.READ_WRITE) {
+                throw new MessagingException(
+                        "processingPendingMoveOrCopy: could not open remoteSrcFolder "
+                                + srcFolder + " read/write", true);
+            }
+
+            if (RakuPhotoMail.DEBUG)
+                Log.d(RakuPhotoMail.LOG_TAG,
+                        "processingPendingMoveOrCopy: source folder = "
+                                + srcFolder + ", " + messages.size()
+                                + " messages, destination folder = "
+                                + destFolder + ", isCopy = " + isCopy);
+
+            if (!isCopy && destFolder.equals(account.getTrashFolderName())) {
+                if (RakuPhotoMail.DEBUG)
+                    Log.d(RakuPhotoMail.LOG_TAG,
+                            "processingPendingMoveOrCopy doing special case for deleting message");
+
+                String destFolderName = destFolder;
+                if (RakuPhotoMail.FOLDER_NONE.equals(destFolderName)) {
+                    destFolderName = null;
+                }
+                remoteSrcFolder.delete(messages.toArray(EMPTY_MESSAGE_ARRAY),
+                        destFolderName);
+            } else {
+                remoteDestFolder = remoteStore.getFolder(destFolder);
+
+                if (isCopy) {
+                    remoteSrcFolder.copyMessages(
+                            messages.toArray(EMPTY_MESSAGE_ARRAY),
+                            remoteDestFolder);
+                } else {
+                    remoteSrcFolder.moveMessages(
+                            messages.toArray(EMPTY_MESSAGE_ARRAY),
+                            remoteDestFolder);
+                }
+            }
+            if (!isCopy
+                    && Account.EXPUNGE_IMMEDIATELY.equals(account
+                    .getExpungePolicy())) {
+                if (RakuPhotoMail.DEBUG)
+                    Log.i(RakuPhotoMail.LOG_TAG,
+                            "processingPendingMoveOrCopy expunging folder "
+                                    + account.getDescription() + ":"
+                                    + srcFolder);
+
+                remoteSrcFolder.expunge();
+            }
+        } finally {
+            closeFolder(remoteSrcFolder);
+            closeFolder(remoteDestFolder);
+        }
+
+    }
+
+    private void queueSetFlag(final Account account, final String folderName,
+                              final String newState, final String flag, final String[] uids) {
+
+        putBackground("queueSetFlag " + account.getDescription() + ":"
+                + folderName, null, new Runnable() {
+            @Override
+            public void run() {
+                PendingCommand command = new PendingCommand();
+                command.command = PENDING_COMMAND_SET_FLAG_BULK;
+                int length = 3 + uids.length;
+                command.arguments = new String[length];
+                command.arguments[0] = folderName;
+                command.arguments[1] = newState;
+                command.arguments[2] = flag;
+                System.arraycopy(uids, 0, command.arguments, 3, uids.length);
+                queuePendingCommand(account, command);
+                processPendingCommands(account);
+            }
+        });
+    }
+
+    /**
+     * Processes a pending mark read or unread command.
+     *
+     * @param command arguments = (String folder, String uid, boolean read)
+     * @param account
+     */
+    private void processPendingSetFlag(PendingCommand command, Account account)
+            throws MessagingException {
+        String folder = command.arguments[0];
+
+        if (account.getErrorFolderName().equals(folder)) {
+            return;
+        }
+
+        boolean newState = Boolean.parseBoolean(command.arguments[1]);
+
+        Flag flag = Flag.valueOf(command.arguments[2]);
+
+        Store remoteStore = account.getRemoteStore();
+        Folder remoteFolder = remoteStore.getFolder(folder);
+        if (!remoteFolder.exists() || !remoteFolder.isFlagSupported(flag)) {
+            return;
+        }
+
+        try {
+            remoteFolder.open(OpenMode.READ_WRITE);
+            if (remoteFolder.getMode() != OpenMode.READ_WRITE) {
+                return;
+            }
+            List<Message> messages = new ArrayList<Message>();
+            for (int i = 3; i < command.arguments.length; i++) {
+                String uid = command.arguments[i];
+                if (!uid.startsWith(RakuPhotoMail.LOCAL_UID_PREFIX)) {
+                    messages.add(remoteFolder.getMessage(uid));
+                }
+            }
+
+            if (messages.size() == 0) {
+                return;
+            }
+            remoteFolder.setFlags(messages.toArray(EMPTY_MESSAGE_ARRAY),
+                    new Flag[]{flag}, newState);
+        } finally {
+            closeFolder(remoteFolder);
+        }
+    }
+
+    // Eventually, it should be removed
+    private void processPendingSetFlagOld(PendingCommand command,
+                                          Account account) throws MessagingException {
+        String folder = command.arguments[0];
+        String uid = command.arguments[1];
+
+        if (account.getErrorFolderName().equals(folder)) {
+            return;
+        }
+        if (RakuPhotoMail.DEBUG)
+            Log.d(RakuPhotoMail.LOG_TAG, "processPendingSetFlagOld: folder = "
+                    + folder + ", uid = " + uid);
+
+        boolean newState = Boolean.parseBoolean(command.arguments[2]);
+
+        Flag flag = Flag.valueOf(command.arguments[3]);
+        Folder remoteFolder = null;
+        try {
+            Store remoteStore = account.getRemoteStore();
+            remoteFolder = remoteStore.getFolder(folder);
+            if (!remoteFolder.exists()) {
+                return;
+            }
+            remoteFolder.open(OpenMode.READ_WRITE);
+            if (remoteFolder.getMode() != OpenMode.READ_WRITE) {
+                return;
+            }
+            Message remoteMessage = null;
+            if (!uid.startsWith(RakuPhotoMail.LOCAL_UID_PREFIX)) {
+                remoteMessage = remoteFolder.getMessage(uid);
+            }
+            if (remoteMessage == null) {
+                return;
+            }
+            remoteMessage.setFlag(flag, newState);
+        } finally {
+            closeFolder(remoteFolder);
+        }
+    }
+
+    private void queueExpunge(final Account account, final String folderName) {
+        putBackground("queueExpunge " + account.getDescription() + ":"
+                + folderName, null, new Runnable() {
+            @Override
+            public void run() {
+                PendingCommand command = new PendingCommand();
+                command.command = PENDING_COMMAND_EXPUNGE;
+
+                command.arguments = new String[1];
+
+                command.arguments[0] = folderName;
+                queuePendingCommand(account, command);
+                processPendingCommands(account);
+            }
+        });
+    }
+
+    private void processPendingExpunge(PendingCommand command, Account account)
+            throws MessagingException {
+        String folder = command.arguments[0];
+
+        if (account.getErrorFolderName().equals(folder)) {
+            return;
+        }
+        if (RakuPhotoMail.DEBUG)
+            Log.d(RakuPhotoMail.LOG_TAG, "processPendingExpunge: folder = "
+                    + folder);
+
+        Store remoteStore = account.getRemoteStore();
+        Folder remoteFolder = remoteStore.getFolder(folder);
+        try {
+            if (!remoteFolder.exists()) {
+                return;
+            }
+            remoteFolder.open(OpenMode.READ_WRITE);
+            if (remoteFolder.getMode() != OpenMode.READ_WRITE) {
+                return;
+            }
+            remoteFolder.expunge();
+            if (RakuPhotoMail.DEBUG)
+                Log.d(RakuPhotoMail.LOG_TAG,
+                        "processPendingExpunge: complete for folder = "
+                                + folder);
+        } finally {
+            closeFolder(remoteFolder);
+        }
+    }
+
+    // Eventually, it should be removed
+    private void processPendingMoveOrCopyOld(PendingCommand command,
+                                             Account account) throws MessagingException {
+        String srcFolder = command.arguments[0];
+        String uid = command.arguments[1];
+        String destFolder = command.arguments[2];
+        String isCopyS = command.arguments[3];
+
+        boolean isCopy = false;
+        if (isCopyS != null) {
+            isCopy = Boolean.parseBoolean(isCopyS);
+        }
+
+        if (account.getErrorFolderName().equals(srcFolder)) {
+            return;
+        }
+
+        Store remoteStore = account.getRemoteStore();
+        Folder remoteSrcFolder = remoteStore.getFolder(srcFolder);
+        Folder remoteDestFolder = remoteStore.getFolder(destFolder);
+
+        if (!remoteSrcFolder.exists()) {
+            throw new MessagingException(
+                    "processPendingMoveOrCopyOld: remoteFolder " + srcFolder
+                            + " does not exist", true);
+        }
+        remoteSrcFolder.open(OpenMode.READ_WRITE);
+        if (remoteSrcFolder.getMode() != OpenMode.READ_WRITE) {
+            throw new MessagingException(
+                    "processPendingMoveOrCopyOld: could not open remoteSrcFolder "
+                            + srcFolder + " read/write", true);
+        }
+
+        Message remoteMessage = null;
+        if (!uid.startsWith(RakuPhotoMail.LOCAL_UID_PREFIX)) {
+            remoteMessage = remoteSrcFolder.getMessage(uid);
+        }
+        if (remoteMessage == null) {
+            throw new MessagingException(
+                    "processPendingMoveOrCopyOld: remoteMessage " + uid
+                            + " does not exist", true);
+        }
+
+        if (RakuPhotoMail.DEBUG)
+            Log.d(RakuPhotoMail.LOG_TAG,
+                    "processPendingMoveOrCopyOld: source folder = " + srcFolder
+                            + ", uid = " + uid + ", destination folder = "
+                            + destFolder + ", isCopy = " + isCopy);
+
+        if (!isCopy && destFolder.equals(account.getTrashFolderName())) {
+            if (RakuPhotoMail.DEBUG)
+                Log.d(RakuPhotoMail.LOG_TAG,
+                        "processPendingMoveOrCopyOld doing special case for deleting message");
+
+            remoteMessage.delete(account.getTrashFolderName());
+            remoteSrcFolder.close();
+            return;
+        }
+
+        remoteDestFolder.open(OpenMode.READ_WRITE);
+        if (remoteDestFolder.getMode() != OpenMode.READ_WRITE) {
+            throw new MessagingException(
+                    "processPendingMoveOrCopyOld: could not open remoteDestFolder "
+                            + srcFolder + " read/write", true);
+        }
+
+        if (isCopy) {
+            remoteSrcFolder.copyMessages(new Message[]{remoteMessage},
+                    remoteDestFolder);
+        } else {
+            remoteSrcFolder.moveMessages(new Message[]{remoteMessage},
+                    remoteDestFolder);
+        }
+        remoteSrcFolder.close();
+        remoteDestFolder.close();
+    }
+
+    private void processPendingMarkAllAsRead(PendingCommand command,
+                                             Account account) throws MessagingException {
+        String folder = command.arguments[0];
+        Folder remoteFolder = null;
+        LocalFolder localFolder = null;
+        try {
+            Store localStore = account.getLocalStore();
+            localFolder = (LocalFolder) localStore.getFolder(folder);
+            localFolder.open(OpenMode.READ_WRITE);
+            Message[] messages = localFolder.getMessages(null, false);
+            for (Message message : messages) {
+                if (!message.isSet(Flag.SEEN)) {
+                    message.setFlag(Flag.SEEN, true);
+                    for (MessagingListener l : getListeners()) {
+                        l.listLocalMessagesUpdateMessage(account, folder,
+                                message);
+                    }
+                }
+            }
+            localFolder.setUnreadMessageCount(0);
+            for (MessagingListener l : getListeners()) {
+                l.folderStatusChanged(account, folder, 0);
+            }
+
+            if (account.getErrorFolderName().equals(folder)) {
+                return;
+            }
+
+            Store remoteStore = account.getRemoteStore();
+            remoteFolder = remoteStore.getFolder(folder);
+
+            if (!remoteFolder.exists()
+                    || !remoteFolder.isFlagSupported(Flag.SEEN)) {
+                return;
+            }
+            remoteFolder.open(OpenMode.READ_WRITE);
+            if (remoteFolder.getMode() != OpenMode.READ_WRITE) {
+                return;
+            }
+
+            remoteFolder.setFlags(new Flag[]{Flag.SEEN}, true);
+            remoteFolder.close();
+        } catch (UnsupportedOperationException uoe) {
+            Log.w(RakuPhotoMail.LOG_TAG,
+                    "Could not mark all server-side as read because store doesn't support operation",
+                    uoe);
+        } finally {
+            closeFolder(localFolder);
+            closeFolder(remoteFolder);
+        }
+    }
+
+    static long uidfill = 0;
+    static AtomicBoolean loopCatch = new AtomicBoolean();
+
+    public void addErrorMessage(Account account, String subject, Throwable t) {
+        if (!loopCatch.compareAndSet(false, true)) {
+            return;
+        }
+        try {
+            if (t == null) {
+                return;
+            }
+
+            CharArrayWriter baos = new CharArrayWriter(
+                    t.getStackTrace().length * 10);
+            PrintWriter ps = new PrintWriter(baos);
+            t.printStackTrace(ps);
+            ps.close();
+
+            if (subject == null) {
+                subject = getRootCauseMessage(t);
+            }
+
+            addErrorMessage(account, subject, baos.toString());
+        } catch (Throwable it) {
+            Log.e(RakuPhotoMail.LOG_TAG, "Could not save error message to "
+                    + account.getErrorFolderName(), it);
+        } finally {
+            loopCatch.set(false);
+        }
+    }
+
+    public void addErrorMessage(Account account, String subject, String body) {
+        if (!RakuPhotoMail.ENABLE_ERROR_FOLDER) {
+            return;
+        }
+        if (!loopCatch.compareAndSet(false, true)) {
+            return;
+        }
+        try {
+            if (body == null || body.length() < 1) {
+                return;
+            }
+
+            Store localStore = account.getLocalStore();
+            LocalFolder localFolder = (LocalFolder) localStore
+                    .getFolder(account.getErrorFolderName());
+            Message[] messages = new Message[1];
+            MimeMessage message = new MimeMessage();
+
+            message.setBody(new TextBody(body));
+            message.setFlag(Flag.X_DOWNLOADED_FULL, true);
+            message.setSubject(subject);
+
+            long nowTime = System.currentTimeMillis();
+            Date nowDate = new Date(nowTime);
+            message.setInternalDate(nowDate);
+            message.addSentDate(nowDate);
+            message.setFrom(new Address(account.getEmail(), "K9mail internal"));
+            messages[0] = message;
+
+            localFolder.appendMessages(messages);
+
+            localFolder.clearMessagesOlderThan(nowTime - (15 * 60 * 1000));
+
+        } catch (Throwable it) {
+            Log.e(RakuPhotoMail.LOG_TAG, "Could not save error message to "
+                    + account.getErrorFolderName(), it);
+        } finally {
+            loopCatch.set(false);
+        }
+    }
+
+    public void markAllMessagesRead(final Account account, final String folder) {
+
+        if (RakuPhotoMail.DEBUG)
+            Log.i(RakuPhotoMail.LOG_TAG,
+                    "Marking all messages in " + account.getDescription() + ":"
+                            + folder + " as read");
+        List<String> args = new ArrayList<String>();
+        args.add(folder);
+        PendingCommand command = new PendingCommand();
+        command.command = PENDING_COMMAND_MARK_ALL_AS_READ;
+        command.arguments = args.toArray(EMPTY_STRING_ARRAY);
+        queuePendingCommand(account, command);
+        processPendingCommands(account);
+    }
+
+    public void setFlag(final Message[] messages, final Flag flag,
+                        final boolean newState) {
+        actOnMessages(messages, new MessageActor() {
+            @Override
+            public void act(final Account account, final Folder folder,
+                            final List<Message> messages) {
+                String[] uids = new String[messages.size()];
+                for (int i = 0; i < messages.size(); i++) {
+                    uids[i] = messages.get(i).getUid();
+                }
+                setFlag(account, folder.getName(), uids, flag, newState);
+            }
+
+        });
+
+    }
+
+    public void setFlag(final Account account, final String folderName,
+                        final String[] uids, final Flag flag, final boolean newState) {
+        Folder localFolder = null;
+        try {
+            Store localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folderName);
+            localFolder.open(OpenMode.READ_WRITE);
+            ArrayList<Message> messages = new ArrayList<Message>();
+            for (String uid : uids) {
+                // Allows for re-allowing sending of messages that could not be
+                // sent
+                if (flag == Flag.FLAGGED && !newState && uid != null
+                        && account.getOutboxFolderName().equals(folderName)) {
+                    sendCount.remove(uid);
+                }
+                Message msg = localFolder.getMessage(uid);
+                if (msg != null) {
+                    messages.add(msg);
+                }
+            }
+
+            localFolder.setFlags(messages.toArray(EMPTY_MESSAGE_ARRAY),
+                    new Flag[]{flag}, newState);
+
+            for (MessagingListener l : getListeners()) {
+                l.folderStatusChanged(account, folderName,
+                        localFolder.getUnreadMessageCount());
+            }
+
+            if (account.getErrorFolderName().equals(folderName)) {
+                return;
+            }
+
+            queueSetFlag(account, folderName, Boolean.toString(newState),
+                    flag.toString(), uids);
+            processPendingCommands(account);
+        } catch (MessagingException me) {
+            addErrorMessage(account, null, me);
+
+            throw new RuntimeException(me);
+        } finally {
+            closeFolder(localFolder);
+        }
+    }// setMesssageFlag
+
+    public void clearAllPending(final Account account) {
+        try {
+            Log.w(RakuPhotoMail.LOG_TAG, "Clearing pending commands!");
+            LocalStore localStore = account.getLocalStore();
+            localStore.removePendingCommands();
+        } catch (MessagingException me) {
+            Log.e(RakuPhotoMail.LOG_TAG, "Unable to clear pending command", me);
+            addErrorMessage(account, null, me);
+        }
+    }
+
+    public void loadMessageForViewRemote(final Account account,
+                                         final String folder, final String uid,
+                                         final MessagingListener listener) {
+        put("loadMessageForViewRemote", listener, new Runnable() {
+            @Override
+            public void run() {
+                // XXX 画像DL対応箇所と思われ
+                Folder remoteFolder = null;
+                LocalFolder localFolder = null;
+                try {
+                    LocalStore localStore = account.getLocalStore();
+                    localFolder = localStore.getFolder(folder);
+                    localFolder.open(OpenMode.READ_WRITE);
+
+                    Message message = localFolder.getMessage(uid);
+
+                    if (message.isSet(Flag.X_DOWNLOADED_FULL)) {
+                        /*
 						 * If the message has been synchronized since we were
 						 * called we'll just hand it back cause it's ready to
 						 * go.
 						 */
-						FetchProfile fp = new FetchProfile();
-						fp.add(FetchProfile.Item.ENVELOPE);
-						fp.add(FetchProfile.Item.BODY);
-						localFolder.fetch(new Message[] { message }, fp, null);
-					} else {
-						/*
+                        FetchProfile fp = new FetchProfile();
+                        fp.add(FetchProfile.Item.ENVELOPE);
+                        fp.add(FetchProfile.Item.BODY);
+                        localFolder.fetch(new Message[]{message}, fp, null);
+                    } else {
+                        /*
 						 * At this point the message is not available, so we
 						 * need to download it fully if possible.
 						 */
 
-						Store remoteStore = account.getRemoteStore();
-						remoteFolder = remoteStore.getFolder(folder);
-						remoteFolder.open(OpenMode.READ_WRITE);
+                        Store remoteStore = account.getRemoteStore();
+                        remoteFolder = remoteStore.getFolder(folder);
+                        remoteFolder.open(OpenMode.READ_WRITE);
 
-						// Get the remote message and fully download it
-						Message remoteMessage = remoteFolder.getMessage(uid);
-						FetchProfile fp = new FetchProfile();
-						fp.add(FetchProfile.Item.BODY);
-						remoteFolder.fetch(new Message[] { remoteMessage }, fp,
-								null);
+                        // Get the remote message and fully download it
+                        Message remoteMessage = remoteFolder.getMessage(uid);
+                        FetchProfile fp = new FetchProfile();
+                        fp.add(FetchProfile.Item.BODY);
+                        remoteFolder.fetch(new Message[]{remoteMessage}, fp,
+                                null);
 
-						// Store the message locally and load the stored message
-						// into memory
-						localFolder
-								.appendMessages(new Message[] { remoteMessage });
-						fp.add(FetchProfile.Item.ENVELOPE);
-						message = localFolder.getMessage(uid);
-						localFolder.fetch(new Message[] { message }, fp, null);
+                        // Store the message locally and load the stored message
+                        // into memory
+                        localFolder
+                                .appendMessages(new Message[]{remoteMessage});
+                        fp.add(FetchProfile.Item.ENVELOPE);
+                        message = localFolder.getMessage(uid);
+                        localFolder.fetch(new Message[]{message}, fp, null);
 
-						// Mark that this message is now fully synched
-						message.setFlag(Flag.X_DOWNLOADED_FULL, true);
-					}
+                        // Mark that this message is now fully synched
+                        message.setFlag(Flag.X_DOWNLOADED_FULL, true);
+                    }
 
-					// now that we have the full message, refresh the headers
-					for (MessagingListener l : getListeners(listener)) {
-						l.loadMessageForViewHeadersAvailable(account, folder,
-								uid, message);
-					}
+                    // now that we have the full message, refresh the headers
+                    for (MessagingListener l : getListeners(listener)) {
+                        l.loadMessageForViewHeadersAvailable(account, folder,
+                                uid, message);
+                    }
 
-					for (MessagingListener l : getListeners(listener)) {
-						l.loadMessageForViewBodyAvailable(account, folder, uid,
-								message);
-					}
-					for (MessagingListener l : getListeners(listener)) {
-						l.loadMessageForViewFinished(account, folder, uid,
-								message);
-					}
-				} catch (Exception e) {
-					for (MessagingListener l : getListeners(listener)) {
-						l.loadMessageForViewFailed(account, folder, uid, e);
-					}
-					addErrorMessage(account, null, e);
+                    for (MessagingListener l : getListeners(listener)) {
+                        l.loadMessageForViewBodyAvailable(account, folder, uid,
+                                message);
+                    }
+                    for (MessagingListener l : getListeners(listener)) {
+                        l.loadMessageForViewFinished(account, folder, uid,
+                                message);
+                    }
+                } catch (Exception e) {
+                    for (MessagingListener l : getListeners(listener)) {
+                        l.loadMessageForViewFailed(account, folder, uid, e);
+                    }
+                    addErrorMessage(account, null, e);
 
-				} finally {
-					closeFolder(remoteFolder);
-					closeFolder(localFolder);
-				}
-			}// run
-		});
-	}
+                } finally {
+                    closeFolder(remoteFolder);
+                    closeFolder(localFolder);
+                }
+            }// run
+        });
+    }
 
-	public void loadMessageForView(final Account account, final String folder,
-			final String uid, final MessagingListener listener) {
-		for (MessagingListener l : getListeners(listener)) {
-			l.loadMessageForViewStarted(account, folder, uid);
-		}
-		threadPool.execute(new Runnable() {
-			@Override
-			public void run() {
+    public void loadMessageForView(final Account account, final String folder,
+                                   final String uid, final MessagingListener listener) {
+        for (MessagingListener l : getListeners(listener)) {
+            l.loadMessageForViewStarted(account, folder, uid);
+        }
+        threadPool.execute(new Runnable() {
+            @Override
+            public void run() {
 
-				try {
-					LocalStore localStore = account.getLocalStore();
-					LocalFolder localFolder = localStore.getFolder(folder);
-					localFolder.open(OpenMode.READ_WRITE);
-					LocalMessage message = (LocalMessage) localFolder
-							.getMessage(uid);
-					if (message == null || message.getId() == 0) {
-						throw new IllegalArgumentException(
-								"Message not found: folder=" + folder
-										+ ", uid=" + uid);
-					}
-					if (!message.isSet(Flag.SEEN)) {
-						message.setFlag(Flag.SEEN, true);
-						setFlag(new Message[] { message }, Flag.SEEN, true);
-					}
+                try {
+                    LocalStore localStore = account.getLocalStore();
+                    LocalFolder localFolder = localStore.getFolder(folder);
+                    localFolder.open(OpenMode.READ_WRITE);
+                    LocalMessage message = (LocalMessage) localFolder
+                            .getMessage(uid);
+                    if (message == null || message.getId() == 0) {
+                        throw new IllegalArgumentException(
+                                "Message not found: folder=" + folder
+                                        + ", uid=" + uid);
+                    }
+                    if (!message.isSet(Flag.SEEN)) {
+                        message.setFlag(Flag.SEEN, true);
+                        setFlag(new Message[]{message}, Flag.SEEN, true);
+                    }
 
-					for (MessagingListener l : getListeners(listener)) {
-						l.loadMessageForViewHeadersAvailable(account, folder,
-								uid, message);
-					}
+                    for (MessagingListener l : getListeners(listener)) {
+                        l.loadMessageForViewHeadersAvailable(account, folder,
+                                uid, message);
+                    }
 
-					FetchProfile fp = new FetchProfile();
-					fp.add(FetchProfile.Item.ENVELOPE);
-					fp.add(FetchProfile.Item.BODY);
-					localFolder.fetch(new Message[] { message }, fp, null);
-					localFolder.close();
+                    FetchProfile fp = new FetchProfile();
+                    fp.add(FetchProfile.Item.ENVELOPE);
+                    fp.add(FetchProfile.Item.BODY);
+                    localFolder.fetch(new Message[]{message}, fp, null);
+                    localFolder.close();
 
-					for (MessagingListener l : getListeners(listener)) {
-						l.loadMessageForViewBodyAvailable(account, folder, uid,
-								message);
-					}
+                    for (MessagingListener l : getListeners(listener)) {
+                        l.loadMessageForViewBodyAvailable(account, folder, uid,
+                                message);
+                    }
 
-					for (MessagingListener l : getListeners(listener)) {
-						l.loadMessageForViewFinished(account, folder, uid,
-								message);
-					}
+                    for (MessagingListener l : getListeners(listener)) {
+                        l.loadMessageForViewFinished(account, folder, uid,
+                                message);
+                    }
 
-				} catch (Exception e) {
-					for (MessagingListener l : getListeners(listener)) {
-						l.loadMessageForViewFailed(account, folder, uid, e);
-					}
-					addErrorMessage(account, null, e);
+                } catch (Exception e) {
+                    for (MessagingListener l : getListeners(listener)) {
+                        l.loadMessageForViewFailed(account, folder, uid, e);
+                    }
+                    addErrorMessage(account, null, e);
 
-				}
-			}
-		});
-	}
+                }
+            }
+        });
+    }
 
-	/**
-	 * Attempts to load the attachment specified by part from the given account
-	 * and message.
-	 * 
-	 * @param account
-	 * @param message
-	 * @param part
-	 * @param listener
-	 */
-	public void loadAttachment(final Account account, final Message message,
-			final Part part, final Object tag, final MessagingListener listener) {
-		Log.d("kierkegaard", "MessaginController#loadAttachment");
-		/*
+    /**
+     * Attempts to load the attachment specified by part from the given account
+     * and message.
+     *
+     * @param account
+     * @param message
+     * @param part
+     * @param listener
+     */
+    public void loadAttachment(final Account account, final Message message,
+                               final Part part, final Object tag, final MessagingListener listener) {
+        Log.d("kierkegaard", "MessaginController#loadAttachment");
+        /*
 		 * Check if the attachment has already been downloaded. If it has
 		 * there's no reason to download it, so we just tell the listener that
 		 * it's ready to go.
 		 */
 
-		if (part.getBody() != null) {
-			Log.d("kierkegaard",
-					"MessaginController#loadAttachment part.getBody():"
-							+ part.getBody());
-			for (MessagingListener l : getListeners()) {
-				Log.d("kierkegaard",
-						"MessaginController#loadAttachment l.loadAttachmentStarted<false>:"
-								+ account + " " + message + " " + part + " "
-								+ tag);
-				l.loadAttachmentStarted(account, message, part, tag, false);
-			}
-			if (listener != null) {
-				Log.d("kierkegaard",
-						"MessaginController#loadAttachment listener.loadAttachmentStarted<false>:"
-								+ account + " " + message + " " + part + " "
-								+ tag);
-				listener.loadAttachmentStarted(account, message, part, tag,
-						false);
-			}
+        if (part.getBody() != null) {
+            Log.d("kierkegaard",
+                    "MessaginController#loadAttachment part.getBody():"
+                            + part.getBody());
+            for (MessagingListener l : getListeners()) {
+                Log.d("kierkegaard",
+                        "MessaginController#loadAttachment l.loadAttachmentStarted<false>:"
+                                + account + " " + message + " " + part + " "
+                                + tag);
+                l.loadAttachmentStarted(account, message, part, tag, false);
+            }
+            if (listener != null) {
+                Log.d("kierkegaard",
+                        "MessaginController#loadAttachment listener.loadAttachmentStarted<false>:"
+                                + account + " " + message + " " + part + " "
+                                + tag);
+                listener.loadAttachmentStarted(account, message, part, tag,
+                        false);
+            }
 
-			for (MessagingListener l : getListeners()) {
-				Log.d("kierkegaard",
-						"MessaginController#loadAttachment l.loadAttachmentFinished:"
-								+ account + " " + message + " " + part + " "
-								+ tag);
-				l.loadAttachmentFinished(account, message, part, tag);
-			}
+            for (MessagingListener l : getListeners()) {
+                Log.d("kierkegaard",
+                        "MessaginController#loadAttachment l.loadAttachmentFinished:"
+                                + account + " " + message + " " + part + " "
+                                + tag);
+                l.loadAttachmentFinished(account, message, part, tag);
+            }
 
-			if (listener != null) {
-				Log.d("kierkegaard",
-						"MessaginController#loadAttachment listener.loadAttachmentFinished:"
-								+ account + " " + message + " " + part + " "
-								+ tag);
-				listener.loadAttachmentFinished(account, message, part, tag);
-			}
-			return;
-		}
+            if (listener != null) {
+                Log.d("kierkegaard",
+                        "MessaginController#loadAttachment listener.loadAttachmentFinished:"
+                                + account + " " + message + " " + part + " "
+                                + tag);
+                listener.loadAttachmentFinished(account, message, part, tag);
+            }
+            return;
+        }
 
-		// 07-11 11:17:29.689: DEBUG/kierkegaard(17818):
-		// MessaginController#loadAttachment l.loadAttachmentStarted<true>:ogu
-		// jp.co.fttx.rakuphotomail.mail.store.LocalStore$LocalMessage@143f7e03
-		// 3 [Ljava.lang.Object;@405998c8
-		for (MessagingListener l : getListeners()) {
-			Log.d("kierkegaard",
-					"MessaginController#loadAttachment l:" + l.getClass());
-			Log.d("kierkegaard",
-					"MessaginController#loadAttachment l.loadAttachmentStarted<true>:"
-							+ account + " " + message + " " + part + " " + tag);
-			l.loadAttachmentStarted(account, message, part, tag, true);
-		}
-		// 07-11 11:15:28.869: DEBUG/kierkegaard(17818):
-		// MessaginController#loadAttachment
-		// listener.loadAttachmentStarted<false>:ogu
-		// jp.co.fttx.rakuphotomail.mail.store.LocalStore$LocalMessage@143f7e03
-		// 3 [Ljava.lang.Object;@405d7188
-		if (listener != null) {
-			Log.d("kierkegaard", "MessaginController#loadAttachment listener:"
-					+ listener.getClass());
-			Log.d("kierkegaard",
-					"MessaginController#loadAttachment listener.loadAttachmentStarted<false> ????:"
-							+ account + " " + message + " " + part + " " + tag);
-			// 07-11 12:27:01.099: DEBUG/kierkegaard(15828):
-			// MessaginController#loadAttachment
-			// listener.loadAttachmentStarted<false> ????:ogu
-			// jp.co.fttx.rakuphotomail.mail.store.LocalStore$LocalMessage@143f80a9
-			// 1 [Ljava.lang.Object;@405499d0
-			listener.loadAttachmentStarted(account, message, part, tag, false);
-		}
+        // 07-11 11:17:29.689: DEBUG/kierkegaard(17818):
+        // MessaginController#loadAttachment l.loadAttachmentStarted<true>:ogu
+        // jp.co.fttx.rakuphotomail.mail.store.LocalStore$LocalMessage@143f7e03
+        // 3 [Ljava.lang.Object;@405998c8
+        for (MessagingListener l : getListeners()) {
+            Log.d("kierkegaard",
+                    "MessaginController#loadAttachment l:" + l.getClass());
+            Log.d("kierkegaard",
+                    "MessaginController#loadAttachment l.loadAttachmentStarted<true>:"
+                            + account + " " + message + " " + part + " " + tag);
+            l.loadAttachmentStarted(account, message, part, tag, true);
+        }
+        // 07-11 11:15:28.869: DEBUG/kierkegaard(17818):
+        // MessaginController#loadAttachment
+        // listener.loadAttachmentStarted<false>:ogu
+        // jp.co.fttx.rakuphotomail.mail.store.LocalStore$LocalMessage@143f7e03
+        // 3 [Ljava.lang.Object;@405d7188
+        if (listener != null) {
+            Log.d("kierkegaard", "MessaginController#loadAttachment listener:"
+                    + listener.getClass());
+            Log.d("kierkegaard",
+                    "MessaginController#loadAttachment listener.loadAttachmentStarted<false> ????:"
+                            + account + " " + message + " " + part + " " + tag);
+            // 07-11 12:27:01.099: DEBUG/kierkegaard(15828):
+            // MessaginController#loadAttachment
+            // listener.loadAttachmentStarted<false> ????:ogu
+            // jp.co.fttx.rakuphotomail.mail.store.LocalStore$LocalMessage@143f80a9
+            // 1 [Ljava.lang.Object;@405499d0
+            listener.loadAttachmentStarted(account, message, part, tag, false);
+        }
 
-		Log.d("kierkegaard", "MessaginController#loadAttachment fmfm");
+        Log.d("kierkegaard", "MessaginController#loadAttachment fmfm");
 
-		put("loadAttachment", listener, new Runnable() {
-			@Override
-			public void run() {
-				Log.d("kierkegaard", "MessaginController#loadAttachment run()");
-				listener.loadAttachmentStarted(account, message, part, tag,
-						false);
-				Folder remoteFolder = null;
-				LocalFolder localFolder = null;
-				try {
-					LocalStore localStore = account.getLocalStore();
+        put("loadAttachment", listener, new Runnable() {
+            @Override
+            public void run() {
+                Log.d("kierkegaard", "MessaginController#loadAttachment run()");
+                listener.loadAttachmentStarted(account, message, part, tag,
+                        false);
+                Folder remoteFolder = null;
+                LocalFolder localFolder = null;
+                try {
+                    LocalStore localStore = account.getLocalStore();
 
-					ArrayList<Part> viewables = new ArrayList<Part>();
-					ArrayList<Part> attachments = new ArrayList<Part>();
-					MimeUtility.collectParts(message, viewables, attachments);
-					for (Part attachment : attachments) {
-						attachment.setBody(null);
-					}
-					Store remoteStore = account.getRemoteStore();
-					Log.d("kierkegaard",
-							"MessaginController#loadAttachment run() message.getFolder().getName():"
-									+ message.getFolder().getName());
-					localFolder = localStore.getFolder(message.getFolder()
-							.getName());
-					Log.d("kierkegaard",
-							"MessaginController#loadAttachment run() localFolder:"
-									+ localFolder.getMessageCount() + " "
-									+ localFolder.getId() + " "
-									+ localFolder.getLastChecked() + " "
-									+ localFolder.toString() + " "
-									+ localFolder.getLastPush() + " "
-									+ localFolder.getLastUpdate() + " "
-									+ localFolder.getLastUid() + " "
-									+ localFolder.getPushState() + " "
-									+ localFolder.getStatus());
-					remoteFolder = remoteStore.getFolder(message.getFolder()
-							.getName());
-					Log.d("kierkegaard",
-							"MessaginController#loadAttachment run() remoteFolder:"
-									+ remoteFolder.getMessageCount() + " "
-									+ remoteFolder.getAccount() + " "
-									+ remoteFolder.getLastChecked() + " "
-									+ remoteFolder.toString() + " "
-									+ remoteFolder.getLastPush() + " "
-									+ remoteFolder.getLastUpdate() + " "
-									+ remoteFolder.getMode() + " "
-									+ remoteFolder.getStatus());
-					remoteFolder.open(OpenMode.READ_WRITE);
+                    ArrayList<Part> viewables = new ArrayList<Part>();
+                    ArrayList<Part> attachments = new ArrayList<Part>();
+                    MimeUtility.collectParts(message, viewables, attachments);
+                    for (Part attachment : attachments) {
+                        attachment.setBody(null);
+                    }
+                    Store remoteStore = account.getRemoteStore();
+                    Log.d("kierkegaard",
+                            "MessaginController#loadAttachment run() message.getFolder().getName():"
+                                    + message.getFolder().getName());
+                    localFolder = localStore.getFolder(message.getFolder()
+                            .getName());
+                    Log.d("kierkegaard",
+                            "MessaginController#loadAttachment run() localFolder:"
+                                    + localFolder.getMessageCount() + " "
+                                    + localFolder.getId() + " "
+                                    + localFolder.getLastChecked() + " "
+                                    + localFolder.toString() + " "
+                                    + localFolder.getLastPush() + " "
+                                    + localFolder.getLastUpdate() + " "
+                                    + localFolder.getLastUid() + " "
+                                    + localFolder.getPushState() + " "
+                                    + localFolder.getStatus());
+                    remoteFolder = remoteStore.getFolder(message.getFolder()
+                            .getName());
+                    Log.d("kierkegaard",
+                            "MessaginController#loadAttachment run() remoteFolder:"
+                                    + remoteFolder.getMessageCount() + " "
+                                    + remoteFolder.getAccount() + " "
+                                    + remoteFolder.getLastChecked() + " "
+                                    + remoteFolder.toString() + " "
+                                    + remoteFolder.getLastPush() + " "
+                                    + remoteFolder.getLastUpdate() + " "
+                                    + remoteFolder.getMode() + " "
+                                    + remoteFolder.getStatus());
+                    remoteFolder.open(OpenMode.READ_WRITE);
 
-					// FIXME: This is an ugly hack that won't be needed once the
-					// Message objects have been united.
-					Message remoteMessage = remoteFolder.getMessage(message
-							.getUid());
-					remoteMessage.setBody(message.getBody());
-					remoteFolder.fetchPart(remoteMessage, part, null);
+                    // FIXME: This is an ugly hack that won't be needed once the
+                    // Message objects have been united.
+                    Message remoteMessage = remoteFolder.getMessage(message
+                            .getUid());
+                    remoteMessage.setBody(message.getBody());
+                    remoteFolder.fetchPart(remoteMessage, part, null);
 
-					localFolder.updateMessage((LocalMessage) message);
-					for (MessagingListener l : getListeners()) {
-						l.loadAttachmentFinished(account, message, part, tag);
-					}
-					if (listener != null) {
-						listener.loadAttachmentFinished(account, message, part,
-								tag);
-					}
-				} catch (MessagingException me) {
-					if (RakuPhotoMail.DEBUG)
-						Log.v(RakuPhotoMail.LOG_TAG,
-								"Exception loading attachment", me);
+                    localFolder.updateMessage((LocalMessage) message);
+                    for (MessagingListener l : getListeners()) {
+                        l.loadAttachmentFinished(account, message, part, tag);
+                    }
+                    if (listener != null) {
+                        listener.loadAttachmentFinished(account, message, part,
+                                tag);
+                    }
+                } catch (MessagingException me) {
+                    if (RakuPhotoMail.DEBUG)
+                        Log.v(RakuPhotoMail.LOG_TAG,
+                                "Exception loading attachment", me);
 
-					for (MessagingListener l : getListeners()) {
-						l.loadAttachmentFailed(account, message, part, tag,
-								me.getMessage());
-					}
-					if (listener != null) {
-						listener.loadAttachmentFailed(account, message, part,
-								tag, me.getMessage());
-					}
-					addErrorMessage(account, null, me);
+                    for (MessagingListener l : getListeners()) {
+                        l.loadAttachmentFailed(account, message, part, tag,
+                                me.getMessage());
+                    }
+                    if (listener != null) {
+                        listener.loadAttachmentFailed(account, message, part,
+                                tag, me.getMessage());
+                    }
+                    addErrorMessage(account, null, me);
 
-				} finally {
-					closeFolder(localFolder);
-					closeFolder(remoteFolder);
-				}
-			}
-		});
-	}
+                } finally {
+                    closeFolder(localFolder);
+                    closeFolder(remoteFolder);
+                }
+            }
+        });
+    }
 
-	/**
-	 * Attempts to load the attachment specified by part from the given account
-	 * and message.
-	 * 
-	 * @param account
-	 * @param message
-	 * @param part
-	 */
-	public void loadAttachmentMk2(final Account account, final Message message,
-			final Part part, final MessagingListener listener) {
-		Folder remoteFolder = null;
-		LocalFolder localFolder = null;
-		try {
-			LocalStore localStore = account.getLocalStore();
+    /**
+     * Attempts to load the attachment specified by part from the given account
+     * and message.
+     *
+     * @param account
+     * @param message
+     * @param part
+     */
+    public void loadAttachmentMk2(final Account account, final Message message,
+                                  final Part part, final MessagingListener listener) {
+        Folder remoteFolder = null;
+        LocalFolder localFolder = null;
+        try {
+            LocalStore localStore = account.getLocalStore();
 
-			ArrayList<Part> viewables = new ArrayList<Part>();
-			ArrayList<Part> attachments = new ArrayList<Part>();
-			MimeUtility.collectParts(message, viewables, attachments);
-			for (Part attachment : attachments) {
-				attachment.setBody(null);
-			}
-			Store remoteStore = account.getRemoteStore();
-			localFolder = localStore.getFolder(message.getFolder().getName());
-			remoteFolder = remoteStore.getFolder(message.getFolder().getName());
-			remoteFolder.open(OpenMode.READ_WRITE);
-			Message remoteMessage = remoteFolder.getMessage(message.getUid());
-			remoteMessage.setBody(message.getBody());
-			remoteFolder.fetchPart(remoteMessage, part, null);
-			localFolder.updateMessage((LocalMessage) message);
-		} catch (MessagingException me) {
-			addErrorMessage(account, null, me);
-		} finally {
-			closeFolder(localFolder);
-			closeFolder(remoteFolder);
-			listener.loadAttachmentFinished(part);
-		}
-	}
+            ArrayList<Part> viewables = new ArrayList<Part>();
+            ArrayList<Part> attachments = new ArrayList<Part>();
+            MimeUtility.collectParts(message, viewables, attachments);
+            for (Part attachment : attachments) {
+                attachment.setBody(null);
+            }
+            Store remoteStore = account.getRemoteStore();
+            localFolder = localStore.getFolder(message.getFolder().getName());
+            remoteFolder = remoteStore.getFolder(message.getFolder().getName());
+            remoteFolder.open(OpenMode.READ_WRITE);
+            Message remoteMessage = remoteFolder.getMessage(message.getUid());
+            remoteMessage.setBody(message.getBody());
+            remoteFolder.fetchPart(remoteMessage, part, null);
+            localFolder.updateMessage((LocalMessage) message);
+        } catch (MessagingException me) {
+            addErrorMessage(account, null, me);
+        } finally {
+            closeFolder(localFolder);
+            closeFolder(remoteFolder);
+            listener.loadAttachmentFinished(part);
+        }
+    }
 
-	/**
-	 * Stores the given message in the Outbox and starts a sendPendingMessages
-	 * command to attempt to send the message.
-	 * 
-	 * @param account
-	 * @param message
-	 * @param listener
-	 */
-	public void sendMessage(final Account account, final Message message,
-			MessagingListener listener) {
-        Log.d("SendTest","MessagingController#sendMessage start");
+    /**
+     * Stores the given message in the Outbox and starts a sendPendingMessages
+     * command to attempt to send the message.
+     *
+     * @param account
+     * @param message
+     * @param listener
+     */
+    public void sendMessage(final Account account, final Message message,
+                            MessagingListener listener) {
+        Log.d("SendTest", "MessagingController#sendMessage start");
 
-		try {
-			LocalStore localStore = account.getLocalStore();
-			LocalFolder localFolder = localStore.getFolder(account
-					.getOutboxFolderName());
-			localFolder.open(OpenMode.READ_WRITE);
+        try {
+            LocalStore localStore = account.getLocalStore();
+            LocalFolder localFolder = localStore.getFolder(account
+                    .getOutboxFolderName());
+            localFolder.open(OpenMode.READ_WRITE);
 
-			localFolder.appendMessages(new Message[] { message });
+            localFolder.appendMessages(new Message[]{message});
 
-			Message localMessage = localFolder.getMessage(message.getUid());
-			localMessage.setFlag(Flag.X_DOWNLOADED_FULL, true);
-			localFolder.close();
+            Message localMessage = localFolder.getMessage(message.getUid());
+            localMessage.setFlag(Flag.X_DOWNLOADED_FULL, true);
+            localFolder.close();
 
-			sendPendingMessages(account, listener);
-		} catch (Exception e) {
-			/*
+            sendPendingMessages(account, listener);
+        } catch (Exception e) {
+            /*
 			 * for (MessagingListener l : getListeners()) { // TODO general
 			 * failed }
 			 */
-			addErrorMessage(account, null, e);
+            addErrorMessage(account, null, e);
 
-		}
-        Log.d("SendTest","MessagingController#sendMessage end");
-	}
+        }
+        Log.d("SendTest", "MessagingController#sendMessage end");
+    }
 
-	public void sendPendingMessages(MessagingListener listener) {
-		final Preferences prefs = Preferences.getPreferences(mApplication
-				.getApplicationContext());
-		Account[] accounts = prefs.getAccounts();
-		for (Account account : accounts) {
-			sendPendingMessages(account, listener);
-		}
-	}
+    public void sendPendingMessages(MessagingListener listener) {
+        final Preferences prefs = Preferences.getPreferences(mApplication
+                .getApplicationContext());
+        Account[] accounts = prefs.getAccounts();
+        for (Account account : accounts) {
+            sendPendingMessages(account, listener);
+        }
+    }
 
-	/**
-	 * Attempt to send any messages that are sitting in the Outbox.
-	 * 
-	 * @param account
-	 * @param listener
-	 */
-	public void sendPendingMessages(final Account account,
-			MessagingListener listener) {
-        Log.d("SendTest","MessagingController#sendPendingMessages start");
+    /**
+     * Attempt to send any messages that are sitting in the Outbox.
+     *
+     * @param account
+     * @param listener
+     */
+    public void sendPendingMessages(final Account account,
+                                    MessagingListener listener) {
+        Log.d("SendTest", "MessagingController#sendPendingMessages start");
 
-		putBackground("sendPendingMessages", listener, new Runnable() {
-			@Override
-			public void run() {
-				if (!account.isAvailable(mApplication)) {
-					throw new UnavailableAccountException();
-				}
-				if (messagesPendingSend(account)) {
+        putBackground("sendPendingMessages", listener, new Runnable() {
+            @Override
+            public void run() {
+                if (!account.isAvailable(mApplication)) {
+                    throw new UnavailableAccountException();
+                }
+                if (messagesPendingSend(account)) {
 
-					notifyWhileSending(account);
+                    notifyWhileSending(account);
 
-					try {
-						sendPendingMessagesSynchronous(account);
-					} finally {
-						notifyWhileSendingDone(account);
-					}
-				}
-			}
-		});
-        Log.d("SendTest","MessagingController#sendPendingMessages end");
+                    try {
+                        sendPendingMessagesSynchronous(account);
+                    } finally {
+                        notifyWhileSendingDone(account);
+                    }
+                }
+            }
+        });
+        Log.d("SendTest", "MessagingController#sendPendingMessages end");
 
-	}
+    }
 
-	private void cancelNotification(int id) {
-		NotificationManager notifMgr = (NotificationManager) mApplication
-				.getSystemService(Context.NOTIFICATION_SERVICE);
-		notifMgr.cancel(id);
-	}
+    private void cancelNotification(int id) {
+        NotificationManager notifMgr = (NotificationManager) mApplication
+                .getSystemService(Context.NOTIFICATION_SERVICE);
+        notifMgr.cancel(id);
+    }
 
-	private void notifyWhileSendingDone(Account account) {
-		if (account.isShowOngoing()) {
-			cancelNotification(RakuPhotoMail.FETCHING_EMAIL_NOTIFICATION
-					- account.getAccountNumber());
+    private void notifyWhileSendingDone(Account account) {
+        if (account.isShowOngoing()) {
+            cancelNotification(RakuPhotoMail.FETCHING_EMAIL_NOTIFICATION
+                    - account.getAccountNumber());
 
-		}
-	}
+        }
+    }
 
-	private void notifyWhileSending(Account account) {
-		if (!account.isShowOngoing()) {
-			return;
-		}
-		NotificationManager notifMgr = (NotificationManager) mApplication
-				.getSystemService(Context.NOTIFICATION_SERVICE);
-		Notification notif = new Notification(R.drawable.ic_menu_refresh,
-				mApplication.getString(R.string.notification_bg_send_ticker,
-						account.getDescription()), System.currentTimeMillis());
-		Intent intent = MessageList.actionHandleFolderIntent(mApplication,
-				account, account.getInboxFolderName());
-		PendingIntent pi = PendingIntent
-				.getActivity(mApplication, 0, intent, 0);
-		notif.setLatestEventInfo(mApplication,
-				mApplication.getString(R.string.notification_bg_send_title),
-				account.getDescription(), pi);
-		notif.flags = Notification.FLAG_ONGOING_EVENT;
+    private void notifyWhileSending(Account account) {
+        if (!account.isShowOngoing()) {
+            return;
+        }
+        NotificationManager notifMgr = (NotificationManager) mApplication
+                .getSystemService(Context.NOTIFICATION_SERVICE);
+        Notification notif = new Notification(R.drawable.ic_menu_refresh,
+                mApplication.getString(R.string.notification_bg_send_ticker,
+                        account.getDescription()), System.currentTimeMillis());
+        Intent intent = MessageList.actionHandleFolderIntent(mApplication,
+                account, account.getInboxFolderName());
+        PendingIntent pi = PendingIntent
+                .getActivity(mApplication, 0, intent, 0);
+        notif.setLatestEventInfo(mApplication,
+                mApplication.getString(R.string.notification_bg_send_title),
+                account.getDescription(), pi);
+        notif.flags = Notification.FLAG_ONGOING_EVENT;
 
-		if (RakuPhotoMail.NOTIFICATION_LED_WHILE_SYNCING) {
-			configureNotification(notif, null, null, account
-					.getNotificationSetting().getLedColor(),
-					RakuPhotoMail.NOTIFICATION_LED_BLINK_FAST, true);
-		}
+        if (RakuPhotoMail.NOTIFICATION_LED_WHILE_SYNCING) {
+            configureNotification(notif, null, null, account
+                    .getNotificationSetting().getLedColor(),
+                    RakuPhotoMail.NOTIFICATION_LED_BLINK_FAST, true);
+        }
 
-		notifMgr.notify(
-				RakuPhotoMail.FETCHING_EMAIL_NOTIFICATION
-						- account.getAccountNumber(), notif);
-	}
+        notifMgr.notify(
+                RakuPhotoMail.FETCHING_EMAIL_NOTIFICATION
+                        - account.getAccountNumber(), notif);
+    }
 
-	private void notifySendTempFailed(Account account, Exception lastFailure) {
-		notifySendFailed(account, lastFailure, account.getOutboxFolderName());
-	}
+    private void notifySendTempFailed(Account account, Exception lastFailure) {
+        notifySendFailed(account, lastFailure, account.getOutboxFolderName());
+    }
 
-	private void notifySendPermFailed(Account account, Exception lastFailure) {
-		notifySendFailed(account, lastFailure, account.getDraftsFolderName());
-	}
+    private void notifySendPermFailed(Account account, Exception lastFailure) {
+        notifySendFailed(account, lastFailure, account.getDraftsFolderName());
+    }
 
-	private void notifySendFailed(Account account, Exception lastFailure,
-			String openFolder) {
-		NotificationManager notifMgr = (NotificationManager) mApplication
-				.getSystemService(Context.NOTIFICATION_SERVICE);
-		Notification notif = new Notification(
-				R.drawable.stat_notify_email_generic,
-				mApplication.getString(R.string.send_failure_subject),
-				System.currentTimeMillis());
+    private void notifySendFailed(Account account, Exception lastFailure,
+                                  String openFolder) {
+        NotificationManager notifMgr = (NotificationManager) mApplication
+                .getSystemService(Context.NOTIFICATION_SERVICE);
+        Notification notif = new Notification(
+                R.drawable.stat_notify_email_generic,
+                mApplication.getString(R.string.send_failure_subject),
+                System.currentTimeMillis());
 
-		Intent i = FolderList.actionHandleNotification(mApplication, account,
-				openFolder);
+        Intent i = FolderList.actionHandleNotification(mApplication, account,
+                openFolder);
 
-		PendingIntent pi = PendingIntent.getActivity(mApplication, 0, i, 0);
+        PendingIntent pi = PendingIntent.getActivity(mApplication, 0, i, 0);
 
-		notif.setLatestEventInfo(mApplication,
-				mApplication.getString(R.string.send_failure_subject),
-				getRootCauseMessage(lastFailure), pi);
+        notif.setLatestEventInfo(mApplication,
+                mApplication.getString(R.string.send_failure_subject),
+                getRootCauseMessage(lastFailure), pi);
 
-		configureNotification(notif, null, null,
-				RakuPhotoMail.NOTIFICATION_LED_SENDING_FAILURE_COLOR,
-				RakuPhotoMail.NOTIFICATION_LED_BLINK_FAST, true);
-		notif.flags |= Notification.FLAG_AUTO_CANCEL;
-		notifMgr.notify(
-				RakuPhotoMail.SEND_FAILED_NOTIFICATION
-						- account.getAccountNumber(), notif);
-	}
+        configureNotification(notif, null, null,
+                RakuPhotoMail.NOTIFICATION_LED_SENDING_FAILURE_COLOR,
+                RakuPhotoMail.NOTIFICATION_LED_BLINK_FAST, true);
+        notif.flags |= Notification.FLAG_AUTO_CANCEL;
+        notifMgr.notify(
+                RakuPhotoMail.SEND_FAILED_NOTIFICATION
+                        - account.getAccountNumber(), notif);
+    }
 
-	private void notifyFetchingMail(final Account account, final Folder folder) {
-		if (account.isShowOngoing()) {
-			final NotificationManager notifMgr = (NotificationManager) mApplication
-					.getSystemService(Context.NOTIFICATION_SERVICE);
-			Notification notif = new Notification(R.drawable.ic_menu_refresh,
-					mApplication.getString(
-							R.string.notification_bg_sync_ticker,
-							account.getDescription(), folder.getName()),
-					System.currentTimeMillis());
-			Intent intent = MessageList.actionHandleFolderIntent(mApplication,
-					account, account.getInboxFolderName());
-			PendingIntent pi = PendingIntent.getActivity(mApplication, 0,
-					intent, 0);
-			notif.setLatestEventInfo(
-					mApplication,
-					mApplication.getString(R.string.notification_bg_sync_title),
-					account.getDescription()
-							+ mApplication
-									.getString(R.string.notification_bg_title_separator)
-							+ folder.getName(), pi);
-			notif.flags = Notification.FLAG_ONGOING_EVENT;
+    private void notifyFetchingMail(final Account account, final Folder folder) {
+        if (account.isShowOngoing()) {
+            final NotificationManager notifMgr = (NotificationManager) mApplication
+                    .getSystemService(Context.NOTIFICATION_SERVICE);
+            Notification notif = new Notification(R.drawable.ic_menu_refresh,
+                    mApplication.getString(
+                            R.string.notification_bg_sync_ticker,
+                            account.getDescription(), folder.getName()),
+                    System.currentTimeMillis());
+            Intent intent = MessageList.actionHandleFolderIntent(mApplication,
+                    account, account.getInboxFolderName());
+            PendingIntent pi = PendingIntent.getActivity(mApplication, 0,
+                    intent, 0);
+            notif.setLatestEventInfo(
+                    mApplication,
+                    mApplication.getString(R.string.notification_bg_sync_title),
+                    account.getDescription()
+                            + mApplication
+                            .getString(R.string.notification_bg_title_separator)
+                            + folder.getName(), pi);
+            notif.flags = Notification.FLAG_ONGOING_EVENT;
 
-			if (RakuPhotoMail.NOTIFICATION_LED_WHILE_SYNCING) {
-				configureNotification(notif, null, null, account
-						.getNotificationSetting().getLedColor(),
-						RakuPhotoMail.NOTIFICATION_LED_BLINK_FAST, true);
-			}
+            if (RakuPhotoMail.NOTIFICATION_LED_WHILE_SYNCING) {
+                configureNotification(notif, null, null, account
+                        .getNotificationSetting().getLedColor(),
+                        RakuPhotoMail.NOTIFICATION_LED_BLINK_FAST, true);
+            }
 
-			notifMgr.notify(
-					RakuPhotoMail.FETCHING_EMAIL_NOTIFICATION
-							- account.getAccountNumber(), notif);
-		}
-	}
+            notifMgr.notify(
+                    RakuPhotoMail.FETCHING_EMAIL_NOTIFICATION
+                            - account.getAccountNumber(), notif);
+        }
+    }
 
-	private void notifyFetchingMailCancel(final Account account) {
-		if (account.isShowOngoing()) {
-			cancelNotification(RakuPhotoMail.FETCHING_EMAIL_NOTIFICATION
-					- account.getAccountNumber());
-		}
-	}
+    private void notifyFetchingMailCancel(final Account account) {
+        if (account.isShowOngoing()) {
+            cancelNotification(RakuPhotoMail.FETCHING_EMAIL_NOTIFICATION
+                    - account.getAccountNumber());
+        }
+    }
 
-	public boolean messagesPendingSend(final Account account) {
-		Folder localFolder = null;
-		try {
-			localFolder = account.getLocalStore().getFolder(
-					account.getOutboxFolderName());
-			if (!localFolder.exists()) {
-				return false;
-			}
+    public boolean messagesPendingSend(final Account account) {
+        Folder localFolder = null;
+        try {
+            localFolder = account.getLocalStore().getFolder(
+                    account.getOutboxFolderName());
+            if (!localFolder.exists()) {
+                return false;
+            }
 
-			localFolder.open(OpenMode.READ_WRITE);
+            localFolder.open(OpenMode.READ_WRITE);
 
-			if (localFolder.getMessageCount() > 0) {
-				return true;
-			}
-		} catch (Exception e) {
-			Log.e(RakuPhotoMail.LOG_TAG,
-					"Exception while checking for unsent messages", e);
-		} finally {
-			closeFolder(localFolder);
-		}
-		return false;
-	}
+            if (localFolder.getMessageCount() > 0) {
+                return true;
+            }
+        } catch (Exception e) {
+            Log.e(RakuPhotoMail.LOG_TAG,
+                    "Exception while checking for unsent messages", e);
+        } finally {
+            closeFolder(localFolder);
+        }
+        return false;
+    }
 
-	/**
-	 * Attempt to send any messages that are sitting in the Outbox.
-	 * 
-	 * @param account
-	 */
-	public void sendPendingMessagesSynchronous(final Account account) {
-        Log.d("SendTest","MessagingController#sendPendingMessagesSynchronous start");
+    /**
+     * Attempt to send any messages that are sitting in the Outbox.
+     *
+     * @param account
+     */
+    public void sendPendingMessagesSynchronous(final Account account) {
+        Log.d("SendTest", "MessagingController#sendPendingMessagesSynchronous start");
 
-		Folder localFolder = null;
-		Exception lastFailure = null;
-		try {
-			Store localStore = account.getLocalStore();
-			localFolder = localStore.getFolder(account.getOutboxFolderName());
-			if (!localFolder.exists()) {
-				return;
-			}
-			for (MessagingListener l : getListeners()) {
-				l.sendPendingMessagesStarted(account);
-			}
-			localFolder.open(OpenMode.READ_WRITE);
+        Folder localFolder = null;
+        Exception lastFailure = null;
+        try {
+            Store localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(account.getOutboxFolderName());
+            if (!localFolder.exists()) {
+                return;
+            }
+            for (MessagingListener l : getListeners()) {
+                l.sendPendingMessagesStarted(account);
+            }
+            localFolder.open(OpenMode.READ_WRITE);
 
-			Message[] localMessages = localFolder.getMessages(null);
-			int progress = 0;
-			int todo = localMessages.length;
-			for (MessagingListener l : getListeners()) {
-				l.synchronizeMailboxProgress(account,
-						account.getSentFolderName(), progress, todo);
-			}
-			/*
+            Message[] localMessages = localFolder.getMessages(null);
+            int progress = 0;
+            int todo = localMessages.length;
+            for (MessagingListener l : getListeners()) {
+                l.synchronizeMailboxProgress(account,
+                        account.getSentFolderName(), progress, todo);
+            }
+            /*
 			 * The profile we will use to pull all of the content for a given
 			 * local message into memory for sending.
 			 */
-			FetchProfile fp = new FetchProfile();
-			fp.add(FetchProfile.Item.ENVELOPE);
-			fp.add(FetchProfile.Item.BODY);
-
-			if (RakuPhotoMail.DEBUG)
-				Log.i(RakuPhotoMail.LOG_TAG,
-						"Scanning folder '" + account.getOutboxFolderName()
-								+ "' (" + ((LocalFolder) localFolder).getId()
-								+ ") for messages to send");
-
-			Transport transport = Transport.getInstance(account);
-			for (Message message : localMessages) {
-				if (message.isSet(Flag.DELETED)) {
-					message.destroy();
-					continue;
-				}
-				try {
-					AtomicInteger count = new AtomicInteger(0);
-					AtomicInteger oldCount = sendCount.putIfAbsent(
-							message.getUid(), count);
-					if (oldCount != null) {
-						count = oldCount;
-					}
-
-					if (RakuPhotoMail.DEBUG)
-						Log.i(RakuPhotoMail.LOG_TAG, "Send count for message "
-								+ message.getUid() + " is " + count.get());
-
-					if (count.incrementAndGet() > RakuPhotoMail.MAX_SEND_ATTEMPTS) {
-						Log.e(RakuPhotoMail.LOG_TAG,
-								"Send count for message "
-										+ message.getUid()
-										+ " can't be delivered after "
-										+ RakuPhotoMail.MAX_SEND_ATTEMPTS
-										+ " attempts.  Giving up until the user restarts the device");
-						notifySendTempFailed(account, new MessagingException(
-								message.getSubject()));
-						continue;
-					}
-
-                    Log.d("SendTest","MessagingController#sendPendingMessagesSynchronous fetch前:message.getUid():"+message.getUid());
-					localFolder.fetch(new Message[] { message }, fp, null);
-                    Log.d("SendTest","MessagingController#sendPendingMessagesSynchronous fetch後:message.getUid():"+message.getUid());
-
-					try {
-
-						if (message.getHeader(RakuPhotoMail.IDENTITY_HEADER) != null) {
-							Log.v(RakuPhotoMail.LOG_TAG,
-									"The user has set the Outbox and Drafts folder to the same thing. "
-											+ "This message appears to be a draft, so UCOM will not send it");
-							continue;
-
-						}
-
-						message.setFlag(Flag.X_SEND_IN_PROGRESS, true);
-						if (RakuPhotoMail.DEBUG)
-							Log.i(RakuPhotoMail.LOG_TAG,
-									"Sending message with UID "
-											+ message.getUid());
-
-                        Log.d("SendTest","MessagingController#sendPendingMessagesSynchronous transport.sendMessage前:message.getUid():"+message.getUid());
-						transport.sendMessage(message);
-                        Log.d("SendTest","MessagingController#sendPendingMessagesSynchronous transport.sendMessage後:message.getUid():"+message.getUid());
-
-
-						message.setFlag(Flag.X_SEND_IN_PROGRESS, false);
-						message.setFlag(Flag.SEEN, true);
-						progress++;
-						for (MessagingListener l : getListeners()) {
-							l.synchronizeMailboxProgress(account,
-									account.getSentFolderName(), progress, todo);
-						}
-						if (RakuPhotoMail.FOLDER_NONE.equals(account
-								.getSentFolderName())) {
-							if (RakuPhotoMail.DEBUG)
-								Log.i(RakuPhotoMail.LOG_TAG,
-										"Sent folder set to "
-												+ RakuPhotoMail.FOLDER_NONE
-												+ ", deleting sent message");
-							message.setFlag(Flag.DELETED, true);
-						} else {
-							LocalFolder localSentFolder = (LocalFolder) localStore
-									.getFolder(account.getSentFolderName());
-							if (RakuPhotoMail.DEBUG)
-								Log.i(RakuPhotoMail.LOG_TAG,
-										"Moving sent message to folder '"
-												+ account.getSentFolderName()
-												+ "' ("
-												+ localSentFolder.getId()
-												+ ") ");
-
-                            Log.d("SendTest","MessagingController#sendPendingMessagesSynchronous localFolder.moveMessages前:message.getUid():"+message.getUid());
-							localFolder.moveMessages(new Message[] { message },
-									localSentFolder);
-                            Log.d("SendTest","MessagingController#sendPendingMessagesSynchronous localFolder.moveMessages後:message.getUid():"+message.getUid());
-
-							if (RakuPhotoMail.DEBUG)
-								Log.i(RakuPhotoMail.LOG_TAG,
-										"Moved sent message to folder '"
-												+ account.getSentFolderName()
-												+ "' ("
-												+ localSentFolder.getId()
-												+ ") ");
-
-							PendingCommand command = new PendingCommand();
-							command.command = PENDING_COMMAND_APPEND;
-							command.arguments = new String[] {
-									localSentFolder.getName(), message.getUid() };
-							queuePendingCommand(account, command);
-							processPendingCommands(account);
-						}
-
-					} catch (Exception e) {
-						// 5.x.x errors from the SMTP server are "PERMFAIL"
-						// move the message over to drafts rather than leaving
-						// it in the outbox
-						// This is a complete hack, but is worlds better than
-						// the previous
-						// "don't even bother" functionality
-						if (getRootCauseMessage(e).startsWith("5")) {
-							localFolder.moveMessages(new Message[] { message },
-									(LocalFolder) localStore.getFolder(account
-											.getDraftsFolderName()));
-						} else {
-						}
-
-						message.setFlag(Flag.X_SEND_FAILED, true);
-						Log.e(RakuPhotoMail.LOG_TAG, "Failed to send message",
-								e);
-						for (MessagingListener l : getListeners()) {
-							l.synchronizeMailboxFailed(account,
-									localFolder.getName(),
-									getRootCauseMessage(e));
-						}
-						lastFailure = e;
-					}
-				} catch (Exception e) {
-					Log.e(RakuPhotoMail.LOG_TAG,
-							"Failed to fetch message for sending", e);
-					for (MessagingListener l : getListeners()) {
-						l.synchronizeMailboxFailed(account,
-								localFolder.getName(), getRootCauseMessage(e));
-					}
-					lastFailure = e;
-				}
-			}
-			for (MessagingListener l : getListeners()) {
-				l.sendPendingMessagesCompleted(account);
-			}
-			if (lastFailure != null) {
-				if (getRootCauseMessage(lastFailure).startsWith("5")) {
-					notifySendPermFailed(account, lastFailure);
-				} else {
-					notifySendTempFailed(account, lastFailure);
-				}
-			}
-		} catch (UnavailableStorageException e) {
-			Log.i(RakuPhotoMail.LOG_TAG,
-					"Failed to send pending messages because storage is not available - trying again later.");
-			throw new UnavailableAccountException(e);
-		} catch (Exception e) {
-			for (MessagingListener l : getListeners()) {
-				l.sendPendingMessagesFailed(account);
-			}
-			addErrorMessage(account, null, e);
-
-		} finally {
-			if (lastFailure == null) {
-				cancelNotification(RakuPhotoMail.SEND_FAILED_NOTIFICATION
-						- account.getAccountNumber());
-			}
-			closeFolder(localFolder);
-		}
-        Log.d("SendTest","MessagingController#sendPendingMessagesSynchronous end");
-	}
-
-	public void getAccountStats(final Context context, final Account account,
-			final MessagingListener l) {
-		Runnable unreadRunnable = new Runnable() {
-			@Override
-			public void run() {
-				try {
-					AccountStats stats = account.getStats(context);
-					l.accountStatusChanged(account, stats);
-				} catch (MessagingException me) {
-					Log.e(RakuPhotoMail.LOG_TAG,
-							"Count not get unread count for account "
-									+ account.getDescription(), me);
-				}
-
-			}
-		};
-
-		put("getAccountStats:" + account.getDescription(), l, unreadRunnable);
-	}
-
-	public void getFolderUnreadMessageCount(final Account account,
-			final String folderName, final MessagingListener l) {
-		Runnable unreadRunnable = new Runnable() {
-			@Override
-			public void run() {
-
-				int unreadMessageCount = 0;
-				try {
-					Folder localFolder = account.getLocalStore().getFolder(
-							folderName);
-					unreadMessageCount = localFolder.getUnreadMessageCount();
-				} catch (MessagingException me) {
-					Log.e(RakuPhotoMail.LOG_TAG,
-							"Count not get unread count for account "
-									+ account.getDescription(), me);
-				}
-				l.folderStatusChanged(account, folderName, unreadMessageCount);
-			}
-		};
-
-		put("getFolderUnread:" + account.getDescription() + ":" + folderName,
-				l, unreadRunnable);
-	}
-
-	public boolean isMoveCapable(Message message) {
-		return !message.getUid().startsWith(RakuPhotoMail.LOCAL_UID_PREFIX);
-	}
-
-	public boolean isCopyCapable(Message message) {
-		return isMoveCapable(message);
-	}
-
-	public boolean isMoveCapable(final Account account) {
-		try {
-			Store localStore = account.getLocalStore();
-			Store remoteStore = account.getRemoteStore();
-			return localStore.isMoveCapable() && remoteStore.isMoveCapable();
-		} catch (MessagingException me) {
-
-			Log.e(RakuPhotoMail.LOG_TAG,
-					"Exception while ascertaining move capability", me);
-			return false;
-		}
-	}
-
-	public boolean isCopyCapable(final Account account) {
-		try {
-			Store localStore = account.getLocalStore();
-			Store remoteStore = account.getRemoteStore();
-			return localStore.isCopyCapable() && remoteStore.isCopyCapable();
-		} catch (MessagingException me) {
-			Log.e(RakuPhotoMail.LOG_TAG,
-					"Exception while ascertaining copy capability", me);
-			return false;
-		}
-	}
-
-	public void moveMessages(final Account account, final String srcFolder,
-			final Message[] messages, final String destFolder,
-			final MessagingListener listener) {
-		for (Message message : messages) {
-			suppressMessage(account, srcFolder, message);
-		}
-		putBackground("moveMessages", null, new Runnable() {
-			@Override
-			public void run() {
-				moveOrCopyMessageSynchronous(account, srcFolder, messages,
-						destFolder, false, listener);
-			}
-		});
-	}
-
-	public void moveMessage(final Account account, final String srcFolder,
-			final Message message, final String destFolder,
-			final MessagingListener listener) {
-		moveMessages(account, srcFolder, new Message[] { message }, destFolder,
-				listener);
-	}
-
-	public void copyMessages(final Account account, final String srcFolder,
-			final Message[] messages, final String destFolder,
-			final MessagingListener listener) {
-		putBackground("copyMessages", null, new Runnable() {
-			@Override
-			public void run() {
-				moveOrCopyMessageSynchronous(account, srcFolder, messages,
-						destFolder, true, listener);
-			}
-		});
-	}
-
-	public void copyMessage(final Account account, final String srcFolder,
-			final Message message, final String destFolder,
-			final MessagingListener listener) {
-		copyMessages(account, srcFolder, new Message[] { message }, destFolder,
-				listener);
-	}
-
-	private void moveOrCopyMessageSynchronous(final Account account,
-			final String srcFolder, final Message[] inMessages,
-			final String destFolder, final boolean isCopy,
-			MessagingListener listener) {
-		try {
-			Store localStore = account.getLocalStore();
-			Store remoteStore = account.getRemoteStore();
-			if (!isCopy
-					&& (!remoteStore.isMoveCapable() || !localStore
-							.isMoveCapable())) {
-				return;
-			}
-			if (isCopy
-					&& (!remoteStore.isCopyCapable() || !localStore
-							.isCopyCapable())) {
-				return;
-			}
-
-			Folder localSrcFolder = localStore.getFolder(srcFolder);
-			Folder localDestFolder = localStore.getFolder(destFolder);
-
-			List<String> uids = new LinkedList<String>();
-			for (Message message : inMessages) {
-				String uid = message.getUid();
-				if (!uid.startsWith(RakuPhotoMail.LOCAL_UID_PREFIX)) {
-					uids.add(uid);
-				}
-			}
-
-			Message[] messages = localSrcFolder.getMessages(
-					uids.toArray(EMPTY_STRING_ARRAY), null);
-			if (messages.length > 0) {
-				Map<String, Message> origUidMap = new HashMap<String, Message>();
-
-				for (Message message : messages) {
-					origUidMap.put(message.getUid(), message);
-				}
-
-				if (RakuPhotoMail.DEBUG)
-					Log.i(RakuPhotoMail.LOG_TAG,
-							"moveOrCopyMessageSynchronous: source folder = "
-									+ srcFolder + ", " + messages.length
-									+ " messages, " + ", destination folder = "
-									+ destFolder + ", isCopy = " + isCopy);
-
-				if (isCopy) {
-					FetchProfile fp = new FetchProfile();
-					fp.add(FetchProfile.Item.ENVELOPE);
-					fp.add(FetchProfile.Item.BODY);
-					localSrcFolder.fetch(messages, fp, null);
-					localSrcFolder.copyMessages(messages, localDestFolder);
-				} else {
-					localSrcFolder.moveMessages(messages, localDestFolder);
-					for (String origUid : origUidMap.keySet()) {
-						for (MessagingListener l : getListeners()) {
-							l.messageUidChanged(account, srcFolder, origUid,
-									origUidMap.get(origUid).getUid());
-						}
-						unsuppressMessage(account, srcFolder, origUid);
-					}
-				}
-
-				queueMoveOrCopy(account, srcFolder, destFolder, isCopy,
-						origUidMap.keySet().toArray(EMPTY_STRING_ARRAY));
-			}
-
-			processPendingCommands(account);
-		} catch (UnavailableStorageException e) {
-			Log.i(RakuPhotoMail.LOG_TAG,
-					"Failed to move/copy message because storage is not available - trying again later.");
-			throw new UnavailableAccountException(e);
-		} catch (MessagingException me) {
-			addErrorMessage(account, null, me);
-
-			throw new RuntimeException("Error moving message", me);
-		}
-	}
-
-	public void expunge(final Account account, final String folder,
-			final MessagingListener listener) {
-		putBackground("expunge", null, new Runnable() {
-			@Override
-			public void run() {
-				queueExpunge(account, folder);
-			}
-		});
-	}
-
-	public void deleteDraft(final Account account, String uid) {
-		LocalFolder localFolder = null;
-		try {
-			LocalStore localStore = account.getLocalStore();
-			localFolder = localStore.getFolder(account.getDraftsFolderName());
-			localFolder.open(OpenMode.READ_WRITE);
-			Message message = localFolder.getMessage(uid);
-			if (message != null) {
-				deleteMessages(new Message[] { message }, null);
-			}
-		} catch (MessagingException me) {
-			addErrorMessage(account, null, me);
-		} finally {
-			closeFolder(localFolder);
-		}
-	}
-
-	public void deleteMessages(final Message[] messages,
-			final MessagingListener listener) {
-		actOnMessages(messages, new MessageActor() {
-
-			@Override
-			public void act(final Account account, final Folder folder,
-					final List<Message> messages) {
-				for (Message message : messages) {
-					suppressMessage(account, folder.getName(), message);
-				}
-
-				putBackground("deleteMessages", null, new Runnable() {
-					@Override
-					public void run() {
-						deleteMessagesSynchronous(account, folder.getName(),
-								messages.toArray(EMPTY_MESSAGE_ARRAY), listener);
-					}
-				});
-			}
-
-		});
-
-	}
-
-	private void deleteMessagesSynchronous(final Account account,
-			final String folder, final Message[] messages,
-			MessagingListener listener) {
-		Folder localFolder = null;
-		Folder localTrashFolder = null;
-		String[] uids = getUidsFromMessages(messages);
-		try {
-			// We need to make these callbacks before moving the messages to the
-			// trash
-			// as messages get a new UID after being moved
-			for (Message message : messages) {
-				if (listener != null) {
-					listener.messageDeleted(account, folder, message);
-				}
-				for (MessagingListener l : getListeners()) {
-					l.messageDeleted(account, folder, message);
-				}
-			}
-			Store localStore = account.getLocalStore();
-			localFolder = localStore.getFolder(folder);
-			if (folder.equals(account.getTrashFolderName())
-					|| RakuPhotoMail.FOLDER_NONE.equals(account
-							.getTrashFolderName())) {
-				if (RakuPhotoMail.DEBUG)
-					Log.d(RakuPhotoMail.LOG_TAG,
-							"Deleting messages in trash folder or trash set to -None-, not copying");
-
-				localFolder.setFlags(messages, new Flag[] { Flag.DELETED },
-						true);
-			} else {
-				localTrashFolder = localStore.getFolder(account
-						.getTrashFolderName());
-				if (!localTrashFolder.exists()) {
-					localTrashFolder.create(Folder.FolderType.HOLDS_MESSAGES);
-				}
-				if (localTrashFolder.exists()) {
-					if (RakuPhotoMail.DEBUG)
-						Log.d(RakuPhotoMail.LOG_TAG,
-								"Deleting messages in normal folder, moving");
-
-					localFolder.moveMessages(messages, localTrashFolder);
-
-				}
-			}
-
-			for (MessagingListener l : getListeners()) {
-				l.folderStatusChanged(account, folder,
-						localFolder.getUnreadMessageCount());
-				if (localTrashFolder != null) {
-					l.folderStatusChanged(account,
-							account.getTrashFolderName(),
-							localTrashFolder.getUnreadMessageCount());
-				}
-			}
-
-			if (RakuPhotoMail.DEBUG)
-				Log.d(RakuPhotoMail.LOG_TAG,
-						"Delete policy for account " + account.getDescription()
-								+ " is " + account.getDeletePolicy());
-
-			if (folder.equals(account.getOutboxFolderName())) {
-				for (Message message : messages) {
-					// If the message was in the Outbox, then it has been copied
-					// to local Trash, and has
-					// to be copied to remote trash
-					PendingCommand command = new PendingCommand();
-					command.command = PENDING_COMMAND_APPEND;
-					command.arguments = new String[] {
-							account.getTrashFolderName(), message.getUid() };
-					queuePendingCommand(account, command);
-				}
-				processPendingCommands(account);
-			} else if (account.getDeletePolicy() == Account.DELETE_POLICY_ON_DELETE) {
-				if (folder.equals(account.getTrashFolderName())) {
-					queueSetFlag(account, folder, Boolean.toString(true),
-							Flag.DELETED.toString(), uids);
-				} else {
-					queueMoveOrCopy(account, folder,
-							account.getTrashFolderName(), false, uids);
-				}
-				processPendingCommands(account);
-			} else if (account.getDeletePolicy() == Account.DELETE_POLICY_MARK_AS_READ) {
-				queueSetFlag(account, folder, Boolean.toString(true),
-						Flag.SEEN.toString(), uids);
-				processPendingCommands(account);
-			} else {
-				if (RakuPhotoMail.DEBUG)
-					Log.d(RakuPhotoMail.LOG_TAG,
-							"Delete policy " + account.getDeletePolicy()
-									+ " prevents delete from server");
-			}
-			for (String uid : uids) {
-				unsuppressMessage(account, folder, uid);
-			}
-		} catch (UnavailableStorageException e) {
-			Log.i(RakuPhotoMail.LOG_TAG,
-					"Failed to delete message because storage is not available - trying again later.");
-			throw new UnavailableAccountException(e);
-		} catch (MessagingException me) {
-			addErrorMessage(account, null, me);
-
-			throw new RuntimeException(
-					"Error deleting message from local store.", me);
-		} finally {
-			closeFolder(localFolder);
-			closeFolder(localTrashFolder);
-		}
-	}
-
-	private String[] getUidsFromMessages(Message[] messages) {
-		String[] uids = new String[messages.length];
-		for (int i = 0; i < messages.length; i++) {
-			uids[i] = messages[i].getUid();
-		}
-		return uids;
-	}
-
-	private void processPendingEmptyTrash(PendingCommand command,
-			Account account) throws MessagingException {
-		Store remoteStore = account.getRemoteStore();
-
-		Folder remoteFolder = remoteStore.getFolder(account
-				.getTrashFolderName());
-		try {
-			if (remoteFolder.exists()) {
-				remoteFolder.open(OpenMode.READ_WRITE);
-				remoteFolder.setFlags(new Flag[] { Flag.DELETED }, true);
-				if (Account.EXPUNGE_IMMEDIATELY.equals(account
-						.getExpungePolicy())) {
-					remoteFolder.expunge();
-				}
-
-				// When we empty trash, we need to actually synchronize the
-				// folder
-				// or local deletes will never get cleaned up
-				synchronizeFolder(account, remoteFolder, true, 0, null);
-				compact(account, null);
-
-			}
-		} finally {
-			closeFolder(remoteFolder);
-		}
-	}
-
-	public void emptyTrash(final Account account, MessagingListener listener) {
-		putBackground("emptyTrash", listener, new Runnable() {
-			@Override
-			public void run() {
-				Folder localFolder = null;
-				try {
-					Store localStore = account.getLocalStore();
-					localFolder = localStore.getFolder(account
-							.getTrashFolderName());
-					localFolder.open(OpenMode.READ_WRITE);
-					localFolder.setFlags(new Flag[] { Flag.DELETED }, true);
-
-					for (MessagingListener l : getListeners()) {
-						l.emptyTrashCompleted(account);
-					}
-					List<String> args = new ArrayList<String>();
-					PendingCommand command = new PendingCommand();
-					command.command = PENDING_COMMAND_EMPTY_TRASH;
-					command.arguments = args.toArray(EMPTY_STRING_ARRAY);
-					queuePendingCommand(account, command);
-					processPendingCommands(account);
-				} catch (UnavailableStorageException e) {
-					Log.i(RakuPhotoMail.LOG_TAG,
-							"Failed to empty trash because storage is not available - trying again later.");
-					throw new UnavailableAccountException(e);
-				} catch (Exception e) {
-					Log.e(RakuPhotoMail.LOG_TAG, "emptyTrash failed", e);
-
-					addErrorMessage(account, null, e);
-				} finally {
-					closeFolder(localFolder);
-				}
-			}
-		});
-	}
-
-	public void sendAlternate(final Context context, Account account,
-			Message message) {
-		if (RakuPhotoMail.DEBUG)
-			Log.d(RakuPhotoMail.LOG_TAG,
-					"About to load message " + account.getDescription() + ":"
-							+ message.getFolder().getName() + ":"
-							+ message.getUid() + " for sendAlternate");
-
-		loadMessageForView(account, message.getFolder().getName(),
-				message.getUid(), new MessagingListener() {
-					@Override
-					public void loadMessageForViewBodyAvailable(
-							Account account, String folder, String uid,
-							Message message) {
-						if (RakuPhotoMail.DEBUG)
-							Log.d(RakuPhotoMail.LOG_TAG, "Got message "
-									+ account.getDescription() + ":" + folder
-									+ ":" + message.getUid()
-									+ " for sendAlternate");
-
-						try {
-							Intent msg = new Intent(Intent.ACTION_SEND);
-							String quotedText = null;
-							Part part = MimeUtility.findFirstPartByMimeType(
-									message, "text/plain");
-							if (part == null) {
-								part = MimeUtility.findFirstPartByMimeType(
-										message, "text/html");
-							}
-							if (part != null) {
-								quotedText = MimeUtility.getTextFromPart(part);
-							}
-							if (quotedText != null) {
-								msg.putExtra(Intent.EXTRA_TEXT, quotedText);
-							}
-							msg.putExtra(Intent.EXTRA_SUBJECT,
-									message.getSubject());
-
-							Address[] from = message.getFrom();
-							String[] senders = new String[from.length];
-							for (int i = 0; i < from.length; i++) {
-								senders[i] = from[i].toString();
-							}
-							msg.putExtra(Intents.Share.EXTRA_FROM, senders);
-
-							Address[] to = message
-									.getRecipients(RecipientType.TO);
-							String[] recipientsTo = new String[to.length];
-							for (int i = 0; i < to.length; i++) {
-								recipientsTo[i] = to[i].toString();
-							}
-							msg.putExtra(Intent.EXTRA_EMAIL, recipientsTo);
-
-							Address[] cc = message
-									.getRecipients(RecipientType.CC);
-							String[] recipientsCc = new String[cc.length];
-							for (int i = 0; i < cc.length; i++) {
-								recipientsCc[i] = cc[i].toString();
-							}
-							msg.putExtra(Intent.EXTRA_CC, recipientsCc);
-
-							msg.setType("text/plain");
-							context.startActivity(Intent.createChooser(
-									msg,
-									context.getString(R.string.send_alternate_chooser_title)));
-						} catch (MessagingException me) {
-							Log.e(RakuPhotoMail.LOG_TAG,
-									"Unable to send email through alternate program",
-									me);
-						}
-					}
-				});
-
-	}
-
-	/**
-	 * Checks mail for one or multiple accounts. If account is null all accounts
-	 * are checked.
-	 * 
-	 * @param context
-	 * @param account
-	 * @param listener
-	 */
-	public void checkMail(final Context context, final Account account,
-			final boolean ignoreLastCheckedTime,
-			final boolean useManualWakeLock, final MessagingListener listener) {
-		Log.v(RakuPhotoMail.LOG_TAG, "MessagingController#chckMail:start");
-
-		TracingWakeLock twakeLock = null;
-		if (useManualWakeLock) {
-			TracingPowerManager pm = TracingPowerManager
-					.getPowerManager(context);
-
-			twakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-					"RakuPhotoMail MessagingController.checkMail");
-			twakeLock.setReferenceCounted(false);
-			twakeLock.acquire(RakuPhotoMail.MANUAL_WAKE_LOCK_TIMEOUT);
-		}
-		final TracingWakeLock wakeLock = twakeLock;
-
-		for (MessagingListener l : getListeners()) {
-			l.checkMailStarted(context, account);
-		}
-		putBackground("checkMail", listener, new Runnable() {
-			@Override
-			public void run() {
-
-				try {
-					Log.i(RakuPhotoMail.LOG_TAG,
-							"MessagingController#chckMail:putBackground checkMail");
-
-					if (RakuPhotoMail.DEBUG)
-						Log.i(RakuPhotoMail.LOG_TAG, "Starting mail check");
-					Preferences prefs = Preferences.getPreferences(context);
-
-					Account[] accounts;
-					if (account != null) {
-						accounts = new Account[] { account };
-					} else {
-						accounts = prefs.getAccounts();
-					}
-
-					for (final Account account : accounts) {
-						checkMailForAccount(context, account,
-								ignoreLastCheckedTime, prefs, listener);
-					}
-
-				} catch (Exception e) {
-					Log.e(RakuPhotoMail.LOG_TAG, "Unable to synchronize mail",
-							e);
-					addErrorMessage(account, null, e);
-				}
-				putBackground("finalize sync", null, new Runnable() {
-					@Override
-					public void run() {
-						Log.i(RakuPhotoMail.LOG_TAG,
-								"MessagingController#chckMail:putBackground "
-										+ "finalize sync");
-
-						if (RakuPhotoMail.DEBUG)
-							Log.i(RakuPhotoMail.LOG_TAG, "Finished mail sync");
-
-						if (wakeLock != null) {
-							wakeLock.release();
-						}
-						for (MessagingListener l : getListeners()) {
-							l.checkMailFinished(context, account);
-						}
-
-					}
-				});
-			}
-		});
-	}
-
-	private void checkMailForAccount(final Context context,
-			final Account account, final boolean ignoreLastCheckedTime,
-			final Preferences prefs, final MessagingListener listener) {
-		if (!account.isAvailable(context)) {
-			if (RakuPhotoMail.DEBUG) {
-				Log.i(RakuPhotoMail.LOG_TAG,
-						"Skipping synchronizing unavailable account "
-								+ account.getDescription());
-			}
-			return;
-		}
-		final long accountInterval = account.getAutomaticCheckIntervalMinutes() * 60 * 1000;
-		if (!ignoreLastCheckedTime && accountInterval <= 0) {
-			if (RakuPhotoMail.DEBUG)
-				Log.i(RakuPhotoMail.LOG_TAG, "Skipping synchronizing account "
-						+ account.getDescription());
-			return;
-		}
-
-		if (RakuPhotoMail.DEBUG)
-			Log.i(RakuPhotoMail.LOG_TAG,
-					"Synchronizing account " + account.getDescription());
-
-		account.setRingNotified(false);
-
-		sendPendingMessages(account, listener);
-
-		try {
-			Account.FolderMode aDisplayMode = account.getFolderDisplayMode();
-			Account.FolderMode aSyncMode = account.getFolderSyncMode();
-
-			Store localStore = account.getLocalStore();
-			for (final Folder folder : localStore.getPersonalNamespaces(false)) {
-				folder.open(Folder.OpenMode.READ_WRITE);
-				folder.refresh(prefs);
-
-				Folder.FolderClass fDisplayClass = folder.getDisplayClass();
-				Folder.FolderClass fSyncClass = folder.getSyncClass();
-
-				if (modeMismatch(aDisplayMode, fDisplayClass)) {
-					// Never sync a folder that isn't displayed
-					/*
+            FetchProfile fp = new FetchProfile();
+            fp.add(FetchProfile.Item.ENVELOPE);
+            fp.add(FetchProfile.Item.BODY);
+
+            if (RakuPhotoMail.DEBUG)
+                Log.i(RakuPhotoMail.LOG_TAG,
+                        "Scanning folder '" + account.getOutboxFolderName()
+                                + "' (" + ((LocalFolder) localFolder).getId()
+                                + ") for messages to send");
+
+            Transport transport = Transport.getInstance(account);
+            for (Message message : localMessages) {
+                if (message.isSet(Flag.DELETED)) {
+                    message.destroy();
+                    continue;
+                }
+                try {
+                    AtomicInteger count = new AtomicInteger(0);
+                    AtomicInteger oldCount = sendCount.putIfAbsent(
+                            message.getUid(), count);
+                    if (oldCount != null) {
+                        count = oldCount;
+                    }
+
+                    if (RakuPhotoMail.DEBUG)
+                        Log.i(RakuPhotoMail.LOG_TAG, "Send count for message "
+                                + message.getUid() + " is " + count.get());
+
+                    if (count.incrementAndGet() > RakuPhotoMail.MAX_SEND_ATTEMPTS) {
+                        Log.e(RakuPhotoMail.LOG_TAG,
+                                "Send count for message "
+                                        + message.getUid()
+                                        + " can't be delivered after "
+                                        + RakuPhotoMail.MAX_SEND_ATTEMPTS
+                                        + " attempts.  Giving up until the user restarts the device");
+                        notifySendTempFailed(account, new MessagingException(
+                                message.getSubject()));
+                        continue;
+                    }
+
+                    Log.d("SendTest", "MessagingController#sendPendingMessagesSynchronous fetch前:message.getUid():" + message.getUid());
+                    localFolder.fetch(new Message[]{message}, fp, null);
+                    Log.d("SendTest", "MessagingController#sendPendingMessagesSynchronous fetch後:message.getUid():" + message.getUid());
+
+                    try {
+
+                        if (message.getHeader(RakuPhotoMail.IDENTITY_HEADER) != null) {
+                            Log.v(RakuPhotoMail.LOG_TAG,
+                                    "The user has set the Outbox and Drafts folder to the same thing. "
+                                            + "This message appears to be a draft, so UCOM will not send it");
+                            continue;
+
+                        }
+
+                        message.setFlag(Flag.X_SEND_IN_PROGRESS, true);
+                        if (RakuPhotoMail.DEBUG)
+                            Log.i(RakuPhotoMail.LOG_TAG,
+                                    "Sending message with UID "
+                                            + message.getUid());
+
+                        Log.d("SendTest", "MessagingController#sendPendingMessagesSynchronous transport.sendMessage前:message.getUid():" + message.getUid());
+                        transport.sendMessage(message);
+                        Log.d("SendTest", "MessagingController#sendPendingMessagesSynchronous transport.sendMessage後:message.getUid():" + message.getUid());
+
+
+                        message.setFlag(Flag.X_SEND_IN_PROGRESS, false);
+                        message.setFlag(Flag.SEEN, true);
+                        progress++;
+                        for (MessagingListener l : getListeners()) {
+                            l.synchronizeMailboxProgress(account,
+                                    account.getSentFolderName(), progress, todo);
+                        }
+                        if (RakuPhotoMail.FOLDER_NONE.equals(account
+                                .getSentFolderName())) {
+                            if (RakuPhotoMail.DEBUG)
+                                Log.i(RakuPhotoMail.LOG_TAG,
+                                        "Sent folder set to "
+                                                + RakuPhotoMail.FOLDER_NONE
+                                                + ", deleting sent message");
+                            message.setFlag(Flag.DELETED, true);
+                        } else {
+                            LocalFolder localSentFolder = (LocalFolder) localStore
+                                    .getFolder(account.getSentFolderName());
+                            if (RakuPhotoMail.DEBUG)
+                                Log.i(RakuPhotoMail.LOG_TAG,
+                                        "Moving sent message to folder '"
+                                                + account.getSentFolderName()
+                                                + "' ("
+                                                + localSentFolder.getId()
+                                                + ") ");
+
+                            Log.d("SendTest", "MessagingController#sendPendingMessagesSynchronous localFolder.moveMessages前:localSentFolder:" + localSentFolder);
+                            Log.d("SendTest", "MessagingController#sendPendingMessagesSynchronous localFolder.moveMessages前:message.getUid():" + message.getUid());
+                            localFolder.moveMessages(new Message[]{message},
+                                    localSentFolder);
+                            Log.d("SendTest", "MessagingController#sendPendingMessagesSynchronous localFolder.moveMessages後:message.getUid():" + message.getUid());
+
+                            if (RakuPhotoMail.DEBUG)
+                                Log.i(RakuPhotoMail.LOG_TAG,
+                                        "Moved sent message to folder '"
+                                                + account.getSentFolderName()
+                                                + "' ("
+                                                + localSentFolder.getId()
+                                                + ") ");
+
+                            PendingCommand command = new PendingCommand();
+                            command.command = PENDING_COMMAND_APPEND;
+                            command.arguments = new String[]{
+                                    localSentFolder.getName(), message.getUid()};
+                            queuePendingCommand(account, command);
+                            processPendingCommands(account);
+                        }
+
+                    } catch (Exception e) {
+                        // 5.x.x errors from the SMTP server are "PERMFAIL"
+                        // move the message over to drafts rather than leaving
+                        // it in the outbox
+                        // This is a complete hack, but is worlds better than
+                        // the previous
+                        // "don't even bother" functionality
+                        if (getRootCauseMessage(e).startsWith("5")) {
+                            localFolder.moveMessages(new Message[]{message},
+                                    (LocalFolder) localStore.getFolder(account
+                                            .getDraftsFolderName()));
+                        } else {
+                        }
+
+                        message.setFlag(Flag.X_SEND_FAILED, true);
+                        Log.e(RakuPhotoMail.LOG_TAG, "Failed to send message",
+                                e);
+                        for (MessagingListener l : getListeners()) {
+                            l.synchronizeMailboxFailed(account,
+                                    localFolder.getName(),
+                                    getRootCauseMessage(e));
+                        }
+                        lastFailure = e;
+                    }
+                } catch (Exception e) {
+                    Log.e(RakuPhotoMail.LOG_TAG,
+                            "Failed to fetch message for sending", e);
+                    for (MessagingListener l : getListeners()) {
+                        l.synchronizeMailboxFailed(account,
+                                localFolder.getName(), getRootCauseMessage(e));
+                    }
+                    lastFailure = e;
+                }
+            }
+            for (MessagingListener l : getListeners()) {
+                l.sendPendingMessagesCompleted(account);
+            }
+            if (lastFailure != null) {
+                if (getRootCauseMessage(lastFailure).startsWith("5")) {
+                    notifySendPermFailed(account, lastFailure);
+                } else {
+                    notifySendTempFailed(account, lastFailure);
+                }
+            }
+        } catch (UnavailableStorageException e) {
+            Log.i(RakuPhotoMail.LOG_TAG,
+                    "Failed to send pending messages because storage is not available - trying again later.");
+            throw new UnavailableAccountException(e);
+        } catch (Exception e) {
+            for (MessagingListener l : getListeners()) {
+                l.sendPendingMessagesFailed(account);
+            }
+            addErrorMessage(account, null, e);
+
+        } finally {
+            if (lastFailure == null) {
+                cancelNotification(RakuPhotoMail.SEND_FAILED_NOTIFICATION
+                        - account.getAccountNumber());
+            }
+            closeFolder(localFolder);
+        }
+        Log.d("SendTest", "MessagingController#sendPendingMessagesSynchronous end");
+    }
+
+    public void getAccountStats(final Context context, final Account account,
+                                final MessagingListener l) {
+        Runnable unreadRunnable = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    AccountStats stats = account.getStats(context);
+                    l.accountStatusChanged(account, stats);
+                } catch (MessagingException me) {
+                    Log.e(RakuPhotoMail.LOG_TAG,
+                            "Count not get unread count for account "
+                                    + account.getDescription(), me);
+                }
+
+            }
+        };
+
+        put("getAccountStats:" + account.getDescription(), l, unreadRunnable);
+    }
+
+    public void getFolderUnreadMessageCount(final Account account,
+                                            final String folderName, final MessagingListener l) {
+        Runnable unreadRunnable = new Runnable() {
+            @Override
+            public void run() {
+
+                int unreadMessageCount = 0;
+                try {
+                    Folder localFolder = account.getLocalStore().getFolder(
+                            folderName);
+                    unreadMessageCount = localFolder.getUnreadMessageCount();
+                } catch (MessagingException me) {
+                    Log.e(RakuPhotoMail.LOG_TAG,
+                            "Count not get unread count for account "
+                                    + account.getDescription(), me);
+                }
+                l.folderStatusChanged(account, folderName, unreadMessageCount);
+            }
+        };
+
+        put("getFolderUnread:" + account.getDescription() + ":" + folderName,
+                l, unreadRunnable);
+    }
+
+    public boolean isMoveCapable(Message message) {
+        return !message.getUid().startsWith(RakuPhotoMail.LOCAL_UID_PREFIX);
+    }
+
+    public boolean isCopyCapable(Message message) {
+        return isMoveCapable(message);
+    }
+
+    public boolean isMoveCapable(final Account account) {
+        try {
+            Store localStore = account.getLocalStore();
+            Store remoteStore = account.getRemoteStore();
+            return localStore.isMoveCapable() && remoteStore.isMoveCapable();
+        } catch (MessagingException me) {
+
+            Log.e(RakuPhotoMail.LOG_TAG,
+                    "Exception while ascertaining move capability", me);
+            return false;
+        }
+    }
+
+    public boolean isCopyCapable(final Account account) {
+        try {
+            Store localStore = account.getLocalStore();
+            Store remoteStore = account.getRemoteStore();
+            return localStore.isCopyCapable() && remoteStore.isCopyCapable();
+        } catch (MessagingException me) {
+            Log.e(RakuPhotoMail.LOG_TAG,
+                    "Exception while ascertaining copy capability", me);
+            return false;
+        }
+    }
+
+    public void moveMessages(final Account account, final String srcFolder,
+                             final Message[] messages, final String destFolder,
+                             final MessagingListener listener) {
+        for (Message message : messages) {
+            suppressMessage(account, srcFolder, message);
+        }
+        putBackground("moveMessages", null, new Runnable() {
+            @Override
+            public void run() {
+                moveOrCopyMessageSynchronous(account, srcFolder, messages,
+                        destFolder, false, listener);
+            }
+        });
+    }
+
+    public void moveMessage(final Account account, final String srcFolder,
+                            final Message message, final String destFolder,
+                            final MessagingListener listener) {
+        moveMessages(account, srcFolder, new Message[]{message}, destFolder,
+                listener);
+    }
+
+    public void copyMessages(final Account account, final String srcFolder,
+                             final Message[] messages, final String destFolder,
+                             final MessagingListener listener) {
+        putBackground("copyMessages", null, new Runnable() {
+            @Override
+            public void run() {
+                moveOrCopyMessageSynchronous(account, srcFolder, messages,
+                        destFolder, true, listener);
+            }
+        });
+    }
+
+    public void copyMessage(final Account account, final String srcFolder,
+                            final Message message, final String destFolder,
+                            final MessagingListener listener) {
+        copyMessages(account, srcFolder, new Message[]{message}, destFolder,
+                listener);
+    }
+
+    private void moveOrCopyMessageSynchronous(final Account account,
+                                              final String srcFolder, final Message[] inMessages,
+                                              final String destFolder, final boolean isCopy,
+                                              MessagingListener listener) {
+        try {
+            Store localStore = account.getLocalStore();
+            Store remoteStore = account.getRemoteStore();
+            if (!isCopy
+                    && (!remoteStore.isMoveCapable() || !localStore
+                    .isMoveCapable())) {
+                return;
+            }
+            if (isCopy
+                    && (!remoteStore.isCopyCapable() || !localStore
+                    .isCopyCapable())) {
+                return;
+            }
+
+            Folder localSrcFolder = localStore.getFolder(srcFolder);
+            Folder localDestFolder = localStore.getFolder(destFolder);
+
+            List<String> uids = new LinkedList<String>();
+            for (Message message : inMessages) {
+                String uid = message.getUid();
+                if (!uid.startsWith(RakuPhotoMail.LOCAL_UID_PREFIX)) {
+                    uids.add(uid);
+                }
+            }
+
+            Message[] messages = localSrcFolder.getMessages(
+                    uids.toArray(EMPTY_STRING_ARRAY), null);
+            if (messages.length > 0) {
+                Map<String, Message> origUidMap = new HashMap<String, Message>();
+
+                for (Message message : messages) {
+                    origUidMap.put(message.getUid(), message);
+                }
+
+                if (RakuPhotoMail.DEBUG)
+                    Log.i(RakuPhotoMail.LOG_TAG,
+                            "moveOrCopyMessageSynchronous: source folder = "
+                                    + srcFolder + ", " + messages.length
+                                    + " messages, " + ", destination folder = "
+                                    + destFolder + ", isCopy = " + isCopy);
+
+                if (isCopy) {
+                    FetchProfile fp = new FetchProfile();
+                    fp.add(FetchProfile.Item.ENVELOPE);
+                    fp.add(FetchProfile.Item.BODY);
+                    localSrcFolder.fetch(messages, fp, null);
+                    localSrcFolder.copyMessages(messages, localDestFolder);
+                } else {
+                    localSrcFolder.moveMessages(messages, localDestFolder);
+                    for (String origUid : origUidMap.keySet()) {
+                        for (MessagingListener l : getListeners()) {
+                            l.messageUidChanged(account, srcFolder, origUid,
+                                    origUidMap.get(origUid).getUid());
+                        }
+                        unsuppressMessage(account, srcFolder, origUid);
+                    }
+                }
+
+                queueMoveOrCopy(account, srcFolder, destFolder, isCopy,
+                        origUidMap.keySet().toArray(EMPTY_STRING_ARRAY));
+            }
+
+            processPendingCommands(account);
+        } catch (UnavailableStorageException e) {
+            Log.i(RakuPhotoMail.LOG_TAG,
+                    "Failed to move/copy message because storage is not available - trying again later.");
+            throw new UnavailableAccountException(e);
+        } catch (MessagingException me) {
+            addErrorMessage(account, null, me);
+
+            throw new RuntimeException("Error moving message", me);
+        }
+    }
+
+    public void expunge(final Account account, final String folder,
+                        final MessagingListener listener) {
+        putBackground("expunge", null, new Runnable() {
+            @Override
+            public void run() {
+                queueExpunge(account, folder);
+            }
+        });
+    }
+
+    public void deleteDraft(final Account account, String uid) {
+        LocalFolder localFolder = null;
+        try {
+            LocalStore localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(account.getDraftsFolderName());
+            localFolder.open(OpenMode.READ_WRITE);
+            Message message = localFolder.getMessage(uid);
+            if (message != null) {
+                deleteMessages(new Message[]{message}, null);
+            }
+        } catch (MessagingException me) {
+            addErrorMessage(account, null, me);
+        } finally {
+            closeFolder(localFolder);
+        }
+    }
+
+    public void deleteMessages(final Message[] messages,
+                               final MessagingListener listener) {
+        actOnMessages(messages, new MessageActor() {
+
+            @Override
+            public void act(final Account account, final Folder folder,
+                            final List<Message> messages) {
+                for (Message message : messages) {
+                    suppressMessage(account, folder.getName(), message);
+                }
+
+                putBackground("deleteMessages", null, new Runnable() {
+                    @Override
+                    public void run() {
+                        deleteMessagesSynchronous(account, folder.getName(),
+                                messages.toArray(EMPTY_MESSAGE_ARRAY), listener);
+                    }
+                });
+            }
+
+        });
+
+    }
+
+    private void deleteMessagesSynchronous(final Account account,
+                                           final String folder, final Message[] messages,
+                                           MessagingListener listener) {
+        Folder localFolder = null;
+        Folder localTrashFolder = null;
+        String[] uids = getUidsFromMessages(messages);
+        try {
+            // We need to make these callbacks before moving the messages to the
+            // trash
+            // as messages get a new UID after being moved
+            for (Message message : messages) {
+                if (listener != null) {
+                    listener.messageDeleted(account, folder, message);
+                }
+                for (MessagingListener l : getListeners()) {
+                    l.messageDeleted(account, folder, message);
+                }
+            }
+            Store localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folder);
+            if (folder.equals(account.getTrashFolderName())
+                    || RakuPhotoMail.FOLDER_NONE.equals(account
+                    .getTrashFolderName())) {
+                if (RakuPhotoMail.DEBUG)
+                    Log.d(RakuPhotoMail.LOG_TAG,
+                            "Deleting messages in trash folder or trash set to -None-, not copying");
+
+                localFolder.setFlags(messages, new Flag[]{Flag.DELETED},
+                        true);
+            } else {
+                localTrashFolder = localStore.getFolder(account
+                        .getTrashFolderName());
+                if (!localTrashFolder.exists()) {
+                    localTrashFolder.create(Folder.FolderType.HOLDS_MESSAGES);
+                }
+                if (localTrashFolder.exists()) {
+                    if (RakuPhotoMail.DEBUG)
+                        Log.d(RakuPhotoMail.LOG_TAG,
+                                "Deleting messages in normal folder, moving");
+
+                    localFolder.moveMessages(messages, localTrashFolder);
+
+                }
+            }
+
+            for (MessagingListener l : getListeners()) {
+                l.folderStatusChanged(account, folder,
+                        localFolder.getUnreadMessageCount());
+                if (localTrashFolder != null) {
+                    l.folderStatusChanged(account,
+                            account.getTrashFolderName(),
+                            localTrashFolder.getUnreadMessageCount());
+                }
+            }
+
+            if (RakuPhotoMail.DEBUG)
+                Log.d(RakuPhotoMail.LOG_TAG,
+                        "Delete policy for account " + account.getDescription()
+                                + " is " + account.getDeletePolicy());
+
+            if (folder.equals(account.getOutboxFolderName())) {
+                for (Message message : messages) {
+                    // If the message was in the Outbox, then it has been copied
+                    // to local Trash, and has
+                    // to be copied to remote trash
+                    PendingCommand command = new PendingCommand();
+                    command.command = PENDING_COMMAND_APPEND;
+                    command.arguments = new String[]{
+                            account.getTrashFolderName(), message.getUid()};
+                    queuePendingCommand(account, command);
+                }
+                processPendingCommands(account);
+            } else if (account.getDeletePolicy() == Account.DELETE_POLICY_ON_DELETE) {
+                if (folder.equals(account.getTrashFolderName())) {
+                    queueSetFlag(account, folder, Boolean.toString(true),
+                            Flag.DELETED.toString(), uids);
+                } else {
+                    queueMoveOrCopy(account, folder,
+                            account.getTrashFolderName(), false, uids);
+                }
+                processPendingCommands(account);
+            } else if (account.getDeletePolicy() == Account.DELETE_POLICY_MARK_AS_READ) {
+                queueSetFlag(account, folder, Boolean.toString(true),
+                        Flag.SEEN.toString(), uids);
+                processPendingCommands(account);
+            } else {
+                if (RakuPhotoMail.DEBUG)
+                    Log.d(RakuPhotoMail.LOG_TAG,
+                            "Delete policy " + account.getDeletePolicy()
+                                    + " prevents delete from server");
+            }
+            for (String uid : uids) {
+                unsuppressMessage(account, folder, uid);
+            }
+        } catch (UnavailableStorageException e) {
+            Log.i(RakuPhotoMail.LOG_TAG,
+                    "Failed to delete message because storage is not available - trying again later.");
+            throw new UnavailableAccountException(e);
+        } catch (MessagingException me) {
+            addErrorMessage(account, null, me);
+
+            throw new RuntimeException(
+                    "Error deleting message from local store.", me);
+        } finally {
+            closeFolder(localFolder);
+            closeFolder(localTrashFolder);
+        }
+    }
+
+    private String[] getUidsFromMessages(Message[] messages) {
+        String[] uids = new String[messages.length];
+        for (int i = 0; i < messages.length; i++) {
+            uids[i] = messages[i].getUid();
+        }
+        return uids;
+    }
+
+    private void processPendingEmptyTrash(PendingCommand command,
+                                          Account account) throws MessagingException {
+        Store remoteStore = account.getRemoteStore();
+
+        Folder remoteFolder = remoteStore.getFolder(account
+                .getTrashFolderName());
+        try {
+            if (remoteFolder.exists()) {
+                remoteFolder.open(OpenMode.READ_WRITE);
+                remoteFolder.setFlags(new Flag[]{Flag.DELETED}, true);
+                if (Account.EXPUNGE_IMMEDIATELY.equals(account
+                        .getExpungePolicy())) {
+                    remoteFolder.expunge();
+                }
+
+                // When we empty trash, we need to actually synchronize the
+                // folder
+                // or local deletes will never get cleaned up
+                synchronizeFolder(account, remoteFolder, true, 0, null);
+                compact(account, null);
+
+            }
+        } finally {
+            closeFolder(remoteFolder);
+        }
+    }
+
+    public void emptyTrash(final Account account, MessagingListener listener) {
+        putBackground("emptyTrash", listener, new Runnable() {
+            @Override
+            public void run() {
+                Folder localFolder = null;
+                try {
+                    Store localStore = account.getLocalStore();
+                    localFolder = localStore.getFolder(account
+                            .getTrashFolderName());
+                    localFolder.open(OpenMode.READ_WRITE);
+                    localFolder.setFlags(new Flag[]{Flag.DELETED}, true);
+
+                    for (MessagingListener l : getListeners()) {
+                        l.emptyTrashCompleted(account);
+                    }
+                    List<String> args = new ArrayList<String>();
+                    PendingCommand command = new PendingCommand();
+                    command.command = PENDING_COMMAND_EMPTY_TRASH;
+                    command.arguments = args.toArray(EMPTY_STRING_ARRAY);
+                    queuePendingCommand(account, command);
+                    processPendingCommands(account);
+                } catch (UnavailableStorageException e) {
+                    Log.i(RakuPhotoMail.LOG_TAG,
+                            "Failed to empty trash because storage is not available - trying again later.");
+                    throw new UnavailableAccountException(e);
+                } catch (Exception e) {
+                    Log.e(RakuPhotoMail.LOG_TAG, "emptyTrash failed", e);
+
+                    addErrorMessage(account, null, e);
+                } finally {
+                    closeFolder(localFolder);
+                }
+            }
+        });
+    }
+
+    public void sendAlternate(final Context context, Account account,
+                              Message message) {
+        if (RakuPhotoMail.DEBUG)
+            Log.d(RakuPhotoMail.LOG_TAG,
+                    "About to load message " + account.getDescription() + ":"
+                            + message.getFolder().getName() + ":"
+                            + message.getUid() + " for sendAlternate");
+
+        loadMessageForView(account, message.getFolder().getName(),
+                message.getUid(), new MessagingListener() {
+            @Override
+            public void loadMessageForViewBodyAvailable(
+                    Account account, String folder, String uid,
+                    Message message) {
+                if (RakuPhotoMail.DEBUG)
+                    Log.d(RakuPhotoMail.LOG_TAG, "Got message "
+                            + account.getDescription() + ":" + folder
+                            + ":" + message.getUid()
+                            + " for sendAlternate");
+
+                try {
+                    Intent msg = new Intent(Intent.ACTION_SEND);
+                    String quotedText = null;
+                    Part part = MimeUtility.findFirstPartByMimeType(
+                            message, "text/plain");
+                    if (part == null) {
+                        part = MimeUtility.findFirstPartByMimeType(
+                                message, "text/html");
+                    }
+                    if (part != null) {
+                        quotedText = MimeUtility.getTextFromPart(part);
+                    }
+                    if (quotedText != null) {
+                        msg.putExtra(Intent.EXTRA_TEXT, quotedText);
+                    }
+                    msg.putExtra(Intent.EXTRA_SUBJECT,
+                            message.getSubject());
+
+                    Address[] from = message.getFrom();
+                    String[] senders = new String[from.length];
+                    for (int i = 0; i < from.length; i++) {
+                        senders[i] = from[i].toString();
+                    }
+                    msg.putExtra(Intents.Share.EXTRA_FROM, senders);
+
+                    Address[] to = message
+                            .getRecipients(RecipientType.TO);
+                    String[] recipientsTo = new String[to.length];
+                    for (int i = 0; i < to.length; i++) {
+                        recipientsTo[i] = to[i].toString();
+                    }
+                    msg.putExtra(Intent.EXTRA_EMAIL, recipientsTo);
+
+                    Address[] cc = message
+                            .getRecipients(RecipientType.CC);
+                    String[] recipientsCc = new String[cc.length];
+                    for (int i = 0; i < cc.length; i++) {
+                        recipientsCc[i] = cc[i].toString();
+                    }
+                    msg.putExtra(Intent.EXTRA_CC, recipientsCc);
+
+                    msg.setType("text/plain");
+                    context.startActivity(Intent.createChooser(
+                            msg,
+                            context.getString(R.string.send_alternate_chooser_title)));
+                } catch (MessagingException me) {
+                    Log.e(RakuPhotoMail.LOG_TAG,
+                            "Unable to send email through alternate program",
+                            me);
+                }
+            }
+        });
+
+    }
+
+    /**
+     * Checks mail for one or multiple accounts. If account is null all accounts
+     * are checked.
+     *
+     * @param context
+     * @param account
+     * @param listener
+     */
+    public void checkMail(final Context context, final Account account,
+                          final boolean ignoreLastCheckedTime,
+                          final boolean useManualWakeLock, final MessagingListener listener) {
+        Log.v(RakuPhotoMail.LOG_TAG, "MessagingController#chckMail:start");
+
+        TracingWakeLock twakeLock = null;
+        if (useManualWakeLock) {
+            TracingPowerManager pm = TracingPowerManager
+                    .getPowerManager(context);
+
+            twakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                    "RakuPhotoMail MessagingController.checkMail");
+            twakeLock.setReferenceCounted(false);
+            twakeLock.acquire(RakuPhotoMail.MANUAL_WAKE_LOCK_TIMEOUT);
+        }
+        final TracingWakeLock wakeLock = twakeLock;
+
+        for (MessagingListener l : getListeners()) {
+            l.checkMailStarted(context, account);
+        }
+        putBackground("checkMail", listener, new Runnable() {
+            @Override
+            public void run() {
+
+                try {
+                    Log.i(RakuPhotoMail.LOG_TAG,
+                            "MessagingController#chckMail:putBackground checkMail");
+
+                    if (RakuPhotoMail.DEBUG)
+                        Log.i(RakuPhotoMail.LOG_TAG, "Starting mail check");
+                    Preferences prefs = Preferences.getPreferences(context);
+
+                    Account[] accounts;
+                    if (account != null) {
+                        accounts = new Account[]{account};
+                    } else {
+                        accounts = prefs.getAccounts();
+                    }
+
+                    for (final Account account : accounts) {
+                        checkMailForAccount(context, account,
+                                ignoreLastCheckedTime, prefs, listener);
+                    }
+
+                } catch (Exception e) {
+                    Log.e(RakuPhotoMail.LOG_TAG, "Unable to synchronize mail",
+                            e);
+                    addErrorMessage(account, null, e);
+                }
+                putBackground("finalize sync", null, new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.i(RakuPhotoMail.LOG_TAG,
+                                "MessagingController#chckMail:putBackground "
+                                        + "finalize sync");
+
+                        if (RakuPhotoMail.DEBUG)
+                            Log.i(RakuPhotoMail.LOG_TAG, "Finished mail sync");
+
+                        if (wakeLock != null) {
+                            wakeLock.release();
+                        }
+                        for (MessagingListener l : getListeners()) {
+                            l.checkMailFinished(context, account);
+                        }
+
+                    }
+                });
+            }
+        });
+    }
+
+    private void checkMailForAccount(final Context context,
+                                     final Account account, final boolean ignoreLastCheckedTime,
+                                     final Preferences prefs, final MessagingListener listener) {
+        if (!account.isAvailable(context)) {
+            if (RakuPhotoMail.DEBUG) {
+                Log.i(RakuPhotoMail.LOG_TAG,
+                        "Skipping synchronizing unavailable account "
+                                + account.getDescription());
+            }
+            return;
+        }
+        final long accountInterval = account.getAutomaticCheckIntervalMinutes() * 60 * 1000;
+        if (!ignoreLastCheckedTime && accountInterval <= 0) {
+            if (RakuPhotoMail.DEBUG)
+                Log.i(RakuPhotoMail.LOG_TAG, "Skipping synchronizing account "
+                        + account.getDescription());
+            return;
+        }
+
+        if (RakuPhotoMail.DEBUG)
+            Log.i(RakuPhotoMail.LOG_TAG,
+                    "Synchronizing account " + account.getDescription());
+
+        account.setRingNotified(false);
+
+        sendPendingMessages(account, listener);
+
+        try {
+            Account.FolderMode aDisplayMode = account.getFolderDisplayMode();
+            Account.FolderMode aSyncMode = account.getFolderSyncMode();
+
+            Store localStore = account.getLocalStore();
+            for (final Folder folder : localStore.getPersonalNamespaces(false)) {
+                folder.open(Folder.OpenMode.READ_WRITE);
+                folder.refresh(prefs);
+
+                Folder.FolderClass fDisplayClass = folder.getDisplayClass();
+                Folder.FolderClass fSyncClass = folder.getSyncClass();
+
+                if (modeMismatch(aDisplayMode, fDisplayClass)) {
+                    // Never sync a folder that isn't displayed
+                    /*
 					 * if (RakuPhotoMail.DEBUG) Log.v(RakuPhotoMail.LOG_TAG,
 					 * "Not syncing folder " + folder.getName() +
 					 * " which is in display mode " + fDisplayClass +
 					 * " while account is in display mode " + aDisplayMode);
 					 */
 
-					continue;
-				}
+                    continue;
+                }
 
-				if (modeMismatch(aSyncMode, fSyncClass)) {
-					// Do not sync folders in the wrong class
-					/*
+                if (modeMismatch(aSyncMode, fSyncClass)) {
+                    // Do not sync folders in the wrong class
+                    /*
 					 * if (RakuPhotoMail.DEBUG) Log.v(RakuPhotoMail.LOG_TAG,
 					 * "Not syncing folder " + folder.getName() +
 					 * " which is in sync mode " + fSyncClass +
 					 * " while account is in sync mode " + aSyncMode);
 					 */
 
-					continue;
-				}
-				synchronizeFolder(account, folder, ignoreLastCheckedTime,
-						accountInterval, listener);
-			}
-		} catch (MessagingException e) {
-			Log.e(RakuPhotoMail.LOG_TAG, "Unable to synchronize account "
-					+ account.getName(), e);
-			addErrorMessage(account, null, e);
-		} finally {
-			putBackground(
-					"clear notification flag for " + account.getDescription(),
-					null, new Runnable() {
-						@Override
-						public void run() {
-							if (RakuPhotoMail.DEBUG)
-								Log.v(RakuPhotoMail.LOG_TAG,
-										"Clearing notification flag for "
-												+ account.getDescription());
-							account.setRingNotified(false);
-							try {
-								AccountStats stats = account.getStats(context);
-								if (stats == null
-										|| stats.unreadMessageCount == 0) {
-									notifyAccountCancel(context, account);
-								}
-							} catch (MessagingException e) {
-								Log.e(RakuPhotoMail.LOG_TAG,
-										"Unable to getUnreadMessageCount for account: "
-												+ account, e);
-							}
-						}
-					});
-		}
+                    continue;
+                }
+                synchronizeFolder(account, folder, ignoreLastCheckedTime,
+                        accountInterval, listener);
+            }
+        } catch (MessagingException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "Unable to synchronize account "
+                    + account.getName(), e);
+            addErrorMessage(account, null, e);
+        } finally {
+            putBackground(
+                    "clear notification flag for " + account.getDescription(),
+                    null, new Runnable() {
+                @Override
+                public void run() {
+                    if (RakuPhotoMail.DEBUG)
+                        Log.v(RakuPhotoMail.LOG_TAG,
+                                "Clearing notification flag for "
+                                        + account.getDescription());
+                    account.setRingNotified(false);
+                    try {
+                        AccountStats stats = account.getStats(context);
+                        if (stats == null
+                                || stats.unreadMessageCount == 0) {
+                            notifyAccountCancel(context, account);
+                        }
+                    } catch (MessagingException e) {
+                        Log.e(RakuPhotoMail.LOG_TAG,
+                                "Unable to getUnreadMessageCount for account: "
+                                        + account, e);
+                    }
+                }
+            });
+        }
 
-	}
+    }
 
-	private void synchronizeFolder(final Account account, final Folder folder,
-			final boolean ignoreLastCheckedTime, final long accountInterval,
-			final MessagingListener listener) {
+    private void synchronizeFolder(final Account account, final Folder folder,
+                                   final boolean ignoreLastCheckedTime, final long accountInterval,
+                                   final MessagingListener listener) {
 
-		if (RakuPhotoMail.DEBUG)
-			Log.v(RakuPhotoMail.LOG_TAG, "Folder " + folder.getName()
-					+ " was last synced @ " + new Date(folder.getLastChecked()));
+        if (RakuPhotoMail.DEBUG)
+            Log.v(RakuPhotoMail.LOG_TAG, "Folder " + folder.getName()
+                    + " was last synced @ " + new Date(folder.getLastChecked()));
 
-		if (!ignoreLastCheckedTime
-				&& folder.getLastChecked() > (System.currentTimeMillis() - accountInterval)) {
-			if (RakuPhotoMail.DEBUG)
-				Log.v(RakuPhotoMail.LOG_TAG,
-						"Not syncing folder "
-								+ folder.getName()
-								+ ", previously synced @ "
-								+ new Date(folder.getLastChecked())
-								+ " which would be too recent for the account period");
+        if (!ignoreLastCheckedTime
+                && folder.getLastChecked() > (System.currentTimeMillis() - accountInterval)) {
+            if (RakuPhotoMail.DEBUG)
+                Log.v(RakuPhotoMail.LOG_TAG,
+                        "Not syncing folder "
+                                + folder.getName()
+                                + ", previously synced @ "
+                                + new Date(folder.getLastChecked())
+                                + " which would be too recent for the account period");
 
-			return;
-		}
-		putBackground("sync" + folder.getName(), null, new Runnable() {
-			@Override
-			public void run() {
-				LocalFolder tLocalFolder = null;
-				try {
-					// In case multiple Commands get enqueued, don't run more
-					// than
-					// once
-					final LocalStore localStore = account.getLocalStore();
-					tLocalFolder = localStore.getFolder(folder.getName());
-					tLocalFolder.open(Folder.OpenMode.READ_WRITE);
+            return;
+        }
+        putBackground("sync" + folder.getName(), null, new Runnable() {
+            @Override
+            public void run() {
+                LocalFolder tLocalFolder = null;
+                try {
+                    // In case multiple Commands get enqueued, don't run more
+                    // than
+                    // once
+                    final LocalStore localStore = account.getLocalStore();
+                    tLocalFolder = localStore.getFolder(folder.getName());
+                    tLocalFolder.open(Folder.OpenMode.READ_WRITE);
 
-					if (!ignoreLastCheckedTime
-							&& tLocalFolder.getLastChecked() > (System
-									.currentTimeMillis() - accountInterval)) {
-						if (RakuPhotoMail.DEBUG)
-							Log.v(RakuPhotoMail.LOG_TAG,
-									"Not running Command for folder "
-											+ folder.getName()
-											+ ", previously synced @ "
-											+ new Date(folder.getLastChecked())
-											+ " which would be too recent for the account period");
-						return;
-					}
-					notifyFetchingMail(account, folder);
-					try {
-						synchronizeMailboxSynchronous(account,
-								folder.getName(), listener, null);
-					} finally {
-						notifyFetchingMailCancel(account);
-					}
-				} catch (Exception e) {
+                    if (!ignoreLastCheckedTime
+                            && tLocalFolder.getLastChecked() > (System
+                            .currentTimeMillis() - accountInterval)) {
+                        if (RakuPhotoMail.DEBUG)
+                            Log.v(RakuPhotoMail.LOG_TAG,
+                                    "Not running Command for folder "
+                                            + folder.getName()
+                                            + ", previously synced @ "
+                                            + new Date(folder.getLastChecked())
+                                            + " which would be too recent for the account period");
+                        return;
+                    }
+                    notifyFetchingMail(account, folder);
+                    try {
+                        synchronizeMailboxSynchronous(account,
+                                folder.getName(), listener, null);
+                    } finally {
+                        notifyFetchingMailCancel(account);
+                    }
+                } catch (Exception e) {
 
-					Log.e(RakuPhotoMail.LOG_TAG,
-							"Exception while processing folder "
-									+ account.getDescription() + ":"
-									+ folder.getName(), e);
-					addErrorMessage(account, null, e);
-				} finally {
-					closeFolder(tLocalFolder);
-				}
-			}
-		});
+                    Log.e(RakuPhotoMail.LOG_TAG,
+                            "Exception while processing folder "
+                                    + account.getDescription() + ":"
+                                    + folder.getName(), e);
+                    addErrorMessage(account, null, e);
+                } finally {
+                    closeFolder(tLocalFolder);
+                }
+            }
+        });
 
-	}
+    }
 
-	public void compact(final Account account, final MessagingListener ml) {
-		putBackground("compact:" + account.getDescription(), ml,
-				new Runnable() {
-					@Override
-					public void run() {
-						try {
-							LocalStore localStore = account.getLocalStore();
-							long oldSize = localStore.getSize();
-							localStore.compact();
-							long newSize = localStore.getSize();
-							if (ml != null) {
-								ml.accountSizeChanged(account, oldSize, newSize);
-							}
-							for (MessagingListener l : getListeners()) {
-								l.accountSizeChanged(account, oldSize, newSize);
-							}
-						} catch (UnavailableStorageException e) {
-							Log.i(RakuPhotoMail.LOG_TAG,
-									"Failed to compact account because storage is not available - trying again later.");
-							throw new UnavailableAccountException(e);
-						} catch (Exception e) {
-							Log.e(RakuPhotoMail.LOG_TAG,
-									"Failed to compact account "
-											+ account.getDescription(), e);
-						}
-					}
-				});
-	}
+    public void compact(final Account account, final MessagingListener ml) {
+        putBackground("compact:" + account.getDescription(), ml,
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            LocalStore localStore = account.getLocalStore();
+                            long oldSize = localStore.getSize();
+                            localStore.compact();
+                            long newSize = localStore.getSize();
+                            if (ml != null) {
+                                ml.accountSizeChanged(account, oldSize, newSize);
+                            }
+                            for (MessagingListener l : getListeners()) {
+                                l.accountSizeChanged(account, oldSize, newSize);
+                            }
+                        } catch (UnavailableStorageException e) {
+                            Log.i(RakuPhotoMail.LOG_TAG,
+                                    "Failed to compact account because storage is not available - trying again later.");
+                            throw new UnavailableAccountException(e);
+                        } catch (Exception e) {
+                            Log.e(RakuPhotoMail.LOG_TAG,
+                                    "Failed to compact account "
+                                            + account.getDescription(), e);
+                        }
+                    }
+                });
+    }
 
-	public void clear(final Account account, final MessagingListener ml) {
-		putBackground("clear:" + account.getDescription(), ml, new Runnable() {
-			@Override
-			public void run() {
-				try {
-					LocalStore localStore = account.getLocalStore();
-					long oldSize = localStore.getSize();
-					localStore.clear();
-					localStore.resetVisibleLimits(account.getDisplayCount());
-					long newSize = localStore.getSize();
-					AccountStats stats = new AccountStats();
-					stats.size = newSize;
-					stats.unreadMessageCount = 0;
-					stats.flaggedMessageCount = 0;
-					if (ml != null) {
-						ml.accountSizeChanged(account, oldSize, newSize);
-						ml.accountStatusChanged(account, stats);
-					}
-					for (MessagingListener l : getListeners()) {
-						l.accountSizeChanged(account, oldSize, newSize);
-						l.accountStatusChanged(account, stats);
-					}
-				} catch (UnavailableStorageException e) {
-					Log.i(RakuPhotoMail.LOG_TAG,
-							"Failed to clear account because storage is not available - trying again later.");
-					throw new UnavailableAccountException(e);
-				} catch (Exception e) {
-					Log.e(RakuPhotoMail.LOG_TAG, "Failed to clear account "
-							+ account.getDescription(), e);
-				}
-			}
-		});
-	}
+    public void clear(final Account account, final MessagingListener ml) {
+        putBackground("clear:" + account.getDescription(), ml, new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    LocalStore localStore = account.getLocalStore();
+                    long oldSize = localStore.getSize();
+                    localStore.clear();
+                    localStore.resetVisibleLimits(account.getDisplayCount());
+                    long newSize = localStore.getSize();
+                    AccountStats stats = new AccountStats();
+                    stats.size = newSize;
+                    stats.unreadMessageCount = 0;
+                    stats.flaggedMessageCount = 0;
+                    if (ml != null) {
+                        ml.accountSizeChanged(account, oldSize, newSize);
+                        ml.accountStatusChanged(account, stats);
+                    }
+                    for (MessagingListener l : getListeners()) {
+                        l.accountSizeChanged(account, oldSize, newSize);
+                        l.accountStatusChanged(account, stats);
+                    }
+                } catch (UnavailableStorageException e) {
+                    Log.i(RakuPhotoMail.LOG_TAG,
+                            "Failed to clear account because storage is not available - trying again later.");
+                    throw new UnavailableAccountException(e);
+                } catch (Exception e) {
+                    Log.e(RakuPhotoMail.LOG_TAG, "Failed to clear account "
+                            + account.getDescription(), e);
+                }
+            }
+        });
+    }
 
-	public void recreate(final Account account, final MessagingListener ml) {
-		putBackground("recreate:" + account.getDescription(), ml,
-				new Runnable() {
-					@Override
-					public void run() {
-						try {
-							LocalStore localStore = account.getLocalStore();
-							long oldSize = localStore.getSize();
-							localStore.recreate();
-							localStore.resetVisibleLimits(account
-									.getDisplayCount());
-							long newSize = localStore.getSize();
-							AccountStats stats = new AccountStats();
-							stats.size = newSize;
-							stats.unreadMessageCount = 0;
-							stats.flaggedMessageCount = 0;
-							if (ml != null) {
-								ml.accountSizeChanged(account, oldSize, newSize);
-								ml.accountStatusChanged(account, stats);
-							}
-							for (MessagingListener l : getListeners()) {
-								l.accountSizeChanged(account, oldSize, newSize);
-								l.accountStatusChanged(account, stats);
-							}
-						} catch (UnavailableStorageException e) {
-							Log.i(RakuPhotoMail.LOG_TAG,
-									"Failed to recreate an account because storage is not available - trying again later.");
-							throw new UnavailableAccountException(e);
-						} catch (Exception e) {
-							Log.e(RakuPhotoMail.LOG_TAG,
-									"Failed to recreate account "
-											+ account.getDescription(), e);
-						}
-					}
-				});
-	}
+    public void recreate(final Account account, final MessagingListener ml) {
+        putBackground("recreate:" + account.getDescription(), ml,
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            LocalStore localStore = account.getLocalStore();
+                            long oldSize = localStore.getSize();
+                            localStore.recreate();
+                            localStore.resetVisibleLimits(account
+                                    .getDisplayCount());
+                            long newSize = localStore.getSize();
+                            AccountStats stats = new AccountStats();
+                            stats.size = newSize;
+                            stats.unreadMessageCount = 0;
+                            stats.flaggedMessageCount = 0;
+                            if (ml != null) {
+                                ml.accountSizeChanged(account, oldSize, newSize);
+                                ml.accountStatusChanged(account, stats);
+                            }
+                            for (MessagingListener l : getListeners()) {
+                                l.accountSizeChanged(account, oldSize, newSize);
+                                l.accountStatusChanged(account, stats);
+                            }
+                        } catch (UnavailableStorageException e) {
+                            Log.i(RakuPhotoMail.LOG_TAG,
+                                    "Failed to recreate an account because storage is not available - trying again later.");
+                            throw new UnavailableAccountException(e);
+                        } catch (Exception e) {
+                            Log.e(RakuPhotoMail.LOG_TAG,
+                                    "Failed to recreate account "
+                                            + account.getDescription(), e);
+                        }
+                    }
+                });
+    }
 
-	private boolean shouldNotifyForMessage(Account account,
-			LocalFolder localFolder, Message message) {
-		// If we don't even have an account name, don't show the notification.
-		// (This happens during initial account setup)
-		if (account.getName() == null) {
-			return false;
-		}
+    private boolean shouldNotifyForMessage(Account account,
+                                           LocalFolder localFolder, Message message) {
+        // If we don't even have an account name, don't show the notification.
+        // (This happens during initial account setup)
+        if (account.getName() == null) {
+            return false;
+        }
 
-		// Do not notify if the user does not have notifications enabled or if
-		// the message has
-		// been read.
-		if (!account.isNotifyNewMail() || message.isSet(Flag.SEEN)) {
-			return false;
-		}
+        // Do not notify if the user does not have notifications enabled or if
+        // the message has
+        // been read.
+        if (!account.isNotifyNewMail() || message.isSet(Flag.SEEN)) {
+            return false;
+        }
 
-		// If the account is a POP3 account and the message is older than the
-		// oldest message we've
-		// previously seen, then don't notify about it.
-		if (account.getStoreUri().startsWith("pop3")
-				&& message.olderThan(new Date(account
-						.getLatestOldMessageSeenTime()))) {
-			return false;
-		}
+        // If the account is a POP3 account and the message is older than the
+        // oldest message we've
+        // previously seen, then don't notify about it.
+        if (account.getStoreUri().startsWith("pop3")
+                && message.olderThan(new Date(account
+                .getLatestOldMessageSeenTime()))) {
+            return false;
+        }
 
-		// No notification for new messages in Trash, Drafts, Spam or Sent
-		// folder.
-		// But do notify if it's the INBOX (see issue 1817).
-		Folder folder = message.getFolder();
-		if (folder != null) {
-			String folderName = folder.getName();
-			if (!account.getInboxFolderName().equals(folderName)
-					&& (account.getTrashFolderName().equals(folderName)
-							|| account.getDraftsFolderName().equals(folderName)
-							|| account.getSpamFolderName().equals(folderName) || account
-							.getSentFolderName().equals(folderName))) {
-				return false;
-			}
-		}
+        // No notification for new messages in Trash, Drafts, Spam or Sent
+        // folder.
+        // But do notify if it's the INBOX (see issue 1817).
+        Folder folder = message.getFolder();
+        if (folder != null) {
+            String folderName = folder.getName();
+            if (!account.getInboxFolderName().equals(folderName)
+                    && (account.getTrashFolderName().equals(folderName)
+                    || account.getDraftsFolderName().equals(folderName)
+                    || account.getSpamFolderName().equals(folderName) || account
+                    .getSentFolderName().equals(folderName))) {
+                return false;
+            }
+        }
 
-		if (message.getUid() != null && localFolder.getLastUid() != null) {
-			try {
-				Integer messageUid = Integer.parseInt(message.getUid());
-				if (messageUid <= localFolder.getLastUid()) {
-					if (RakuPhotoMail.DEBUG)
-						Log.d(RakuPhotoMail.LOG_TAG, "Message uid is "
-								+ messageUid + ", max message uid is "
-								+ localFolder.getLastUid()
-								+ ".  Skipping notification.");
-					return false;
-				}
-			} catch (NumberFormatException e) {
-				// Nothing to be done here.
-			}
-		}
+        if (message.getUid() != null && localFolder.getLastUid() != null) {
+            try {
+                Integer messageUid = Integer.parseInt(message.getUid());
+                if (messageUid <= localFolder.getLastUid()) {
+                    if (RakuPhotoMail.DEBUG)
+                        Log.d(RakuPhotoMail.LOG_TAG, "Message uid is "
+                                + messageUid + ", max message uid is "
+                                + localFolder.getLastUid()
+                                + ".  Skipping notification.");
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                // Nothing to be done here.
+            }
+        }
 
-		// Don't notify if the sender address matches one of our identities and
-		// the user chose not
-		// to be notified for such messages.
-		if (account.isAnIdentity(message.getFrom())
-				&& !account.isNotifySelfNewMail()) {
-			return false;
-		}
+        // Don't notify if the sender address matches one of our identities and
+        // the user chose not
+        // to be notified for such messages.
+        if (account.isAnIdentity(message.getFrom())
+                && !account.isNotifySelfNewMail()) {
+            return false;
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	/**
-	 * Creates a notification of a newly received message.
-	 */
-	private void notifyAccount(Context context, Account account,
-			Message message, int previousUnreadMessageCount,
-			AtomicInteger newMessageCount) {
+    /**
+     * Creates a notification of a newly received message.
+     */
+    private void notifyAccount(Context context, Account account,
+                               Message message, int previousUnreadMessageCount,
+                               AtomicInteger newMessageCount) {
 
-		// If we have a message, set the notification to "<From>: <Subject>"
-		StringBuilder messageNotice = new StringBuilder();
-		final KeyguardManager keyguardService = (KeyguardManager) context
-				.getSystemService(Context.KEYGUARD_SERVICE);
-		try {
-			if (message.getFrom() != null) {
-				Address[] fromAddrs = message.getFrom();
-				String from = fromAddrs.length > 0 ? fromAddrs[0].toFriendly()
-						.toString() : null;
-				String subject = message.getSubject();
-				if (subject == null) {
-					subject = context.getString(R.string.general_no_subject);
-				}
+        // If we have a message, set the notification to "<From>: <Subject>"
+        StringBuilder messageNotice = new StringBuilder();
+        final KeyguardManager keyguardService = (KeyguardManager) context
+                .getSystemService(Context.KEYGUARD_SERVICE);
+        try {
+            if (message.getFrom() != null) {
+                Address[] fromAddrs = message.getFrom();
+                String from = fromAddrs.length > 0 ? fromAddrs[0].toFriendly()
+                        .toString() : null;
+                String subject = message.getSubject();
+                if (subject == null) {
+                    subject = context.getString(R.string.general_no_subject);
+                }
 
-				if (from != null) {
-					// Show From: address by default
-					if (!account.isAnIdentity(fromAddrs)) {
-						messageNotice.append(from).append(": ").append(subject);
-					}
-					// show To: if the message was sent from me
-					else {
-						Address[] rcpts = message
-								.getRecipients(Message.RecipientType.TO);
-						String to = rcpts.length > 0 ? rcpts[0].toFriendly()
-								.toString() : null;
-						if (to != null) {
-							messageNotice
-									.append(String.format(
-											context.getString(R.string.message_to_fmt),
-											to)).append(": ").append(subject);
-						} else {
-							messageNotice
-									.append(context
-											.getString(R.string.general_no_sender))
-									.append(": ").append(subject);
-						}
-					}
-				}
-			}
-		} catch (MessagingException e) {
-			Log.e(RakuPhotoMail.LOG_TAG,
-					"Unable to get message information for notification.", e);
-		}
+                if (from != null) {
+                    // Show From: address by default
+                    if (!account.isAnIdentity(fromAddrs)) {
+                        messageNotice.append(from).append(": ").append(subject);
+                    }
+                    // show To: if the message was sent from me
+                    else {
+                        Address[] rcpts = message
+                                .getRecipients(Message.RecipientType.TO);
+                        String to = rcpts.length > 0 ? rcpts[0].toFriendly()
+                                .toString() : null;
+                        if (to != null) {
+                            messageNotice
+                                    .append(String.format(
+                                            context.getString(R.string.message_to_fmt),
+                                            to)).append(": ").append(subject);
+                        } else {
+                            messageNotice
+                                    .append(context
+                                            .getString(R.string.general_no_sender))
+                                    .append(": ").append(subject);
+                        }
+                    }
+                }
+            }
+        } catch (MessagingException e) {
+            Log.e(RakuPhotoMail.LOG_TAG,
+                    "Unable to get message information for notification.", e);
+        }
 
-		// If privacy mode active and keyguard active
-		// OR
-		// If we could not set a per-message notification, revert to a default
-		// message
-		if ((RakuPhotoMail.keyguardPrivacy() && keyguardService
-				.inKeyguardRestrictedInputMode())
-				|| messageNotice.length() == 0) {
-			messageNotice = new StringBuilder(
-					context.getString(R.string.notification_new_title));
-		}
+        // If privacy mode active and keyguard active
+        // OR
+        // If we could not set a per-message notification, revert to a default
+        // message
+        if ((RakuPhotoMail.keyguardPrivacy() && keyguardService
+                .inKeyguardRestrictedInputMode())
+                || messageNotice.length() == 0) {
+            messageNotice = new StringBuilder(
+                    context.getString(R.string.notification_new_title));
+        }
 
-		NotificationManager notifMgr = (NotificationManager) context
-				.getSystemService(Context.NOTIFICATION_SERVICE);
-		Notification notif = new Notification(
-				R.drawable.stat_notify_email_generic, messageNotice,
-				System.currentTimeMillis());
-		final int unreadCount = previousUnreadMessageCount
-				+ newMessageCount.get();
-		if (account.isNotificationShowsUnreadCount()) {
-			notif.number = unreadCount;
-		}
+        NotificationManager notifMgr = (NotificationManager) context
+                .getSystemService(Context.NOTIFICATION_SERVICE);
+        Notification notif = new Notification(
+                R.drawable.stat_notify_email_generic, messageNotice,
+                System.currentTimeMillis());
+        final int unreadCount = previousUnreadMessageCount
+                + newMessageCount.get();
+        if (account.isNotificationShowsUnreadCount()) {
+            notif.number = unreadCount;
+        }
 
-		Intent i = FolderList.actionHandleNotification(context, account,
-				message.getFolder().getName());
-		PendingIntent pi = PendingIntent.getActivity(context, 0, i, 0);
+        Intent i = FolderList.actionHandleNotification(context, account,
+                message.getFolder().getName());
+        PendingIntent pi = PendingIntent.getActivity(context, 0, i, 0);
 
-		String accountDescr = (account.getDescription() != null) ? account
-				.getDescription() : account.getEmail();
-		String accountNotice = context.getString(
-				R.string.notification_new_one_account_fmt, unreadCount,
-				accountDescr);
-		notif.setLatestEventInfo(context, accountNotice, messageNotice, pi);
+        String accountDescr = (account.getDescription() != null) ? account
+                .getDescription() : account.getEmail();
+        String accountNotice = context.getString(
+                R.string.notification_new_one_account_fmt, unreadCount,
+                accountDescr);
+        notif.setLatestEventInfo(context, accountNotice, messageNotice, pi);
 
-		// Only ring or vibrate if we have not done so already on this
-		// account and fetch
-		boolean ringAndVibrate = false;
-		if (!account.isRingNotified()) {
-			account.setRingNotified(true);
-			ringAndVibrate = true;
-		}
+        // Only ring or vibrate if we have not done so already on this
+        // account and fetch
+        boolean ringAndVibrate = false;
+        if (!account.isRingNotified()) {
+            account.setRingNotified(true);
+            ringAndVibrate = true;
+        }
 
-		NotificationSetting n = account.getNotificationSetting();
+        NotificationSetting n = account.getNotificationSetting();
 
-		configureNotification(notif, (n.shouldRing() ? n.getRingtone() : null),
-				(n.shouldVibrate() ? n.getVibration() : null),
-				(n.isLed() ? n.getLedColor() : null),
-				RakuPhotoMail.NOTIFICATION_LED_BLINK_SLOW, ringAndVibrate);
+        configureNotification(notif, (n.shouldRing() ? n.getRingtone() : null),
+                (n.shouldVibrate() ? n.getVibration() : null),
+                (n.isLed() ? n.getLedColor() : null),
+                RakuPhotoMail.NOTIFICATION_LED_BLINK_SLOW, ringAndVibrate);
 
-		notifMgr.notify(account.getAccountNumber(), notif);
-	}
+        notifMgr.notify(account.getAccountNumber(), notif);
+    }
 
-	/**
-	 * @param notification
-	 *            Object to configure. Never <code>null</code>.
-	 * @param ringtone
-	 *            String name of ringtone. <code>null</code> if no ringtone
-	 *            should be played
-	 * @param vibrationPattern
-	 *            <code>long[]</code> vibration pattern. <code>null</code> if no
-	 *            vibration should be played
-	 * @param ledColor
-	 *            <code>Integer</code> Color to flash LED. <code>null</code> if
-	 *            no LED flash should happen
-	 * @param ledSpeed
-	 *            <code>int</code> should LEDs flash
-	 *            RakuPhotoMail.NOTIFICATION_LED_BLINK_SLOW or
-	 *            RakuPhotoMail.NOTIFICATION_LED_BLINK_FAST
-	 * @param ringAndVibrate
-	 *            <code>true</code> if ringtone/vibration are allowed,
-	 *            <code>false</code> otherwise.
-	 */
-	private void configureNotification(final Notification notification,
-			final String ringtone, final long[] vibrationPattern,
-			final Integer ledColor, final int ledSpeed,
+    /**
+     * @param notification     Object to configure. Never <code>null</code>.
+     * @param ringtone         String name of ringtone. <code>null</code> if no ringtone
+     *                         should be played
+     * @param vibrationPattern <code>long[]</code> vibration pattern. <code>null</code> if no
+     *                         vibration should be played
+     * @param ledColor         <code>Integer</code> Color to flash LED. <code>null</code> if
+     *                         no LED flash should happen
+     * @param ledSpeed         <code>int</code> should LEDs flash
+     *                         RakuPhotoMail.NOTIFICATION_LED_BLINK_SLOW or
+     *                         RakuPhotoMail.NOTIFICATION_LED_BLINK_FAST
+     * @param ringAndVibrate   <code>true</code> if ringtone/vibration are allowed,
+     *                         <code>false</code> otherwise.
+     */
+    private void configureNotification(final Notification notification,
+                                       final String ringtone, final long[] vibrationPattern,
+                                       final Integer ledColor, final int ledSpeed,
 
-			final boolean ringAndVibrate) {
+                                       final boolean ringAndVibrate) {
 
-		// if it's quiet time, then we shouldn't be ringing, buzzing or flashing
-		if (RakuPhotoMail.isQuietTime()) {
-			return;
-		}
+        // if it's quiet time, then we shouldn't be ringing, buzzing or flashing
+        if (RakuPhotoMail.isQuietTime()) {
+            return;
+        }
 
-		if (ringAndVibrate) {
-			if (ringtone != null) {
-				notification.sound = TextUtils.isEmpty(ringtone) ? null : Uri
-						.parse(ringtone);
-				notification.audioStreamType = AudioManager.STREAM_NOTIFICATION;
-			}
-			if (vibrationPattern != null) {
-				notification.vibrate = vibrationPattern;
-			}
-		}
+        if (ringAndVibrate) {
+            if (ringtone != null) {
+                notification.sound = TextUtils.isEmpty(ringtone) ? null : Uri
+                        .parse(ringtone);
+                notification.audioStreamType = AudioManager.STREAM_NOTIFICATION;
+            }
+            if (vibrationPattern != null) {
+                notification.vibrate = vibrationPattern;
+            }
+        }
 
-		if (ledColor != null) {
-			notification.flags |= Notification.FLAG_SHOW_LIGHTS;
-			notification.ledARGB = ledColor;
-			if (ledSpeed == RakuPhotoMail.NOTIFICATION_LED_BLINK_SLOW) {
-				notification.ledOnMS = RakuPhotoMail.NOTIFICATION_LED_ON_TIME;
-				notification.ledOffMS = RakuPhotoMail.NOTIFICATION_LED_OFF_TIME;
-			} else if (ledSpeed == RakuPhotoMail.NOTIFICATION_LED_BLINK_FAST) {
-				notification.ledOnMS = RakuPhotoMail.NOTIFICATION_LED_FAST_ON_TIME;
-				notification.ledOffMS = RakuPhotoMail.NOTIFICATION_LED_FAST_OFF_TIME;
-			}
-		}
-	}
+        if (ledColor != null) {
+            notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+            notification.ledARGB = ledColor;
+            if (ledSpeed == RakuPhotoMail.NOTIFICATION_LED_BLINK_SLOW) {
+                notification.ledOnMS = RakuPhotoMail.NOTIFICATION_LED_ON_TIME;
+                notification.ledOffMS = RakuPhotoMail.NOTIFICATION_LED_OFF_TIME;
+            } else if (ledSpeed == RakuPhotoMail.NOTIFICATION_LED_BLINK_FAST) {
+                notification.ledOnMS = RakuPhotoMail.NOTIFICATION_LED_FAST_ON_TIME;
+                notification.ledOffMS = RakuPhotoMail.NOTIFICATION_LED_FAST_OFF_TIME;
+            }
+        }
+    }
 
-	/**
-	 * Cancel a notification of new email messages
-	 */
-	public void notifyAccountCancel(Context context, Account account) {
-		NotificationManager notifMgr = (NotificationManager) context
-				.getSystemService(Context.NOTIFICATION_SERVICE);
-		notifMgr.cancel(account.getAccountNumber());
-		notifMgr.cancel(-1000 - account.getAccountNumber());
-	}
+    /**
+     * Cancel a notification of new email messages
+     */
+    public void notifyAccountCancel(Context context, Account account) {
+        NotificationManager notifMgr = (NotificationManager) context
+                .getSystemService(Context.NOTIFICATION_SERVICE);
+        notifMgr.cancel(account.getAccountNumber());
+        notifMgr.cancel(-1000 - account.getAccountNumber());
+    }
 
-	/**
-	 * Save a draft message.
-	 * 
-	 * @param account
-	 *            Account we are saving for.
-	 * @param message
-	 *            Message to save.
-	 * @return Message representing the entry in the local store.
-	 */
-	public Message saveDraft(final Account account, final Message message) {
-		Message localMessage = null;
-		try {
-			LocalStore localStore = account.getLocalStore();
-			LocalFolder localFolder = localStore.getFolder(account
-					.getDraftsFolderName());
-			localFolder.open(OpenMode.READ_WRITE);
-			// Save the message to the store.
-			localFolder.appendMessages(new Message[] { message });
-			// Fetch the message back from the store. This is the Message that's
-			// returned to the caller.
-			localMessage = localFolder.getMessage(message.getUid());
-			localMessage.setFlag(Flag.X_DOWNLOADED_FULL, true);
+    /**
+     * Save a draft message.
+     *
+     * @param account Account we are saving for.
+     * @param message Message to save.
+     * @return Message representing the entry in the local store.
+     */
+    public Message saveDraft(final Account account, final Message message) {
+        Message localMessage = null;
+        try {
+            LocalStore localStore = account.getLocalStore();
+            LocalFolder localFolder = localStore.getFolder(account
+                    .getDraftsFolderName());
+            localFolder.open(OpenMode.READ_WRITE);
+            // Save the message to the store.
+            localFolder.appendMessages(new Message[]{message});
+            // Fetch the message back from the store. This is the Message that's
+            // returned to the caller.
+            localMessage = localFolder.getMessage(message.getUid());
+            localMessage.setFlag(Flag.X_DOWNLOADED_FULL, true);
 
-			PendingCommand command = new PendingCommand();
-			command.command = PENDING_COMMAND_APPEND;
-			command.arguments = new String[] { localFolder.getName(),
-					localMessage.getUid() };
-			queuePendingCommand(account, command);
-			processPendingCommands(account);
+            PendingCommand command = new PendingCommand();
+            command.command = PENDING_COMMAND_APPEND;
+            command.arguments = new String[]{localFolder.getName(),
+                    localMessage.getUid()};
+            queuePendingCommand(account, command);
+            processPendingCommands(account);
 
-		} catch (MessagingException e) {
-			Log.e(RakuPhotoMail.LOG_TAG, "Unable to save message as draft.", e);
-			addErrorMessage(account, null, e);
-		}
-		return localMessage;
-	}
+        } catch (MessagingException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "Unable to save message as draft.", e);
+            addErrorMessage(account, null, e);
+        }
+        return localMessage;
+    }
 
-	public boolean modeMismatch(Account.FolderMode aMode,
-			Folder.FolderClass fMode) {
-		if (aMode == Account.FolderMode.NONE
-				|| (aMode == Account.FolderMode.FIRST_CLASS && fMode != Folder.FolderClass.FIRST_CLASS)
-				|| (aMode == Account.FolderMode.FIRST_AND_SECOND_CLASS
-						&& fMode != Folder.FolderClass.FIRST_CLASS && fMode != Folder.FolderClass.SECOND_CLASS)
-				|| (aMode == Account.FolderMode.NOT_SECOND_CLASS && fMode == Folder.FolderClass.SECOND_CLASS)) {
-			return true;
-		} else {
-			return false;
-		}
-	}
+    public boolean modeMismatch(Account.FolderMode aMode,
+                                Folder.FolderClass fMode) {
+        if (aMode == Account.FolderMode.NONE
+                || (aMode == Account.FolderMode.FIRST_CLASS && fMode != Folder.FolderClass.FIRST_CLASS)
+                || (aMode == Account.FolderMode.FIRST_AND_SECOND_CLASS
+                && fMode != Folder.FolderClass.FIRST_CLASS && fMode != Folder.FolderClass.SECOND_CLASS)
+                || (aMode == Account.FolderMode.NOT_SECOND_CLASS && fMode == Folder.FolderClass.SECOND_CLASS)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
-	static AtomicInteger sequencing = new AtomicInteger(0);
+    static AtomicInteger sequencing = new AtomicInteger(0);
 
-	static class Command implements Comparable<Command> {
-		public Runnable runnable;
+    static class Command implements Comparable<Command> {
+        public Runnable runnable;
 
-		public MessagingListener listener;
+        public MessagingListener listener;
 
-		public String description;
+        public String description;
 
-		boolean isForeground;
+        boolean isForeground;
 
-		int sequence = sequencing.getAndIncrement();
+        int sequence = sequencing.getAndIncrement();
 
-		@Override
-		public int compareTo(Command other) {
-			if (other.isForeground && !isForeground) {
-				return 1;
-			} else if (!other.isForeground && isForeground) {
-				return -1;
-			} else {
-				return (sequence - other.sequence);
-			}
-		}
-	}
+        @Override
+        public int compareTo(Command other) {
+            if (other.isForeground && !isForeground) {
+                return 1;
+            } else if (!other.isForeground && isForeground) {
+                return -1;
+            } else {
+                return (sequence - other.sequence);
+            }
+        }
+    }
 
-	public MessagingListener getCheckMailListener() {
-		return checkMailListener;
-	}
+    public MessagingListener getCheckMailListener() {
+        return checkMailListener;
+    }
 
-	public void setCheckMailListener(MessagingListener checkMailListener) {
-		if (this.checkMailListener != null) {
-			removeListener(this.checkMailListener);
-		}
-		this.checkMailListener = checkMailListener;
-		if (this.checkMailListener != null) {
-			addListener(this.checkMailListener);
-		}
-	}
+    public void setCheckMailListener(MessagingListener checkMailListener) {
+        if (this.checkMailListener != null) {
+            removeListener(this.checkMailListener);
+        }
+        this.checkMailListener = checkMailListener;
+        if (this.checkMailListener != null) {
+            addListener(this.checkMailListener);
+        }
+    }
 
-	public SORT_TYPE getSortType() {
-		return sortType;
-	}
+    public SORT_TYPE getSortType() {
+        return sortType;
+    }
 
-	public void setSortType(SORT_TYPE sortType) {
-		this.sortType = sortType;
-	}
+    public void setSortType(SORT_TYPE sortType) {
+        this.sortType = sortType;
+    }
 
-	public boolean isSortAscending(SORT_TYPE sortType) {
-		Boolean sortAsc = sortAscending.get(sortType);
-		if (sortAsc == null) {
-			return sortType.isDefaultAscending();
-		} else
-			return sortAsc;
-	}
+    public boolean isSortAscending(SORT_TYPE sortType) {
+        Boolean sortAsc = sortAscending.get(sortType);
+        if (sortAsc == null) {
+            return sortType.isDefaultAscending();
+        } else
+            return sortAsc;
+    }
 
-	public void setSortAscending(SORT_TYPE sortType, boolean nsortAscending) {
-		sortAscending.put(sortType, nsortAscending);
-	}
+    public void setSortAscending(SORT_TYPE sortType, boolean nsortAscending) {
+        sortAscending.put(sortType, nsortAscending);
+    }
 
-	public Collection<Pusher> getPushers() {
-		return pushers.values();
-	}
+    public Collection<Pusher> getPushers() {
+        return pushers.values();
+    }
 
-	public boolean setupPushing(final Account account) {
-		try {
-			Pusher previousPusher = pushers.remove(account);
-			if (previousPusher != null) {
-				previousPusher.stop();
-			}
-			Preferences prefs = Preferences.getPreferences(mApplication);
+    public boolean setupPushing(final Account account) {
+        try {
+            Pusher previousPusher = pushers.remove(account);
+            if (previousPusher != null) {
+                previousPusher.stop();
+            }
+            Preferences prefs = Preferences.getPreferences(mApplication);
 
-			Account.FolderMode aDisplayMode = account.getFolderDisplayMode();
-			Account.FolderMode aPushMode = account.getFolderPushMode();
+            Account.FolderMode aDisplayMode = account.getFolderDisplayMode();
+            Account.FolderMode aPushMode = account.getFolderPushMode();
 
-			List<String> names = new ArrayList<String>();
+            List<String> names = new ArrayList<String>();
 
-			Store localStore = account.getLocalStore();
-			for (final Folder folder : localStore.getPersonalNamespaces(false)) {
-				if (folder.getName().equals(account.getErrorFolderName())
-						|| folder.getName().equals(
-								account.getOutboxFolderName())) {
-					/*
+            Store localStore = account.getLocalStore();
+            for (final Folder folder : localStore.getPersonalNamespaces(false)) {
+                if (folder.getName().equals(account.getErrorFolderName())
+                        || folder.getName().equals(
+                        account.getOutboxFolderName())) {
+                    /*
 					 * if (RakuPhotoMail.DEBUG) Log.v(RakuPhotoMail.LOG_TAG,
 					 * "Not pushing folder " + folder.getName() +
 					 * " which should never be pushed");
 					 */
 
-					continue;
-				}
-				folder.open(Folder.OpenMode.READ_WRITE);
-				folder.refresh(prefs);
+                    continue;
+                }
+                folder.open(Folder.OpenMode.READ_WRITE);
+                folder.refresh(prefs);
 
-				Folder.FolderClass fDisplayClass = folder.getDisplayClass();
-				Folder.FolderClass fPushClass = folder.getPushClass();
+                Folder.FolderClass fDisplayClass = folder.getDisplayClass();
+                Folder.FolderClass fPushClass = folder.getPushClass();
 
-				if (modeMismatch(aDisplayMode, fDisplayClass)) {
-					// Never push a folder that isn't displayed
-					/*
+                if (modeMismatch(aDisplayMode, fDisplayClass)) {
+                    // Never push a folder that isn't displayed
+                    /*
 					 * if (RakuPhotoMail.DEBUG) Log.v(RakuPhotoMail.LOG_TAG,
 					 * "Not pushing folder " + folder.getName() +
 					 * " which is in display class " + fDisplayClass +
 					 * " while account is in display mode " + aDisplayMode);
 					 */
 
-					continue;
-				}
+                    continue;
+                }
 
-				if (modeMismatch(aPushMode, fPushClass)) {
-					// Do not push folders in the wrong class
-					/*
+                if (modeMismatch(aPushMode, fPushClass)) {
+                    // Do not push folders in the wrong class
+                    /*
 					 * if (RakuPhotoMail.DEBUG) Log.v(RakuPhotoMail.LOG_TAG,
 					 * "Not pushing folder " + folder.getName() +
 					 * " which is in push mode " + fPushClass +
 					 * " while account is in push mode " + aPushMode);
 					 */
 
-					continue;
-				}
-				if (RakuPhotoMail.DEBUG)
-					Log.i(RakuPhotoMail.LOG_TAG, "Starting pusher for "
-							+ account.getDescription() + ":" + folder.getName());
+                    continue;
+                }
+                if (RakuPhotoMail.DEBUG)
+                    Log.i(RakuPhotoMail.LOG_TAG, "Starting pusher for "
+                            + account.getDescription() + ":" + folder.getName());
 
-				names.add(folder.getName());
-			}
+                names.add(folder.getName());
+            }
 
-			if (names.size() > 0) {
-				PushReceiver receiver = new MessagingControllerPushReceiver(
-						mApplication, account, this);
-				int maxPushFolders = account.getMaxPushFolders();
+            if (names.size() > 0) {
+                PushReceiver receiver = new MessagingControllerPushReceiver(
+                        mApplication, account, this);
+                int maxPushFolders = account.getMaxPushFolders();
 
-				if (names.size() > maxPushFolders) {
-					if (RakuPhotoMail.DEBUG)
-						Log.i(RakuPhotoMail.LOG_TAG,
-								"Count of folders to push for account "
-										+ account.getDescription() + " is "
-										+ names.size()
-										+ ", greater than limit of "
-										+ maxPushFolders + ", truncating");
+                if (names.size() > maxPushFolders) {
+                    if (RakuPhotoMail.DEBUG)
+                        Log.i(RakuPhotoMail.LOG_TAG,
+                                "Count of folders to push for account "
+                                        + account.getDescription() + " is "
+                                        + names.size()
+                                        + ", greater than limit of "
+                                        + maxPushFolders + ", truncating");
 
-					names = names.subList(0, maxPushFolders);
-				}
+                    names = names.subList(0, maxPushFolders);
+                }
 
-				try {
-					Store store = account.getRemoteStore();
-					if (!store.isPushCapable()) {
-						if (RakuPhotoMail.DEBUG)
-							Log.i(RakuPhotoMail.LOG_TAG,
-									"Account " + account.getDescription()
-											+ " is not push capable, skipping");
+                try {
+                    Store store = account.getRemoteStore();
+                    if (!store.isPushCapable()) {
+                        if (RakuPhotoMail.DEBUG)
+                            Log.i(RakuPhotoMail.LOG_TAG,
+                                    "Account " + account.getDescription()
+                                            + " is not push capable, skipping");
 
-						return false;
-					}
-					Pusher pusher = store.getPusher(receiver);
-					if (pusher != null) {
-						Pusher oldPusher = pushers.putIfAbsent(account, pusher);
-						if (oldPusher == null) {
-							pusher.start(names);
-						}
-					}
-				} catch (Exception e) {
-					Log.e(RakuPhotoMail.LOG_TAG, "Could not get remote store",
-							e);
-					return false;
-				}
+                        return false;
+                    }
+                    Pusher pusher = store.getPusher(receiver);
+                    if (pusher != null) {
+                        Pusher oldPusher = pushers.putIfAbsent(account, pusher);
+                        if (oldPusher == null) {
+                            pusher.start(names);
+                        }
+                    }
+                } catch (Exception e) {
+                    Log.e(RakuPhotoMail.LOG_TAG, "Could not get remote store",
+                            e);
+                    return false;
+                }
 
-				return true;
-			} else {
-				if (RakuPhotoMail.DEBUG)
-					Log.i(RakuPhotoMail.LOG_TAG,
-							"No folders are configured for pushing in account "
-									+ account.getDescription());
-				return false;
-			}
+                return true;
+            } else {
+                if (RakuPhotoMail.DEBUG)
+                    Log.i(RakuPhotoMail.LOG_TAG,
+                            "No folders are configured for pushing in account "
+                                    + account.getDescription());
+                return false;
+            }
 
-		} catch (Exception e) {
-			Log.e(RakuPhotoMail.LOG_TAG,
-					"Got exception while setting up pushing", e);
-		}
-		return false;
-	}
+        } catch (Exception e) {
+            Log.e(RakuPhotoMail.LOG_TAG,
+                    "Got exception while setting up pushing", e);
+        }
+        return false;
+    }
 
-	public void stopAllPushing() {
-		if (RakuPhotoMail.DEBUG)
-			Log.i(RakuPhotoMail.LOG_TAG, "Stopping all pushers");
+    public void stopAllPushing() {
+        if (RakuPhotoMail.DEBUG)
+            Log.i(RakuPhotoMail.LOG_TAG, "Stopping all pushers");
 
-		Iterator<Pusher> iter = pushers.values().iterator();
-		while (iter.hasNext()) {
-			Pusher pusher = iter.next();
-			iter.remove();
-			pusher.stop();
-		}
-	}
+        Iterator<Pusher> iter = pushers.values().iterator();
+        while (iter.hasNext()) {
+            Pusher pusher = iter.next();
+            iter.remove();
+            pusher.stop();
+        }
+    }
 
-	public void messagesArrived(final Account account,
-			final Folder remoteFolder, final List<Message> messages,
-			final boolean flagSyncOnly) {
-		if (RakuPhotoMail.DEBUG)
-			Log.i(RakuPhotoMail.LOG_TAG,
-					"Got new pushed email messages for account "
-							+ account.getDescription() + ", folder "
-							+ remoteFolder.getName());
+    public void messagesArrived(final Account account,
+                                final Folder remoteFolder, final List<Message> messages,
+                                final boolean flagSyncOnly) {
+        if (RakuPhotoMail.DEBUG)
+            Log.i(RakuPhotoMail.LOG_TAG,
+                    "Got new pushed email messages for account "
+                            + account.getDescription() + ", folder "
+                            + remoteFolder.getName());
 
-		final CountDownLatch latch = new CountDownLatch(1);
-		putBackground(
-				"Push messageArrived of account " + account.getDescription()
-						+ ", folder " + remoteFolder.getName(), null,
-				new Runnable() {
-					@Override
-					public void run() {
-						LocalFolder localFolder = null;
-						try {
-							LocalStore localStore = account.getLocalStore();
-							localFolder = localStore.getFolder(remoteFolder
-									.getName());
-							localFolder.open(OpenMode.READ_WRITE);
+        final CountDownLatch latch = new CountDownLatch(1);
+        putBackground(
+                "Push messageArrived of account " + account.getDescription()
+                        + ", folder " + remoteFolder.getName(), null,
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        LocalFolder localFolder = null;
+                        try {
+                            LocalStore localStore = account.getLocalStore();
+                            localFolder = localStore.getFolder(remoteFolder
+                                    .getName());
+                            localFolder.open(OpenMode.READ_WRITE);
 
-							account.setRingNotified(false);
-							int newCount = downloadMessages(account,
-									remoteFolder, localFolder, messages,
-									flagSyncOnly);
-							int unreadMessageCount = setLocalUnreadCountToRemote(
-									localFolder, remoteFolder, messages.size());
+                            account.setRingNotified(false);
+                            int newCount = downloadMessages(account,
+                                    remoteFolder, localFolder, messages,
+                                    flagSyncOnly);
+                            int unreadMessageCount = setLocalUnreadCountToRemote(
+                                    localFolder, remoteFolder, messages.size());
 
-							setLocalFlaggedCountToRemote(localFolder,
-									remoteFolder);
+                            setLocalFlaggedCountToRemote(localFolder,
+                                    remoteFolder);
 
-							localFolder.setLastPush(System.currentTimeMillis());
-							localFolder.setStatus(null);
+                            localFolder.setLastPush(System.currentTimeMillis());
+                            localFolder.setStatus(null);
 
-							if (RakuPhotoMail.DEBUG)
-								Log.i(RakuPhotoMail.LOG_TAG,
-										"messagesArrived newCount = "
-												+ newCount
-												+ ", unread count = "
-												+ unreadMessageCount);
+                            if (RakuPhotoMail.DEBUG)
+                                Log.i(RakuPhotoMail.LOG_TAG,
+                                        "messagesArrived newCount = "
+                                                + newCount
+                                                + ", unread count = "
+                                                + unreadMessageCount);
 
-							if (unreadMessageCount == 0) {
-								notifyAccountCancel(mApplication, account);
-							}
+                            if (unreadMessageCount == 0) {
+                                notifyAccountCancel(mApplication, account);
+                            }
 
-							for (MessagingListener l : getListeners()) {
-								l.folderStatusChanged(account,
-										remoteFolder.getName(),
-										unreadMessageCount);
-							}
+                            for (MessagingListener l : getListeners()) {
+                                l.folderStatusChanged(account,
+                                        remoteFolder.getName(),
+                                        unreadMessageCount);
+                            }
 
-						} catch (Exception e) {
-							String rootMessage = getRootCauseMessage(e);
-							String errorMessage = "Push failed: " + rootMessage;
-							try {
-								// Oddly enough, using a local variable gets rid
-								// of a
-								// potential null pointer access warning with
-								// Eclipse.
-								LocalFolder folder = localFolder;
-								folder.setStatus(errorMessage);
-							} catch (Exception se) {
-								Log.e(RakuPhotoMail.LOG_TAG,
-										"Unable to set failed status on localFolder",
-										se);
-							}
-							for (MessagingListener l : getListeners()) {
-								l.synchronizeMailboxFailed(account,
-										remoteFolder.getName(), errorMessage);
-							}
-							addErrorMessage(account, null, e);
-						} finally {
-							closeFolder(localFolder);
-							latch.countDown();
-						}
+                        } catch (Exception e) {
+                            String rootMessage = getRootCauseMessage(e);
+                            String errorMessage = "Push failed: " + rootMessage;
+                            try {
+                                // Oddly enough, using a local variable gets rid
+                                // of a
+                                // potential null pointer access warning with
+                                // Eclipse.
+                                LocalFolder folder = localFolder;
+                                folder.setStatus(errorMessage);
+                            } catch (Exception se) {
+                                Log.e(RakuPhotoMail.LOG_TAG,
+                                        "Unable to set failed status on localFolder",
+                                        se);
+                            }
+                            for (MessagingListener l : getListeners()) {
+                                l.synchronizeMailboxFailed(account,
+                                        remoteFolder.getName(), errorMessage);
+                            }
+                            addErrorMessage(account, null, e);
+                        } finally {
+                            closeFolder(localFolder);
+                            latch.countDown();
+                        }
 
-					}
-				});
-		try {
-			latch.await();
-		} catch (Exception e) {
-			Log.e(RakuPhotoMail.LOG_TAG,
-					"Interrupted while awaiting latch release", e);
-		}
-		if (RakuPhotoMail.DEBUG)
-			Log.i(RakuPhotoMail.LOG_TAG,
-					"MessagingController.messagesArrivedLatch released");
-	}
+                    }
+                });
+        try {
+            latch.await();
+        } catch (Exception e) {
+            Log.e(RakuPhotoMail.LOG_TAG,
+                    "Interrupted while awaiting latch release", e);
+        }
+        if (RakuPhotoMail.DEBUG)
+            Log.i(RakuPhotoMail.LOG_TAG,
+                    "MessagingController.messagesArrivedLatch released");
+    }
 
-	public void systemStatusChanged() {
-		for (MessagingListener l : getListeners()) {
-			l.systemStatusChanged();
-		}
-	}
+    public void systemStatusChanged() {
+        for (MessagingListener l : getListeners()) {
+            l.systemStatusChanged();
+        }
+    }
 
-	enum MemorizingState {
-		STARTED, FINISHED, FAILED
-	}
+    enum MemorizingState {
+        STARTED, FINISHED, FAILED
+    }
 
-	static class Memory {
-		Account account;
-		String folderName;
-		MemorizingState syncingState = null;
-		MemorizingState sendingState = null;
-		MemorizingState pushingState = null;
-		MemorizingState processingState = null;
-		String failureMessage = null;
+    static class Memory {
+        Account account;
+        String folderName;
+        MemorizingState syncingState = null;
+        MemorizingState sendingState = null;
+        MemorizingState pushingState = null;
+        MemorizingState processingState = null;
+        String failureMessage = null;
 
-		int syncingTotalMessagesInMailbox;
-		int syncingNumNewMessages;
+        int syncingTotalMessagesInMailbox;
+        int syncingNumNewMessages;
 
-		int folderCompleted = 0;
-		int folderTotal = 0;
-		String processingCommandTitle = null;
+        int folderCompleted = 0;
+        int folderTotal = 0;
+        String processingCommandTitle = null;
 
-		Memory(Account nAccount, String nFolderName) {
-			account = nAccount;
-			folderName = nFolderName;
-		}
+        Memory(Account nAccount, String nFolderName) {
+            account = nAccount;
+            folderName = nFolderName;
+        }
 
-		String getKey() {
-			return getMemoryKey(account, folderName);
-		}
+        String getKey() {
+            return getMemoryKey(account, folderName);
+        }
 
-	}
+    }
 
-	static String getMemoryKey(Account taccount, String tfolderName) {
-		return taccount.getDescription() + ":" + tfolderName;
-	}
+    static String getMemoryKey(Account taccount, String tfolderName) {
+        return taccount.getDescription() + ":" + tfolderName;
+    }
 
-	static class MemorizingListener extends MessagingListener {
-		HashMap<String, Memory> memories = new HashMap<String, Memory>(31);
+    static class MemorizingListener extends MessagingListener {
+        HashMap<String, Memory> memories = new HashMap<String, Memory>(31);
 
-		Memory getMemory(Account account, String folderName) {
-			Log.v(RakuPhotoMail.LOG_TAG,
-					"MemorizingListener#getMemory account:"
-							+ account.toString() + " folderName:" + folderName);
-			Memory memory = memories.get(getMemoryKey(account, folderName));
-			Log.v(RakuPhotoMail.LOG_TAG,
-					"MemorizingListener#getMemory getMemoryKey(account, "
-							+ "folderName):"
-							+ getMemoryKey(account, folderName));
-			if (memory == null) {
-				memory = new Memory(account, folderName);
-				memories.put(memory.getKey(), memory);
-			}
-			Log.v(RakuPhotoMail.LOG_TAG, "MemorizingListener#getMemory memory:"
-					+ memory.toString());
-			return memory;
-		}
+        Memory getMemory(Account account, String folderName) {
+            Log.v(RakuPhotoMail.LOG_TAG,
+                    "MemorizingListener#getMemory account:"
+                            + account.toString() + " folderName:" + folderName);
+            Memory memory = memories.get(getMemoryKey(account, folderName));
+            Log.v(RakuPhotoMail.LOG_TAG,
+                    "MemorizingListener#getMemory getMemoryKey(account, "
+                            + "folderName):"
+                            + getMemoryKey(account, folderName));
+            if (memory == null) {
+                memory = new Memory(account, folderName);
+                memories.put(memory.getKey(), memory);
+            }
+            Log.v(RakuPhotoMail.LOG_TAG, "MemorizingListener#getMemory memory:"
+                    + memory.toString());
+            return memory;
+        }
 
-		@Override
-		public synchronized void synchronizeMailboxStarted(Account account,
-				String folder) {
-			Log.v(RakuPhotoMail.LOG_TAG,
-					"MemorizingListener#synchronizeMailboxStarted");
-			Memory memory = getMemory(account, folder);
-			memory.syncingState = MemorizingState.STARTED;
-			memory.folderCompleted = 0;
-			memory.folderTotal = 0;
-		}
+        @Override
+        public synchronized void synchronizeMailboxStarted(Account account,
+                                                           String folder) {
+            Log.v(RakuPhotoMail.LOG_TAG,
+                    "MemorizingListener#synchronizeMailboxStarted");
+            Memory memory = getMemory(account, folder);
+            memory.syncingState = MemorizingState.STARTED;
+            memory.folderCompleted = 0;
+            memory.folderTotal = 0;
+        }
 
-		@Override
-		public synchronized void synchronizeMailboxFinished(Account account,
-				String folder, int totalMessagesInMailbox, int numNewMessages) {
-			Log.v(RakuPhotoMail.LOG_TAG,
-					"MemorizingListener#synchronizeMailboxFinished");
+        @Override
+        public synchronized void synchronizeMailboxFinished(Account account,
+                                                            String folder, int totalMessagesInMailbox, int numNewMessages) {
+            Log.v(RakuPhotoMail.LOG_TAG,
+                    "MemorizingListener#synchronizeMailboxFinished");
 
-			Memory memory = getMemory(account, folder);
-			memory.syncingState = MemorizingState.FINISHED;
-			memory.syncingTotalMessagesInMailbox = totalMessagesInMailbox;
-			memory.syncingNumNewMessages = numNewMessages;
-		}
+            Memory memory = getMemory(account, folder);
+            memory.syncingState = MemorizingState.FINISHED;
+            memory.syncingTotalMessagesInMailbox = totalMessagesInMailbox;
+            memory.syncingNumNewMessages = numNewMessages;
+        }
 
-		@Override
-		public synchronized void synchronizeMailboxFailed(Account account,
-				String folder, String message) {
+        @Override
+        public synchronized void synchronizeMailboxFailed(Account account,
+                                                          String folder, String message) {
 
-			Memory memory = getMemory(account, folder);
-			memory.syncingState = MemorizingState.FAILED;
-			memory.failureMessage = message;
-		}
+            Memory memory = getMemory(account, folder);
+            memory.syncingState = MemorizingState.FAILED;
+            memory.failureMessage = message;
+        }
 
-		synchronized void refreshOther(MessagingListener other) {
-			if (other != null) {
+        synchronized void refreshOther(MessagingListener other) {
+            if (other != null) {
 
-				Memory syncStarted = null;
-				Memory sendStarted = null;
-				Memory processingStarted = null;
+                Memory syncStarted = null;
+                Memory sendStarted = null;
+                Memory processingStarted = null;
 
-				for (Memory memory : memories.values()) {
+                for (Memory memory : memories.values()) {
 
-					if (memory.syncingState != null) {
-						switch (memory.syncingState) {
-						case STARTED:
-							syncStarted = memory;
-							break;
-						case FINISHED:
-							other.synchronizeMailboxFinished(memory.account,
-									memory.folderName,
-									memory.syncingTotalMessagesInMailbox,
-									memory.syncingNumNewMessages);
-							break;
-						case FAILED:
-							other.synchronizeMailboxFailed(memory.account,
-									memory.folderName, memory.failureMessage);
-							break;
-						}
-					}
+                    if (memory.syncingState != null) {
+                        switch (memory.syncingState) {
+                            case STARTED:
+                                syncStarted = memory;
+                                break;
+                            case FINISHED:
+                                other.synchronizeMailboxFinished(memory.account,
+                                        memory.folderName,
+                                        memory.syncingTotalMessagesInMailbox,
+                                        memory.syncingNumNewMessages);
+                                break;
+                            case FAILED:
+                                other.synchronizeMailboxFailed(memory.account,
+                                        memory.folderName, memory.failureMessage);
+                                break;
+                        }
+                    }
 
-					if (memory.sendingState != null) {
-						switch (memory.sendingState) {
-						case STARTED:
-							sendStarted = memory;
-							break;
-						case FINISHED:
-							other.sendPendingMessagesCompleted(memory.account);
-							break;
-						case FAILED:
-							other.sendPendingMessagesFailed(memory.account);
-							break;
-						}
-					}
-					if (memory.pushingState != null) {
-						switch (memory.pushingState) {
-						case STARTED:
-							other.setPushActive(memory.account,
-									memory.folderName, true);
-							break;
-						case FINISHED:
-							other.setPushActive(memory.account,
-									memory.folderName, false);
-							break;
-						}
-					}
-					if (memory.processingState != null) {
-						switch (memory.processingState) {
-						case STARTED:
-							processingStarted = memory;
-							break;
-						case FINISHED:
-						case FAILED:
-							other.pendingCommandsFinished(memory.account);
-							break;
-						}
-					}
-				}
-				Memory somethingStarted = null;
-				if (syncStarted != null) {
-					other.synchronizeMailboxStarted(syncStarted.account,
-							syncStarted.folderName);
-					somethingStarted = syncStarted;
-				}
-				if (sendStarted != null) {
-					other.sendPendingMessagesStarted(sendStarted.account);
-					somethingStarted = sendStarted;
-				}
-				if (processingStarted != null) {
-					other.pendingCommandsProcessing(processingStarted.account);
-					if (processingStarted.processingCommandTitle != null) {
-						other.pendingCommandStarted(processingStarted.account,
-								processingStarted.processingCommandTitle);
+                    if (memory.sendingState != null) {
+                        switch (memory.sendingState) {
+                            case STARTED:
+                                sendStarted = memory;
+                                break;
+                            case FINISHED:
+                                other.sendPendingMessagesCompleted(memory.account);
+                                break;
+                            case FAILED:
+                                other.sendPendingMessagesFailed(memory.account);
+                                break;
+                        }
+                    }
+                    if (memory.pushingState != null) {
+                        switch (memory.pushingState) {
+                            case STARTED:
+                                other.setPushActive(memory.account,
+                                        memory.folderName, true);
+                                break;
+                            case FINISHED:
+                                other.setPushActive(memory.account,
+                                        memory.folderName, false);
+                                break;
+                        }
+                    }
+                    if (memory.processingState != null) {
+                        switch (memory.processingState) {
+                            case STARTED:
+                                processingStarted = memory;
+                                break;
+                            case FINISHED:
+                            case FAILED:
+                                other.pendingCommandsFinished(memory.account);
+                                break;
+                        }
+                    }
+                }
+                Memory somethingStarted = null;
+                if (syncStarted != null) {
+                    other.synchronizeMailboxStarted(syncStarted.account,
+                            syncStarted.folderName);
+                    somethingStarted = syncStarted;
+                }
+                if (sendStarted != null) {
+                    other.sendPendingMessagesStarted(sendStarted.account);
+                    somethingStarted = sendStarted;
+                }
+                if (processingStarted != null) {
+                    other.pendingCommandsProcessing(processingStarted.account);
+                    if (processingStarted.processingCommandTitle != null) {
+                        other.pendingCommandStarted(processingStarted.account,
+                                processingStarted.processingCommandTitle);
 
-					} else {
-						other.pendingCommandCompleted(
-								processingStarted.account,
-								processingStarted.processingCommandTitle);
-					}
-					somethingStarted = processingStarted;
-				}
-				if (somethingStarted != null
-						&& somethingStarted.folderTotal > 0) {
-					other.synchronizeMailboxProgress(somethingStarted.account,
-							somethingStarted.folderName,
-							somethingStarted.folderCompleted,
-							somethingStarted.folderTotal);
-				}
+                    } else {
+                        other.pendingCommandCompleted(
+                                processingStarted.account,
+                                processingStarted.processingCommandTitle);
+                    }
+                    somethingStarted = processingStarted;
+                }
+                if (somethingStarted != null
+                        && somethingStarted.folderTotal > 0) {
+                    other.synchronizeMailboxProgress(somethingStarted.account,
+                            somethingStarted.folderName,
+                            somethingStarted.folderCompleted,
+                            somethingStarted.folderTotal);
+                }
 
-			}
-		}
+            }
+        }
 
-		@Override
-		public synchronized void setPushActive(Account account,
-				String folderName, boolean active) {
-			Memory memory = getMemory(account, folderName);
-			memory.pushingState = (active ? MemorizingState.STARTED
-					: MemorizingState.FINISHED);
-		}
+        @Override
+        public synchronized void setPushActive(Account account,
+                                               String folderName, boolean active) {
+            Memory memory = getMemory(account, folderName);
+            memory.pushingState = (active ? MemorizingState.STARTED
+                    : MemorizingState.FINISHED);
+        }
 
-		@Override
-		public synchronized void sendPendingMessagesStarted(Account account) {
-			Memory memory = getMemory(account, null);
-			memory.sendingState = MemorizingState.STARTED;
-			memory.folderCompleted = 0;
-			memory.folderTotal = 0;
-		}
+        @Override
+        public synchronized void sendPendingMessagesStarted(Account account) {
+            Memory memory = getMemory(account, null);
+            memory.sendingState = MemorizingState.STARTED;
+            memory.folderCompleted = 0;
+            memory.folderTotal = 0;
+        }
 
-		@Override
-		public synchronized void sendPendingMessagesCompleted(Account account) {
-			Memory memory = getMemory(account, null);
-			memory.sendingState = MemorizingState.FINISHED;
-		}
+        @Override
+        public synchronized void sendPendingMessagesCompleted(Account account) {
+            Memory memory = getMemory(account, null);
+            memory.sendingState = MemorizingState.FINISHED;
+        }
 
-		@Override
-		public synchronized void sendPendingMessagesFailed(Account account) {
-			Memory memory = getMemory(account, null);
-			memory.sendingState = MemorizingState.FAILED;
-		}
+        @Override
+        public synchronized void sendPendingMessagesFailed(Account account) {
+            Memory memory = getMemory(account, null);
+            memory.sendingState = MemorizingState.FAILED;
+        }
 
-		@Override
-		public synchronized void synchronizeMailboxProgress(Account account,
-				String folderName, int completed, int total) {
-			Memory memory = getMemory(account, folderName);
-			memory.folderCompleted = completed;
-			memory.folderTotal = total;
-		}
+        @Override
+        public synchronized void synchronizeMailboxProgress(Account account,
+                                                            String folderName, int completed, int total) {
+            Memory memory = getMemory(account, folderName);
+            memory.folderCompleted = completed;
+            memory.folderTotal = total;
+        }
 
-		@Override
-		public synchronized void pendingCommandsProcessing(Account account) {
-			Memory memory = getMemory(account, null);
-			memory.processingState = MemorizingState.STARTED;
-			memory.folderCompleted = 0;
-			memory.folderTotal = 0;
-		}
+        @Override
+        public synchronized void pendingCommandsProcessing(Account account) {
+            Memory memory = getMemory(account, null);
+            memory.processingState = MemorizingState.STARTED;
+            memory.folderCompleted = 0;
+            memory.folderTotal = 0;
+        }
 
-		@Override
-		public synchronized void pendingCommandsFinished(Account account) {
-			Memory memory = getMemory(account, null);
-			memory.processingState = MemorizingState.FINISHED;
-		}
+        @Override
+        public synchronized void pendingCommandsFinished(Account account) {
+            Memory memory = getMemory(account, null);
+            memory.processingState = MemorizingState.FINISHED;
+        }
 
-		@Override
-		public synchronized void pendingCommandStarted(Account account,
-				String commandTitle) {
-			Memory memory = getMemory(account, null);
-			memory.processingCommandTitle = commandTitle;
-		}
+        @Override
+        public synchronized void pendingCommandStarted(Account account,
+                                                       String commandTitle) {
+            Memory memory = getMemory(account, null);
+            memory.processingCommandTitle = commandTitle;
+        }
 
-		@Override
-		public synchronized void pendingCommandCompleted(Account account,
-				String commandTitle) {
-			Memory memory = getMemory(account, null);
-			memory.processingCommandTitle = null;
-		}
+        @Override
+        public synchronized void pendingCommandCompleted(Account account,
+                                                         String commandTitle) {
+            Memory memory = getMemory(account, null);
+            memory.processingCommandTitle = null;
+        }
 
-	}
+    }
 
-	private void actOnMessages(Message[] messages, MessageActor actor) {
-		Map<Account, Map<Folder, List<Message>>> accountMap = new HashMap<Account, Map<Folder, List<Message>>>();
+    private void actOnMessages(Message[] messages, MessageActor actor) {
+        Map<Account, Map<Folder, List<Message>>> accountMap = new HashMap<Account, Map<Folder, List<Message>>>();
 
-		for (Message message : messages) {
-			Folder folder = message.getFolder();
-			Account account = folder.getAccount();
+        for (Message message : messages) {
+            Folder folder = message.getFolder();
+            Account account = folder.getAccount();
 
-			Map<Folder, List<Message>> folderMap = accountMap.get(account);
-			if (folderMap == null) {
-				folderMap = new HashMap<Folder, List<Message>>();
-				accountMap.put(account, folderMap);
-			}
-			List<Message> messageList = folderMap.get(folder);
-			if (messageList == null) {
-				messageList = new LinkedList<Message>();
-				folderMap.put(folder, messageList);
-			}
+            Map<Folder, List<Message>> folderMap = accountMap.get(account);
+            if (folderMap == null) {
+                folderMap = new HashMap<Folder, List<Message>>();
+                accountMap.put(account, folderMap);
+            }
+            List<Message> messageList = folderMap.get(folder);
+            if (messageList == null) {
+                messageList = new LinkedList<Message>();
+                folderMap.put(folder, messageList);
+            }
 
-			messageList.add(message);
-		}
-		for (Map.Entry<Account, Map<Folder, List<Message>>> entry : accountMap
-				.entrySet()) {
-			Account account = entry.getKey();
+            messageList.add(message);
+        }
+        for (Map.Entry<Account, Map<Folder, List<Message>>> entry : accountMap
+                .entrySet()) {
+            Account account = entry.getKey();
 
-			// account.refresh(Preferences.getPreferences(RakuPhotoMail.app));
-			Map<Folder, List<Message>> folderMap = entry.getValue();
-			for (Map.Entry<Folder, List<Message>> folderEntry : folderMap
-					.entrySet()) {
-				Folder folder = folderEntry.getKey();
-				List<Message> messageList = folderEntry.getValue();
-				actor.act(account, folder, messageList);
-			}
-		}
-	}
+            // account.refresh(Preferences.getPreferences(RakuPhotoMail.app));
+            Map<Folder, List<Message>> folderMap = entry.getValue();
+            for (Map.Entry<Folder, List<Message>> folderEntry : folderMap
+                    .entrySet()) {
+                Folder folder = folderEntry.getKey();
+                List<Message> messageList = folderEntry.getValue();
+                actor.act(account, folder, messageList);
+            }
+        }
+    }
 
-	interface MessageActor {
-		public void act(final Account account, final Folder folder,
-				final List<Message> messages);
-	}
+    interface MessageActor {
+        public void act(final Account account, final Folder folder,
+                        final List<Message> messages);
+    }
 }
