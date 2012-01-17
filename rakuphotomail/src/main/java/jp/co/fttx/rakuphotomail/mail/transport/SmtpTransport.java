@@ -309,10 +309,8 @@ public class SmtpTransport extends Transport {
         }
     }
 
-    //TODO こいつを直接呼んでどうにかすっか？
     @Override
     public void sendMessage(Message message) throws MessagingException {
-        Log.d("refs1961","MessagingController#sendMessage start message:"+message.getUid());
 
         ArrayList<Address> addresses = new ArrayList<Address>();
         {
@@ -342,12 +340,10 @@ public class SmtpTransport extends Transport {
             message.setCharset(charset);
             sendMessageTo(addressesOfCharset, message);
         }
-        Log.d("refs1961","MessagingController#sendMessage end message:"+message.getUid());
     }
 
     private void sendMessageTo(ArrayList<String> addresses, Message message)
     throws MessagingException {
-        Log.d("refs1961","MessagingController#sendMessageTo start message:"+message.getUid());
         boolean possibleSend = false;
 
         close();
@@ -393,8 +389,6 @@ public class SmtpTransport extends Transport {
         } finally {
             close();
         }
-
-        Log.d("refs1961","MessagingController#sendMessageTo start message:"+message.getUid());
     }
 
     @Override

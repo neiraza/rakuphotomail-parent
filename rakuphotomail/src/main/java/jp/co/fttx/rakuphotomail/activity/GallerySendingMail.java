@@ -6,6 +6,8 @@ package jp.co.fttx.rakuphotomail.activity;
 
 import java.util.Date;
 
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
@@ -245,7 +247,13 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
     @Override
     public void onClick(View v) {
         if (onCheck()) {
-            onSend();
+            final Account account = Preferences.getPreferences(this).getAccount(mMessageReference.accountUuid);
+            final String folderName = mMessageReference.folderName;
+            final String uid = mMessageReference.uid;
+            Log.d("refs1961", "GallerySendingMail#onClick folderName:" + folderName);
+            Log.d("refs1961", "GallerySendingMail#onClick uid:" + uid);
+
+            onSend(account, folderName, uid);
             finish();
         }
     }
@@ -280,56 +288,145 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
      * @author tooru.oguri
      * @since 0.1-beta1
      */
-    private void onSend() {
+    private void onSend(Account account, String folderName, String uid) {
         Log.d("refs1961", "GallerySendingMail#onSend start");
+        Log.d("refs1961", "GallerySendingMail#onSend folderName:" + folderName);
+        Log.d("refs1961", "GallerySendingMail#onSend uid:" + uid);
         sendMessage();
-        final Account account = Preferences.getPreferences(this).getAccount(mMessageReference.accountUuid);
-        final String folderName = mMessageReference.folderName;
-        final String sourceMessageUid = mMessageReference.uid;
         MessagingController.getInstance(getApplication()).setFlag(account, folderName,
-                new String[]{sourceMessageUid}, mMessageReference.flag, true);
+                new String[]{uid}, mMessageReference.flag, true);
         Log.d("refs1961", "GallerySendingMail#onSend end");
     }
 
     /**
-     * メールを送信.
-     *
+     * @author tooru.oguri
+     * @since 0.1-beta1
+     */
+    private void onSendAfter(Account account, String folderName, String uid) {
+        Log.d("refs1961", "GallerySendingMail#onSendAfter start");
+        try {
+            Log.d("refs1961", "GallerySendingMail#onSendAfter folderName:" + folderName);
+            Log.d("refs1961", "GallerySendingMail#onSendAfter uid:" + uid);
+
+            //TODO
+            MessageSync.sentMessageAfter(account, account.getOutboxFolderName(), uid);
+        } catch (MessagingException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
+        }
+        Log.d("refs1961", "GallerySendingMail#onSendAfter end");
+    }
+
+    /**
+     * @param account user account info.
+     * @author tooru.oguri
+     * @since 0.1-beta1
+     */
+    private void onSync(Account account) {
+        //INBOX
+        MessageSync.synchronizeMailbox(account, account.getInboxFolderName());
+        //OUTBOX
+        MessageSync.synchronizeMailbox(account, account.getOutboxFolderName());
+        //Sent
+        MessageSync.synchronizeMailbox(account, account.getSentFolderName());
+    }
+
+    /**
      * @author tooru.oguri
      * @since 0.1-beta1
      */
     private void sendMessage() {
-        new SendMessageTask().execute();
+        Log.d("refs1961", "GallerySendingMail#sendMessage");
+        new SendMessageTask(this).execute();
     }
 
     /**
-     * メールを送信Class.
-     *
      * @author tooru.oguri
      * @since 0.1-beta1
      */
-    private class SendMessageTask extends AsyncTask<Void, Void, Void> {
+    private class SendMessageTask extends AsyncTask<Void, Integer, Void> implements DialogInterface.OnCancelListener {
+        ProgressDialog dialog;
+        Context context;
+
+        public SendMessageTask(Context context) {
+            Log.d("refs1961", "SendMessageTask constracta start");
+            this.context = context;
+            Log.d("refs1961", "SendMessageTask constructor end");
+        }
+
         @Override
-        protected Void doInBackground(Void... params) {
+        protected void onPreExecute() {
+            Log.d("refs1961", "SendMessageTask#onPreExecute start");
+            dialog = new ProgressDialog(context);
+            dialog.setTitle("Please wait");
+            dialog.setMessage("Loading data...");
+            dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            dialog.setCancelable(true);
+            dialog.setOnCancelListener(this);
+            dialog.setMax(100);
+            dialog.setProgress(0);
+            dialog.show();
+            Log.d("refs1961", "SendMessageTask#onPreExecute end");
+        }
+
+        /**
+         * @return null
+         */
+        @Override
+        protected Void doInBackground(Void...params) {
             Log.d("refs1961", "SendMessageTask#doInBackground start");
 
             /*
-             * Create the message from all the data the user has entered.
-             */
+            * Create the message from all the data the user has entered.
+            */
             MimeMessage message;
             try {
                 message = createMessage();
+                publishProgress(20);
             } catch (MessagingException me) {
                 Log.e(RakuPhotoMail.LOG_TAG, "Failed to create new message for send or save.", me);
                 throw new RuntimeException("Failed to create a new message for send or save.", me);
             }
-
-//            MessagingController.getInstance(getApplication()).sendMessage(mAccount, message, null);
-            //TODO 変更したぞこら
             MessagingController.getInstance(getApplication()).sendMessage(mAccount, message);
+            publishProgress(60);
 
+            Log.d("refs1961", "SendMessageTask#doInBackground message.getUid():" + message.getUid());
+            onSendAfter(mAccount, mAccount.getSentFolderName(), message.getUid());
+            publishProgress(100);
             Log.d("refs1961", "SendMessageTask#doInBackground end");
             return null;
         }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            Log.d("refs1961", "SendMessageTask#onProgressUpdate start");
+            dialog.setProgress(values[0]);
+            Log.d("refs1961", "SendMessageTask#onProgressUpdate end");
+        }
+
+        @Override
+        protected void onCancelled() {
+            Log.d("refs1961", "SendMessageTask#onCancelled start");
+            dialog.dismiss();
+            Log.d("refs1961", "SendMessageTask#onCancelled end");
+        }
+
+        @Override
+        protected void onPostExecute(Void tmp) {
+            Log.d("refs1961", "SendMessageTask#onPostExecute start");
+            onSync(mAccount);
+            Log.d("refs1961", "SendMessageTask#onPostExecute end");
+        }
+
+        @Override
+        public void onCancel(DialogInterface dialog) {
+            Log.d("refs1961", "SendMessageTask#onCancel start");
+            this.cancel(true);
+            Log.d("refs1961", "SendMessageTask#onCancel end");
+        }
+
+//        private boolean isParamError(String folderName, String uid) {
+//            return (folderName == null || "".equals(folderName)) || (uid == null || "".equals(uid));
+//        }
     }
 
     /**
@@ -341,6 +438,7 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
      * @since 0.1-beta1
      */
     private MimeMessage createMessage() throws MessagingException {
+        Log.d("refs1961", "GallerySendingMail#createMessage start");
         MimeMessage message = new MimeMessage();
         message.addSentDate(new Date());
         message.setFrom(mFromAddress);
@@ -356,7 +454,7 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
         TextBody body = null;
         body = new TextBody("このメールは、らくフォトメールの試験用メールです。");
         message.setBody(body);
-
+        Log.d("refs1961", "GallerySendingMail#createMessage end");
         return message;
     }
 
@@ -448,7 +546,7 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
                     }
                 }
             } catch (MessagingException e) {
-                e.printStackTrace();
+                Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
             }
         }
     }

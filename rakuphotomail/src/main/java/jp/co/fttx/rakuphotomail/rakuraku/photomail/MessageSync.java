@@ -25,6 +25,22 @@ public class MessageSync {
 
     // こいつを解析する
     //TODO 一件しか取得できない？？
+
+    /**
+     * @param account    User Account Info(Account Class)
+     * @param folderName Folder Name(String)
+     *                   <p>Ex.Folder Name</p>
+     *                   <ul>
+     *                   <li>account.getInboxFolderName()</li>
+     *                   <li>account.getOutboxFolderName()</li>
+     *                   <li>account.getSentFolderName()</li>
+     *                   <li>account.getArchiveFolderName()</li>
+     *                   <li>account.getAutoExpandFolderName()</li>
+     *                   </ul>
+     * @return String NewMail Uid
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
     public static String synchronizeMailbox(Account account, String folderName) {
         Log.d("refs1961", "MessageSync#synchronizeMailbox start");
 
@@ -109,6 +125,67 @@ public class MessageSync {
             closeFolder(localFolder);
         }
         return newMailUid;
+    }
+
+    /**
+     * @param account        User Account Info(Account Class)
+     * @param folderName     Folder Name(String)
+     * @param sentMessageUid sent message's UID
+     * @throws MessagingException exception
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    public static void sentMessageAfter(Account account, String folderName, String sentMessageUid) throws MessagingException {
+        Log.d("refs1961", "MessageSync#sentMessageAfter");
+
+        if (account.getErrorFolderName().equals(folderName)) {
+            return;
+        }
+
+        Folder remoteFolder = null;
+        LocalStore.LocalFolder localFolder = null;
+
+        try {
+            LocalStore localStore = account.getLocalStore();
+
+            localFolder = localStore.getFolder(folderName);
+            LocalStore.LocalMessage localMessage = (LocalStore.LocalMessage) localFolder
+                    .getMessage(sentMessageUid);
+
+            if (localMessage == null) {
+                Log.d("refs1961", "MessageSync#sentMessageAfter localMessage is null");
+                return;
+            }
+
+            Store remoteStore = account.getRemoteStore();
+            remoteFolder = remoteStore.getFolder(folderName);
+            Log.d("refs1961", "MessageSync#sentMessageAfter !remoteFolder.exists():"+!remoteFolder.exists());
+            if (!remoteFolder.exists()) {
+                if (!remoteFolder.create(Folder.FolderType.HOLDS_MESSAGES)) {
+                    Log.d("refs1961", "MessageSync#sentMessageAfter FolderType?");
+                    return;
+                }
+            }
+
+            remoteFolder.open(Folder.OpenMode.READ_WRITE);
+            if (remoteFolder.getMode() != Folder.OpenMode.READ_WRITE) {
+                Log.d("refs1961", "MessageSync#sentMessageAfter remoteFolder.getMode():"+remoteFolder.getMode());
+                return;
+            }
+
+            FetchProfile fp = new FetchProfile();
+            fp.add(FetchProfile.Item.BODY);
+            localFolder.fetch(new Message[]{localMessage}, fp, null);
+            localMessage.setFlag(Flag.X_REMOTE_COPY_STARTED, true);
+
+            remoteFolder.appendMessages(new Message[]{localMessage});
+
+            localFolder.changeUid(localMessage);
+
+        } finally {
+            closeFolder(remoteFolder);
+            closeFolder(localFolder);
+        }
     }
 
     //ローカルに落とした証でもマーキングしてんのか？

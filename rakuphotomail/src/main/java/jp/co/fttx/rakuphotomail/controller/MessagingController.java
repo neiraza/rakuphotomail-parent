@@ -3239,12 +3239,7 @@ public class MessagingController implements Runnable {
             Message localMessage = localFolder.getMessage(message.getUid());
             localMessage.setFlag(Flag.X_DOWNLOADED_FULL, true);
             localFolder.close();
-//            sendPendingMessages(account, listener);
             sendMessage(account);
-
-            //TODO おもいつき
-            LocalFolder localSentFolder = (LocalFolder) localStore.getFolder(account.getSentFolderName());
-            localFolder.moveMessages(new Message[] { message }, localSentFolder);
 
         } catch (Exception e) {
             /*
@@ -3269,12 +3264,6 @@ public class MessagingController implements Runnable {
         }
         if (messagesPendingSend(account)) {
             sendMessagesSynchronous(account);
-            //TODO 追加してみた
-//            MessageSync.synchronizeMailbox(account, account.getInboxFolderName());
-            MessageSync.synchronizeMailbox(account, account.getOutboxFolderName());
-//            MessageSync.synchronizeMailbox(account, account.getSentFolderName());
-//            MessageSync.synchronizeMailbox(account, account.getArchiveFolderName());
-//            MessageSync.synchronizeMailbox(account, account.getAutoExpandFolderName());
         }
         Log.d("refs1961", "MessagingController#sendMessage(Account) end");
     }
@@ -3297,7 +3286,7 @@ public class MessagingController implements Runnable {
             localFolder.open(OpenMode.READ_WRITE);
 
             Message[] localMessages = localFolder.getMessages(null);
-            int progress = 0;
+//            int progress = 0;
             int todo = localMessages.length;
 
             FetchProfile fp = new FetchProfile();
@@ -3305,15 +3294,11 @@ public class MessagingController implements Runnable {
             fp.add(FetchProfile.Item.BODY);
 
             Transport transport = Transport.getInstance(account);
-            Log.d("refs1961", "MessagingController#sendMessagesSynchronous localMessages.length:" + localMessages.length);
-
             for (Message message : localMessages) {
                 Log.d("refs1961", "MessagingController#sendMessagesSynchronous message.getUid:" + message.getUid());
-                Log.d("refs1961", "MessagingController#sendMessagesSynchronous message.getMessageId:" + message.getMessageId());
                 Log.d("refs1961", "MessagingController#sendMessagesSynchronous message.getSubject:" + message.getSubject());
 
                 if (message.isSet(Flag.DELETED)) {
-                    Log.d("refs1961", "MessagingController#sendMessagesSynchronous message.getUid Flag.DELETED:" + message.getUid());
                     message.destroy();
                     continue;
                 }
@@ -3337,9 +3322,7 @@ public class MessagingController implements Runnable {
 
                     localFolder.fetch(new Message[]{message}, fp, null);
                     try {
-                        Log.d("refs1961", "MessagingController#sendMessagesSynchronous localFolder.fetch");
                         if (message.getHeader(RakuPhotoMail.IDENTITY_HEADER) != null) {
-                            Log.d("refs1961", "MessagingController#sendMessagesSynchronous X-rakuphotomail-Identity is not null");
                             continue;
 
                         }
@@ -3349,25 +3332,28 @@ public class MessagingController implements Runnable {
                         // SmtpTransport#sendMessage !!
                         transport.sendMessage(message);
 
-                        Log.d("refs1961", "MessagingController#sendMessagesSynchronous transport.sendMessage");
                         message.setFlag(Flag.X_SEND_IN_PROGRESS, false);
                         message.setFlag(Flag.SEEN, true);
-                        progress++;
-                        for (MessagingListener l : getListeners()) {
-                            l.synchronizeMailboxProgress(account,
-                                    account.getSentFolderName(), progress, todo);
-                        }
-                        if (RakuPhotoMail.FOLDER_NONE.equals(account
-                                .getSentFolderName())) {
+//                        progress++;
+//                        for (MessagingListener l : getListeners()) {
+//                            l.synchronizeMailboxProgress(account,
+//                                    account.getSentFolderName(), progress, todo);
+//                        }
+//                        if (RakuPhotoMail.FOLDER_NONE.equals(account
+//                                .getSentFolderName())) {
+//
+//                            message.setFlag(Flag.DELETED, true);
+//                        } else {
 
-                            message.setFlag(Flag.DELETED, true);
-                        } else {
-                            LocalFolder localSentFolder = (LocalFolder) localStore
-                                    .getFolder(account.getSentFolderName());
+                        LocalFolder localSentFolder = (LocalFolder) localStore
+                                .getFolder(account.getOutboxFolderName());
+//                        .getFolder(account.getSentFolderName());
 
-                            localFolder.moveMessages(new Message[]{message},
-                                    localSentFolder);
-                        }
+                        localFolder.moveMessages(new Message[]{message},
+                                localSentFolder);
+//
+//  }
+
 
                         //TODO クソみたいな実装だな、死ねよ
                     } catch (Exception e) {
@@ -3384,13 +3370,12 @@ public class MessagingController implements Runnable {
                         }
 
                         message.setFlag(Flag.X_SEND_FAILED, true);
-                        Log.e(RakuPhotoMail.LOG_TAG, "Failed to send message",
-                                e);
-                        for (MessagingListener l : getListeners()) {
-                            l.synchronizeMailboxFailed(account,
-                                    localFolder.getName(),
-                                    getRootCauseMessage(e));
-                        }
+                        Log.e(RakuPhotoMail.LOG_TAG, "Failed to send message", e);
+//                        for (MessagingListener l : getListeners()) {
+//                            l.synchronizeMailboxFailed(account,
+//                                    localFolder.getName(),
+//                                    getRootCauseMessage(e));
+//                        }
                     }
                 } catch (Exception e) {
                     Log.e(RakuPhotoMail.LOG_TAG,
