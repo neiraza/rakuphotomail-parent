@@ -1302,73 +1302,73 @@ public class LocalStore extends Store implements Serializable {
         });
     }
 
-    /**
-     * @param uid
-     * @return
-     * @throws UnavailableStorageException
-     * @author tooru.oguri
-     * @since rakuphoto 0.1-beta1
-     */
-    public int isNextMessage(final String uid, final long folderId) throws UnavailableStorageException {
-        return database.execute(false, new DbCallback<Integer>() {
-            @Override
-            public Integer doDbWork(final SQLiteDatabase db) throws WrappedException,
-                    UnavailableStorageException {
-                Cursor c = null;
-                try {
-                    c = db.rawQuery("SELECT id "
-                            + "FROM messages WHERE uid > ? and folder_id = ?",
-                            new String[]{uid, Long.toString(folderId)});
-                    if (null == c) {
-                        return 0;
-                    }
-                    Log.d("maguro", "SlideMessage#isNextMessage c.getCount():" + c.getCount());
-                    return c.getCount();
-                } catch (CursorIndexOutOfBoundsException e) {
-                    Log.e(RakuPhotoMail.LOG_TAG, "LocalStore#getPreMessage CursorIndexOutOfBoundsException uid:" + uid);
-                } finally {
-                    if (c != null) {
-                        c.close();
-                    }
-                }
-                return 0;
-            }
-        });
-    }
-
-    /**
-     * @param uid
-     * @return
-     * @throws UnavailableStorageException
-     * @author tooru.oguri
-     * @since rakuphoto 0.1-beta1
-     */
-    public int isPreMessage(final String uid, final long folderId) throws UnavailableStorageException {
-        return database.execute(false, new DbCallback<Integer>() {
-            @Override
-            public Integer doDbWork(final SQLiteDatabase db) throws WrappedException,
-                    UnavailableStorageException {
-                Cursor c = null;
-                try {
-                    c = db.rawQuery("SELECT id "
-                            + "FROM messages WHERE uid < ? and folder_id = ?",
-                            new String[]{uid, Long.toString(folderId)});
-                    if (null == c) {
-                        return 0;
-                    }
-                    Log.d("maguro", "SlideMessage#isNextMessage c.getCount():" + c.getCount());
-                    return c.getCount();
-                } catch (CursorIndexOutOfBoundsException e) {
-                    Log.e(RakuPhotoMail.LOG_TAG, "LocalStore#getPreMessage CursorIndexOutOfBoundsException uid:" + uid);
-                } finally {
-                    if (c != null) {
-                        c.close();
-                    }
-                }
-                return 0;
-            }
-        });
-    }
+//    /**
+//     * @param uid
+//     * @return
+//     * @throws UnavailableStorageException
+//     * @author tooru.oguri
+//     * @since rakuphoto 0.1-beta1
+//     */
+//    public int isNextMessage(final String uid, final long folderId) throws UnavailableStorageException {
+//        return database.execute(false, new DbCallback<Integer>() {
+//            @Override
+//            public Integer doDbWork(final SQLiteDatabase db) throws WrappedException,
+//                    UnavailableStorageException {
+//                Cursor c = null;
+//                try {
+//                    c = db.rawQuery("SELECT id "
+//                            + "FROM messages WHERE uid > ? and folder_id = ?",
+//                            new String[]{uid, Long.toString(folderId)});
+//                    if (null == c) {
+//                        return 0;
+//                    }
+//                    Log.d("maguro", "SlideMessage#isNextMessage c.getCount():" + c.getCount());
+//                    return c.getCount();
+//                } catch (CursorIndexOutOfBoundsException e) {
+//                    Log.e(RakuPhotoMail.LOG_TAG, "LocalStore#getPreMessage CursorIndexOutOfBoundsException uid:" + uid);
+//                } finally {
+//                    if (c != null) {
+//                        c.close();
+//                    }
+//                }
+//                return 0;
+//            }
+//        });
+//    }
+//
+//    /**
+//     * @param uid
+//     * @return
+//     * @throws UnavailableStorageException
+//     * @author tooru.oguri
+//     * @since rakuphoto 0.1-beta1
+//     */
+//    public int isPreMessage(final String uid, final long folderId) throws UnavailableStorageException {
+//        return database.execute(false, new DbCallback<Integer>() {
+//            @Override
+//            public Integer doDbWork(final SQLiteDatabase db) throws WrappedException,
+//                    UnavailableStorageException {
+//                Cursor c = null;
+//                try {
+//                    c = db.rawQuery("SELECT id "
+//                            + "FROM messages WHERE uid < ? and folder_id = ?",
+//                            new String[]{uid, Long.toString(folderId)});
+//                    if (null == c) {
+//                        return 0;
+//                    }
+//                    Log.d("maguro", "SlideMessage#isNextMessage c.getCount():" + c.getCount());
+//                    return c.getCount();
+//                } catch (CursorIndexOutOfBoundsException e) {
+//                    Log.e(RakuPhotoMail.LOG_TAG, "LocalStore#getPreMessage CursorIndexOutOfBoundsException uid:" + uid);
+//                } finally {
+//                    if (c != null) {
+//                        c.close();
+//                    }
+//                }
+//                return 0;
+//            }
+//        });
+//    }
 
     /**
      * @author tooru.oguri
