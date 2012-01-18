@@ -642,17 +642,19 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         Log.d("refs1961", "GallerySlideShow#dispSlide(MessageBean) start");
         ArrayList<AttachmentBean> attachmentBeanList = messageBean.getAttachmentBeanList();
         for (AttachmentBean attachmentBean : attachmentBeanList) {
-            Bitmap bitmap = SlideAttachment.getBitmap(mContext, getWindowManager().getDefaultDisplay(), mAccount, attachmentBean);
-            if (null == bitmap) {
-                Log.d("refs1961", "GallerySlideShow#loopUid bitmapがnullなのでreturnしちゃいますね");
-                return;
+            if(SlideCheck.isSlide(attachmentBean)){
+                Bitmap bitmap = SlideAttachment.getBitmap(mContext, getWindowManager().getDefaultDisplay(), mAccount, attachmentBean);
+                if (null == bitmap) {
+                    Log.d("refs1961", "GallerySlideShow#loopUid bitmapがnullなのでreturnしちゃいますね");
+                    return;
+                }
+                Message msg = setSendMessage(messageBean);
+                msg.obj = bitmap;
+                mSlideHandler.sendMessage(msg);
+                mDispUid = messageBean.getUid();
+                // TODO 停止時間はアカウントクラスで保持する方針でいく
+                sleepSlide(1000L);
             }
-            Message msg = setSendMessage(messageBean);
-            msg.obj = bitmap;
-            mSlideHandler.sendMessage(msg);
-            mDispUid = messageBean.getUid();
-            // TODO 停止時間はアカウントクラスで保持する方針でいく
-            sleepSlide(1000L);
         }
         Log.d("refs1961", "GallerySlideShow#dispSlide(MessageBean) end");
     }
