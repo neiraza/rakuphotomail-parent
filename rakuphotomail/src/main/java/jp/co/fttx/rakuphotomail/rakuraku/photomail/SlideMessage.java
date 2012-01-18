@@ -200,7 +200,8 @@ public class SlideMessage {
     }
 
     /**
-     * 次のメールが有る場合はtrue、無い場合はfalse.
+     * 現在よりも新しいスライド対象メールが<br>
+     * 存在する場合はtrue、存在しない場合はfalse.
      *
      * @param account account info
      * @param folder  receive mail folder name
@@ -208,27 +209,31 @@ public class SlideMessage {
      * @return next Message?
      */
     public static boolean isNextMessage(final Account account, final String folder, final String uid) {
-        Log.d("maguro", "SlideMessage#isNextMessage start");
+        Log.d("refs#2611", "SlideMessage#isNextMessage");
         LocalStore localStore;
         LocalStore.LocalFolder localFolder = null;
         try {
             localStore = account.getLocalStore();
             localFolder = getLocalFolder(localStore, account, folder);
-            int count = localStore.isNextMessage(uid, localFolder.getId());
-            Log.d("maguro", "SlideMessage#isNextMessage uid:" + uid);
-            Log.d("maguro", "SlideMessage#isNextMessage count:" + count);
-            return 0 < count;
+
+            //TODO refs#2611(#2612)
+            LocalStore.MessageInfo message = localStore.getNextMessage(uid, localFolder.getId());
+            Log.d("refs#2611", "SlideMessage#isNextMessage message.getId():" + message.getId());
+            return isSlide(localStore, message.getId());
+        } catch (UnavailableStorageException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "SlideMessage#isPreMessage error:" + e);
         } catch (MessagingException e) {
             Log.e(RakuPhotoMail.LOG_TAG, "SlideMessage#isNextMessage error:" + e);
         } finally {
             closeFolder(localFolder);
         }
-        Log.d("maguro", "SlideMessage#isNextMessage abnormal end");
+        Log.d("refs#2611", "SlideMessage#isNextMessage is FALSE");
         return false;
     }
 
     /**
-     * 前のメールが有る場合はtrue、無い場合はfalse.
+     * 現在よりも古いスライド対象メールが<br>
+     * 存在する場合はtrue、存在しない場合はfalse.
      *
      * @param account account info
      * @param folder  receive mail folder name
@@ -236,22 +241,36 @@ public class SlideMessage {
      * @return next Message?
      */
     public static boolean isPreMessage(final Account account, final String folder, final String uid) {
-        Log.d("maguro", "SlideMessage#isPreMessage start");
+        Log.d("refs#2611", "SlideMessage#isPreMessage");
         LocalStore localStore;
         LocalStore.LocalFolder localFolder = null;
+
         try {
             localStore = account.getLocalStore();
             localFolder = getLocalFolder(localStore, account, folder);
-            int count = localStore.isPreMessage(uid, localFolder.getId());
-            Log.d("maguro", "SlideMessage#isNextMessage uid:" + uid);
-            Log.d("maguro", "SlideMessage#isNextMessage count:" + count);
-            return 0 < count;
+
+            //TODO refs#2611(#2612)
+            LocalStore.MessageInfo message = localStore.getPreMessage(uid, localFolder.getId());
+            Log.d("refs#2611", "SlideMessage#isPreMessage message.getId():" + message.getId());
+            return isSlide(localStore, message.getId());
+        } catch (UnavailableStorageException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "SlideMessage#isPreMessage error:" + e);
         } catch (MessagingException e) {
             Log.e(RakuPhotoMail.LOG_TAG, "SlideMessage#isPreMessage error:" + e);
         } finally {
             closeFolder(localFolder);
         }
-        Log.d("maguro", "SlideMessage#isPreMessage abnormal end");
+        return false;
+    }
+
+    private static boolean isSlide(LocalStore localStore, long id) throws UnavailableStorageException {
+        ArrayList<LocalStore.Attachments> list = localStore.getAttachmentList(id);
+        for (LocalStore.Attachments attachments : list) {
+            if (SlideCheck.isSlide(attachments)) {
+                Log.d("refs#2611", "SlideMessage#isSlide is TRUE");
+                return true;
+            }
+        }
         return false;
     }
 
