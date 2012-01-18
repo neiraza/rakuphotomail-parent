@@ -4,6 +4,7 @@
  */
 package jp.co.fttx.rakuphotomail.activity;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.*;
 import android.graphics.Bitmap;
@@ -206,6 +207,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         setUpProgressDialog();
         onNewIntent(getIntent());
         setupViews();
+        doAllFolderSync();
         setUidList();
         doBindService();
         setupSlideShowThread();
@@ -216,6 +218,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             public void run() {
                 // 同期処理で新着メールを見つけられた場合
                 String newMailUid = MessageSync.synchronizeMailbox(mAccount, mFolder);
+                doOutBoxFolderSync();
+                doSentFolderSync();
+
                 if (null != newMailUid && !"".equals(newMailUid)) {
                     Log.d("refs1961", "同期時に取得した新着メールがあったようです newMailUid:" + newMailUid);
                     doUnbindService();
@@ -259,6 +264,22 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         }, 120000L, 60000L);
 
         Log.d("refs1961", "GallerySlideShow#onCreate end");
+    }
+
+    private void doAllFolderSync(){
+        doInBoxFolderSync();
+        doOutBoxFolderSync();
+        doSentFolderSync();
+    }
+
+    private void doInBoxFolderSync(){
+       MessageSync.synchronizeMailbox(mAccount, mAccount.getInboxFolderName());
+    }
+    private void doOutBoxFolderSync(){
+        MessageSync.synchronizeMailbox(mAccount, mAccount.getOutboxFolderName());
+    }
+    private void doSentFolderSync(){
+        MessageSync.synchronizeMailbox(mAccount, mAccount.getSentFolderName());
     }
 
     private void setUpProgressDialog() {
@@ -368,6 +389,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         if (null == messageInfoList || 0 == messageInfoList.size()) {
             Log.w(RakuPhotoMail.LOG_TAG, "現在、サーバー上に受信メールが存在しません");
             dismissProgressDialog();
+            onAlertNoMessage();
             return;
         }
         mUidList.clear();
@@ -786,5 +808,29 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             }
         }
         Log.d("refs1961", "GallerySlideShow#onSlideStop end");
+    }
+
+    private void onAlertNoMessage(){
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setTitle("らくフォトメール");
+        alertDialogBuilder.setMessage("サーバー上にメールが存在しません。\n終了しますか？\n（注）このまま新着メールの待ち受けも可能です。");
+        alertDialogBuilder.setPositiveButton("はい、終了します",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Log.d("refs1961", "onAlertNoMessage PositiveButton click");
+                        finish();
+                    }
+                });
+        alertDialogBuilder.setNegativeButton("いいえ、待ち受けします",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Log.d("refs1961", "onAlertNoMessage NegativeButton click");
+                    }
+                });
+        alertDialogBuilder.setCancelable(false);
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
     }
 }

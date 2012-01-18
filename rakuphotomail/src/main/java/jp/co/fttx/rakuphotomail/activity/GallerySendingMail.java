@@ -247,13 +247,9 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
     @Override
     public void onClick(View v) {
         if (onCheck()) {
-            final Account account = Preferences.getPreferences(this).getAccount(mMessageReference.accountUuid);
-            final String folderName = mMessageReference.folderName;
-            final String uid = mMessageReference.uid;
-            Log.d("refs1961", "GallerySendingMail#onClick folderName:" + folderName);
-            Log.d("refs1961", "GallerySendingMail#onClick uid:" + uid);
-
-            onSend(account, folderName, uid);
+            final String replyTargetUid = mMessageReference.uid;
+            onSend(replyTargetUid);
+            GallerySlideStop.actionHandle(this, mAccount, mAccount.getInboxFolderName(), replyTargetUid);
             finish();
         }
     }
@@ -288,12 +284,10 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
      * @author tooru.oguri
      * @since 0.1-beta1
      */
-    private void onSend(Account account, String folderName, String uid) {
+    private void onSend(String uid) {
         Log.d("refs1961", "GallerySendingMail#onSend start");
-        Log.d("refs1961", "GallerySendingMail#onSend folderName:" + folderName);
-        Log.d("refs1961", "GallerySendingMail#onSend uid:" + uid);
         sendMessage();
-        MessagingController.getInstance(getApplication()).setFlag(account, folderName,
+        MessagingController.getInstance(getApplication()).setFlag(mAccount, mAccount.getInboxFolderName(),
                 new String[]{uid}, mMessageReference.flag, true);
         Log.d("refs1961", "GallerySendingMail#onSend end");
     }
@@ -370,12 +364,9 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
          * @return null
          */
         @Override
-        protected Void doInBackground(Void...params) {
+        protected Void doInBackground(Void... params) {
             Log.d("refs1961", "SendMessageTask#doInBackground start");
 
-            /*
-            * Create the message from all the data the user has entered.
-            */
             MimeMessage message;
             try {
                 message = createMessage();
@@ -388,7 +379,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
             String sendTempUid = MessagingController.getInstance(getApplication()).sendMessage(mAccount, message);
             Log.d("refs1961", "SendMessageTask#doInBackground MessagingController#sendMessage後 message.getUid():" + message.getUid());
             publishProgress(60);
-
             onSendAfter(mAccount, mAccount.getSentFolderName(), sendTempUid);
             publishProgress(100);
             Log.d("refs1961", "SendMessageTask#doInBackground end");
@@ -423,8 +413,8 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
             Log.d("refs1961", "SendMessageTask#onCancel end");
         }
 
-//        private boolean isParamError(String folderName, String uid) {
-//            return (folderName == null || "".equals(folderName)) || (uid == null || "".equals(uid));
+//        private boolean isParamError(String param) {
+//            return (param == null || "".equals(param));
 //        }
     }
 
