@@ -15,6 +15,8 @@ import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.provider.AttachmentProvider;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
 
+import java.util.ArrayList;
+
 /**
  * @author tooru.oguri
  * @since rakuphoto 0.1-beta1
@@ -68,6 +70,16 @@ public class SlideAttachment {
             Log.e(RakuPhotoMail.LOG_TAG, "Exception:" + e);
         }
         return null;
+    }
+
+    public static ArrayList<AttachmentBean> getSlideTargetList(ArrayList<AttachmentBean> origin) {
+        ArrayList<AttachmentBean> dest = new ArrayList<AttachmentBean>();
+        for (AttachmentBean bean : origin) {
+            if (SlideCheck.isSlide(bean)) {
+                dest.add(bean);
+            }
+        }
+        return dest;
     }
 
 }

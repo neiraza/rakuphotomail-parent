@@ -220,8 +220,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 String newMailUid = MessageSync.synchronizeMailbox(mAccount, mFolder);
                 doOutBoxFolderSync();
                 doSentFolderSync();
-
-                if (null != newMailUid && !"".equals(newMailUid)) {
+                if (null != newMailUid && !"".equals(newMailUid) && isSlide(newMailUid)) {
                     Log.d("refs1961", "同期時に取得した新着メールがあったようです newMailUid:" + newMailUid);
                     doUnbindService();
                     mIsRepeatUidList = false;
@@ -235,6 +234,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                         Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
                     }
                     Log.d("refs1961", "同期完了後の新着メールUID:" + mDispUid);
+
                     GalleryNewMail.actionHandle(mContext, mAccount, mFolder, newMailUid, mDispUid);
                     finish();
                 }
@@ -242,7 +242,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 // サーバーとつながってる状態で新着メールがローカル取り込み完了している場合
                 ArrayList<String> newUidList = getUidList();
                 for (String uid : newUidList) {
-                    if (!mUidList.contains(uid)) {
+                    if (!mUidList.contains(uid) && isSlide(uid)) {
                         Log.d("refs1961", "UID最新情報！ どうやら新着メールが既に届いているようです！ uid:" + uid);
                         Log.d("refs1961", "UID最新情報！ UID:" + uid);
                         doUnbindService();
@@ -256,6 +256,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                         } catch (InterruptedException e) {
                             Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
                         }
+
                         GalleryNewMail.actionHandle(mContext, mAccount, mFolder, uid, mDispUid);
                         finish();
                     }
@@ -266,19 +267,38 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         Log.d("refs1961", "GallerySlideShow#onCreate end");
     }
 
-    private void doAllFolderSync(){
+    /**
+     * 添付ファイル中、1つでも表示可能なものを持っているならOK.
+     *
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private boolean isSlide(String uid) {
+        Log.d("refs1961", "GallerySlideShow#isSlide start");
+        ArrayList<Attachments> attachmentsList = SlideMessage.getAttachmentList(mAccount, mFolder, uid);
+        for (Attachments attachments : attachmentsList) {
+            if (SlideCheck.isSlide(attachments)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void doAllFolderSync() {
         doInBoxFolderSync();
         doOutBoxFolderSync();
         doSentFolderSync();
     }
 
-    private void doInBoxFolderSync(){
-       MessageSync.synchronizeMailbox(mAccount, mAccount.getInboxFolderName());
+    private void doInBoxFolderSync() {
+        MessageSync.synchronizeMailbox(mAccount, mAccount.getInboxFolderName());
     }
-    private void doOutBoxFolderSync(){
+
+    private void doOutBoxFolderSync() {
         MessageSync.synchronizeMailbox(mAccount, mAccount.getOutboxFolderName());
     }
-    private void doSentFolderSync(){
+
+    private void doSentFolderSync() {
         MessageSync.synchronizeMailbox(mAccount, mAccount.getSentFolderName());
     }
 
@@ -463,10 +483,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             Log.d("refs1961", "GallerySlideShow ServiceConnection#onServiceConnected");
-            try{
-            mSyncService = ((AttachmentSyncService.AttachmentSyncBinder) service).getService();
+            try {
+                mSyncService = ((AttachmentSyncService.AttachmentSyncBinder) service).getService();
 
-            } catch (ClassCastException e){
+            } catch (ClassCastException e) {
                 Log.d("refs1961", "GallerySlideShow ServiceConnection#onServiceConnected ERRO!!!!");
                 Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow ServiceConnection#onServiceConnected Error:" + e);
             }
@@ -810,7 +830,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         Log.d("refs1961", "GallerySlideShow#onSlideStop end");
     }
 
-    private void onAlertNoMessage(){
+    private void onAlertNoMessage() {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setTitle("らくフォトメール");
         alertDialogBuilder.setMessage("サーバー上にメールが存在しません。\n終了しますか？\n（注）このまま新着メールの待ち受けも可能です。");

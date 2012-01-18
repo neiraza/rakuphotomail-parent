@@ -33,6 +33,18 @@ public class SlideCheck {
     }
 
     /**
+     * @param bean AttachmentBean
+     * @return slide OK/NG
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    public static boolean isSlide(AttachmentBean bean) {
+        String mimeType = bean.getMimeType();
+        String fileName = bean.getName();
+        return isSlide(mimeType, fileName);
+    }
+
+    /**
      * @param messageBean message
      * @return download attachment ?
      * @author tooru.oguri

@@ -126,6 +126,14 @@
                 android:textColor="@color/gallery_view_shadow"
                 android:textSize="20sp"
                 android:typeface="sans"/>
+        <TextView
+                android:id="@+id/gallery_new_mail_sent_flag"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/gallery_view_shadow_background"
+                android:textColor="@color/gallery_view_shadow"
+                android:text="@string/gallery_sent_flg"
+                android:textSize="20sp"/>
     </LinearLayout>
 
 </FrameLayout>

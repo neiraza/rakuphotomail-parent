@@ -90,6 +90,10 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
      */
     private TextView mMailDate;
     /**
+     * mail receive date
+     */
+    private TextView mMailAnswered;
+    /**
      * mail pre disp
      */
     private TextView mMailPre;
@@ -157,6 +161,10 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
      * thumbnail
      */
     private Gallery mGalleryThumbnail;
+    /**
+     *  slide target attachment list
+     */
+    private ArrayList<AttachmentBean>mSlideTargetAttachmentList = new ArrayList<AttachmentBean>();
 
     /**
      * @param context    context
@@ -255,6 +263,8 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
     private void setupViewTopMailInfo() {
         mMailSubject = (TextView) findViewById(R.id.gallery_new_mail_subject);
         mMailDate = (TextView) findViewById(R.id.gallery_new_mail_date);
+        mMailAnswered = (TextView)findViewById(R.id.gallery_new_mail_sent_flag);
+        mMailAnswered.setVisibility(View.GONE);
     }
 
     private void setupViewBottomButton() {
@@ -300,21 +310,23 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
             messageBean = SlideMessage.getMessage(mAccount, mFolder, mNewMailUid);
         }
         mMessageBean = messageBean;
+        mSlideTargetAttachmentList = SlideAttachment.getSlideTargetList(mMessageBean.getAttachmentBeanList());
         //Thumbnail
-        ArrayList<AttachmentBean> attachmentBeanList = mMessageBean.getAttachmentBeanList();
-        if (1 < attachmentBeanList.size()) {
+        if (1 < mSlideTargetAttachmentList.size()) {
             mGalleryThumbnailLayout.setVisibility(View.VISIBLE);
             ThumbnailImageAdapter thumbnailAdapter = new ThumbnailImageAdapter(mContext);
-            thumbnailAdapter.setImageItems(makeBitmapList(attachmentBeanList));
+            thumbnailAdapter.setImageItems(makeBitmapList(mSlideTargetAttachmentList));
             mGalleryThumbnail.setAdapter(thumbnailAdapter);
         } else {
             mGalleryThumbnailLayout.setVisibility(View.GONE);
         }
 
-        setImageViewPicture(mMessageBean.getAttachmentBeanList(), 0);
+        setImageViewPicture(mSlideTargetAttachmentList, 0);
 
         mMailSubject.setText(mMessageBean.getSubject());
         setDate(mMessageBean.getDate());
+        setAnswered(mMessageBean.isFlagAnswered());
+
         dissmissProgressDialog();
         Log.d("maguro", "GalleryNewMail#onDisp end");
     }
@@ -340,6 +352,14 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
     private void setDate(long date) {
         SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
         mMailDate.setText(sdf.format(date));
+    }
+
+    private void setAnswered(boolean isFlagAnswered) {
+        if (isFlagAnswered) {
+            mMailAnswered.setVisibility(View.VISIBLE);
+        } else {
+            mMailAnswered.setVisibility(View.GONE);
+        }
     }
 
     private void setUpProgressDialog() {
@@ -513,6 +533,6 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Log.d("maguro", "GalleryNewMail#onItemClick id:" + id);
-        setImageViewPicture(mMessageBean.getAttachmentBeanList(), (int) id);
+        setImageViewPicture(mSlideTargetAttachmentList, (int) id);
     }
 }
