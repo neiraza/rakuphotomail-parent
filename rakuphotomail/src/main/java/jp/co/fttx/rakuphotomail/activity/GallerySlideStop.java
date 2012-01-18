@@ -147,13 +147,17 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      */
     private TextView mGalleryThumbnailInfo;
     /**
-     *
+     * thumbnail
      */
     private LinearLayout mGalleryThumbnailLayout;
     /**
-     *
+     * thumbnail
      */
     private Gallery mGalleryThumbnail;
+    /**
+     * slide target attachment list
+     */
+    private ArrayList<AttachmentBean> mSlideTargetAttachmentList = new ArrayList<AttachmentBean>();
 
     /**
      * @param context context
@@ -293,8 +297,9 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
             messageBean = SlideMessage.getMessage(mAccount, mFolder, mUid);
         }
         mMessageBean = messageBean;
+        mSlideTargetAttachmentList = SlideAttachment.getSlideTargetList(mMessageBean.getAttachmentBeanList());
         //Thumbnail
-        ArrayList<AttachmentBean> attachmentBeanList = mMessageBean.getAttachmentBeanList();
+        ArrayList<AttachmentBean> attachmentBeanList = mSlideTargetAttachmentList;
         if (1 < attachmentBeanList.size()) {
             mGalleryThumbnailLayout.setVisibility(View.VISIBLE);
             ThumbnailImageAdapter thumbnailAdapter = new ThumbnailImageAdapter(mContext);
@@ -303,7 +308,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         } else {
             mGalleryThumbnailLayout.setVisibility(View.GONE);
         }
-        setImageViewPicture(mMessageBean.getAttachmentBeanList(), 0);
+        setImageViewPicture(mSlideTargetAttachmentList, 0);
         //TODO 140文字に制限します(config)
         mMailSubject.setText(RakuPhotoStringUtils.limitMessage(mMessageBean.getSubject(), 140));
         setDate(mMessageBean.getDate());
@@ -511,6 +516,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Log.d("maguro", "GallerySlideStop#onItemClick id:" + id);
-        setImageViewPicture(mMessageBean.getAttachmentBeanList(), (int) id);
+        setImageViewPicture(mSlideTargetAttachmentList, (int) id);
     }
 }
