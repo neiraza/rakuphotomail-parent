@@ -42,7 +42,7 @@ public class MessageSync {
      * @since rakuphoto 0.1-beta1
      */
     public static String synchronizeMailbox(Account account, String folderName) {
-        Log.d("refs1961", "MessageSync#synchronizeMailbox start");
+        Log.d("refs2608", "MessageSync#synchronizeMailbox start folderName:"+folderName);
 
         String newMailUid = null;
 
@@ -53,7 +53,7 @@ public class MessageSync {
             localFolder = account.getLocalStore().getFolder(folderName);
             localFolder.open(Folder.OpenMode.READ_WRITE);
             localFolder.updateLastUid(); //こいつで一番最後のUIDを保持（localFolder.getLastUid();で取得）
-            Log.d("refs1961", "MessageSync#synchronizeMailbox localFolder.getLastUid():" + localFolder.getLastUid());
+            Log.d("refs2608", "MessageSync#synchronizeMailbox localFolder.getLastUid():" + localFolder.getLastUid());
 
             Message[] localMessages = localFolder.getMessages(null);
             HashMap<String, Message> localUidMap = new HashMap<String, Message>();
@@ -75,11 +75,11 @@ public class MessageSync {
                 remoteMessageArray = remoteFolder.getMessages(remoteStart, remoteEnd, null, null);
 
                 for (Message thisMessage : remoteMessageArray) {
-                    Log.d("refs1961", "MessageSync#synchronizeMailbox thisMessage:" + thisMessage.getUid());
+                    Log.d("refs2608", "MessageSync#synchronizeMailbox thisMessage:" + thisMessage.getUid());
                     Message localMessage = localUidMap.get(thisMessage.getUid()); // このUIDは更新前もあるかなー？
                     remoteUidMap.put(thisMessage.getUid(), thisMessage); // 新規に増えたやつかな
                     if (localMessage == null) {
-                        Log.d("refs1961", "MessageSync#synchronizeMailbox 新着メールのUID:" + thisMessage.getUid());
+                        Log.d("refs2608", "MessageSync#synchronizeMailbox 新着メールのUID:" + thisMessage.getUid());
                         FetchProfile fp = new FetchProfile();
                         fp.add(FetchProfile.Item.BODY);
                         remoteFolder.fetch(new Message[]{thisMessage}, fp, null);
@@ -92,7 +92,7 @@ public class MessageSync {
                         lMessage.setFlag(Flag.X_DOWNLOADED_FULL, true);
 
                         newMailUid = thisMessage.getUid();
-                        Log.d("refs1961", "MessageSync#synchronizeMailbox 新着メールのダウンロードおわった？");
+                        Log.d("refs2608", "MessageSync#synchronizeMailbox 新着メールのダウンロードおわった？");
                     }
                 }
                 remoteMessageArray = null;
@@ -104,8 +104,8 @@ public class MessageSync {
             ArrayList<Message> destroyMessages = new ArrayList<Message>();
             for (Message localMessage : localMessages) {
                 if (remoteUidMap.get(localMessage.getUid()) == null) {
-                    Log.d("refs1961", "MessageSync#synchronizeMailbox さよならするメールのUID:" + localMessage.getUid());
-                    Log.d("refs1961", "MessageSync#synchronizeMailbox さよならするメールの件名:" + localMessage.getSubject());
+                    Log.d("refs2608", "MessageSync#synchronizeMailbox さよならするメールのUID:" + localMessage.getUid());
+                    Log.d("refs2608", "MessageSync#synchronizeMailbox さよならするメールの件名:" + localMessage.getSubject());
                     destroyMessages.add(localMessage);
                 }
             }
@@ -116,7 +116,7 @@ public class MessageSync {
 
             localFolder.setLastChecked(System.currentTimeMillis());
             localFolder.setStatus(null);
-            Log.d("refs1961", "MessageSync#synchronizeMailbox end");
+            Log.d("refs2608", "MessageSync#synchronizeMailbox end");
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -5,6 +5,7 @@
 package jp.co.fttx.rakuphotomail.rakuraku.photomail;
 
 import android.database.CursorIndexOutOfBoundsException;
+import android.text.StaticLayout;
 import android.util.Log;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
@@ -477,5 +478,16 @@ public class SlideMessage {
         attachmentBean.setContentId(attachments.getContentId());
         attachmentBean.setContentDisposition(attachments.getContentDisposition());
         return attachmentBean;
+    }
+
+    public static ArrayList<LocalStore.MessageInfo> getRepliedTargetMessages(final Account account) {
+        Log.d("refs2608", "SlideMessage#getRepliedTargetMessages");
+        try {
+            LocalStore localStore = account.getLocalStore();
+            return localStore.getRepliedTargetMessages();
+        } catch (MessagingException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "MessagingException:" + e);
+        }
+        return new ArrayList();
     }
 }
