@@ -42,7 +42,7 @@ public class MessageSync {
      * @since rakuphoto 0.1-beta1
      */
     public static String synchronizeMailbox(Account account, String folderName) {
-        Log.d("refs2608", "MessageSync#synchronizeMailbox start folderName:"+folderName);
+        Log.d("refs2608@", "MessageSync#synchronizeMailbox start folderName:"+folderName);
 
         String newMailUid = null;
 
@@ -116,7 +116,7 @@ public class MessageSync {
 
             localFolder.setLastChecked(System.currentTimeMillis());
             localFolder.setStatus(null);
-            Log.d("refs2608", "MessageSync#synchronizeMailbox end");
+            Log.d("refs2608@", "MessageSync#synchronizeMailbox end");
 
         } catch (Exception e) {
             e.printStackTrace();

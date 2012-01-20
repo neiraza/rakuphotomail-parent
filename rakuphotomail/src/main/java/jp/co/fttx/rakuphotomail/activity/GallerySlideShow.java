@@ -623,7 +623,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     private void dispSlide(String uid) throws RakuRakuException {
-        Log.d("refs1961", "GallerySlideShow#dispSlide(String) start");
+        Log.d("refs2068@", "GallerySlideShow#dispSlide(String) start");
         MessageBean messageBean = SlideMessage.getMessage(mAccount, mFolder, uid);
         if (SlideCheck.isDownloadedAttachment(messageBean)) {
             dismissProgressDialog();
@@ -639,7 +639,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#loopUid 次のuid(" + uid + ")をDLしますね");
             }
         }
-        Log.d("refs1961", "GallerySlideShow#dispSlide(String) end");
+        Log.d("refs2068@", "GallerySlideShow#dispSlide(String) end");
     }
 
     /**

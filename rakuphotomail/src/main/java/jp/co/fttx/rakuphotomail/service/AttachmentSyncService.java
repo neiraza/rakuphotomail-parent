@@ -112,7 +112,7 @@ public class AttachmentSyncService extends Service {
      */
     public void onDownload(final Account account, final String folder, final String uid, final String action)
             throws MessagingException {
-        Log.d("refs1961", "AttachmentSyncService#onDownload start");
+        Log.d("refs2608@", "AttachmentSyncService#onDownload start");
         if (!downloadList.contains(uid)) {
             download(account, folder, uid);
             downloadList.add(uid);
@@ -130,7 +130,7 @@ public class AttachmentSyncService extends Service {
             }
             sendBroadcast(intent);
         }
-        Log.d("refs1961", "AttachmentSyncService#onDownload end");
+        Log.d("refs2608@", "AttachmentSyncService#onDownload end");
     }
 
     /**
@@ -143,6 +143,7 @@ public class AttachmentSyncService extends Service {
      */
     private void download(final Account account, final String folder, final String uid)
             throws MessagingException {
+        Log.d("refs2608@", "AttachmentSyncService#download start");
         Folder remoteFolder = null;
         LocalFolder localFolder = null;
         try {
@@ -173,6 +174,7 @@ public class AttachmentSyncService extends Service {
                 localFolder.fetch(new Message[]{message}, fp, null);
 
                 message.setFlag(Flag.X_DOWNLOADED_FULL, true);
+                Log.d("refs2608@", "AttachmentSyncService#download end");
             }
         } finally {
             closeFolder(remoteFolder);
@@ -185,5 +187,5 @@ public class AttachmentSyncService extends Service {
             f.close();
         }
     }
-    
+
 }
