@@ -8,10 +8,7 @@ import android.database.CursorIndexOutOfBoundsException;
 import android.util.Log;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
-import jp.co.fttx.rakuphotomail.mail.FetchProfile;
-import jp.co.fttx.rakuphotomail.mail.Folder;
-import jp.co.fttx.rakuphotomail.mail.Message;
-import jp.co.fttx.rakuphotomail.mail.MessagingException;
+import jp.co.fttx.rakuphotomail.mail.*;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
 import jp.co.fttx.rakuphotomail.mail.store.UnavailableStorageException;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
@@ -20,6 +17,8 @@ import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author tooru.oguri
@@ -303,7 +302,12 @@ public class SlideMessage {
         if (null == messageInfo) {
             throw new RakuRakuException("SlideMessage#getMesasge messageInfo is null...");
         }
-        MessageBean messageBean = setMessageBean(localMessage, messageInfo);
+        MessageBean messageBean = null;
+        try {
+            messageBean = setMessageBean(account, localMessage, messageInfo);
+        } catch (MessagingException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
+        }
         ArrayList<LocalStore.Attachments> attachmentsList = getAttachmentList(account, folder, uid);
         ArrayList<AttachmentBean> list = new ArrayList<AttachmentBean>();
         for (LocalStore.Attachments attachments : attachmentsList) {
@@ -324,7 +328,12 @@ public class SlideMessage {
         if (null == messageInfo) {
             throw new RakuRakuException("SlideMessage#getNextMessage messageInfo is null...");
         }
-        MessageBean messageBean = setMessageBean(localMessage, messageInfo);
+        MessageBean messageBean = null;
+        try {
+            messageBean = setMessageBean(account, localMessage, messageInfo);
+        } catch (MessagingException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
+        }
 
         ArrayList<LocalStore.Attachments> attachmentsList = getAttachmentList(account, folder, messageBean.getUid());
         ArrayList<AttachmentBean> list = new ArrayList<AttachmentBean>();
@@ -346,7 +355,12 @@ public class SlideMessage {
         if (null == messageInfo) {
             throw new RakuRakuException("SlideMessage#getPreMessage messageInfo is null...");
         }
-        MessageBean messageBean = setMessageBean(localMessage, messageInfo);
+        MessageBean messageBean = null;
+        try {
+            messageBean = setMessageBean(account, localMessage, messageInfo);
+        } catch (MessagingException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
+        }
         ArrayList<LocalStore.Attachments> attachmentsList = getAttachmentList(account, folder, messageBean.getUid());
         ArrayList<AttachmentBean> list = new ArrayList<AttachmentBean>();
         for (LocalStore.Attachments attachments : attachmentsList) {
@@ -381,8 +395,7 @@ public class SlideMessage {
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
-    private static MessageBean setMessageBean(LocalStore.LocalMessage localMessage, LocalStore.MessageInfo messageInfo) {
-        Log.d("maguro", "SlideMessage#setMessage start");
+    private static MessageBean setMessageBean(Account account, LocalStore.LocalMessage localMessage, LocalStore.MessageInfo messageInfo) throws MessagingException {
         MessageBean messageBean = new MessageBean();
         messageBean.setId(localMessage.getId());
         messageBean.setDeleted(messageInfo.getDeleted());
@@ -417,7 +430,17 @@ public class SlideMessage {
         messageBean.setPreview(messageInfo.getPreview());
         messageBean.setMimeType(messageInfo.getMimeType());
         messageBean.setMessage(localMessage);
-        Log.d("maguro", "SlideMessage#setMessage end");
+
+        if (!messageBean.isFlagAnswered()) {
+            messageBean.setFlagAnswered(setFlagAnsweredSupplement(account, messageBean));
+            if (messageBean.isFlagAnswered()) {
+                List<String> list = new ArrayList<String>();
+                list.addAll(Arrays.asList(flagList));
+                list.add(Flag.ANSWERED.toString());
+                String[] resultArray = new String[list.size()];
+                account.getLocalStore().setFlagAnswered(messageBean.getUid(), list.toArray(resultArray));
+            }
+        }
         return messageBean;
     }
 
@@ -432,13 +455,12 @@ public class SlideMessage {
      * <li>X_REMOTE_COPY_STARTED</li>
      * </ul>
      *
-     * @param flag        message.flag (rakuphoto DB)
+     * @param flag        message.flag (rakuphoto DB) 参考：Flag.class(enum)
      * @param messageBean MessageBean
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
-    private static void setFlag(String[] flag, MessageBean messageBean) {
-        Log.d("maguro", "SlideMessage#setFlag start");
+    private static void setFlag(String[] flag, MessageBean messageBean) throws MessagingException {
         StringBuilder builder = new StringBuilder();
         for (String f : flag) {
             if ("X_GOT_ALL_HEADERS".equals(f)) {
@@ -462,7 +484,6 @@ public class SlideMessage {
                 messageBean.setFlagOther(builder.delete(len - 1, len).toString());
             }
         }
-        Log.d("maguro", "SlideMessage#setFlag end");
     }
 
     private static AttachmentBean setAttachmentBean(LocalStore.Attachments attachments) {
@@ -477,5 +498,11 @@ public class SlideMessage {
         attachmentBean.setContentId(attachments.getContentId());
         attachmentBean.setContentDisposition(attachments.getContentDisposition());
         return attachmentBean;
+    }
+
+    private static boolean setFlagAnsweredSupplement(Account account, MessageBean messageBean) throws MessagingException {
+        LocalStore localStore = account.getLocalStore();
+        ArrayList<String> list = localStore.getHeadersReferences();
+        return list.contains(messageBean.getMessageId());
     }
 }

@@ -22,6 +22,7 @@ import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.mail.MessagingException;
+import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore.Attachments;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore.MessageInfo;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
@@ -208,6 +209,16 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         onNewIntent(getIntent());
         setupViews();
         doAllFolderSync();
+        //ここにDBの返信済みフラグを更新する処理をはさむか
+//        //TODO TEST
+//        Log.d("refs2608", "GallerySlideShow#onCreate TEST START");
+//        ArrayList<LocalStore.MessageInfo> list = SlideMessage.getRepliedTargetMessages(mAccount);
+//        for(MessageInfo message :list){
+//            Log.d("refs2608", "GallerySlideShow#onCreate message.getUid():" + message.getUid());
+//            Log.d("refs2608", "GallerySlideShow#onCreate message.getSubject():" + message.getSubject());
+//            Log.d("refs2608", "GallerySlideShow#onCreate message.getMessageId():" + message.getMessageId());
+//        }
+//        Log.d("refs2608", "GallerySlideShow#onCreate TEST END");
         setUidList();
         doBindService();
         setupSlideShowThread();
@@ -612,7 +623,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     private void dispSlide(String uid) throws RakuRakuException {
-        Log.d("refs1961", "GallerySlideShow#dispSlide(String) start");
+        Log.d("refs2068@", "GallerySlideShow#dispSlide(String) start");
         MessageBean messageBean = SlideMessage.getMessage(mAccount, mFolder, uid);
         if (SlideCheck.isDownloadedAttachment(messageBean)) {
             dismissProgressDialog();
@@ -628,7 +639,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#loopUid 次のuid(" + uid + ")をDLしますね");
             }
         }
-        Log.d("refs1961", "GallerySlideShow#dispSlide(String) end");
+        Log.d("refs2068@", "GallerySlideShow#dispSlide(String) end");
     }
 
     /**
@@ -642,7 +653,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         Log.d("refs1961", "GallerySlideShow#dispSlide(MessageBean) start");
         ArrayList<AttachmentBean> attachmentBeanList = messageBean.getAttachmentBeanList();
         for (AttachmentBean attachmentBean : attachmentBeanList) {
-            if(SlideCheck.isSlide(attachmentBean)){
+            if (SlideCheck.isSlide(attachmentBean)) {
                 Bitmap bitmap = SlideAttachment.getBitmap(mContext, getWindowManager().getDefaultDisplay(), mAccount, attachmentBean);
                 if (null == bitmap) {
                     Log.d("refs1961", "GallerySlideShow#loopUid bitmapがnullなのでreturnしちゃいますね");
