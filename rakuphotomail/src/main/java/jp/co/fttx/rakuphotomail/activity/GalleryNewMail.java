@@ -482,14 +482,14 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
 
     private void setMailMoveVisibility(String uid) {
         if (!SlideMessage.isNextMessage(mAccount, mFolder, uid)) {
-            mMailNext.setVisibility(View.GONE);
+            mMailNext.setEnabled(false);
         } else {
-            mMailNext.setVisibility(View.VISIBLE);
+            mMailNext.setEnabled(true);
         }
         if (!SlideMessage.isPreMessage(mAccount, mFolder, uid)) {
-            mMailPre.setVisibility(View.GONE);
+            mMailPre.setEnabled(false);
         } else {
-            mMailPre.setVisibility(View.VISIBLE);
+            mMailPre.setEnabled(true);
         }
     }
 
