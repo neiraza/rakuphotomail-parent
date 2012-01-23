@@ -1,10 +1,5 @@
 package jp.co.fttx.rakuphotomail.activity.setup;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Vector;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -18,11 +13,9 @@ import android.preference.Preference;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.view.KeyEvent;
 import android.widget.Toast;
-
-import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
-import jp.co.fttx.rakuphotomail.activity.Accounts;
+import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.activity.ColorPickerDialog;
 import jp.co.fttx.rakuphotomail.activity.RakuphotoPreferenceActivity;
 import jp.co.fttx.rakuphotomail.helper.DateFormatter;
@@ -30,8 +23,12 @@ import jp.co.fttx.rakuphotomail.helper.FileBrowserHelper;
 import jp.co.fttx.rakuphotomail.helper.FileBrowserHelper.FileBrowserFailOverCallback;
 import jp.co.fttx.rakuphotomail.preferences.CheckBoxListPreference;
 import jp.co.fttx.rakuphotomail.preferences.TimePickerPreference;
-
 import jp.co.fttx.rakuphotomail.service.MailService;
+
+import java.io.File;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Vector;
 
 
 public class Prefs extends RakuphotoPreferenceActivity {
@@ -398,7 +395,8 @@ public class Prefs extends RakuphotoPreferenceActivity {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             saveSettings();
             if (RakuPhotoMail.manageBack()) {
-                Accounts.listAccounts(this);
+                //TODO kari
+//                Accounts.listAccounts(this);
                 finish();
                 return true;
             }

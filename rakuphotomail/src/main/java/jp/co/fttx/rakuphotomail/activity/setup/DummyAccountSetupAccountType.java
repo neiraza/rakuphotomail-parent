@@ -28,20 +28,20 @@ public class DummyAccountSetupAccountType extends RakuPhotoActivity {
     private boolean mMakeDefault;
 
     public static void actionSelectAccountType(Context context, Account account, boolean makeDefault) {
-        Log.d("maguro", "DummyAccountSetupAccountType#actionSelectAccountType start");
+        Log.d("refs#2169", "DummyAccountSetupAccountType#actionSelectAccountType start");
 
         Intent i = new Intent(context, DummyAccountSetupAccountType.class);
         i.putExtra(EXTRA_ACCOUNT, account.getUuid());
         i.putExtra(EXTRA_MAKE_DEFAULT, makeDefault);
 
         context.startActivity(i);
-        Log.d("maguro", "DummyAccountSetupAccountType#actionSelectAccountType end");
+        Log.d("refs#2169", "DummyAccountSetupAccountType#actionSelectAccountType end");
 
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.d("maguro", "DummyAccountSetupAccountType#onCreate start");
+        Log.d("refs#2169", "DummyAccountSetupAccountType#onCreate start");
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_account_type);
@@ -49,24 +49,24 @@ public class DummyAccountSetupAccountType extends RakuPhotoActivity {
         String accountUuid = getIntent().getStringExtra(EXTRA_ACCOUNT);
         mAccount = Preferences.getPreferences(this).getAccount(accountUuid);
         mMakeDefault = getIntent().getBooleanExtra(EXTRA_MAKE_DEFAULT, false);
-        Log.d("maguro", "DummyAccountSetupAccountType#onCreate end");
+        Log.d("refs#2169", "DummyAccountSetupAccountType#onCreate end");
 
     }
 
     @Override
     public void onResume() {
-        Log.d("maguro", "DummyAccountSetupAccountType#onResume start");
+        Log.d("refs#2169", "DummyAccountSetupAccountType#onResume start");
 
         super.onResume();
         // XXX ショートカットん
         onImap();
-        Log.d("maguro", "DummyAccountSetupAccountType#onResume end");
+        Log.d("refs#2169", "DummyAccountSetupAccountType#onResume end");
 
     }
 
 
     private void onImap() {
-        Log.d("maguro", "DummyAccountSetupAccountType#onImap start");
+        Log.d("refs#2169", "DummyAccountSetupAccountType#onImap start");
 
         try {
             URI uri = new URI(mAccount.getStoreUri());
@@ -77,7 +77,7 @@ public class DummyAccountSetupAccountType extends RakuPhotoActivity {
         } catch (Exception use) {
             failure(use);
         }
-        Log.d("maguro", "DummyAccountSetupAccountType#onImap end");
+        Log.d("refs#2169", "DummyAccountSetupAccountType#onImap end");
 
     }
 

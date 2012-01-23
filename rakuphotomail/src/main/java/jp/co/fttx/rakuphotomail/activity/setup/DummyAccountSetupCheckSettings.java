@@ -71,19 +71,19 @@ public class DummyAccountSetupCheckSettings extends RakuPhotoActivity implements
 
     public static void actionCheckSettings(Activity context, Account account,
                                            boolean checkIncoming, boolean checkOutgoing) {
-        Log.d("redbull", "DummyAccountSetupCheckSettings#actionCheckSettings start");
+        Log.d("refs#2169", "DummyAccountSetupCheckSettings#actionCheckSettings start");
 
         Intent i = new Intent(context, DummyAccountSetupCheckSettings.class);
         i.putExtra(EXTRA_ACCOUNT, account.getUuid());
         i.putExtra(EXTRA_CHECK_INCOMING, checkIncoming);
         i.putExtra(EXTRA_CHECK_OUTGOING, checkOutgoing);
         context.startActivityForResult(i, ACTIVITY_REQUEST_CODE);
-        Log.d("redbull", "DummyAccountSetupCheckSettings#actionCheckSettings end");
+        Log.d("refs#2169", "DummyAccountSetupCheckSettings#actionCheckSettings end");
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.d("redbull", "DummyAccountSetupCheckSettings#onCreate start");
+        Log.d("refs#2169", "DummyAccountSetupCheckSettings#onCreate start");
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_check_settings);
@@ -175,7 +175,7 @@ public class DummyAccountSetupCheckSettings extends RakuPhotoActivity implements
         }
         .start();
 
-        Log.d("redbull", "DummyAccountSetupCheckSettings#onCreate end");
+        Log.d("refs#2169", "DummyAccountSetupCheckSettings#onCreate end");
     }
 
     @Override

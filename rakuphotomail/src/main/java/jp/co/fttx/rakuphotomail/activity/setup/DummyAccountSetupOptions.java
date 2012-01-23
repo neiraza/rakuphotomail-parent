@@ -33,19 +33,19 @@ public class DummyAccountSetupOptions extends RakuPhotoActivity implements OnCli
     private Account mAccount;
 
     public static void actionOptions(Context context, Account account, boolean makeDefault) {
-        Log.d("redbull", "DummyAccountSetupOptions#actionOptions start");
+        Log.d("refs#2169", "DummyAccountSetupOptions#actionOptions start");
 
         Intent i = new Intent(context, DummyAccountSetupOptions.class);
         i.putExtra(EXTRA_ACCOUNT, account.getUuid());
         i.putExtra(EXTRA_MAKE_DEFAULT, makeDefault);
         context.startActivity(i);
-        Log.d("redbull", "DummyAccountSetupOptions#actionOptions end");
+        Log.d("refs#2169", "DummyAccountSetupOptions#actionOptions end");
 
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.d("redbull", "DummyAccountSetupOptions#onCreate start");
+        Log.d("refs#2169", "DummyAccountSetupOptions#onCreate start");
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_options);
@@ -133,22 +133,23 @@ public class DummyAccountSetupOptions extends RakuPhotoActivity implements OnCli
             mPushEnable.setChecked(true);
         }
 
-        Log.d("redbull", "DummyAccountSetupOptions#onCreate end");
+        Log.d("refs#2169", "DummyAccountSetupOptions#onCreate end");
 
     }
 
     @Override
     public void onResume(){
-        Log.d("redbull", "DummyAccountSetupOptions#onResume start");
+        Log.d("refs#2169", "DummyAccountSetupOptions#onResume start");
 
         super.onResume();
-        done();
-        Log.d("redbull", "DummyAccountSetupOptions#onResume end");
+        //TODO ショートカット
+//        done();
+        Log.d("refs#2169", "DummyAccountSetupOptions#onResume end");
 
     }
 
     private void done() {
-        Log.d("redbull", "DummyAccountSetupOptions#done start");
+        Log.d("refs#2169", "DummyAccountSetupOptions#done start");
 
         mAccount.setDescription(mAccount.getEmail());
         mAccount.setNotifyNewMail(mNotifyView.isChecked());
@@ -173,11 +174,12 @@ public class DummyAccountSetupOptions extends RakuPhotoActivity implements OnCli
         DummyAccountSetupNames.actionSetNames(this, mAccount);
 
         finish();
-        Log.d("redbull", "DummyAccountSetupOptions#done start");
+        Log.d("refs#2169", "DummyAccountSetupOptions#done start");
 
     }
 
     private void onDone() {
+        Log.d("refs#2169", "DummyAccountSetupOptions#onDone start");
         mAccount.setDescription(mAccount.getEmail());
         mAccount.setNotifyNewMail(mNotifyView.isChecked());
         mAccount.setShowOngoing(mNotifySyncView.isChecked());
@@ -200,6 +202,7 @@ public class DummyAccountSetupOptions extends RakuPhotoActivity implements OnCli
         RakuPhotoMail.setServicesEnabled(this);
         DummyAccountSetupNames.actionSetNames(this, mAccount);
         finish();
+        Log.d("refs#2169", "DummyAccountSetupOptions#onDone end");
     }
 
     public void onClick(View v) {
