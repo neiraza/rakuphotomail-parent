@@ -143,7 +143,7 @@ public class DummyAccountSetupOptions extends RakuPhotoActivity implements OnCli
 
         super.onResume();
         //TODO ショートカット
-//        done();
+        done();
         Log.d("refs#2169", "DummyAccountSetupOptions#onResume end");
 
     }

@@ -358,7 +358,7 @@ public class DummyAccountSetupIncoming extends RakuPhotoActivity implements
         super.onResume();
 
         //TODO ショートカットさん
-//        next();
+        next();
         Log.d("refs#2169", "DummyAccountSetupIncoming#onResume end");
 
     }

@@ -64,7 +64,7 @@ public class DummyAccountSetupBasics extends RakuPhotoActivity
         Log.d("refs#2169", "DummyAccountSetupBasics#onCreate start");
         super.onCreate(savedInstanceState);
         // XXX アカウント情報(EMail,Password)固定埋め込み
-        setContentView(R.layout.account_setup_basics);
+        setContentView(R.layout.dummy_account_setup_basics);
         mPrefs = Preferences.getPreferences(this);
         mEmailView = (EditText) findViewById(R.id.account_email);
         mPasswordView = (EditText) findViewById(R.id.account_password);
@@ -97,9 +97,9 @@ public class DummyAccountSetupBasics extends RakuPhotoActivity
     public void onResume() {
         super.onResume();
         // TODO ショートカットしまーす
-//        next();
+        next();
         // TODO 通常営業します
-        validateFields();
+//        validateFields();
     }
 
     @Override

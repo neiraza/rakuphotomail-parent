@@ -255,7 +255,7 @@ public class DummyAccountSetupOutgoing extends RakuPhotoActivity implements OnCl
         super.onResume();
 
         //TODO ショートカット
-//        next();
+        next();
         Log.d("refs#2169", "DummyAccountSetupOutgoing#onResume end");
 
     }
