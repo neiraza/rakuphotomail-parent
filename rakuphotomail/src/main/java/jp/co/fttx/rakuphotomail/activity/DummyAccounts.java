@@ -17,20 +17,20 @@ public class DummyAccounts extends RakuPhotoActivity {
 
     @Override
     public void onCreate(Bundle icicle) {
-        Log.d("maguro", "DummyAcounts#onCreate start");
+        Log.d("refs#2169", "DummyAccounts#onCreate start");
         super.onCreate(icicle);
         setContentView(R.layout.dummy_accounts);
         setUp();
         Account[] accounts = Preferences.getPreferences(this).getAccounts();
         if (accounts.length == 1 && accounts[0].isAvailable(this)) {
-            Log.d("maguro", "DummyAcounts#onCreate 1");
+            Log.d("refs#2169", "DummyAccounts#onCreate アカウントあるからスライドいくぜー");
             GallerySlideShow.actionSlideShow(this, accounts[0], accounts[0].getInboxFolderName(), null);
             finish();
         } else {
-            Log.d("maguro", "DummyAcounts#onCreate 2");
+            Log.d("refs#2169", "DummyAccounts#onCreate アカウントつくるぜー");
             onAddNewAccount();
         }
-        Log.d("maguro", "DummyAcounts#onCreate end");
+        Log.d("refs#2169", "DummyAccounts#onCreate end");
     }
 
     private void setUp() {
@@ -46,79 +46,76 @@ public class DummyAccounts extends RakuPhotoActivity {
 
     @Override
     public void onResume() {
-        Log.d("maguro", "DummyAcounts#onResume start");
+        Log.d("refs#2169", "DummyAccounts#onResume start");
 
         super.onResume();
         MessagingController.getInstance(getApplication())
                 .addListener(mListener);
-        Log.d("maguro", "DummyAcounts#onResume end");
+        Log.d("refs#2169", "DummyAccounts#onResume end");
 
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        Log.d("maguro", "DummyAcounts#onSaveInstanceState start");
+        Log.d("refs#2169", "DummyAccounts#onSaveInstanceState start");
         super.onSaveInstanceState(outState);
-        Log.d("maguro", "DummyAcounts#onSaveInstanceState end");
+        Log.d("refs#2169", "DummyAccounts#onSaveInstanceState end");
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        Log.d("maguro", "DummyAcounts#onRestoreInstanceState start");
+        Log.d("refs#2169", "DummyAccounts#onRestoreInstanceState start");
         super.onRestoreInstanceState(savedInstanceState);
-        Log.d("maguro", "DummyAcounts#onRestoreInstanceState end");
+        Log.d("refs#2169", "DummyAccounts#onRestoreInstanceState end");
     }
 
 
     private void onAddNewAccount() {
-        Log.d("maguro", "DummyAccounts#onAddNewAccount start");
+        Log.d("refs#2169", "DummyAccounts#onAddNewAccount start");
         DummyAccountSetupBasics.actionNewAccount(this);
-        Log.d("maguro", "DummyAccounts#onAddNewAccount end");
+        Log.d("refs#2169", "DummyAccounts#onAddNewAccount end");
     }
 
     ActivityListener mListener = new ActivityListener() {
 
-        // TODO
         @Override
         public void folderStatusChanged(Account account, String folderName,
                                         int unreadMessageCount) {
-            Log.d("maguro", "ActivityListener mListener#folderStatusChanged");
+            Log.d("refs#2169", "DummyAccounts ActivityListener mListener#folderStatusChanged");
         }
 
         @Override
         public void accountStatusChanged(BaseAccount account, AccountStats stats) {
-            Log.d("maguro", "ActivityListener mListener#accountStatusChanged");
+            Log.d("refs#2169", "DummyAccounts ActivityListener mListener#accountStatusChanged");
         }
 
         @Override
         public void accountSizeChanged(Account account, long oldSize,
                                        long newSize) {
-            Log.d("maguro", "ActivityListener mListener#accountSizeChanged");
+            Log.d("refs#2169", "DummyAccounts ActivityListener mListener#accountSizeChanged");
         }
 
 
-        // TODO
         @Override
         public void synchronizeMailboxStarted(Account account, String folder) {
             super.synchronizeMailboxStarted(account, folder);
-            Log.d("maguro", "ActivityListener mListener#synchronizeMailboxStarted");
+            Log.d("refs#2169", "DummyAccounts ActivityListener mListener#synchronizeMailboxStarted");
         }
 
         @Override
         public void synchronizeMailboxFailed(Account account, String folder,
                                              String message) {
             super.synchronizeMailboxFailed(account, folder, message);
-            Log.d("maguro", "ActivityListener mListener#synchronizeMailboxFailed");
+            Log.d("refs#2169", "DummyAccounts ActivityListener mListener#synchronizeMailboxFailed");
         }
 
-        // TODO
         @Override
         public void synchronizeMailboxFinished(Account account, String folder,
                                                int totalMessagesInMailbox, int numNewMessages) {
-            Log.d("maguro", "ActivityListener mListener#synchronizeMailboxFinished start");
+            Log.d("refs#2169", "DummyAccounts ActivityListener mListener#synchronizeMailboxFinished start");
             startActivity(new Intent(mContext, DummyAccounts.class));
             finish();
-            Log.d("maguro", "ActivityListener mListener#synchronizeMailboxFinished end");
+            Log.d("refs#2169", "DummyAccounts ActivityListener mListener#synchronizeMailboxFinished end");
         }
     };
 }

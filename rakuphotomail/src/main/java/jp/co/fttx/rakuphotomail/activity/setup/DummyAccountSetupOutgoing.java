@@ -59,19 +59,19 @@ public class DummyAccountSetupOutgoing extends RakuPhotoActivity implements OnCl
     private boolean mMakeDefault;
 
     public static void actionOutgoingSettings(Context context, Account account, boolean makeDefault) {
-        Log.d("redbull", "DummyAccountSetupOutgoing#actionOutgoingSettings start");
+        Log.d("refs#2169", "DummyAccountSetupOutgoing#actionOutgoingSettings start");
 
         Intent i = new Intent(context, DummyAccountSetupOutgoing.class);
         i.putExtra(EXTRA_ACCOUNT, account.getUuid());
         i.putExtra(EXTRA_MAKE_DEFAULT, makeDefault);
         context.startActivity(i);
-        Log.d("redbull", "DummyAccountSetupOutgoing#actionOutgoingSettings end");
+        Log.d("refs#2169", "DummyAccountSetupOutgoing#actionOutgoingSettings end");
 
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.d("redbull", "DummyAccountSetupOutgoing#onCreate start");
+        Log.d("refs#2169", "DummyAccountSetupOutgoing#onCreate start");
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_outgoing);
@@ -244,17 +244,19 @@ public class DummyAccountSetupOutgoing extends RakuPhotoActivity implements OnCl
              */
             failure(e);
         }
-        Log.d("redbull", "DummyAccountSetupOutgoing#onCreate end");
+        Log.d("refs#2169", "DummyAccountSetupOutgoing#onCreate end");
 
     }
 
     @Override
     public void onResume(){
-        Log.d("redbull", "DummyAccountSetupOutgoing#onResume start");
+        Log.d("refs#2169", "DummyAccountSetupOutgoing#onResume start");
 
         super.onResume();
+
+        //TODO ショートカット
         next();
-        Log.d("redbull", "DummyAccountSetupOutgoing#onResume end");
+        Log.d("refs#2169", "DummyAccountSetupOutgoing#onResume end");
 
     }
 
@@ -284,7 +286,7 @@ public class DummyAccountSetupOutgoing extends RakuPhotoActivity implements OnCl
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d("redbull", "DummyAccountSetupOutgoing#onActivityResult start");
+        Log.d("refs#2169", "DummyAccountSetupOutgoing#onActivityResult start");
 
         if (resultCode == RESULT_OK) {
             if (Intent.ACTION_EDIT.equals(getIntent().getAction())) {
@@ -295,12 +297,13 @@ public class DummyAccountSetupOutgoing extends RakuPhotoActivity implements OnCl
                 finish();
             }
         }
-        Log.d("redbull", "DummyAccountSetupOutgoing#onActivityResult end");
+        Log.d("refs#2169", "DummyAccountSetupOutgoing#onActivityResult end");
 
     }
 
     @Override
     protected void onNext() {
+        Log.d("refs#2169", "DummyAccountSetupOutgoing#onNext start");
         int securityType = (Integer)((SpinnerOption)mSecurityTypeView.getSelectedItem()).value;
         URI uri;
         try {
@@ -326,11 +329,11 @@ public class DummyAccountSetupOutgoing extends RakuPhotoActivity implements OnCl
              */
             failure(e);
         }
-
+        Log.d("refs#2169", "DummyAccountSetupOutgoing#onNext end");
     }
 
     public void next() {
-        Log.d("redbull", "DummyAccountSetupOutgoing#next start");
+        Log.d("refs#2169", "DummyAccountSetupOutgoing#next start");
 
         int securityType = (Integer)((SpinnerOption)mSecurityTypeView.getSelectedItem()).value;
         URI uri;
@@ -357,7 +360,7 @@ public class DummyAccountSetupOutgoing extends RakuPhotoActivity implements OnCl
              */
             failure(e);
         }
-        Log.d("redbull", "DummyAccountSetupOutgoing#next end");
+        Log.d("refs#2169", "DummyAccountSetupOutgoing#next end");
 
     }
 

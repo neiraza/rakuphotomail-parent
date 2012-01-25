@@ -4,10 +4,18 @@
  */
 package jp.co.fttx.rakuphotomail.activity;
 
-import java.util.Date;
-
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
@@ -22,17 +30,9 @@ import jp.co.fttx.rakuphotomail.mail.MessagingException;
 import jp.co.fttx.rakuphotomail.mail.internet.MimeMessage;
 import jp.co.fttx.rakuphotomail.mail.internet.TextBody;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
-import android.content.Context;
-import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.MessageSync;
+
+import java.util.Date;
 
 /**
  * @author tooru.oguri
@@ -413,9 +413,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
             Log.d("refs1961", "SendMessageTask#onCancel end");
         }
 
-//        private boolean isParamError(String param) {
-//            return (param == null || "".equals(param));
-//        }
     }
 
     /**

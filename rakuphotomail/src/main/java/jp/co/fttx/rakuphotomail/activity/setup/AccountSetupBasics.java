@@ -72,6 +72,9 @@ public class AccountSetupBasics extends RakuPhotoActivity
         mNextButton = (Button) findViewById(R.id.next);
         mManualSetupButton = (Button) findViewById(R.id.manual_setup);
 
+        //TODO add
+        mManualSetupButton.setVisibility(View.GONE);
+
         mNextButton.setOnClickListener(this);
         mManualSetupButton.setOnClickListener(this);
 

@@ -27,6 +27,7 @@
     <EditText
         android:id="@+id/account_email"
         android:hint="@string/account_setup_basics_email_hint"
+        android:text="tooru.oguri@rakuphoto.ucom.local"
         android:singleLine="true"
         android:inputType="textEmailAddress"
         android:layout_height="wrap_content"
@@ -36,6 +37,7 @@
         android:id="@+id/account_password"
         android:inputType="textPassword"
         android:hint="@string/account_setup_basics_password_hint"
+        android:text="ucomrp2011"
         android:password="true"
         android:singleLine="true"
         android:layout_height="wrap_content"
