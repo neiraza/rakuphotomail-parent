@@ -1347,8 +1347,8 @@ public class LocalStore extends Store implements Serializable {
                     UnavailableStorageException {
                 Cursor c = null;
                 try {
-                    c = db.rawQuery("SELECT " + GET_MESSAGES_COLS_STR_ALL
-                            + "FROM messages WHERE uid > ? and folder_id = ? ORDER BY uid ASC LIMIT 1",
+                    String sql = "SELECT " + GET_MESSAGES_COLS_STR_ALL + "FROM ( SELECT " + GET_MESSAGES_COLS_STR_ALL + " FROM MESSAGES AS m WHERE EXISTS ( SELECT * FROM ATTACHMENTS AS a WHERE ( a.NAME LIKE '%.jpg' OR a.NAME LIKE '%.png' OR a.NAME LIKE '%.JPG' OR a.NAME LIKE '%.PNG' OR a.NAME LIKE '%.jpeg' OR a.MIME_TYPE = 'image/jpeg' OR a.MIME_TYPE = 'image/png') AND a.MESSAGE_ID = m.ID)) as mes WHERE ? < mes.UID AND mes.FOLDER_ID = ? ORDER BY mes.UID ASC LIMIT 1;";
+                    c = db.rawQuery(sql,
                             new String[]{uid, Long.toString(folderId)});
                     if (null != c) {
                         c.moveToFirst();
@@ -1380,8 +1380,8 @@ public class LocalStore extends Store implements Serializable {
                     UnavailableStorageException {
                 Cursor c = null;
                 try {
-                    c = db.rawQuery("SELECT " + GET_MESSAGES_COLS_STR_ALL
-                            + "FROM messages WHERE uid < ? and folder_id = ? ORDER BY uid DESC LIMIT 1",
+                    String sql = "SELECT " + GET_MESSAGES_COLS_STR_ALL + "FROM ( SELECT " + GET_MESSAGES_COLS_STR_ALL + " FROM MESSAGES AS m WHERE EXISTS ( SELECT * FROM ATTACHMENTS AS a WHERE ( a.NAME LIKE '%.jpg' OR a.NAME LIKE '%.png' OR a.NAME LIKE '%.JPG' OR a.NAME LIKE '%.PNG' OR a.NAME LIKE '%.jpeg' OR a.MIME_TYPE = 'image/jpeg' OR a.MIME_TYPE = 'image/png') AND a.MESSAGE_ID = m.ID)) as mes WHERE ? > mes.UID AND mes.FOLDER_ID = ? ORDER BY mes.UID DESC LIMIT 1;";
+                    c = db.rawQuery(sql,
                             new String[]{uid, Long.toString(folderId)});
                     if (null != c) {
                         c.moveToFirst();
@@ -2588,7 +2588,7 @@ public class LocalStore extends Store implements Serializable {
             return messages.toArray(EMPTY_MESSAGE_ARRAY);
         }
 
-        public Message getNextMessage(final String uid) throws MessagingException {
+        public Message getNextMessage(final String uid, final long folderId) throws MessagingException {
             try {
                 return database.execute(false, new DbCallback<Message>() {
                     @Override
@@ -2600,9 +2600,9 @@ public class LocalStore extends Store implements Serializable {
                             Cursor cursor = null;
 
                             try {
-                                cursor = db.rawQuery("SELECT " + GET_MESSAGES_COLS
-                                        + "FROM messages WHERE uid > ? ORDER BY uid ASC LIMIT 1", new String[]{
-                                        message.getUid()});
+                                String sql = "SELECT " + GET_MESSAGES_COLS + "FROM ( SELECT " + GET_MESSAGES_COLS + " FROM MESSAGES AS m WHERE EXISTS ( SELECT * FROM ATTACHMENTS AS a WHERE ( a.NAME LIKE '%.jpg' OR a.NAME LIKE '%.png' OR a.NAME LIKE '%.JPG' OR a.NAME LIKE '%.PNG' OR a.NAME LIKE '%.jpeg' OR a.MIME_TYPE = 'image/jpeg' OR a.MIME_TYPE = 'image/png') AND a.MESSAGE_ID = m.ID)) as mes WHERE ? < mes.UID AND mes.FOLDER_ID = ? ORDER BY mes.UID ASC LIMIT 1;";
+                                cursor = db.rawQuery(sql, new String[]{
+                                        message.getUid(), Long.toString(folderId)});
                                 if (!cursor.moveToNext()) {
                                     return null;
                                 }
@@ -2623,7 +2623,7 @@ public class LocalStore extends Store implements Serializable {
             }
         }
 
-        public Message getPreMessage(final String uid) throws MessagingException {
+        public Message getPreMessage(final String uid, final long folderId) throws MessagingException {
             try {
                 return database.execute(false, new DbCallback<Message>() {
                     @Override
@@ -2635,9 +2635,13 @@ public class LocalStore extends Store implements Serializable {
                             Cursor cursor = null;
 
                             try {
-                                cursor = db.rawQuery("SELECT " + GET_MESSAGES_COLS
-                                        + "FROM messages WHERE uid < ? ORDER BY uid DESC LIMIT 1", new String[]{
-                                        message.getUid()});
+                                String sql = "SELECT " + GET_MESSAGES_COLS + "FROM ( SELECT " + GET_MESSAGES_COLS + " FROM MESSAGES AS m WHERE EXISTS ( SELECT * FROM ATTACHMENTS AS a WHERE ( a.NAME LIKE '%.jpg' OR a.NAME LIKE '%.png' OR a.NAME LIKE '%.JPG' OR a.NAME LIKE '%.PNG' OR a.NAME LIKE '%.jpeg' OR a.MIME_TYPE = 'image/jpeg' OR a.MIME_TYPE = 'image/png') AND a.MESSAGE_ID = m.ID)) as mes WHERE ? > mes.UID AND mes.FOLDER_ID = ? ORDER BY mes.UID DESC LIMIT 1;";
+                                Log.d("ucom", "sql:" + sql);
+                                Log.d("ucom", "uid:" + uid);
+                                Log.d("ucom", "folderId:" + folderId);
+
+                                cursor = db.rawQuery(sql, new String[]{
+                                        message.getUid(),Long.toString(folderId)});
                                 if (!cursor.moveToNext()) {
                                     return null;
                                 }
