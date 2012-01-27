@@ -75,7 +75,10 @@ public class SlideAttachment {
     public static ArrayList<AttachmentBean> getSlideTargetList(ArrayList<AttachmentBean> origin) {
         ArrayList<AttachmentBean> dest = new ArrayList<AttachmentBean>();
         for (AttachmentBean bean : origin) {
+            Log.d("ucom", "bean.getId():" + bean.getId());
+            Log.d("ucom", "bean.getName():" + bean.getName());
             if (SlideCheck.isSlide(bean)) {
+                Log.d("ucom", bean.getId() + " is OK");
                 dest.add(bean);
             }
         }
