@@ -5,15 +5,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.Toast;
 import jp.co.fttx.rakuphotomail.Account;
-import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
+import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.activity.RakuPhotoActivity;
+
 import java.net.URI;
 
 /**
@@ -21,7 +19,7 @@ import java.net.URI;
  * passed in email address, password and makeDefault are then passed on to the
  * AccountSetupIncoming activity.
  */
-public class AccountSetupAccountType extends RakuPhotoActivity implements OnClickListener {
+public class AccountSetupAccountType extends RakuPhotoActivity {
     private static final String EXTRA_ACCOUNT = "account";
 
     private static final String EXTRA_MAKE_DEFAULT = "makeDefault";
@@ -40,28 +38,29 @@ public class AccountSetupAccountType extends RakuPhotoActivity implements OnClic
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.account_setup_account_type);
-        ((Button)findViewById(R.id.pop)).setOnClickListener(this);
-        ((Button)findViewById(R.id.imap)).setOnClickListener(this);
-        ((Button)findViewById(R.id.webdav)).setOnClickListener(this);
+//        setContentView(R.layout.account_setup_account_type);
+//        ((Button)findViewById(R.id.pop)).setOnClickListener(this);
+//        ((Button)findViewById(R.id.imap)).setOnClickListener(this);
+//        ((Button)findViewById(R.id.webdav)).setOnClickListener(this);
 
         String accountUuid = getIntent().getStringExtra(EXTRA_ACCOUNT);
         mAccount = Preferences.getPreferences(this).getAccount(accountUuid);
         mMakeDefault = getIntent().getBooleanExtra(EXTRA_MAKE_DEFAULT, false);
+        onImap();
     }
 
-    private void onPop() {
-        try {
-            URI uri = new URI(mAccount.getStoreUri());
-            uri = new URI("pop3", uri.getUserInfo(), uri.getHost(), uri.getPort(), null, null, null);
-            mAccount.setStoreUri(uri.toString());
-            AccountSetupIncoming.actionIncomingSettings(this, mAccount, mMakeDefault);
-            finish();
-        } catch (Exception use) {
-            failure(use);
-        }
-
-    }
+//    private void onPop() {
+//        try {
+//            URI uri = new URI(mAccount.getStoreUri());
+//            uri = new URI("pop3", uri.getUserInfo(), uri.getHost(), uri.getPort(), null, null, null);
+//            mAccount.setStoreUri(uri.toString());
+//            AccountSetupIncoming.actionIncomingSettings(this, mAccount, mMakeDefault);
+//            finish();
+//        } catch (Exception use) {
+//            failure(use);
+//        }
+//
+//    }
 
     private void onImap() {
         try {
@@ -76,32 +75,32 @@ public class AccountSetupAccountType extends RakuPhotoActivity implements OnClic
 
     }
 
-    private void onWebDav() {
-        try {
-            URI uri = new URI(mAccount.getStoreUri());
-            uri = new URI("webdav", uri.getUserInfo(), uri.getHost(), uri.getPort(), null, null, null);
-            mAccount.setStoreUri(uri.toString());
-            AccountSetupIncoming.actionIncomingSettings(this, mAccount, mMakeDefault);
-            finish();
-        } catch (Exception use) {
-            failure(use);
-        }
+//    private void onWebDav() {
+//        try {
+//            URI uri = new URI(mAccount.getStoreUri());
+//            uri = new URI("webdav", uri.getUserInfo(), uri.getHost(), uri.getPort(), null, null, null);
+//            mAccount.setStoreUri(uri.toString());
+//            AccountSetupIncoming.actionIncomingSettings(this, mAccount, mMakeDefault);
+//            finish();
+//        } catch (Exception use) {
+//            failure(use);
+//        }
+//
+//    }
 
-    }
-
-    public void onClick(View v) {
-        switch (v.getId()) {
-        case R.id.pop:
-            onPop();
-            break;
-        case R.id.imap:
-            onImap();
-            break;
-        case R.id.webdav:
-            onWebDav();
-            break;
-        }
-    }
+//    public void onClick(View v) {
+//        switch (v.getId()) {
+//        case R.id.pop:
+//            onPop();
+//            break;
+//        case R.id.imap:
+//            onImap();
+//            break;
+//        case R.id.webdav:
+//            onWebDav();
+//            break;
+//        }
+//    }
     private void failure(Exception use) {
         Log.e(RakuPhotoMail.LOG_TAG, "Failure", use);
         String toastText = getString(R.string.account_setup_bad_uri, use.getMessage());

@@ -29,11 +29,9 @@ public class DummyAccountSetupAccountType extends RakuPhotoActivity {
 
     public static void actionSelectAccountType(Context context, Account account, boolean makeDefault) {
         Log.d("refs#2169", "DummyAccountSetupAccountType#actionSelectAccountType start");
-
         Intent i = new Intent(context, DummyAccountSetupAccountType.class);
         i.putExtra(EXTRA_ACCOUNT, account.getUuid());
         i.putExtra(EXTRA_MAKE_DEFAULT, makeDefault);
-
         context.startActivity(i);
         Log.d("refs#2169", "DummyAccountSetupAccountType#actionSelectAccountType end");
 
@@ -42,26 +40,19 @@ public class DummyAccountSetupAccountType extends RakuPhotoActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.d("refs#2169", "DummyAccountSetupAccountType#onCreate start");
-
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.account_setup_account_type);
-
         String accountUuid = getIntent().getStringExtra(EXTRA_ACCOUNT);
         mAccount = Preferences.getPreferences(this).getAccount(accountUuid);
         mMakeDefault = getIntent().getBooleanExtra(EXTRA_MAKE_DEFAULT, false);
         Log.d("refs#2169", "DummyAccountSetupAccountType#onCreate end");
-
     }
 
     @Override
     public void onResume() {
         Log.d("refs#2169", "DummyAccountSetupAccountType#onResume start");
-
         super.onResume();
-        // XXX ショートカットん
         onImap();
         Log.d("refs#2169", "DummyAccountSetupAccountType#onResume end");
-
     }
 
 
