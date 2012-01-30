@@ -9,11 +9,14 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:padding="8dip"
+            android:typeface="sans"
+            android:autoLink="web"
             android:text="@string/accounts_welcome" />
     <Button
             android:id="@+id/next"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:padding="8dip"
+            android:drawableRight="@drawable/button_indicator_next"
             android:text="@string/next_action" />
 </LinearLayout>

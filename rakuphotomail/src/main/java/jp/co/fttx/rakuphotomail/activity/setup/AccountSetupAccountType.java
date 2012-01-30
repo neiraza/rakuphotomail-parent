@@ -38,29 +38,12 @@ public class AccountSetupAccountType extends RakuPhotoActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        setContentView(R.layout.account_setup_account_type);
-//        ((Button)findViewById(R.id.pop)).setOnClickListener(this);
-//        ((Button)findViewById(R.id.imap)).setOnClickListener(this);
-//        ((Button)findViewById(R.id.webdav)).setOnClickListener(this);
 
         String accountUuid = getIntent().getStringExtra(EXTRA_ACCOUNT);
         mAccount = Preferences.getPreferences(this).getAccount(accountUuid);
         mMakeDefault = getIntent().getBooleanExtra(EXTRA_MAKE_DEFAULT, false);
         onImap();
     }
-
-//    private void onPop() {
-//        try {
-//            URI uri = new URI(mAccount.getStoreUri());
-//            uri = new URI("pop3", uri.getUserInfo(), uri.getHost(), uri.getPort(), null, null, null);
-//            mAccount.setStoreUri(uri.toString());
-//            AccountSetupIncoming.actionIncomingSettings(this, mAccount, mMakeDefault);
-//            finish();
-//        } catch (Exception use) {
-//            failure(use);
-//        }
-//
-//    }
 
     private void onImap() {
         try {
@@ -75,32 +58,6 @@ public class AccountSetupAccountType extends RakuPhotoActivity {
 
     }
 
-//    private void onWebDav() {
-//        try {
-//            URI uri = new URI(mAccount.getStoreUri());
-//            uri = new URI("webdav", uri.getUserInfo(), uri.getHost(), uri.getPort(), null, null, null);
-//            mAccount.setStoreUri(uri.toString());
-//            AccountSetupIncoming.actionIncomingSettings(this, mAccount, mMakeDefault);
-//            finish();
-//        } catch (Exception use) {
-//            failure(use);
-//        }
-//
-//    }
-
-//    public void onClick(View v) {
-//        switch (v.getId()) {
-//        case R.id.pop:
-//            onPop();
-//            break;
-//        case R.id.imap:
-//            onImap();
-//            break;
-//        case R.id.webdav:
-//            onWebDav();
-//            break;
-//        }
-//    }
     private void failure(Exception use) {
         Log.e(RakuPhotoMail.LOG_TAG, "Failure", use);
         String toastText = getString(R.string.account_setup_bad_uri, use.getMessage());
