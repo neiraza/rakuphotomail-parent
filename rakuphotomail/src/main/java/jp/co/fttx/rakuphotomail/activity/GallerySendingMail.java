@@ -351,7 +351,7 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
             dialog = new ProgressDialog(context);
             dialog.setTitle("Please wait");
             dialog.setMessage("Loading data...");
-            dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             dialog.setCancelable(true);
             dialog.setOnCancelListener(this);
             dialog.setMax(100);

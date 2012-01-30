@@ -314,7 +314,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         Log.d("refs1961", "GallerySlideShow#setUpProgressDialog start");
         if (!mProgressDialog.isShowing()) {
             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            mProgressDialog.setMessage("サーバーと同期し、データを読み込んでいます。\nしばらくお待ちください。");
+            mProgressDialog.setTitle("しばらくお待ちください");
+            mProgressDialog.setMessage("サーバーと同期し、スライドショー用の画像をダウンロード中です。\n完了次第、スライドショーを開始します。");
             mProgressDialog.setCancelable(true);
             mProgressDialog.show();
         }
