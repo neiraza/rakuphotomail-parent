@@ -351,9 +351,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void setUpProgressDialog(String msg) {
-        Log.d("madara", "GallerySlideStop#setUpProgressDialog s");
         if (!mProgressDialog.isShowing()) {
-            Log.d("madara", "GallerySlideStop#setUpProgressDialog 表示されるはず");
             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             mProgressDialog.setTitle("しばらくお待ちください");
             mProgressDialog.setMessage(msg);
@@ -362,15 +360,12 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
             mProgressDialog.setProgress(0);
             mProgressDialog.show();
         }
-        Log.d("madara", "GallerySlideStop#setUpProgressDialog e");
     }
 
     private void dissmissProgressDialog() {
-        Log.d("madara", "GallerySlideStop#dissmissProgressDialog s");
         if (mProgressDialog.isShowing()) {
             mProgressDialog.dismiss();
         }
-        Log.d("madara", "GallerySlideStop#dissmissProgressDialog e");
     }
 
     @Override
@@ -409,28 +404,13 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         }
     }
 
-    private void onSlide() {
-        Log.d("madara", "GallerySlideStop#onSlide");
-        boolean isEnabledPre = mMailPre.isEnabled();
-        boolean isEnabledNext = mMailNext.isEnabled();
-        GallerySlideShow.actionSlideShow(this, mAccount, mFolder, mMessageBean.getUid());
-        mMailPre.setEnabled(isEnabledPre);
-        mMailNext.setEnabled(isEnabledNext);
-        finish();
-    }
-
     private void onReply() {
-        Log.d("madara", "GallerySlideStop#onReply");
-        boolean isEnabledPre = mMailPre.isEnabled();
-        boolean isEnabledNext = mMailNext.isEnabled();
         if (null != mMessageBean) {
             GallerySendingMail.actionReply(this, mMessageBean);
         } else {
             Toast.makeText(GallerySlideStop.this, "メールが存在しません。", Toast.LENGTH_SHORT);
             Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideStop#onReply() メールが存在しません UID:" + mUid);
         }
-        mMailPre.setEnabled(isEnabledPre);
-        mMailNext.setEnabled(isEnabledNext);
     }
 
     /**
@@ -530,6 +510,13 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         new DispMailNextTask(this).execute();
     }
 
+    /**
+     * @author tooru.oguri
+     * @since 0.1-beta1
+     */
+    private void onSlide() {
+        new DispSlideStartTask(this).execute();
+    }
 
     /**
      * @author tooru.oguri
@@ -664,6 +651,65 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
             } catch (RakuRakuException e) {
                 Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideStop#onMailPre() 前のメールが表示できず UID:" + mMessageBean.getUid());
             }
+        }
+
+        @Override
+        public void onCancel(DialogInterface dialog) {
+            this.cancel(true);
+        }
+    }
+
+    /**
+     * @author tooru.oguri
+     * @since 0.1-beta1
+     */
+    private class DispSlideStartTask extends AsyncTask<Void, Integer, Void> implements DialogInterface.OnCancelListener {
+        ProgressDialog dialog;
+        Context context;
+
+        public DispSlideStartTask(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(context);
+            dialog.setTitle("Please wait");
+            dialog.setMessage("Loading data...");
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.setCancelable(true);
+            dialog.setOnCancelListener(this);
+            dialog.setMax(100);
+            dialog.setProgress(0);
+            dialog.show();
+        }
+
+        /**
+         * @return null
+         */
+        @Override
+        protected Void doInBackground(Void... params) {
+            publishProgress(50);
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            dialog.setProgress(values[0]);
+        }
+
+        @Override
+        protected void onCancelled() {
+            dialog.dismiss();
+        }
+
+        @Override
+        protected void onPostExecute(Void tmp) {
+            publishProgress(70);
+            GallerySlideShow.actionSlideShow(context, mAccount, mFolder, mMessageBean.getUid());
+            publishProgress(100);
+            onCancelled();
+            finish();
         }
 
         @Override
