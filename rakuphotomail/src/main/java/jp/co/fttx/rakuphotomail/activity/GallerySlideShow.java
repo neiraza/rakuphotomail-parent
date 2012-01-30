@@ -16,13 +16,13 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.mail.MessagingException;
-import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore.Attachments;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore.MessageInfo;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
@@ -36,7 +36,10 @@ import jp.co.fttx.rakuphotomail.service.AttachmentSyncReceiver;
 import jp.co.fttx.rakuphotomail.service.AttachmentSyncService;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * @author tooru.oguri
@@ -97,6 +100,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * context
      */
     private Context mContext;
+    /**
+     * view info layout(subject,date...)
+     */
+    private LinearLayout mInfo;
     /**
      * view subject
      */
@@ -209,16 +216,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         onNewIntent(getIntent());
         setupViews();
         doAllFolderSync();
-        //ここにDBの返信済みフラグを更新する処理をはさむか
-//        //TODO TEST
-//        Log.d("refs2608", "GallerySlideShow#onCreate TEST START");
-//        ArrayList<LocalStore.MessageInfo> list = SlideMessage.getRepliedTargetMessages(mAccount);
-//        for(MessageInfo message :list){
-//            Log.d("refs2608", "GallerySlideShow#onCreate message.getUid():" + message.getUid());
-//            Log.d("refs2608", "GallerySlideShow#onCreate message.getSubject():" + message.getSubject());
-//            Log.d("refs2608", "GallerySlideShow#onCreate message.getMessageId():" + message.getMessageId());
-//        }
-//        Log.d("refs2608", "GallerySlideShow#onCreate TEST END");
         setUidList();
         doBindService();
         setupSlideShowThread();
@@ -317,7 +314,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         Log.d("refs1961", "GallerySlideShow#setUpProgressDialog start");
         if (!mProgressDialog.isShowing()) {
             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            mProgressDialog.setMessage("処理中なんですが？");
+            mProgressDialog.setMessage("サーバーと同期し、データを読み込んでいます。\nしばらくお待ちください。");
             mProgressDialog.setCancelable(true);
             mProgressDialog.show();
         }
@@ -336,6 +333,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * view setup
      */
     private void setupViews() {
+        mInfo = (LinearLayout)findViewById(R.id.gallery_info);
         setImageViewDefault();
         setImageViewEven();
         setImageViewOdd();
@@ -366,11 +364,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     private void setImageViewDefault() {
         mImageViewDefault = (ImageView) findViewById(ID_GALLERY_ATTACHMENT_PICTURE_DEFAULT);
         if ("".equals(mStartUid)) {
-            Log.d("refs1961", "Handler#setImageViewDefault VISIBLE mStartUid:" + mStartUid);
             mImageViewDefault.setVisibility(View.VISIBLE);
+            mInfo.setVisibility(View.GONE);
         } else {
-            Log.d("refs1961", "Handler#setImageViewDefault GONE mStartUid:" + mStartUid);
             mImageViewDefault.setVisibility(View.GONE);
+            mInfo.setVisibility(View.VISIBLE);
         }
     }
 
@@ -725,6 +723,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             mImageViewOdd.setVisibility(View.GONE);
             imageView = mImageViewEven;
         }
+        mInfo.setVisibility(View.VISIBLE);
         return imageView;
     }
 

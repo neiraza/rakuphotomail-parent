@@ -19,6 +19,7 @@
             android:layout_height="fill_parent"/>
 
     <LinearLayout
+            android:id="@+id/gallery_info"
             android:layout_width="250dip"
             android:layout_height="wrap_content"
             android:layout_gravity="top|left"
