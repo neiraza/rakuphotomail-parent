@@ -188,13 +188,10 @@ public class SlideMessage {
             localStore = account.getLocalStore();
             localFolder = getLocalFolder(localStore, account, folder);
             if (null != uid && 0 != limitCount) {
-                Log.d("refs#2616", "SlideMessage#getMessageInfoList localStore.getMessages(localFolder.getId(), uid, limitCount);");
                 return localStore.getMessages(localFolder.getId(), uid, limitCount);
             } else if (null == uid && 0 != limitCount) {
-                Log.d("refs#2616", "SlideMessage#getMessageInfoList localStore.getMessages(localFolder.getId(), limitCount");
                 return localStore.getMessages(localFolder.getId(), limitCount);
             } else {
-                Log.d("refs#2616", "SlideMessage#getMessageInfoList localStore.getMessages(localFolder.getId())");
                 return localStore.getMessages(localFolder.getId());
             }
 

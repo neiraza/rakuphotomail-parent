@@ -7,9 +7,12 @@ package jp.co.fttx.rakuphotomail.activity;
 import android.app.ProgressDialog;
 import android.content.*;
 import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.widget.*;
@@ -17,6 +20,8 @@ import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
+import jp.co.fttx.rakuphotomail.activity.setup.AccountSettings;
+import jp.co.fttx.rakuphotomail.activity.setup.Prefs;
 import jp.co.fttx.rakuphotomail.mail.MessagingException;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
@@ -379,19 +384,14 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
 
     @Override
     public void onStop() {
-        Log.d("maguro", "GalleryNewMail#onStop start");
         super.onStop();
-
-        Log.d("maguro", "GalleryNewMail#onStop end");
     }
 
     @Override
     public void onDestroy() {
-        Log.d("maguro", "GalleryNewMail#onDestroy start");
         super.onDestroy();
         doUnbindService();
         finish();
-        Log.d("maguro", "GalleryNewMail#onDestroy end");
     }
 
     @Override
@@ -414,12 +414,6 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
         }
     }
 
-    private void onSlide() {
-        Log.d("maguro", "GalleryNewMail#onSlide");
-        GallerySlideShow.actionSlideShow(this, mAccount, mFolder, mStopUid);
-        finish();
-    }
-
     private void onReply() {
         Log.d("maguro", "GalleryNewMail#onReply");
         if (null != mMessageBean) {
@@ -427,30 +421,6 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
         } else {
             Toast.makeText(GalleryNewMail.this, "メールが存在しません。", Toast.LENGTH_SHORT);
             Log.w(RakuPhotoMail.LOG_TAG, "GalleryNewMail#onReply() メールが存在しません UID:" + mNewMailUid);
-        }
-    }
-
-    private void onMailNext() {
-        Log.d("maguro", "GalleryNewMail#onMailNext");
-        try {
-            MessageBean messageBean = SlideMessage.getNextMessage(mAccount, mFolder, mMessageBean.getUid());
-            dispSlide(messageBean);
-            Log.d("maguro", "GalleryNewMail#onMailNext messageBean.getUid():" + messageBean.getUid());
-            setMailMoveVisibility(messageBean.getUid());
-        } catch (RakuRakuException e) {
-            Log.e(RakuPhotoMail.LOG_TAG, "GalleryNewMail#onMailNext() 次のメールが取得できず UID:" + mMessageBean.getUid());
-        }
-    }
-
-    private void onMailPre() {
-        Log.d("maguro", "GalleryNewMail#onMailPre");
-        try {
-            MessageBean messageBean = SlideMessage.getPreMessage(mAccount, mFolder, mMessageBean.getUid());
-            dispSlide(messageBean);
-            Log.d("maguro", "GalleryNewMail#onMailNext messageBean.getUid():" + messageBean.getUid());
-            setMailMoveVisibility(messageBean.getUid());
-        } catch (RakuRakuException e) {
-            Log.e(RakuPhotoMail.LOG_TAG, "GalleryNewMail#onMailPre() 前のメールが取得できず UID:" + mMessageBean.getUid());
         }
     }
 
@@ -498,23 +468,19 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
      * @since rakuphoto 0.1-beta1
      */
     private void doBindService() {
-        Log.d("maguro", "GalleryNewMail#doBindService start");
         if (!mIsBound) {
             mIsBound = bindService(getIntent(), mConnection, Context.BIND_AUTO_CREATE);
             IntentFilter attachmentFilter = new IntentFilter(AttachmentSyncService.ACTION_SLIDE_SHOW_STOP);
             registerReceiver(mAttachmentReceiver, attachmentFilter);
         }
-        Log.d("maguro", "GalleryNewMail#doBindService end");
     }
 
     private void doUnbindService() {
-        Log.d("maguro", "GalleryNewMail#doUnBindService start");
         if (mIsBound) {
             unbindService(mConnection);
             mIsBound = false;
             unregisterReceiver(mAttachmentReceiver);
         }
-        Log.d("maguro", "GalleryNewMail#doUnBindService end");
     }
 
     /**
@@ -532,7 +498,264 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Log.d("maguro", "GalleryNewMail#onItemClick id:" + id);
         setImageViewPicture(mSlideTargetAttachmentList, (int) id);
+    }
+
+    /**
+     * @author tooru.oguri
+     * @since 0.1-beta1
+     */
+    private void onMailPre() {
+        new DispMailPreTask(this).execute();
+    }
+
+    /**
+     * @author tooru.oguri
+     * @since 0.1-beta1
+     */
+    private void onMailNext() {
+        new DispMailNextTask(this).execute();
+    }
+
+    /**
+     * @author tooru.oguri
+     * @since 0.1-beta1
+     */
+    private void onSlide() {
+        new DispSlideStartTask(this).execute();
+    }
+
+    /**
+     * @author tooru.oguri
+     * @since 0.1-beta1
+     */
+    private class DispMailPreTask extends AsyncTask<Void, Integer, MessageBean> implements DialogInterface.OnCancelListener {
+        ProgressDialog dialog;
+        Context context;
+
+        public DispMailPreTask(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(context);
+            dialog.setTitle("Please wait");
+            dialog.setMessage("Loading data...");
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.setCancelable(true);
+            dialog.setOnCancelListener(this);
+            dialog.setMax(100);
+            dialog.setProgress(0);
+            dialog.show();
+        }
+
+        /**
+         * @return null
+         */
+        @Override
+        protected MessageBean doInBackground(Void... params) {
+            MessageBean messageBean = new MessageBean();
+            try {
+                publishProgress(10);
+                messageBean = SlideMessage.getPreMessage(mAccount, mFolder, mMessageBean.getUid());
+                publishProgress(50);
+            } catch (RakuRakuException e) {
+                Log.e(RakuPhotoMail.LOG_TAG, "DispMailPreTask#doInBackground() 次のメールが取得できず UID:" + mMessageBean.getUid());
+            }
+            return messageBean;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            dialog.setProgress(values[0]);
+        }
+
+        @Override
+        protected void onCancelled() {
+            dialog.dismiss();
+        }
+
+        @Override
+        protected void onPostExecute(MessageBean messageBean) {
+            try {
+                dispSlide(messageBean);
+                publishProgress(80);
+                setMailMoveVisibility(messageBean.getUid());
+                publishProgress(100);
+                onCancelled();
+            } catch (RakuRakuException e) {
+                Log.e(RakuPhotoMail.LOG_TAG, "DispMailPreTask#onPostExecute() 次のメールが表示できず UID:" + mMessageBean.getUid());
+            }
+        }
+
+        @Override
+        public void onCancel(DialogInterface dialog) {
+            this.cancel(true);
+        }
+
+    }
+
+    /**
+     * @author tooru.oguri
+     * @since 0.1-beta1
+     */
+    private class DispMailNextTask extends AsyncTask<Void, Integer, MessageBean> implements DialogInterface.OnCancelListener {
+        ProgressDialog dialog;
+        Context context;
+
+        public DispMailNextTask(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(context);
+            dialog.setTitle("Please wait");
+            dialog.setMessage("Loading data...");
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.setCancelable(true);
+            dialog.setOnCancelListener(this);
+            dialog.setMax(100);
+            dialog.setProgress(0);
+            dialog.show();
+        }
+
+        /**
+         * @return null
+         */
+        @Override
+        protected MessageBean doInBackground(Void... params) {
+            MessageBean messageBean = new MessageBean();
+            try {
+                publishProgress(10);
+                messageBean = SlideMessage.getNextMessage(mAccount, mFolder, mMessageBean.getUid());
+                publishProgress(50);
+            } catch (RakuRakuException e) {
+                Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideStop#onMailPre() 前のメールが取得できず UID:" + mMessageBean.getUid());
+            }
+            return messageBean;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            dialog.setProgress(values[0]);
+        }
+
+        @Override
+        protected void onCancelled() {
+            dialog.dismiss();
+        }
+
+        @Override
+        protected void onPostExecute(MessageBean messageBean) {
+            try {
+                dispSlide(messageBean);
+                publishProgress(80);
+                setMailMoveVisibility(messageBean.getUid());
+                publishProgress(100);
+                onCancelled();
+            } catch (RakuRakuException e) {
+                Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideStop#onMailPre() 前のメールが表示できず UID:" + mMessageBean.getUid());
+            }
+        }
+
+        @Override
+        public void onCancel(DialogInterface dialog) {
+            this.cancel(true);
+        }
+    }
+
+    /**
+     * @author tooru.oguri
+     * @since 0.1-beta1
+     */
+    private class DispSlideStartTask extends AsyncTask<Void, Integer, Void> implements DialogInterface.OnCancelListener {
+        ProgressDialog dialog;
+        Context context;
+
+        public DispSlideStartTask(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(context);
+            dialog.setTitle("Please wait");
+            dialog.setMessage("Loading data...");
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.setCancelable(true);
+            dialog.setOnCancelListener(this);
+            dialog.setMax(100);
+            dialog.setProgress(0);
+            dialog.show();
+        }
+
+        /**
+         * @return null
+         */
+        @Override
+        protected Void doInBackground(Void... params) {
+            publishProgress(50);
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            dialog.setProgress(values[0]);
+        }
+
+        @Override
+        protected void onCancelled() {
+            dialog.dismiss();
+        }
+
+        @Override
+        protected void onPostExecute(Void tmp) {
+            publishProgress(70);
+            GallerySlideShow.actionSlideShow(context, mAccount, mFolder, mMessageBean.getUid());
+            publishProgress(100);
+            onCancelled();
+            finish();
+        }
+
+        @Override
+        public void onCancel(DialogInterface dialog) {
+            this.cancel(true);
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.message_list_option, menu);
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int itemId = item.getItemId();
+        switch (itemId) {
+            case R.id.app_settings: {
+                onEditPrefs();
+                return true;
+            }
+            case R.id.account_settings: {
+                onEditAccount();
+                return true;
+            }
+            default: {
+                return super.onOptionsItemSelected(item);
+            }
+        }
+    }
+
+    private void onEditPrefs() {
+        Prefs.actionPrefs(this);
+    }
+
+    private void onEditAccount() {
+        AccountSettings.actionSettings(this, mAccount);
     }
 }

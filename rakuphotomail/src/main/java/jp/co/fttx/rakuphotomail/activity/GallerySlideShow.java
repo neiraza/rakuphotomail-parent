@@ -137,6 +137,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     private ArrayList<String> mUidList = new ArrayList<String>();
     /**
+     * mesage uid's list
+     */
+    private ArrayList<String> mAllUidList = new ArrayList<String>();
+    /**
      * Uid List is Repeat?
      */
     private boolean mIsRepeatUidList = true;
@@ -214,6 +218,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         setupViews();
         doAllFolderSync();
         createUidList(null, mAccount.getMessageLimitCountFromDb());
+        mAllUidList = getUidList(null, 0);
         doBindService();
         setupSlideShowThread();
 
@@ -237,15 +242,16 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                     } catch (InterruptedException e) {
                         Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
                     }
-
                     GalleryNewMail.actionHandle(mContext, mAccount, mFolder, newMailUid, mDispUid);
+                    mAllUidList.clear();
+                    mAllUidList = getUidList(null, 0);
                     finish();
                 }
 
                 // サーバーとつながってる状態で新着メールがローカル取り込み完了している場合
                 ArrayList<String> newUidList = getUidList(null, mAccount.getMessageLimitCountFromDb());
                 for (String uid : newUidList) {
-                    if (!mUidList.contains(uid) && isSlide(uid)) {
+                    if (!mAllUidList.contains(uid) && isSlide(uid)) {
                         doUnbindService();
                         mIsRepeatUidList = false;
                         try {
@@ -259,6 +265,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                         }
 
                         GalleryNewMail.actionHandle(mContext, mAccount, mFolder, uid, mDispUid);
+                        mAllUidList.clear();
+                        mAllUidList = getUidList(null, 0);
                         finish();
                     }
                 }
@@ -452,29 +460,23 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     private void doBindService() {
-        Log.d("refs1961", "GallerySlideShow#doBindService start");
         if (!mIsBound) {
             mIsBound = bindService(getIntent(), mConnection, Context.BIND_AUTO_CREATE);
             IntentFilter attachmentFilter = new IntentFilter(AttachmentSyncService.ACTION_SLIDE_SHOW);
             registerReceiver(mAttachmentReceiver, attachmentFilter);
         }
-        Log.d("refs1961", "GallerySlideShow#doBindService end");
     }
 
     private void doUnbindService() {
-        Log.d("refs1961", "GallerySlideShow#doUnBindService start");
         try {
             if (mIsBound) {
-                Log.d("refs1961", "GallerySlideShow#doUnBindService 呼ばれてない？");
                 unbindService(mConnection);
                 mIsBound = false;
                 unregisterReceiver(mAttachmentReceiver);
             }
         } catch (Exception cce) {
             Log.e(RakuPhotoMail.LOG_TAG, "doUnbindService Error:" + cce);
-            Log.d("refs1961", "GallerySlideShow#doUnBindService Error");
         }
-        Log.d("refs1961", "GallerySlideShow#doUnBindService end");
     }
 
     /**
@@ -482,18 +484,15 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
-            Log.d("refs1961", "GallerySlideShow ServiceConnection#onServiceConnected");
             try {
                 mSyncService = ((AttachmentSyncService.AttachmentSyncBinder) service).getService();
 
             } catch (ClassCastException e) {
-                Log.d("refs1961", "GallerySlideShow ServiceConnection#onServiceConnected ERRO!!!!");
                 Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow ServiceConnection#onServiceConnected Error:" + e);
             }
         }
 
         public void onServiceDisconnected(ComponentName className) {
-            Log.d("refs1961", "GallerySlideShow ServiceConnection#onServiceDisconnected");
             mSyncService = null;
         }
     };
@@ -542,10 +541,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     private void loopInfinite() throws RakuRakuException {
         while (mIsRepeatUidList) {
-            if ("".equals(mStartUid)) {
-                loop();
+            if (!"".equals(mStartUid)) {
+                createUidList(mStartUid, mAccount.getMessageLimitCountFromDb());
+                mStartUid = "";
             }
-            loopNumbered();
+            loop();
+//            loopNumbered();
 
             createUidList(mDispUid, mAccount.getMessageLimitCountFromDb());
 
@@ -564,30 +565,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     private void loop() throws RakuRakuException {
         for (String uid : mUidList) {
             dispSlide(uid);
-            if (!mIsRepeatUidList) {
-                return;
-            }
-        }
-    }
-
-    /**
-     * uid specified.
-     *
-     * @throws RakuRakuException exception
-     * @author tooru.oguri
-     * @since rakuphoto 0.1-beta
-     */
-    private void loopNumbered() throws RakuRakuException {
-        boolean reset = false;
-        for (String uid : mUidList) {
-            if (mStartUid.equals(uid)) {
-                reset = true;
-                mStartUid = "";
-            }
-            if (reset) {
-                dismissProgressDialog();
-                dispSlide(uid);
-            }
             if (!mIsRepeatUidList) {
                 return;
             }
@@ -626,13 +603,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     private void dispSlide(MessageBean messageBean) {
-        Log.d("refs1961", "GallerySlideShow#dispSlide(MessageBean) start");
         ArrayList<AttachmentBean> attachmentBeanList = messageBean.getAttachmentBeanList();
         for (AttachmentBean attachmentBean : attachmentBeanList) {
             if (SlideCheck.isSlide(attachmentBean)) {
                 Bitmap bitmap = SlideAttachment.getBitmap(mContext, getWindowManager().getDefaultDisplay(), mAccount, attachmentBean);
                 if (null == bitmap) {
-                    Log.d("refs1961", "GallerySlideShow#loopUid bitmapがnullなのでreturnしちゃいますね");
                     return;
                 }
                 Message msg = setSendMessage(messageBean);
@@ -643,7 +618,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 sleepSlide(3000L);
             }
         }
-        Log.d("refs1961", "GallerySlideShow#dispSlide(MessageBean) end");
     }
 
     /**
@@ -668,13 +642,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     private void sleepSlide(long sleepTime) {
-        Log.d("refs1961", "GallerySlideShow#sleepSlide start");
         try {
             Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
             Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#stopSlide error:" + e);
         }
-        Log.d("refs1961", "GallerySlideShow#sleepSlide end");
     }
 
     /**
@@ -683,7 +655,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     private ImageView setVisibilityImageView() {
-        Log.d("refs1961", "GallerySlideShow#setVisibilityImageView");
         ImageView imageView;
         if (mImageViewEven.getVisibility() == View.GONE) {
             mImageViewDefault.setVisibility(View.GONE);
@@ -707,7 +678,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
     @Override
     public void onStop() {
-        Log.d("refs1961", "GallerySlideShow#onStop start");
         super.onStop();
         try {
             doUnbindService();
@@ -715,27 +685,21 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             mSlideShowThread.join();
         } catch (InterruptedException e) {
             Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow#onStop Error:" + e);
-            Log.d("refs1961", "GallerySlideShow#onStop e Error");
             finish();
         } catch (ClassCastException cce) {
             Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow#onStop Error:" + cce);
-            Log.d("refs1961", "GallerySlideShow#onStop cce Error");
         }
-        Log.d("refs1961", "GallerySlideShow#onStop stop");
     }
 
     @Override
     public void onDestroy() {
-        Log.d("refs1961", "GallerySlideShow#onDestroy start");
         super.onDestroy();
         try {
             mTimer.cancel();
             mTimer = null;
         } catch (ClassCastException cce) {
             Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow#onDestroy Error:" + cce);
-            Log.d("refs1961", "GallerySlideShow#onDestroy cce Error");
         }
-        Log.d("refs1961", "GallerySlideShow#onDestroy stop");
     }
 
     /**
@@ -745,11 +709,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        Log.d("refs1961", "GallerySlideShow#onSaveInstanceState start");
         outState.putString(EXTRA_ACCOUNT, mAccount.getUuid());
         outState.putString(EXTRA_FOLDER, mFolder);
         outState.putString(EXTRA_UID, mStartUid);
-        Log.d("refs1961", "GallerySlideShow#onSaveInstanceState end");
     }
 
     /**
@@ -759,13 +721,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        Log.d("refs1961", "GallerySlideShow#onRestoreInstanceState start");
         super.onRestoreInstanceState(savedInstanceState);
         mAccount = Preferences.getPreferences(this)
                 .getAccount(savedInstanceState.getString(EXTRA_ACCOUNT));
         mFolder = savedInstanceState.getString(EXTRA_FOLDER);
         mStartUid = savedInstanceState.getString(EXTRA_UID);
-        Log.d("refs1961", "GallerySlideShow#onRestoreInstanceState end");
     }
 
     /**
@@ -804,7 +764,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     private void onSlideStop(String uid) throws InterruptedException {
-        Log.d("refs1961", "GallerySlideShow#onSlideStop start");
         if (null != mDispUid) {
             try {
                 doUnbindService();
@@ -817,7 +776,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 finish();
             }
         }
-        Log.d("refs1961", "GallerySlideShow#onSlideStop end");
     }
 
     private void onAlertNoMessage() {

@@ -374,18 +374,14 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
 
     @Override
     public void onStop() {
-        Log.d("maguro", "GallerySlideStop#onStop start");
         super.onStop();
-        Log.d("maguro", "GallerySlideStop#onStop end");
     }
 
     @Override
     public void onDestroy() {
-        Log.d("maguro", "GallerySlideStop#onDestroy start");
         super.onDestroy();
         doUnbindService();
         finish();
-        Log.d("maguro", "GallerySlideStop#onDestroy end");
     }
 
     @Override
@@ -629,7 +625,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
                 messageBean = SlideMessage.getNextMessage(mAccount, mFolder, mMessageBean.getUid());
                 publishProgress(50);
             } catch (RakuRakuException e) {
-                Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideStop#onMailPre() 前のメールが取得できず UID:" + mMessageBean.getUid());
+                Log.e(RakuPhotoMail.LOG_TAG, "DispMailPreTask#doInBackground() 前のメールが取得できず UID:" + mMessageBean.getUid());
             }
             return messageBean;
         }
@@ -653,7 +649,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
                 publishProgress(100);
                 onCancelled();
             } catch (RakuRakuException e) {
-                Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideStop#onMailPre() 前のメールが表示できず UID:" + mMessageBean.getUid());
+                Log.e(RakuPhotoMail.LOG_TAG, "DispMailPreTask#onPostExecute() 前のメールが表示できず UID:" + mMessageBean.getUid());
             }
         }
 
