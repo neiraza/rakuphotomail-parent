@@ -227,7 +227,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             @Override
             public void run() {
                 // 同期処理で新着メールを見つけられた場合
-                String newMailUid = MessageSync.synchronizeMailbox(mAccount, mFolder);
+                String newMailUid = MessageSync.syncMailboxForCheckNewMail(mAccount, mFolder, mAccount.getMessageLimitCountFromRemote());
                 doOutBoxFolderSync();
                 doSentFolderSync();
                 if (null != newMailUid && !"".equals(newMailUid) && isSlide(newMailUid)) {
@@ -300,15 +300,15 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void doInBoxFolderSync() {
-        MessageSync.synchronizeMailbox(mAccount, mAccount.getInboxFolderName());
+        MessageSync.syncMailbox(mAccount, mAccount.getInboxFolderName(), mAccount.getMessageLimitCountFromRemote());
     }
 
     private void doOutBoxFolderSync() {
-        MessageSync.synchronizeMailbox(mAccount, mAccount.getOutboxFolderName());
+        MessageSync.syncMailboxAll(mAccount, mAccount.getOutboxFolderName());
     }
 
     private void doSentFolderSync() {
-        MessageSync.synchronizeMailbox(mAccount, mAccount.getSentFolderName());
+        MessageSync.syncMailboxAll(mAccount, mAccount.getSentFolderName());
     }
 
     private void setUpProgressDialog() {

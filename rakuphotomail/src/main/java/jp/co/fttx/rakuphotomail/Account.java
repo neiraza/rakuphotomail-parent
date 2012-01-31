@@ -126,7 +126,10 @@ public class Account implements BaseAccount {
 
     private CryptoProvider mCryptoProvider = null;
 
+    // デバイス内のDBから何件づつメッセージを取得するか（ユーザー非公開OK）
     private long messageLimitCountFromDb = 0;
+    //TODO メールサーバーから最大何件取得するか（ユーザー選択に変更したい）
+    private int messageLimitCountFromRemote = 0; // 0だと全件
 
     /**
      * Name of the folder that was last selected for a copy or move operation.
@@ -1389,11 +1392,20 @@ public class Account implements BaseAccount {
 
     public long getMessageLimitCountFromDb() {
         //TODO message limit count from DB 応急処置
-        return 2L;
+        return 50L;
 //        return messageLimitCountFromDb;
     }
 
     public void setMessageLimitCountFromDb(long limitCountFromDb) {
         this.messageLimitCountFromDb = limitCountFromDb;
+    }
+
+    public int getMessageLimitCountFromRemote() {
+        return messageLimitCountFromRemote;
+    }
+
+    public void setMessageLimitCountFromRemote(int messageLimitCountFromRemote) {
+        //TODO remote messeage synq count どっかでセットしないとな
+        this.messageLimitCountFromRemote = messageLimitCountFromRemote;
     }
 }

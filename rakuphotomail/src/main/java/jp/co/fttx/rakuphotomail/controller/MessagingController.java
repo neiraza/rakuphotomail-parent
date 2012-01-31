@@ -27,7 +27,6 @@ import jp.co.fttx.rakuphotomail.mail.store.LocalStore.LocalMessage;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore.PendingCommand;
 import jp.co.fttx.rakuphotomail.mail.store.UnavailableAccountException;
 import jp.co.fttx.rakuphotomail.mail.store.UnavailableStorageException;
-import jp.co.fttx.rakuphotomail.rakuraku.photomail.MessageSync;
 
 import java.io.CharArrayWriter;
 import java.io.PrintWriter;
@@ -891,20 +890,20 @@ public class MessagingController implements Runnable {
         });
     }
 
-    /**
-     * Start foreground synchronization of the specified folder.
-     *
-     * @param account
-     * @param folder
-     * @param listener
-     * @param providedRemoteFolder TODO
-     */
-    public void synchronizeMailboxForegound(final Account account,
-                                            final String folder, final MessagingListener listener,
-                                            final Folder providedRemoteFolder) {
-        synchronizeMailboxSynchronous(account, folder, listener,
-                providedRemoteFolder);
-    }
+//    /**
+//     * Start foreground synchronization of the specified folder.
+//     *
+//     * @param account
+//     * @param folder
+//     * @param listener
+//     * @param providedRemoteFolder TODO
+//     */
+//    public void synchronizeMailboxForegound(final Account account,
+//                                            final String folder, final MessagingListener listener,
+//                                            final Folder providedRemoteFolder) {
+//        synchronizeMailboxSynchronous(account, folder, listener,
+//                providedRemoteFolder);
+//    }
 
     /**
      * Start foreground synchronization of the specified folder. This is

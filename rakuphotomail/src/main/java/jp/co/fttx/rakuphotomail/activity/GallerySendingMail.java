@@ -315,11 +315,11 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
      */
     private void onSync(Account account) {
         //INBOX
-        MessageSync.synchronizeMailbox(account, account.getInboxFolderName());
+        MessageSync.syncMailbox(account, account.getInboxFolderName(), account.getMessageLimitCountFromRemote());
         //OUTBOX
-        MessageSync.synchronizeMailbox(account, account.getOutboxFolderName());
+        MessageSync.syncMailboxAll(account, account.getOutboxFolderName());
         //Sent
-        MessageSync.synchronizeMailbox(account, account.getSentFolderName());
+        MessageSync.syncMailboxAll(account, account.getSentFolderName());
     }
 
     /**
