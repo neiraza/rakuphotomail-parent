@@ -1,20 +1,34 @@
 package jp.co.fttx.rakuphotomail.mail.store;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.ConnectException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.SocketException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLDecoder;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.PowerManager;
+import android.util.Log;
+import com.beetstra.jutf7.CharsetProvider;
+import com.jcraft.jzlib.JZlib;
+import com.jcraft.jzlib.ZOutputStream;
+import jp.co.fttx.rakuphotomail.Account;
+import jp.co.fttx.rakuphotomail.R;
+import jp.co.fttx.rakuphotomail.RakuPhotoMail;
+import jp.co.fttx.rakuphotomail.controller.MessageRetrievalListener;
+import jp.co.fttx.rakuphotomail.helper.Utility;
+import jp.co.fttx.rakuphotomail.helper.power.TracingPowerManager;
+import jp.co.fttx.rakuphotomail.helper.power.TracingPowerManager.TracingWakeLock;
+import jp.co.fttx.rakuphotomail.mail.*;
+import jp.co.fttx.rakuphotomail.mail.filter.EOLConvertingOutputStream;
+import jp.co.fttx.rakuphotomail.mail.filter.FixedLengthInputStream;
+import jp.co.fttx.rakuphotomail.mail.filter.PeekableInputStream;
+import jp.co.fttx.rakuphotomail.mail.internet.*;
+import jp.co.fttx.rakuphotomail.mail.store.ImapResponseParser.ImapList;
+import jp.co.fttx.rakuphotomail.mail.store.ImapResponseParser.ImapResponse;
+import jp.co.fttx.rakuphotomail.mail.transport.imap.ImapSettings;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.TrustManager;
+import java.io.*;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -25,69 +39,10 @@ import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.TrustManager;
-
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.os.PowerManager;
-import android.util.Log;
-
-import com.beetstra.jutf7.CharsetProvider;
-import jp.co.fttx.rakuphotomail.Account;
-import jp.co.fttx.rakuphotomail.RakuPhotoMail;
-import jp.co.fttx.rakuphotomail.R;
-import jp.co.fttx.rakuphotomail.controller.MessageRetrievalListener;
-import jp.co.fttx.rakuphotomail.helper.Utility;
-import jp.co.fttx.rakuphotomail.helper.power.TracingPowerManager;
-import jp.co.fttx.rakuphotomail.helper.power.TracingPowerManager.TracingWakeLock;
-import jp.co.fttx.rakuphotomail.mail.Authentication;
-import jp.co.fttx.rakuphotomail.mail.AuthenticationFailedException;
-import jp.co.fttx.rakuphotomail.mail.Body;
-import jp.co.fttx.rakuphotomail.mail.CertificateValidationException;
-import jp.co.fttx.rakuphotomail.mail.FetchProfile;
-import jp.co.fttx.rakuphotomail.mail.Flag;
-import jp.co.fttx.rakuphotomail.mail.Folder;
-import jp.co.fttx.rakuphotomail.mail.Message;
-import jp.co.fttx.rakuphotomail.mail.MessagingException;
-import jp.co.fttx.rakuphotomail.mail.Part;
-import jp.co.fttx.rakuphotomail.mail.PushReceiver;
-import jp.co.fttx.rakuphotomail.mail.Pusher;
-import jp.co.fttx.rakuphotomail.mail.Store;
-import jp.co.fttx.rakuphotomail.mail.filter.EOLConvertingOutputStream;
-import jp.co.fttx.rakuphotomail.mail.filter.FixedLengthInputStream;
-import jp.co.fttx.rakuphotomail.mail.filter.PeekableInputStream;
-import jp.co.fttx.rakuphotomail.mail.internet.MimeBodyPart;
-import jp.co.fttx.rakuphotomail.mail.internet.MimeHeader;
-import jp.co.fttx.rakuphotomail.mail.internet.MimeMessage;
-import jp.co.fttx.rakuphotomail.mail.internet.MimeMultipart;
-import jp.co.fttx.rakuphotomail.mail.internet.MimeUtility;
-import jp.co.fttx.rakuphotomail.mail.store.ImapResponseParser.ImapList;
-import jp.co.fttx.rakuphotomail.mail.store.ImapResponseParser.ImapResponse;
-import jp.co.fttx.rakuphotomail.mail.transport.imap.ImapSettings;
-import com.jcraft.jzlib.JZlib;
-import com.jcraft.jzlib.ZOutputStream;
-
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
@@ -240,7 +195,7 @@ public class ImapStore extends Store {
      * imap+ssl://auth:user:password@server:port
      * CONNECTION_SECURITY_SSL_OPTIONAL
      *
-     * @param _uri
+     * @param account
      */
     public ImapStore(Account account) throws MessagingException {
         super(account);

@@ -182,7 +182,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     public static void actionSlideShow(Context context, Account account, String folder, String uid) {
-        Log.d("refs1961", "GallerySlideShow#actionSlideShow start");
         Intent intent = new Intent(context, GallerySlideShow.class);
         if (account != null) {
             intent.putExtra(EXTRA_ACCOUNT, account.getUuid());
@@ -196,7 +195,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             intent.putExtra(EXTRA_UID, "");
         }
         context.startActivity(intent);
-        Log.d("refs1961", "GallerySlideShow#actionSlideShow end");
     }
 
     /**
@@ -206,7 +204,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.d("refs1961", "GallerySlideShow#onCreate start");
         super.onCreate(savedInstanceState);
         mContext = this;
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -216,7 +213,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         onNewIntent(getIntent());
         setupViews();
         doAllFolderSync();
-        setUidList();
+        createUidList(null, mAccount.getMessageLimitCountFromDb());
         doBindService();
         setupSlideShowThread();
 
@@ -229,7 +226,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 doOutBoxFolderSync();
                 doSentFolderSync();
                 if (null != newMailUid && !"".equals(newMailUid) && isSlide(newMailUid)) {
-                    Log.d("refs1961", "同期時に取得した新着メールがあったようです newMailUid:" + newMailUid);
                     doUnbindService();
                     mIsRepeatUidList = false;
                     try {
@@ -241,18 +237,15 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                     } catch (InterruptedException e) {
                         Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
                     }
-                    Log.d("refs1961", "同期完了後の新着メールUID:" + mDispUid);
 
                     GalleryNewMail.actionHandle(mContext, mAccount, mFolder, newMailUid, mDispUid);
                     finish();
                 }
 
                 // サーバーとつながってる状態で新着メールがローカル取り込み完了している場合
-                ArrayList<String> newUidList = getUidList();
+                ArrayList<String> newUidList = getUidList(null, mAccount.getMessageLimitCountFromDb());
                 for (String uid : newUidList) {
                     if (!mUidList.contains(uid) && isSlide(uid)) {
-                        Log.d("refs1961", "UID最新情報！ どうやら新着メールが既に届いているようです！ uid:" + uid);
-                        Log.d("refs1961", "UID最新情報！ UID:" + uid);
                         doUnbindService();
                         mIsRepeatUidList = false;
                         try {
@@ -270,19 +263,19 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                     }
                 }
             }
-        }, 120000L, 60000L);
+        }, 120000L, 120000L);
 
-        Log.d("refs1961", "GallerySlideShow#onCreate end");
     }
 
     /**
      * 添付ファイル中、1つでも表示可能なものを持っているならOK.
      *
+     * @param uid unique id
+     * @return boolean slide OK/NG
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
     private boolean isSlide(String uid) {
-        Log.d("refs1961", "GallerySlideShow#isSlide start");
         ArrayList<Attachments> attachmentsList = SlideMessage.getAttachmentList(mAccount, mFolder, uid);
         for (Attachments attachments : attachmentsList) {
             if (SlideCheck.isSlide(attachments)) {
@@ -311,7 +304,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void setUpProgressDialog() {
-        Log.d("refs1961", "GallerySlideShow#setUpProgressDialog start");
         if (!mProgressDialog.isShowing()) {
             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             mProgressDialog.setTitle("しばらくお待ちください");
@@ -319,29 +311,25 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             mProgressDialog.setCancelable(true);
             mProgressDialog.show();
         }
-        Log.d("refs1961", "GallerySlideShow#setUpProgressDialog end");
     }
 
     private void dismissProgressDialog() {
-        Log.d("refs1961", "GallerySlideShow#dissmissProgressDialog start");
         if (mProgressDialog.isShowing()) {
             mProgressDialog.dismiss();
         }
-        Log.d("refs1961", "GallerySlideShow#dissmissProgressDialog end");
     }
 
     /**
      * view setup
      */
     private void setupViews() {
-        mInfo = (LinearLayout)findViewById(R.id.gallery_info);
+        mInfo = (LinearLayout) findViewById(R.id.gallery_info);
         setImageViewDefault();
         setImageViewEven();
         setImageViewOdd();
         mSubject = (TextView) findViewById(R.id.gallery_subject);
         mSlideHandler = new Handler() {
             public void handleMessage(android.os.Message msg) {
-                Log.d("refs1961", "Handler#handleMessage bitmapをmsg.objから抜いてセットしてみますね");
                 setVisibilityImageView().setImageBitmap((Bitmap) msg.obj);
                 Bundle bundle = msg.getData();
                 mSubject.setText(bundle.get(MESSAGE_SUBJECT).toString());
@@ -398,58 +386,60 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     @Override
     public void onNewIntent(Intent intent) {
-        Log.d("refs1961", "GallerySlideShow#onNewIntent start");
         mAccount = Preferences.getPreferences(this).getAccount(intent.getStringExtra(EXTRA_ACCOUNT));
         mFolder = intent.getStringExtra(EXTRA_FOLDER);
         mStartUid = intent.getStringExtra(EXTRA_UID);
         intent.setClass(mContext, AttachmentSyncService.class);
         setIntent(intent);
-        Log.d("refs1961", "GallerySlideShow#onNewIntent end");
     }
 
     /**
-     * get Uid List
+     * UIDリスト作成
      *
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
-    private void setUidList() {
-        Log.d("refs1961", "GallerySlideShow#setUidList start");
-        List<MessageInfo> messageInfoList = SlideMessage.getMessageInfoList(mAccount, mFolder);
+    private void createUidList(String currentUid, long limitCount) {
+        List<MessageInfo> messageInfoList = SlideMessage.getMessageInfoList(mAccount, mFolder, currentUid, limitCount);
         if (null == messageInfoList || 0 == messageInfoList.size()) {
-            Log.w(RakuPhotoMail.LOG_TAG, "現在、サーバー上に受信メールが存在しません");
-            dismissProgressDialog();
-            onAlertNoMessage();
-            return;
+            if (null != currentUid) {
+                // currentUidがnullではない場合、DBの一番最後の可能性が有るため、最初から取り直す
+                messageInfoList = SlideMessage.getMessageInfoList(mAccount, mFolder, null, limitCount);
+                if (null == messageInfoList || 0 == messageInfoList.size()) {
+                    Log.w(RakuPhotoMail.LOG_TAG, "現在、サーバー上に受信メールが存在しません");
+                    dismissProgressDialog();
+                    onAlertNoMessage();
+                    return;
+                }
+            } else {
+                Log.w(RakuPhotoMail.LOG_TAG, "現在、サーバー上に受信メールが存在しません");
+                dismissProgressDialog();
+                onAlertNoMessage();
+                return;
+            }
         }
         mUidList.clear();
         for (MessageInfo messageInfo : messageInfoList) {
             String uid = messageInfo.getUid();
-            Log.d("refs1961", "GallerySlideShow#setUidList uid:" + uid);
             ArrayList<Attachments> attachmentsList = SlideMessage.getAttachmentList(mAccount, mFolder, uid);
             for (Attachments attachments : attachmentsList) {
                 //追加対象はスライドする奴のみ（重複UIDは省く）
                 if (SlideCheck.isSlide(attachments) && !mUidList.contains(uid)) {
-                    Log.d("refs1961", "GallerySlideShow#setUidList mUidListにuid(" + uid + ")を追加しますた");
                     mUidList.add(uid);
                 }
             }
         }
-        Log.d("refs1961", "GallerySlideShow#setUidList end");
     }
 
-    private ArrayList<String> getUidList() {
-        Log.d("refs1961", "GallerySlideShow#getUidList");
-        List<MessageInfo> messageInfoList = SlideMessage.getMessageInfoList(mAccount, mFolder);
+    private ArrayList<String> getUidList(String currentUid, long limitCount) {
+        List<MessageInfo> messageInfoList = SlideMessage.getMessageInfoList(mAccount, mFolder, currentUid, limitCount);
         ArrayList<String> uidList = new ArrayList<String>();
         for (MessageInfo messageInfo : messageInfoList) {
             String uid = messageInfo.getUid();
-            Log.d("refs1961", "GallerySlideShow#setUidList uid:" + uid);
             ArrayList<Attachments> attachmentsList = SlideMessage.getAttachmentList(mAccount, mFolder, uid);
             for (Attachments attachments : attachmentsList) {
                 //追加対象はスライドする奴のみ（重複UIDは省く）
                 if (SlideCheck.isSlide(attachments) && !uidList.contains(uid)) {
-                    Log.d("refs1961", "GallerySlideShow#getUidList uidListにuid(" + uid + ")を追加しますた");
                     uidList.add(uid);
                 }
             }
@@ -512,13 +502,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         mSlideShowThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Log.d("refs1961", "GallerySlideShow#onSlide thread start");
                 try {
                     loopInfinite();
                 } catch (RakuRakuException e) {
                     Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow#onSlide thread Error:" + e);
                 }
-                Log.d("refs1961", "GallerySlideShow#onSlide thread end");
             }
         });
     }
@@ -529,12 +517,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     @Override
     public void onResume() {
-        Log.d("refs1961", "GallerySlideShow#onResume start");
         super.onResume();
         if (null != mUidList && 0 < mUidList.size()) {
             onSlide();
         }
-        Log.d("refs1961", "GallerySlideShow#onResume end");
     }
 
     /**
@@ -544,9 +530,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     private void onSlide() {
-        Log.d("refs1961", "GallerySlideShow#onSlide start");
         mSlideShowThread.start();
-        Log.d("refs1961", "GallerySlideShow#onSlide end");
     }
 
     /**
@@ -557,15 +541,17 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     private void loopInfinite() throws RakuRakuException {
-        Log.d("refs1961", "GallerySlideShow#loopInfinite start mIsRepeatUidList:" + mIsRepeatUidList);
         while (mIsRepeatUidList) {
-            Log.d("refs1961", "GallerySlideShow#loopInfinite mIsRepeatUidList:" + mIsRepeatUidList);
             if ("".equals(mStartUid)) {
                 loop();
             }
             loopNumbered();
+
+            createUidList(mDispUid, mAccount.getMessageLimitCountFromDb());
+
+            //TODO it-refs#2654 loop&loopNumberedを5件ループにしてしまい、5件目表示時に１～４件を削除６～１０件を確保する
+            //TODO it-refs#2616 スライドリストを100件とかに絞ることにしたので、それ以降のリストを貰いにいこうぜ
         }
-        Log.d("refs1961", "GallerySlideShow#loopInfinite end ");
     }
 
     /**
@@ -576,15 +562,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     private void loop() throws RakuRakuException {
-        Log.d("refs1961", "GallerySlideShow#loop start ");
         for (String uid : mUidList) {
             dispSlide(uid);
             if (!mIsRepeatUidList) {
-                Log.d("refs1961", "GallerySlideShow#loop mIsRepeatUidList:" + mIsRepeatUidList);
                 return;
             }
         }
-        Log.d("refs1961", "GallerySlideShow#loop end");
     }
 
     /**
@@ -597,9 +580,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     private void loopNumbered() throws RakuRakuException {
         boolean reset = false;
         for (String uid : mUidList) {
-            Log.d("refs1961", "GallerySlideShow#loopNumbered start");
             if (mStartUid.equals(uid)) {
-                Log.d("refs1961", "GallerySlideShow#loopNumbered 一時停止した見つけた uid:" + uid);
                 reset = true;
                 mStartUid = "";
             }
@@ -608,11 +589,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 dispSlide(uid);
             }
             if (!mIsRepeatUidList) {
-                Log.d("refs1961", "GallerySlideShow#loopNumbered mIsRepeatUidList:" + mIsRepeatUidList);
                 return;
             }
         }
-        Log.d("refs1961", "GallerySlideShow#loopNumbered end");
     }
 
     /**
@@ -622,7 +601,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     private void dispSlide(String uid) throws RakuRakuException {
-        Log.d("refs2068@", "GallerySlideShow#dispSlide(String) start");
         MessageBean messageBean = SlideMessage.getMessage(mAccount, mFolder, uid);
         if (SlideCheck.isDownloadedAttachment(messageBean)) {
             dismissProgressDialog();
@@ -638,7 +616,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#loopUid 次のuid(" + uid + ")をDLしますね");
             }
         }
-        Log.d("refs2068@", "GallerySlideShow#dispSlide(String) end");
     }
 
     /**
@@ -663,7 +640,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 mSlideHandler.sendMessage(msg);
                 mDispUid = messageBean.getUid();
                 // TODO 停止時間はアカウントクラスで保持する方針でいく
-                sleepSlide(1000L);
+                sleepSlide(3000L);
             }
         }
         Log.d("refs1961", "GallerySlideShow#dispSlide(MessageBean) end");

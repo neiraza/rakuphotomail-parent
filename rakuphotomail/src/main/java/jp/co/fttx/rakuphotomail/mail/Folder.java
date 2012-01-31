@@ -1,12 +1,12 @@
 package jp.co.fttx.rakuphotomail.mail;
 
-import java.util.Date;
-
 import android.util.Log;
 import jp.co.fttx.rakuphotomail.Account;
-import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.Preferences;
+import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.controller.MessageRetrievalListener;
+
+import java.util.Date;
 
 
 public abstract class Folder {
@@ -89,7 +89,6 @@ public abstract class Folder {
      * possible) objects to be filled in with later requests. In most cases this
      * means that only the UID is downloaded.
      *
-     * @param uids
      * @param listener
      */
     public abstract Message[] getMessages(MessageRetrievalListener listener)

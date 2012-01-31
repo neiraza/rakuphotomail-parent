@@ -4,10 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Uri;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.util.Log;
-
 import jp.co.fttx.rakuphotomail.crypto.Apg;
 import jp.co.fttx.rakuphotomail.crypto.CryptoProvider;
 import jp.co.fttx.rakuphotomail.helper.Utility;
@@ -19,14 +16,7 @@ import jp.co.fttx.rakuphotomail.mail.store.StorageManager;
 import jp.co.fttx.rakuphotomail.mail.store.StorageManager.StorageProvider;
 import jp.co.fttx.rakuphotomail.view.ColorChip;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -135,6 +125,8 @@ public class Account implements BaseAccount {
     private boolean mCryptoAutoSignature;
 
     private CryptoProvider mCryptoProvider = null;
+
+    private long messageLimitCountFromDb = 0;
 
     /**
      * Name of the folder that was last selected for a copy or move operation.
@@ -1395,4 +1387,13 @@ public class Account implements BaseAccount {
         return StorageManager.getInstance(RakuPhotoMail.app).isReady(localStorageProviderId);
     }
 
+    public long getMessageLimitCountFromDb() {
+        //TODO message limit count from DB 応急処置
+        return 100L;
+//        return messageLimitCountFromDb;
+    }
+
+    public void setMessageLimitCountFromDb(long limitCountFromDb) {
+        this.messageLimitCountFromDb = limitCountFromDb;
+    }
 }

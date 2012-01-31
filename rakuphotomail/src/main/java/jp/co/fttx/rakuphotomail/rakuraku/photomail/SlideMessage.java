@@ -72,7 +72,7 @@ public class SlideMessage {
         LocalStore.LocalFolder localFolder = null;
         try {
             localFolder = getLocalFolder(null, account, folder);
-            LocalStore.LocalMessage message = (LocalStore.LocalMessage) localFolder.getNextMessage(uid,localFolder.getId());
+            LocalStore.LocalMessage message = (LocalStore.LocalMessage) localFolder.getNextMessage(uid, localFolder.getId());
 
             FetchProfile fp = new FetchProfile();
             fp.add(FetchProfile.Item.ENVELOPE);
@@ -181,21 +181,28 @@ public class SlideMessage {
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
-    public static ArrayList<LocalStore.MessageInfo> getMessageInfoList(final Account account, final String folder) {
-        Log.d("maguro", "SlideMessage#getMessageInfoList start");
+    public static ArrayList<LocalStore.MessageInfo> getMessageInfoList(final Account account, final String folder, final String uid, final long limitCount) {
         LocalStore localStore;
         LocalStore.LocalFolder localFolder = null;
         try {
             localStore = account.getLocalStore();
             localFolder = getLocalFolder(localStore, account, folder);
-            Log.d("maguro", "SlideMessage#getMessageInfoList nomal end");
-            return localStore.getMessages(localFolder.getId());
+            if (null != uid && 0 != limitCount) {
+                Log.d("refs#2616", "SlideMessage#getMessageInfoList localStore.getMessages(localFolder.getId(), uid, limitCount);");
+                return localStore.getMessages(localFolder.getId(), uid, limitCount);
+            } else if (null == uid && 0 != limitCount) {
+                Log.d("refs#2616", "SlideMessage#getMessageInfoList localStore.getMessages(localFolder.getId(), limitCount");
+                return localStore.getMessages(localFolder.getId(), limitCount);
+            } else {
+                Log.d("refs#2616", "SlideMessage#getMessageInfoList localStore.getMessages(localFolder.getId())");
+                return localStore.getMessages(localFolder.getId());
+            }
+
         } catch (MessagingException e) {
             Log.e(RakuPhotoMail.LOG_TAG, "SlideMessage#getMessageInfoList error:" + e);
         } finally {
             closeFolder(localFolder);
         }
-        Log.d("maguro", "SlideMessage#getMessageInfoList abnomal end");
         return null;
     }
 
@@ -319,7 +326,7 @@ public class SlideMessage {
 
     public static MessageBean getNextMessage(final Account account, final String folder, final String uid) throws RakuRakuException {
         Log.d("maguro", "SlideMessage#getNextMessage start");
-        Log.d("madara", "SlideMessage#getNextMessage folder & uid:" + folder +" & " + uid);
+        Log.d("madara", "SlideMessage#getNextMessage folder & uid:" + folder + " & " + uid);
         LocalStore.LocalMessage localMessage = getNextLocalMessage(account, folder, uid);
         if (null == localMessage) {
             throw new RakuRakuException("SlideMessage#getNextMessage localMessage is null...");

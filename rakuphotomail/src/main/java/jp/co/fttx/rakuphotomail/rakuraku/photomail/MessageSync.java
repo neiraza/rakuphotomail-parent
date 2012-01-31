@@ -6,16 +6,11 @@ package jp.co.fttx.rakuphotomail.rakuraku.photomail;
 
 import android.util.Log;
 import jp.co.fttx.rakuphotomail.Account;
-import jp.co.fttx.rakuphotomail.mail.FetchProfile;
-import jp.co.fttx.rakuphotomail.mail.Flag;
-import jp.co.fttx.rakuphotomail.mail.Folder;
-import jp.co.fttx.rakuphotomail.mail.Message;
-import jp.co.fttx.rakuphotomail.mail.MessagingException;
-import jp.co.fttx.rakuphotomail.mail.Store;
+import jp.co.fttx.rakuphotomail.mail.*;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * @author tooru.oguri
@@ -23,9 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class MessageSync {
 
-    // こいつを解析する
-    //TODO 一件しか取得できない？？
-
+    //TODO it-refs#2651
     /**
      * @param account    User Account Info(Account Class)
      * @param folderName Folder Name(String)

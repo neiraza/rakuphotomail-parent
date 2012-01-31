@@ -946,6 +946,48 @@ public class LocalStore extends Store implements Serializable {
         });
     }
 
+    public ArrayList<MessageInfo> getMessages(final long folderId,final long limitCount) throws UnavailableStorageException {
+        return database.execute(false, new DbCallback<ArrayList<MessageInfo>>() {
+            @Override
+            public ArrayList<MessageInfo> doDbWork(final SQLiteDatabase db) throws WrappedException {
+                Cursor c = null;
+                try {
+                    String where = "deleted = 0 AND folder_id = ?";
+                    String[] param = new String[]{Long.toString(folderId)};
+                    String orderBy = "date DESC";
+                    String limit = Long.toString(limitCount);
+                    c = db.query("messages", GET_MESSAGES_COLS_ALL, where, param, null, null, orderBy, limit);
+                    return setMessagesInfo(c);
+                } finally {
+                    if (c != null) {
+                        c.close();
+                    }
+                }
+            }
+        });
+    }
+
+    public ArrayList<MessageInfo> getMessages(final long folderId, final String uid, final long limitCount) throws UnavailableStorageException {
+        return database.execute(false, new DbCallback<ArrayList<MessageInfo>>() {
+            @Override
+            public ArrayList<MessageInfo> doDbWork(final SQLiteDatabase db) throws WrappedException {
+                Cursor c = null;
+                try {
+                    String where = "deleted = 0 AND folder_id = ? AND uid < ?";
+                    String[] param = new String[]{Long.toString(folderId), uid};
+                    String orderBy = "date DESC";
+                    String limit = Long.toString(limitCount);
+                    c = db.query("messages", GET_MESSAGES_COLS_ALL, where, param, null, null, orderBy, limit);
+                    return setMessagesInfo(c);
+                } finally {
+                    if (c != null) {
+                        c.close();
+                    }
+                }
+            }
+        });
+    }
+
     public ArrayList<MessageInfo> getRepliedTargetMessages() throws UnavailableStorageException {
         return database.execute(false, new DbCallback<ArrayList<MessageInfo>>() {
             @Override
@@ -1084,22 +1126,11 @@ public class LocalStore extends Store implements Serializable {
                 ArrayList<String> updateTargetList = new ArrayList<String>();
                 Cursor c = null;
                 try {
-//                    String queryString = "select message_id,uid from messages where folder_id = 11";
                     String queryString = "select message_id,uid,folder_id,subject from messages";
                     c = db.rawQuery(queryString, null);
                     c.moveToFirst();
-                    Log.d("refs2608@", "LocalStore#getRepliedTargetMessages(String) messageId:" + messageId);
-                    Log.d("refs2608@", "LocalStore#getRepliedTargetMessages(String) c.getCount():" + c.getCount());
                     while (c.moveToNext()) {
-                        Log.d("refs2608@", "LocalStore#getRepliedTargetMessages(String) ののののの");
-                        //TODO ハマった。ここがマッピングできない謎にハマった。
-                        Log.d("refs2608@", "LocalStore#getRepliedTargetMessages(String) c.getString(0)[message_id]:" + c.getString(0));
-                        Log.d("refs2608@", "LocalStore#getRepliedTargetMessages(String) c.getString(1)[uid]:" + c.getString(1));
-                        Log.d("refs2608@", "LocalStore#getRepliedTargetMessages(String) c.getString(2)[folder_id]:" + c.getString(2));
-                        Log.d("refs2608@", "LocalStore#getRepliedTargetMessages(String) c.getString(3)[subject]:" + c.getString(3));
-
                         if (messageId.equals(c.getString(0))) {
-                            Log.d("refs2608@", "LocalStore#getRepliedTargetMessages(String)ああああああ:" + c.getString(1));
                             updateTargetList.add(c.getString(1));
                         }
                     }
@@ -2641,7 +2672,7 @@ public class LocalStore extends Store implements Serializable {
                                 Log.d("ucom", "folderId:" + folderId);
 
                                 cursor = db.rawQuery(sql, new String[]{
-                                        message.getUid(),Long.toString(folderId)});
+                                        message.getUid(), Long.toString(folderId)});
                                 if (!cursor.moveToNext()) {
                                     return null;
                                 }
@@ -3492,6 +3523,7 @@ public class LocalStore extends Store implements Serializable {
             });
         }
 
+        //TODO it-refs#2654 こいつを応用して添付ファイルを物理的に削除するしかけがつくれそう
         private void deleteAttachments(final String uid) throws MessagingException {
             open(OpenMode.READ_WRITE);
             try {
