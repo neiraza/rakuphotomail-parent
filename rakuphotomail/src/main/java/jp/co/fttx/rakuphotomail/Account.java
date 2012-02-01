@@ -1392,7 +1392,7 @@ public class Account implements BaseAccount {
 
     public long getMessageLimitCountFromDb() {
         //TODO message limit count from DB 応急処置
-        return 50L;
+        return 10L;
 //        return messageLimitCountFromDb;
     }
 

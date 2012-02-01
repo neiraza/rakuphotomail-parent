@@ -350,18 +350,11 @@ public class SlideMessage {
     }
 
     public static MessageBean getPreMessage(final Account account, final String folder, final String uid) throws RakuRakuException {
-        Log.d("maguro", "SlideMessage#getPreMessage start");
         LocalStore.LocalMessage localMessage = getPreLocalMessage(account, folder, uid);
-        Log.d("ucom", "localMessage.getSubject():" + localMessage.getSubject());
-
         if (null == localMessage) {
             throw new RakuRakuException("SlideMessage#getPreMessage localMessage is null...");
         }
         LocalStore.MessageInfo messageInfo = getPreMessageInfo(account, folder, uid);
-        Log.d("ucom", "uid:" + uid);
-        Log.d("ucom", "messageInfo.getUid():" + messageInfo.getUid());
-        Log.d("ucom", "messageInfo.getSubject():" + messageInfo.getSubject());
-
         if (null == messageInfo) {
             throw new RakuRakuException("SlideMessage#getPreMessage messageInfo is null...");
         }
@@ -371,16 +364,12 @@ public class SlideMessage {
         } catch (MessagingException e) {
             Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
         }
-        Log.d("ucom", "messageBean.getUid():" + messageBean.getUid());
         ArrayList<LocalStore.Attachments> attachmentsList = getAttachmentList(account, folder, messageBean.getUid());
         ArrayList<AttachmentBean> list = new ArrayList<AttachmentBean>();
         for (LocalStore.Attachments attachments : attachmentsList) {
             list.add(setAttachmentBean(attachments));
-            Log.d("ucom", "attachments.getId():" + attachments.getId());
-            Log.d("ucom", "attachments.getName():" + attachments.getName());
         }
         messageBean.setAttachmentBeanList(list);
-        Log.d("maguro", "SlideMessage#getPreMessage end");
         return messageBean;
     }
 

@@ -15,6 +15,7 @@
             android:src="@drawable/droid"/>
 
     <LinearLayout
+            android:id="@+id/gallery_mail_button_layout"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
@@ -101,6 +102,7 @@
     </LinearLayout>
 
     <LinearLayout
+            android:id="@+id/gallery_mail_info_layout"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="top|left"

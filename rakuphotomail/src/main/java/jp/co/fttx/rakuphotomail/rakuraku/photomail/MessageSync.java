@@ -59,7 +59,7 @@ public class MessageSync {
             HashMap<String, Message> remoteUidMap = new HashMap<String, Message>();
 
             if (remoteMessageCount > 0) {
-                int remoteStart = getRemoteStart(remoteMessageCount,messageLimitCountFromRemote);
+                int remoteStart = getRemoteStart(remoteMessageCount, messageLimitCountFromRemote);
                 int remoteEnd = remoteMessageCount;
                 remoteMessageArray = remoteFolder.getMessages(remoteStart, remoteEnd, null, null);
 
@@ -129,64 +129,7 @@ public class MessageSync {
             HashMap<String, Message> remoteUidMap = new HashMap<String, Message>();
 
             if (remoteMessageCount > 0) {
-                int remoteStart = getRemoteStart(remoteMessageCount,messageLimitCountFromRemote);
-                int remoteEnd = remoteMessageCount;
-                remoteMessageArray = remoteFolder.getMessages(remoteStart, remoteEnd, null, null);
-
-                for (Message thisMessage : remoteMessageArray) {
-                    remoteUidMap.put(thisMessage.getUid(), thisMessage);
-                }
-                remoteMessageArray = null;
-            } else if (remoteMessageCount < 0) {
-                throw new Exception("Message count " + remoteMessageCount + " for folder " + folderName);
-            }
-
-            ArrayList<Message> destroyMessages = new ArrayList<Message>();
-            for (Message localMessage : localMessages) {
-                if (remoteUidMap.get(localMessage.getUid()) == null) {
-                    destroyMessages.add(localMessage);
-                }
-            }
-            localFolder.destroyMessages(destroyMessages.toArray(new Message[0]));
-            localMessages = null;
-
-            setLocalFlaggedCountToRemote(localFolder, remoteFolder);
-
-            localFolder.setLastChecked(System.currentTimeMillis());
-            localFolder.setStatus(null);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            closeFolder(remoteFolder);
-            closeFolder(localFolder);
-        }
-    }
-
-    public static void syncMailboxAll(Account account, String folderName) {
-        Folder remoteFolder = null;
-        LocalStore.LocalFolder localFolder = null;
-        try {
-            localFolder = account.getLocalStore().getFolder(folderName);
-            localFolder.open(Folder.OpenMode.READ_WRITE);
-            localFolder.updateLastUid();
-
-            Message[] localMessages = localFolder.getMessages(null);
-            HashMap<String, Message> localUidMap = new HashMap<String, Message>();
-            for (Message message : localMessages) {
-                localUidMap.put(message.getUid(), message);
-            }
-
-            Store remoteStore = account.getRemoteStore();
-            remoteFolder = remoteStore.getFolder(folderName);
-            remoteFolder.open(Folder.OpenMode.READ_WRITE);
-            int remoteMessageCount = remoteFolder.getMessageCount();
-
-            Message[] remoteMessageArray = new Message[0];
-            HashMap<String, Message> remoteUidMap = new HashMap<String, Message>();
-
-            if (remoteMessageCount > 0) {
-                int remoteStart = 1;
+                int remoteStart = getRemoteStart(remoteMessageCount, messageLimitCountFromRemote);
                 int remoteEnd = remoteMessageCount;
                 remoteMessageArray = remoteFolder.getMessages(remoteStart, remoteEnd, null, null);
 
@@ -221,7 +164,7 @@ public class MessageSync {
     }
 
     private static int getRemoteStart(int remoteMessageCount, int messageLimitCountFromRemote) {
-        if(0 >= messageLimitCountFromRemote){
+        if (0 >= messageLimitCountFromRemote) {
             return 1;
         }
         int tmp = (remoteMessageCount - messageLimitCountFromRemote + 1);

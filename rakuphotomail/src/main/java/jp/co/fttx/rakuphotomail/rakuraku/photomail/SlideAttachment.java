@@ -12,10 +12,16 @@ import android.util.Log;
 import android.view.Display;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
+import jp.co.fttx.rakuphotomail.mail.MessagingException;
+import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
 import jp.co.fttx.rakuphotomail.provider.AttachmentProvider;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
+import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
+import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
+import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * @author tooru.oguri
@@ -23,11 +29,9 @@ import java.util.ArrayList;
  */
 public class SlideAttachment {
     private SlideAttachment() {
-        Log.d("maguro", "SlideAttachment Construct");
     }
 
     public static Bitmap getBitmap(Context context, Display display, Account account, AttachmentBean attachmentBean) {
-        Log.d("maguro", "SlideAttachment#getBitmap");
         try {
             BitmapFactory.Options options = new BitmapFactory.Options();
             Uri uri = AttachmentProvider.getAttachmentUri(account, attachmentBean.getId());
@@ -40,7 +44,6 @@ public class SlideAttachment {
             int scaleH = options.outHeight / displayH + 1;
             options.inJustDecodeBounds = false;
             options.inSampleSize = Math.max(scaleW, scaleH);
-            Log.d("maguro", "SlideAttachment#getBitmap いけそう？");
             return BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null,
                     options);
         } catch (Exception e) {
@@ -49,7 +52,7 @@ public class SlideAttachment {
         return null;
     }
 
-    public static Bitmap getThumbnailBitmap(Context context, Display display, Account account, AttachmentBean attachmentBean) {
+    public static Bitmap getThumbnailBitmap(Context context, Account account, AttachmentBean attachmentBean) {
         Log.d("maguro", "SlideAttachment#getThumbnailBitmap");
         try {
             BitmapFactory.Options options = new BitmapFactory.Options();
@@ -85,4 +88,45 @@ public class SlideAttachment {
         return dest;
     }
 
+    /**
+     * <p>添付ファイルのキャッシュクリア.</p>
+     * <p>実現機能</p>
+     * <ul>
+     * <li>添付ファイルのローカル物理削除（再同期、再DL可）</li>
+     * <li>messages.flags X_DOWNLOADED_FULLの削除</li>
+     * <li>attachments.content_uriのクリア</li>
+     * </ul>
+     *
+     * @param account    user account info
+     * @param folderName user mail folder name
+     * @param uid        message uid
+     * @throws MessagingException me
+     */
+    public static void clearCacheForAttachmentFile(Account account, String folderName, String uid) throws MessagingException {
+        LocalStore.LocalFolder localFolder = null;
+        LocalStore localStore = account.getLocalStore();
+        localFolder = localStore.getFolder(folderName);
+        long[] attachmentIdList = localFolder.deleteAttachmentFile(uid);
+        for (long attachmentId : attachmentIdList) {
+            Log.d("asakusa", "clearCacheForAttachmentFile attachmentId:" + attachmentId);
+            if (localFolder.clearContentUri(attachmentId)) {
+                MessageBean messageBean = new MessageBean();
+                try {
+                    messageBean = SlideMessage.getMessage(account, account.getInboxFolderName(), uid);
+                } catch (RakuRakuException e) {
+                    e.printStackTrace();
+                }
+                String[] arr = RakuPhotoStringUtils.splitFlags(messageBean.getFlags());
+                if (0 < arr.length) {
+                    ArrayList<String> arrayList = new ArrayList<String>(Arrays.asList(arr));
+                    int index = arrayList.indexOf("X_DOWNLOADED_FULL");
+                    Log.d("asakusa", "clearCacheForAttachmentFile index:" + index);
+                    if (0 < index) {
+                        arrayList.remove(index);
+                        localStore.setFlagAnswered(uid, arrayList.toArray(new String[arrayList.size()]));
+                    }
+                }
+            }
+        }
+    }
 }

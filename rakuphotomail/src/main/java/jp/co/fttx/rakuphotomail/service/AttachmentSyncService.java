@@ -4,24 +4,19 @@
  */
 package jp.co.fttx.rakuphotomail.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import jp.co.fttx.rakuphotomail.Account;
-import jp.co.fttx.rakuphotomail.mail.FetchProfile;
-import jp.co.fttx.rakuphotomail.mail.Flag;
-import jp.co.fttx.rakuphotomail.mail.Folder;
-import jp.co.fttx.rakuphotomail.mail.Folder.OpenMode;
-import jp.co.fttx.rakuphotomail.mail.Message;
-import jp.co.fttx.rakuphotomail.mail.MessagingException;
-import jp.co.fttx.rakuphotomail.mail.Store;
-import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
-import jp.co.fttx.rakuphotomail.mail.store.LocalStore.LocalFolder;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
+import jp.co.fttx.rakuphotomail.Account;
+import jp.co.fttx.rakuphotomail.mail.*;
+import jp.co.fttx.rakuphotomail.mail.Folder.OpenMode;
+import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
+import jp.co.fttx.rakuphotomail.mail.store.LocalStore.LocalFolder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author tooru.oguri
@@ -102,17 +97,19 @@ public class AttachmentSyncService extends Service {
      * downloadListに含まれていないuidのメールのみ、ダウンロードの対象とする。<br>
      * これはスライドショーの中で、ダウンロードリクエストが非同期に送信される前提で、<br>
      * 同じリクエストが複数回無駄に送信される事を避けるため。<br>
+     * d
      *
-     * @param account アカウント情報
-     * @param folder  フォルダー名
-     * @param uid     メール識別番号
+     * @param folder フォルダー名
+     * @param uid    メール識別番号
      * @throws MessagingException oyakusoku
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
     public void onDownload(final Account account, final String folder, final String uid, final String action)
             throws MessagingException {
-        Log.d("refs2608@", "AttachmentSyncService#onDownload start");
+        Log.d("asakusa", "AttachmentSyncService#onDownload uid:" + uid);
+        Log.d("asakusa", "AttachmentSyncService#onDownload !downloadList.contains(uid):" + !downloadList.contains(uid));
+
         if (!downloadList.contains(uid)) {
             download(account, folder, uid);
             downloadList.add(uid);
@@ -130,7 +127,6 @@ public class AttachmentSyncService extends Service {
             }
             sendBroadcast(intent);
         }
-        Log.d("refs2608@", "AttachmentSyncService#onDownload end");
     }
 
     /**
@@ -143,7 +139,7 @@ public class AttachmentSyncService extends Service {
      */
     private void download(final Account account, final String folder, final String uid)
             throws MessagingException {
-        Log.d("refs2608@", "AttachmentSyncService#download start");
+        Log.d("asakusa", "AttachmentSyncService#download uid:" + uid);
         Folder remoteFolder = null;
         LocalFolder localFolder = null;
         try {
@@ -152,13 +148,14 @@ public class AttachmentSyncService extends Service {
             localFolder.open(OpenMode.READ_WRITE);
 
             Message message = localFolder.getMessage(uid);
-
             if (message.isSet(Flag.X_DOWNLOADED_FULL)) {
+                Log.d("asakusa", "AttachmentSyncService#download 地獄");
                 FetchProfile fp = new FetchProfile();
                 fp.add(FetchProfile.Item.ENVELOPE);
                 fp.add(FetchProfile.Item.BODY);
                 localFolder.fetch(new Message[]{message}, fp, null);
             } else {
+                Log.d("asakusa", "AttachmentSyncService#download 天国");
                 Store remoteStore = account.getRemoteStore();
                 remoteFolder = remoteStore.getFolder(folder);
                 remoteFolder.open(OpenMode.READ_WRITE);
@@ -187,5 +184,17 @@ public class AttachmentSyncService extends Service {
             f.close();
         }
     }
+
+//    public void clearDownloadedUid(String uid) {
+//        int index = downloadList.indexOf(uid);
+//        if (0 < index) {
+//            downloadList.remove(index);
+//        }
+//    }
+//
+//    public void clearAllDownloadedUid() {
+//        downloadList = new ArrayList<String>();
+//        GallerySlideShow.hoge();
+//    }
 
 }

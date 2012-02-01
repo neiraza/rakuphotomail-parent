@@ -167,10 +167,21 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
      */
     private Gallery mGalleryThumbnail;
     /**
-     *  slide target attachment list
+     * slide target attachment list
      */
-    private ArrayList<AttachmentBean>mSlideTargetAttachmentList = new ArrayList<AttachmentBean>();
-
+    private ArrayList<AttachmentBean> mSlideTargetAttachmentList = new ArrayList<AttachmentBean>();
+    /**
+     * mail layout
+     */
+    private LinearLayout mGalleryMailButtonLayout;
+    /**
+     * mail layout
+     */
+    private LinearLayout mGalleryMailInfoLayout;
+    /**
+     *
+     */
+    private boolean isDispMailLayout = true;
     /**
      * @param context    context
      * @param account    account info
@@ -255,6 +266,8 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
 
     private void setupViews() {
         Log.d("maguro", "GalleryNewMail#setupSlideStopViews start");
+        mGalleryMailButtonLayout = (LinearLayout)findViewById(R.id.gallery_new_mail_button_layout);
+        mGalleryMailInfoLayout = (LinearLayout)findViewById(R.id.gallery_new_mail_info_layout);
         mImageViewPicture = (ImageView) findViewById(R.id.gallery_new_mail_picture);
         mImageViewPicture.setVisibility(View.VISIBLE);
         setupViewTopMailInfo();
@@ -268,7 +281,7 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
     private void setupViewTopMailInfo() {
         mMailSubject = (TextView) findViewById(R.id.gallery_new_mail_subject);
         mMailDate = (TextView) findViewById(R.id.gallery_new_mail_date);
-        mMailAnswered = (TextView)findViewById(R.id.gallery_new_mail_sent_flag);
+        mMailAnswered = (TextView) findViewById(R.id.gallery_new_mail_sent_flag);
         mMailAnswered.setVisibility(View.GONE);
     }
 
@@ -346,7 +359,7 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
     }
 
     private Bitmap getThumbnailBitmap(AttachmentBean attachmentBean) {
-        return SlideAttachment.getThumbnailBitmap(mContext, getWindowManager().getDefaultDisplay(), mAccount, attachmentBean);
+        return SlideAttachment.getThumbnailBitmap(mContext, mAccount, attachmentBean);
     }
 
     private void setImageViewPicture(ArrayList<AttachmentBean> attachmentBeanList, int index) {
@@ -745,6 +758,10 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
                 onEditAccount();
                 return true;
             }
+            case R.id.buttons_disabled:{
+                onButtonsDisp();
+                return true;
+            }
             default: {
                 return super.onOptionsItemSelected(item);
             }
@@ -757,5 +774,17 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
 
     private void onEditAccount() {
         AccountSettings.actionSettings(this, mAccount);
+    }
+
+    private void onButtonsDisp(){
+        if(isDispMailLayout){
+            isDispMailLayout = false;
+            mGalleryMailButtonLayout.setVisibility(View.INVISIBLE);
+            mGalleryMailInfoLayout.setVisibility(View.INVISIBLE);
+        }else{
+            isDispMailLayout = true;
+            mGalleryMailButtonLayout.setVisibility(View.VISIBLE);
+            mGalleryMailInfoLayout.setVisibility(View.VISIBLE);
+        }
     }
 }

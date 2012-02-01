@@ -17,4 +17,9 @@
                     />
         </menu>
     </item>
+    <item
+            android:id="@+id/buttons_disabled"
+            android:title="ボタンON/OFF"
+            android:icon="@drawable/ic_menu_edit">
+    </item>
 </menu>

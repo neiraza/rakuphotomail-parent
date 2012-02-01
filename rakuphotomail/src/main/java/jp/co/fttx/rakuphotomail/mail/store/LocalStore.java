@@ -946,7 +946,7 @@ public class LocalStore extends Store implements Serializable {
         });
     }
 
-    public ArrayList<MessageInfo> getMessages(final long folderId,final long limitCount) throws UnavailableStorageException {
+    public ArrayList<MessageInfo> getMessages(final long folderId, final long limitCount) throws UnavailableStorageException {
         return database.execute(false, new DbCallback<ArrayList<MessageInfo>>() {
             @Override
             public ArrayList<MessageInfo> doDbWork(final SQLiteDatabase db) throws WrappedException {
@@ -3490,6 +3490,60 @@ public class LocalStore extends Store implements Serializable {
             return PERMANENT_FLAGS;
         }
 
+            public Boolean clearContentUri(final long attachmentId) throws MessagingException {
+            open(OpenMode.READ_WRITE);
+            return database.execute(false, new DbCallback<Boolean>() {
+                @Override
+                public Boolean doDbWork(final SQLiteDatabase db) throws WrappedException,
+                        UnavailableStorageException {
+                    String aId = Long.toString(attachmentId);
+                    ContentValues cv = new ContentValues();
+                    cv.putNull("content_uri");
+                    int updateCount = db.update("attachments", cv, "id = ?", new String[]{aId});
+                    return updateCount > 0;
+                }
+            });
+        }
+
+        public long[] deleteAttachmentFile(final String messageUid) throws MessagingException {
+            open(OpenMode.READ_WRITE);
+            return database.execute(false, new DbCallback<long[]>() {
+                @Override
+                public long[] doDbWork(final SQLiteDatabase db) throws WrappedException,
+                        UnavailableStorageException {
+                    Log.e("asakusa", "deleteAttachmentFile messageUid:" + messageUid);
+                    Cursor cursor = null;
+                    try {
+                        cursor = db.rawQuery("SELECT a.id FROM attachments AS a, messages AS m WHERE a.message_id = m.id AND m.uid = ?",
+                                new String[]{messageUid});
+                        final File attachmentDirectory = StorageManager.getInstance(mApplication)
+                                .getAttachmentDirectory(uUid, database.getStorageProviderId());
+                        long[] longArray = new long[cursor.getCount()];
+                        int i = 0;
+                        while (cursor.moveToNext()) {
+                            long attachmentId = cursor.getLong(0);
+                            Log.e("asakusa", "deleteAttachmentFile attachmentId:" + attachmentId);
+                            longArray[i] = cursor.getLong(0);
+                            i++;
+                            try {
+                                File file = new File(attachmentDirectory, Long.toString(attachmentId));
+                                if (file.exists()) {
+                                    file.delete();
+                                }
+                            } catch (Exception e) {
+
+                            }
+                        }
+                        return longArray;
+                    } finally {
+                        if (cursor != null) {
+                            cursor.close();
+                        }
+                    }
+                }
+            });
+        }
+
         private void deleteAttachments(final long messageId) throws MessagingException {
             open(OpenMode.READ_WRITE);
             database.execute(false, new DbCallback<Void>() {
@@ -3523,7 +3577,6 @@ public class LocalStore extends Store implements Serializable {
             });
         }
 
-        //TODO it-refs#2654 こいつを応用して添付ファイルを物理的に削除するしかけがつくれそう
         private void deleteAttachments(final String uid) throws MessagingException {
             open(OpenMode.READ_WRITE);
             try {
