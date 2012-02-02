@@ -8,10 +8,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.*;
 import android.graphics.Bitmap;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Message;
+import android.os.*;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -136,7 +133,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     /**
      * mesage uid's list
      */
-//    private CopyOnWriteArrayList<String> mUidList = new CopyOnWriteArrayList<String>();
     private ArrayList<String> mUidList = new ArrayList<String>();
     /**
      * mesage uid's list
@@ -157,7 +153,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     /**
      * Handler
      */
-    private Handler mProgressHandler;
+    private Handler mDownloadHandler = new Handler();
+    /**
+     * Handler
+     */
+    private Handler mClearHandler = new Handler();
     /**
      *
      */
@@ -182,6 +182,15 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * polling timer
      */
     private Timer mTimer;
+    /**
+     *
+     */
+    private boolean isDownloaded = false;
+    /**
+     *
+     */
+    private boolean isClear = false;
+
 
     /**
      * @param context context
@@ -224,8 +233,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         doBindService();
         setupViews();
         doAllFolderSync();
-        Log.d("umeda", "初めてのcreateUidList:" + mDispUid);
         createUidList(null, mAccount.getMessageLimitCountFromDb());
+//                    downloadBundle();
         mAllUidList = getUidList(null, 0);
         setupSlideShowThread();
 
@@ -236,7 +245,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 Log.d("kyoto", "新着メールをチェックしますね");
                 // 同期処理で新着メールを見つけられた場合
                 String newMailUid = MessageSync.syncMailboxForCheckNewMail(mAccount, mFolder, mAccount.getMessageLimitCountFromRemote());
-//                doOutBoxFolderSync();
                 doSentFolderSync();
                 if (null != newMailUid && !"".equals(newMailUid) && isSlide(newMailUid)) {
                     doUnbindService();
@@ -303,17 +311,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
     private void doAllFolderSync() {
         doInBoxFolderSync();
-//        doOutBoxFolderSync();
         doSentFolderSync();
     }
 
     private void doInBoxFolderSync() {
         MessageSync.syncMailbox(mAccount, mAccount.getInboxFolderName(), mAccount.getMessageLimitCountFromRemote());
     }
-
-//    private void doOutBoxFolderSync() {
-//        MessageSync.syncMailboxForCheckNewMail(mAccount, mAccount.getOutboxFolderName(), 0);
-//    }
 
     private void doSentFolderSync() {
         MessageSync.syncMailboxForCheckNewMail(mAccount, mAccount.getSentFolderName(), 0);
@@ -358,11 +361,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                     mAnswered.setVisibility(View.GONE);
                 }
                 Log.d("asakusa", "セットされたmSubject:" + bundle.get(MESSAGE_SUBJECT).toString());
-            }
-        };
-        mProgressHandler = new Handler() {
-            public void handleMessage(android.os.Message msg) {
-
             }
         };
         mDate = (TextView) findViewById(R.id.gallery_date);
@@ -425,33 +423,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     private void createUidList(String currentUid, long limitCount) {
         Log.d("umeda", "createUidList currentUid:" + currentUid);
         List<MessageInfo> messageInfoList = SlideMessage.getMessageInfoList(mAccount, mFolder, currentUid, limitCount);
-
-        //TODO test
-        if (messageInfoList != null) {
-            for (MessageInfo message : messageInfoList) {
-                Log.d("umeda", "messageInfo.getUid():" + message.getUid());
-            }
-
-        } else {
-            Log.d("umeda", "messageInfoList == null");
-        }
-
         if (null == messageInfoList || 0 == messageInfoList.size()) {
             if (null != currentUid) {
                 Log.d("umeda", "ケツまでいったから頭だしすっか currentUid:" + currentUid);
                 // currentUidがnullではない場合、DBの一番最後の可能性が有るため、最初から取り直す
                 messageInfoList = SlideMessage.getMessageInfoList(mAccount, mFolder, null, limitCount);
-
-                //TODO test
-                if (messageInfoList != null) {
-                    for (MessageInfo message : messageInfoList) {
-                        Log.d("umeda", "ケツ messageInfo.getUid():" + message.getUid());
-                    }
-
-                } else {
-                    Log.d("umeda", "ケツ messageInfoList == null");
-                }
-
                 if (null == messageInfoList || 0 == messageInfoList.size()) {
                     Log.w(RakuPhotoMail.LOG_TAG, "現在、サーバー上に受信メールが存在しません");
                     dismissProgressDialog(mProgressDialog);
@@ -472,10 +448,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             Log.d("umeda", "mUidList をつくろう！ uid:" + uid);
             ArrayList<Attachments> attachmentsList = SlideMessage.getAttachmentList(mAccount, mFolder, uid);
             for (Attachments attachments : attachmentsList) {
-                Log.d("umeda", "mUidList をつくろう！ attachmentsはあるかな〜 uid:" + uid);
                 //追加対象はスライドする奴のみ（重複UIDは省く）
                 if (SlideCheck.isSlide(attachments) && !mUidList.contains(uid)) {
-                    Log.d("umeda", "mUidList をつくろう！ スライドショーにしてよいかな〜 uid:" + uid);
                     mUidList.add(uid);
                 }
             }
@@ -588,38 +562,31 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     private void loopInfinite() throws RakuRakuException, MessagingException {
         while (mIsRepeatUidList) {
             if (!"".equals(mStartUid)) {
-                Log.d("umeda", "loopInfinite 初めてのループ mStartUid:" + mStartUid);
                 createUidList(mStartUid, mAccount.getMessageLimitCountFromDb());
                 mStartUid = "";
             }
-            downloadBundle();
+            dismissProgressDialog(mProgressDialog);
             loop();
-            //TODO Clear条件に追加予定「現在保持中のList以外にスライド対象メッセージがDBに存在する場合」
-            for (String uid : mUidList) {
-                if (mDispUid != uid) {
-                    Log.d("umeda", "クリア対象外 mDispUid:" + mDispUid);
-                    Log.d("umeda", "クリア対象   uid:" + uid);
-                    try {
-                        SlideAttachment.clearCacheForAttachmentFile(mAccount, mFolder, uid);
-                    } catch (MessagingException e) {
-                        e.printStackTrace();
+            if(mUidList.size() > mAccount.getAttachmentCacheLimitCount()){
+                //TODO Clear条件に追加予定「現在保持中のList以外にスライド対象メッセージがDBに存在する場合」
+                mClearHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        //TODO 今だとカレント以外、全部消えるけど、５０件超過したら１０件削除とかにしよ
+                        onClearAttachment(mUidList);
                     }
-                    mSyncService.clearDownloadedUid(uid);
-                } else {
-                    Log.d("umeda", "loopInfinite mDispUid:uid" + mDispUid + ":" + uid);
+                });
+                while(!isClear){
+
                 }
+                isClear = false;
             }
-            Log.d("umeda", "起点となるmDispUid:" + mDispUid);
-            Log.d("umeda", "参考までにmUidList:" + mUidList.toString());
+
             createUidList(mDispUid, mAccount.getMessageLimitCountFromDb());
-            //TODO ちょうじりあわせ
-//                while (is) {
-//
-//                }
-//            mProgressHandler.sendMessage(new Message());
         }
     }
 
+    //一括ダウンロード用
     private void downloadBundle() throws MessagingException {
         for (String uid : mUidList) {
             while (null == mSyncService) {
@@ -638,7 +605,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     private void loop() throws RakuRakuException {
         for (String uid : mUidList) {
-            Log.d("shibuya", "ループuid:" + uid);
             dispSlide(uid);
             if (!mIsRepeatUidList) {
                 return;
@@ -652,23 +618,25 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
-    private void dispSlide(String uid) throws RakuRakuException {
+    private void dispSlide(final String uid) throws RakuRakuException {
+        Log.d("yokosuka", "GallerySlideShow#dispSlide(String uid) uid:" + uid);
         MessageBean messageBean = SlideMessage.getMessage(mAccount, mFolder, uid);
-        if (SlideCheck.isDownloadedAttachment(messageBean)) {
-            dismissProgressDialog(mProgressDialog);
-            dispSlide(messageBean);
-        } else {
-            try {
-                if (null == mSyncService) {
-                    Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#loopUid mSyncServiceがnullでした。");
-                    return;
+        if (!SlideCheck.isDownloadedAttachment(messageBean)) {
+            Log.d("yokosuka", "GallerySlideShow#dispSlide(String uid) 添付ファイルをダウソでGO!");
+            mDownloadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onDownloadAttachment(uid);
                 }
-                Log.e("shinagawa", "GallerySlideShow#dispSlide 任意DL uid:" + uid);
-                mSyncService.onDownload(mAccount, mFolder, uid, AttachmentSyncService.ACTION_SLIDE_SHOW);
-            } catch (MessagingException e) {
-                Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#loopUid 次のuid(" + uid + ")をDLしますね");
+            });
+            while (!isDownloaded) {
+                //ダウソまち
             }
+            isDownloaded = false;
+            Log.d("yokosuka", "GallerySlideShow#dispSlide(String uid) 添付ファイルをダウソ終了しますた");
+            messageBean = SlideMessage.getMessage(mAccount, mFolder, uid);
         }
+        dispSlide(messageBean);
     }
 
     /**
@@ -881,5 +849,169 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         alertDialogBuilder.setCancelable(false);
         AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
+    }
+
+    /**
+     * @author tooru.oguri
+     * @since 0.1-beta1
+     */
+    private void onDownloadAttachment(String uid) {
+        Log.d("yokosuka", "GallerySlideShow#onDownloadAttachment");
+        new DownloadAttachmentForSlideShowTask(this).execute(uid);
+    }
+
+    /**
+     * @author tooru.oguri
+     * @since 0.1-beta1
+     */
+    private void onClearAttachment(ArrayList<String> list) {
+        Log.d("yokosuka", "GallerySlideShow#onClearAttachment");
+        Log.d("yokosuka", "GallerySlideShow#onClearAttachment list.toString():" + list.toString());
+        new ClearAttachmentTask(this).execute(list.toString());
+    }
+
+    /**
+     * @author tooru.oguri
+     * @since 0.1-beta1
+     */
+    private class DownloadAttachmentForSlideShowTask extends AsyncTask<String, Integer, Void> implements DialogInterface.OnCancelListener {
+        ProgressDialog dialog;
+        Context context;
+
+        public DownloadAttachmentForSlideShowTask(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            Log.d("yokosuka", "DownloadAttachmentForSlideShowTask#onPreExecute");
+            dialog = new ProgressDialog(context);
+            dialog.setTitle("Please wait");
+            dialog.setMessage("Loading data...");
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.setCancelable(true);
+            dialog.setOnCancelListener(this);
+            dialog.setMax(100);
+            dialog.setProgress(0);
+            dialog.show();
+        }
+
+        /**
+         * @return null
+         */
+        @Override
+        protected Void doInBackground(String... params) {
+            Log.d("yokosuka", "DownloadAttachmentForSlideShowTask#doInBackground");
+            try {
+                publishProgress(20);
+                SlideAttachment.downloadAttachment(mAccount, mFolder, params[0]);
+            } catch (MessagingException e) {
+                Log.e(RakuPhotoMail.LOG_TAG, "DownloadAttachmentTask#doInBackground():" + e.getMessage());
+            }
+            Log.d("yokosuka", "DownloadAttachmentForSlideShowTask#doInBackground wwwwwwwwwwwwwwwwwwwwwwwwwww");
+            publishProgress(40);
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            dialog.setProgress(values[0]);
+        }
+
+        @Override
+        protected void onCancelled() {
+            dialog.dismiss();
+        }
+
+        @Override
+        protected void onPostExecute(Void tmp) {
+            Log.d("yokosuka", "DownloadAttachmentForSlideShowTask#onPostExecute");
+            publishProgress(75);
+            isDownloaded = true;
+            Log.d("yokosuka", "DownloadAttachmentForSlideShowTask#onPostExecute isDownloaded:" + isDownloaded);
+            publishProgress(100);
+            onCancelled();
+        }
+
+        @Override
+        public void onCancel(DialogInterface dialog) {
+            this.cancel(true);
+        }
+
+    }
+
+    /**
+     * @author tooru.oguri
+     * @since 0.1-beta1
+     */
+    private class ClearAttachmentTask extends AsyncTask<String, Integer, Void> implements DialogInterface.OnCancelListener {
+        ProgressDialog dialog;
+        Context context;
+
+        public ClearAttachmentTask(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            Log.d("yokosuka", "ClearAttachmentTask#onPreExecute");
+            dialog = new ProgressDialog(context);
+            dialog.setTitle("Please wait");
+            dialog.setMessage("Loading data...");
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.setCancelable(true);
+            dialog.setOnCancelListener(this);
+            dialog.setMax(100);
+            dialog.setProgress(0);
+            dialog.show();
+        }
+
+        /**
+         * @return null
+         */
+        @Override
+        protected Void doInBackground(String... params) {
+            Log.d("yokosuka", "ClearAttachmentTask#doInBackground");
+            publishProgress(10);
+            for (String uid : params) {
+                if (mDispUid != uid) {
+                    Log.d("yokosuka", "クリア対象外 mDispUid:" + mDispUid);
+                    Log.d("yokosuka", "クリア対象   uid:" + uid);
+                    try {
+                        SlideAttachment.clearCacheForAttachmentFile(mAccount, mFolder, uid);
+                    } catch (MessagingException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            publishProgress(60);
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            dialog.setProgress(values[0]);
+        }
+
+        @Override
+        protected void onCancelled() {
+            dialog.dismiss();
+        }
+
+        @Override
+        protected void onPostExecute(Void tmp) {
+            Log.d("yokosuka", "ClearAttachmentTask#onPostExecute");
+            publishProgress(75);
+            isClear = true;
+            Log.d("yokosuka", "ClearAttachmentTask#onPostExecute isClear:" + isClear);
+            publishProgress(100);
+            onCancelled();
+        }
+
+        @Override
+        public void onCancel(DialogInterface dialog) {
+            this.cancel(true);
+        }
+
     }
 }

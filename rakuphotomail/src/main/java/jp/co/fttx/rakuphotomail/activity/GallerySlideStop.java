@@ -753,8 +753,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         }
     }
 
-    //TODO test
-
     /**
      * @author tooru.oguri
      * @since 0.1-beta1

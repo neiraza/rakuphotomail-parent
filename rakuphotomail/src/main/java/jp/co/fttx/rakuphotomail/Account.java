@@ -126,6 +126,8 @@ public class Account implements BaseAccount {
 
     private CryptoProvider mCryptoProvider = null;
 
+    // デバイス内に画像ファイルをキャッシュする最大数（ユーザー非公開OK）
+    private long attachmentCacheLimitCount = 0;
     // デバイス内のDBから何件づつメッセージを取得するか（ユーザー非公開OK）
     private long messageLimitCountFromDb = 0;
     //TODO メールサーバーから最大何件取得するか（ユーザー選択に変更したい）
@@ -1392,7 +1394,7 @@ public class Account implements BaseAccount {
 
     public long getMessageLimitCountFromDb() {
         //TODO message limit count from DB 応急処置
-        return 3L;
+        return 10L;
 //        return messageLimitCountFromDb;
     }
 
@@ -1408,4 +1410,17 @@ public class Account implements BaseAccount {
         //TODO remote messeage synq count どっかでセットしないとな
         this.messageLimitCountFromRemote = messageLimitCountFromRemote;
     }
+
+    public long getAttachmentCacheLimitCount() {
+        //TODO limit count 応急処置
+        return 50L;
+//        return attachmentCacheLimitCount;
+    }
+
+    public void setAttachmentCacheLimitCount(long attachmentCacheLimitCount) {
+        //TODO remote messeage synq count どっかでセットしないとな
+        this.attachmentCacheLimitCount = attachmentCacheLimitCount;
+    }
+
+
 }
