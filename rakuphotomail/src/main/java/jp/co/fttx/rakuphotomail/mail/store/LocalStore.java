@@ -3511,7 +3511,6 @@ public class LocalStore extends Store implements Serializable {
                 @Override
                 public long[] doDbWork(final SQLiteDatabase db) throws WrappedException,
                         UnavailableStorageException {
-                    Log.e("asakusa", "deleteAttachmentFile messageUid:" + messageUid);
                     Cursor cursor = null;
                     try {
                         cursor = db.rawQuery("SELECT a.id FROM attachments AS a, messages AS m WHERE a.message_id = m.id AND m.uid = ?",
@@ -3522,7 +3521,6 @@ public class LocalStore extends Store implements Serializable {
                         int i = 0;
                         while (cursor.moveToNext()) {
                             long attachmentId = cursor.getLong(0);
-                            Log.e("asakusa", "deleteAttachmentFile attachmentId:" + attachmentId);
                             longArray[i] = cursor.getLong(0);
                             i++;
                             try {

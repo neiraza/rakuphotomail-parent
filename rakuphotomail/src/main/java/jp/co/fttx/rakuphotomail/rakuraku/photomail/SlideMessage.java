@@ -373,6 +373,16 @@ public class SlideMessage {
         return messageBean;
     }
 
+    public static String getNextUid(final Account account, final String folder, final String uid) throws RakuRakuException {
+        LocalStore.LocalMessage localMessage = getNextLocalMessage(account, folder, uid);
+        return localMessage.getUid();
+    }
+
+    public static String getPreUid(final Account account, final String folder, final String uid) throws RakuRakuException {
+        LocalStore.LocalMessage localMessage = getPreLocalMessage(account, folder, uid);
+        return localMessage.getUid();
+    }
+
     private static LocalStore.LocalFolder getLocalFolder(LocalStore localStore, final Account account, final String folder) throws MessagingException {
         if (null == localStore) {
             localStore = account.getLocalStore();

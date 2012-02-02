@@ -12,7 +12,7 @@ import android.util.Log;
 import android.view.Display;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
-import jp.co.fttx.rakuphotomail.mail.MessagingException;
+import jp.co.fttx.rakuphotomail.mail.*;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
 import jp.co.fttx.rakuphotomail.provider.AttachmentProvider;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
@@ -78,10 +78,7 @@ public class SlideAttachment {
     public static ArrayList<AttachmentBean> getSlideTargetList(ArrayList<AttachmentBean> origin) {
         ArrayList<AttachmentBean> dest = new ArrayList<AttachmentBean>();
         for (AttachmentBean bean : origin) {
-            Log.d("ucom", "bean.getId():" + bean.getId());
-            Log.d("ucom", "bean.getName():" + bean.getName());
             if (SlideCheck.isSlide(bean)) {
-                Log.d("ucom", bean.getId() + " is OK");
                 dest.add(bean);
             }
         }
@@ -108,7 +105,6 @@ public class SlideAttachment {
         localFolder = localStore.getFolder(folderName);
         long[] attachmentIdList = localFolder.deleteAttachmentFile(uid);
         for (long attachmentId : attachmentIdList) {
-            Log.d("asakusa", "clearCacheForAttachmentFile attachmentId:" + attachmentId);
             if (localFolder.clearContentUri(attachmentId)) {
                 MessageBean messageBean = new MessageBean();
                 try {
@@ -120,13 +116,59 @@ public class SlideAttachment {
                 if (0 < arr.length) {
                     ArrayList<String> arrayList = new ArrayList<String>(Arrays.asList(arr));
                     int index = arrayList.indexOf("X_DOWNLOADED_FULL");
-                    Log.d("asakusa", "clearCacheForAttachmentFile index:" + index);
-                    if (0 < index) {
+                    if (0 <= index) {
                         arrayList.remove(index);
                         localStore.setFlagAnswered(uid, arrayList.toArray(new String[arrayList.size()]));
                     }
                 }
             }
+        }
+    }
+
+    public static void downloadAttachment(final Account account, final String folder, final String uid)
+            throws MessagingException {
+        Log.d("yokohama", "SlideAttachment#download uid:" + uid);
+        Folder remoteFolder = null;
+        LocalStore.LocalFolder localFolder = null;
+        try {
+            LocalStore localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folder);
+            localFolder.open(Folder.OpenMode.READ_WRITE);
+
+            Message message = localFolder.getMessage(uid);
+            if (message.isSet(Flag.X_DOWNLOADED_FULL)) {
+                Log.d("yokohama", "SlideAttachment#download 地獄");
+                FetchProfile fp = new FetchProfile();
+                fp.add(FetchProfile.Item.ENVELOPE);
+                fp.add(FetchProfile.Item.BODY);
+                localFolder.fetch(new Message[]{message}, fp, null);
+            } else {
+                Log.d("yokohama", "SlideAttachment#download 天国");
+                Store remoteStore = account.getRemoteStore();
+                remoteFolder = remoteStore.getFolder(folder);
+                remoteFolder.open(Folder.OpenMode.READ_WRITE);
+
+                Message remoteMessage = remoteFolder.getMessage(uid);
+                FetchProfile fp = new FetchProfile();
+                fp.add(FetchProfile.Item.BODY);
+                remoteFolder.fetch(new Message[]{remoteMessage}, fp, null);
+
+                localFolder.appendMessages(new Message[]{remoteMessage});
+                fp.add(FetchProfile.Item.ENVELOPE);
+                message = localFolder.getMessage(uid);
+                localFolder.fetch(new Message[]{message}, fp, null);
+
+                message.setFlag(Flag.X_DOWNLOADED_FULL, true);
+            }
+        } finally {
+            closeFolder(remoteFolder);
+            closeFolder(localFolder);
+        }
+    }
+
+    private static void closeFolder(Folder f) {
+        if (f != null) {
+            f.close();
         }
     }
 }

@@ -34,6 +34,9 @@ public class MessageSync {
      * @since rakuphoto 0.1-beta1
      */
     public static String syncMailboxForCheckNewMail(Account account, String folderName, int messageLimitCountFromRemote) {
+        Log.d("kyoto", "MessageSync#syncMailboxForCheckNewMail folderName:" + folderName);
+        Log.d("kyoto", "MessageSync#syncMailboxForCheckNewMail messageLimitCountFromRemote:" + messageLimitCountFromRemote);
+
         String newMailUid = null;
 
         Folder remoteFolder = null;

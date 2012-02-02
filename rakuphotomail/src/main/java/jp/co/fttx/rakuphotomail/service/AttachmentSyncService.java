@@ -14,6 +14,7 @@ import jp.co.fttx.rakuphotomail.mail.*;
 import jp.co.fttx.rakuphotomail.mail.Folder.OpenMode;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore.LocalFolder;
+import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideAttachment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -107,11 +108,16 @@ public class AttachmentSyncService extends Service {
      */
     public void onDownload(final Account account, final String folder, final String uid, final String action)
             throws MessagingException {
-        Log.d("asakusa", "AttachmentSyncService#onDownload uid:" + uid);
-        Log.d("asakusa", "AttachmentSyncService#onDownload !downloadList.contains(uid):" + !downloadList.contains(uid));
+        Log.d("umeda", "onDownload 初期 uid:" + uid);
+        Log.d("umeda", "onDownload 初期 downloadList.toString():" + downloadList.toString());
+
 
         if (!downloadList.contains(uid)) {
-            download(account, folder, uid);
+            Log.d("umeda", "onDownload listにないよ uid:" + uid);
+            Log.d("umeda", "onDownload listにないよ downloadList.toString():" + downloadList.toString());
+
+//            download(account, folder, uid);
+            SlideAttachment.downloadAttachment(account,folder,uid);
             downloadList.add(uid);
 
             Intent intent = new Intent();
@@ -139,7 +145,7 @@ public class AttachmentSyncService extends Service {
      */
     private void download(final Account account, final String folder, final String uid)
             throws MessagingException {
-        Log.d("asakusa", "AttachmentSyncService#download uid:" + uid);
+        Log.d("shinagawa", "AttachmentSyncService#download uid:" + uid);
         Folder remoteFolder = null;
         LocalFolder localFolder = null;
         try {
@@ -149,13 +155,13 @@ public class AttachmentSyncService extends Service {
 
             Message message = localFolder.getMessage(uid);
             if (message.isSet(Flag.X_DOWNLOADED_FULL)) {
-                Log.d("asakusa", "AttachmentSyncService#download 地獄");
+                Log.d("shinagawa", "AttachmentSyncService#download 地獄");
                 FetchProfile fp = new FetchProfile();
                 fp.add(FetchProfile.Item.ENVELOPE);
                 fp.add(FetchProfile.Item.BODY);
                 localFolder.fetch(new Message[]{message}, fp, null);
             } else {
-                Log.d("asakusa", "AttachmentSyncService#download 天国");
+                Log.d("shinagawa", "AttachmentSyncService#download 天国");
                 Store remoteStore = account.getRemoteStore();
                 remoteFolder = remoteStore.getFolder(folder);
                 remoteFolder.open(OpenMode.READ_WRITE);
@@ -171,7 +177,6 @@ public class AttachmentSyncService extends Service {
                 localFolder.fetch(new Message[]{message}, fp, null);
 
                 message.setFlag(Flag.X_DOWNLOADED_FULL, true);
-                Log.d("refs2608@", "AttachmentSyncService#download end");
             }
         } finally {
             closeFolder(remoteFolder);
@@ -185,16 +190,18 @@ public class AttachmentSyncService extends Service {
         }
     }
 
-//    public void clearDownloadedUid(String uid) {
-//        int index = downloadList.indexOf(uid);
-//        if (0 < index) {
-//            downloadList.remove(index);
-//        }
-//    }
-//
-//    public void clearAllDownloadedUid() {
-//        downloadList = new ArrayList<String>();
-//        GallerySlideShow.hoge();
-//    }
+    public void clearDownloadedUid(String uid) {
+        int index = downloadList.indexOf(uid);
+        Log.d("umeda", "DL List クリア対象uid:" + uid);
+        Log.d("umeda", "DL List クリア対象downloadList:" + downloadList.toString());
+        Log.d("umeda", "DL List uid存在有無:" + index);
+        if (0 <= index) {
+            downloadList.remove(index);
+        }
+    }
+
+    public void clearAllDownloadedUid() {
+        downloadList = new ArrayList<String>();
+    }
 
 }
