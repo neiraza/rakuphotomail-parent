@@ -383,6 +383,17 @@ public class SlideMessage {
         return localMessage.getUid();
     }
 
+    public static ArrayList<String> getMessageUidRemoveTarget(final Account account) {
+        LocalStore localStore;
+        try {
+            localStore = account.getLocalStore();
+            return localStore.getMessageUidRemoveTarget();
+        } catch (MessagingException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "SlideMessage#isPreMessage error:" + e);
+        }
+        return new ArrayList<String>();
+    }
+
     private static LocalStore.LocalFolder getLocalFolder(LocalStore localStore, final Account account, final String folder) throws MessagingException {
         if (null == localStore) {
             localStore = account.getLocalStore();

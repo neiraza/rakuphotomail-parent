@@ -988,20 +988,19 @@ public class LocalStore extends Store implements Serializable {
         });
     }
 
-    public ArrayList<MessageInfo> getRepliedTargetMessages() throws UnavailableStorageException {
-        return database.execute(false, new DbCallback<ArrayList<MessageInfo>>() {
+    public ArrayList<String> getMessageUidRemoveTarget() throws UnavailableStorageException {
+        return database.execute(false, new DbCallback<ArrayList<String>>() {
             @Override
-            public ArrayList<MessageInfo> doDbWork(final SQLiteDatabase db) throws WrappedException {
+            public ArrayList<String> doDbWork(final SQLiteDatabase db) throws WrappedException {
                 Cursor c = null;
-                Log.d("refs2608", "LocalStore#getRepliedTargetMessages");
                 try {
-                    String queryString = "select " + GET_MESSAGES_COLS_STR_ALL + " from messages where message_id " +
-                            "in (select value from headers where message_id " +
-                            "in (select id from messages where folder_id=2) and name = 'In-Reply-To')";
-                    Log.d("refs2608", "LocalStore#getRepliedTargetMessages queryString:" + queryString);
+                    String queryString = "SELECT m.uid FROM messages AS m WHERE EXISTS ( SELECT * FROM attachments AS a WHERE a.content_uri IS NOT NULL AND m.id = a.message_id) ORDER BY m.date DESC";
                     c = db.rawQuery(queryString, null);
-                    Log.d("refs2608", "LocalStore#getRepliedTargetMessages c.getCount():" + c.getCount());
-                    return setMessagesInfo(c);
+                    ArrayList<String> reslut = new ArrayList<String>();
+                    while(c.moveToNext()){
+                        reslut.add(c.getString(0));
+                    }
+                    return reslut;
                 } finally {
                     if (c != null) {
                         c.close();

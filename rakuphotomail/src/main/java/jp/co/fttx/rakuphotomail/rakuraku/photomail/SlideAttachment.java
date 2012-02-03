@@ -100,6 +100,7 @@ public class SlideAttachment {
      * @throws MessagingException me
      */
     public static void clearCacheForAttachmentFile(Account account, String folderName, String uid) throws MessagingException {
+        Log.d("ikebukuro", "SlideAttachment#clearCacheForAttachmentFile clear uid:" + uid);
         LocalStore.LocalFolder localFolder = null;
         LocalStore localStore = account.getLocalStore();
         localFolder = localStore.getFolder(folderName);
@@ -127,7 +128,7 @@ public class SlideAttachment {
 
     public static void downloadAttachment(final Account account, final String folder, final String uid)
             throws MessagingException {
-        Log.d("yokohama", "SlideAttachment#download uid:" + uid);
+        Log.d("ikebukuro", "SlideAttachment#download uid:" + uid);
         Folder remoteFolder = null;
         LocalStore.LocalFolder localFolder = null;
         try {
@@ -137,13 +138,14 @@ public class SlideAttachment {
 
             Message message = localFolder.getMessage(uid);
             if (message.isSet(Flag.X_DOWNLOADED_FULL)) {
-                Log.d("yokohama", "SlideAttachment#download 地獄");
-                FetchProfile fp = new FetchProfile();
-                fp.add(FetchProfile.Item.ENVELOPE);
-                fp.add(FetchProfile.Item.BODY);
-                localFolder.fetch(new Message[]{message}, fp, null);
+                Log.d("ikebukuro", "SlideAttachment#download 現世 X_DOWNLOADED_FULL");
+                //TODO 必要なくね？
+//                FetchProfile fp = new FetchProfile();
+//                fp.add(FetchProfile.Item.ENVELOPE);
+//                fp.add(FetchProfile.Item.BODY);
+//                localFolder.fetch(new Message[]{message}, fp, null);
             } else {
-                Log.d("yokohama", "SlideAttachment#download 天国");
+                Log.d("ikebukuro", "SlideAttachment#download 天国 落しにいくぜ");
                 Store remoteStore = account.getRemoteStore();
                 remoteFolder = remoteStore.getFolder(folder);
                 remoteFolder.open(Folder.OpenMode.READ_WRITE);
