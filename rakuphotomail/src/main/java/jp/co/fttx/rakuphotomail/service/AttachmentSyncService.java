@@ -108,15 +108,8 @@ public class AttachmentSyncService extends Service {
      */
     public void onDownload(final Account account, final String folder, final String uid, final String action)
             throws MessagingException {
-        Log.d("umeda", "onDownload 初期 uid:" + uid);
-        Log.d("umeda", "onDownload 初期 downloadList.toString():" + downloadList.toString());
-
-
+        Log.d("ikebukuro", "onDownload start uid:" + uid);
         if (!downloadList.contains(uid)) {
-            Log.d("umeda", "onDownload listにないよ uid:" + uid);
-            Log.d("umeda", "onDownload listにないよ downloadList.toString():" + downloadList.toString());
-
-//            download(account, folder, uid);
             SlideAttachment.downloadAttachment(account,folder,uid);
             downloadList.add(uid);
 
@@ -132,6 +125,7 @@ public class AttachmentSyncService extends Service {
                 intent.setAction("");
             }
             sendBroadcast(intent);
+            Log.d("ikebukuro", "onDownload end uid:" + uid);
         }
     }
 

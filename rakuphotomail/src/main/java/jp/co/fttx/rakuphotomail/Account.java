@@ -127,9 +127,9 @@ public class Account implements BaseAccount {
     private CryptoProvider mCryptoProvider = null;
 
     // デバイス内に画像ファイルをキャッシュする最大数（ユーザー非公開OK）
-    private long attachmentCacheLimitCount = 0;
+    private int attachmentCacheLimitCount = 0;
     // デバイス内のDBから何件づつメッセージを取得するか（ユーザー非公開OK）
-    private long messageLimitCountFromDb = 0;
+    private int messageLimitCountFromDb = 0;
     //TODO メールサーバーから最大何件取得するか（ユーザー選択に変更したい）
     private int messageLimitCountFromRemote = 0; // 0だと全件
 
@@ -1392,13 +1392,14 @@ public class Account implements BaseAccount {
         return StorageManager.getInstance(RakuPhotoMail.app).isReady(localStorageProviderId);
     }
 
-    public long getMessageLimitCountFromDb() {
+    public int getMessageLimitCountFromDb() {
         //TODO message limit count from DB 応急処置
-        return 10L;
+//        return 10;
+        return 20;
 //        return messageLimitCountFromDb;
     }
 
-    public void setMessageLimitCountFromDb(long limitCountFromDb) {
+    public void setMessageLimitCountFromDb(int limitCountFromDb) {
         this.messageLimitCountFromDb = limitCountFromDb;
     }
 
@@ -1411,13 +1412,14 @@ public class Account implements BaseAccount {
         this.messageLimitCountFromRemote = messageLimitCountFromRemote;
     }
 
-    public long getAttachmentCacheLimitCount() {
+    public int getAttachmentCacheLimitCount() {
         //TODO limit count 応急処置
-        return 50L;
+//        return 50;
+        return 5;
 //        return attachmentCacheLimitCount;
     }
 
-    public void setAttachmentCacheLimitCount(long attachmentCacheLimitCount) {
+    public void setAttachmentCacheLimitCount(int attachmentCacheLimitCount) {
         //TODO remote messeage synq count どっかでセットしないとな
         this.attachmentCacheLimitCount = attachmentCacheLimitCount;
     }

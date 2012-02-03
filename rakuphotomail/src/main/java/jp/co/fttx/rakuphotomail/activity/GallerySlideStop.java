@@ -233,7 +233,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         onNewIntent(getIntent());
         doBindService();
         setMailMoveVisibility(mUid);
-        onSlideStop();
+        onDispMail();
     }
 
     private void setupViews() {
@@ -285,10 +285,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         mAccount = Preferences.getPreferences(this).getAccount(intent.getStringExtra(EXTRA_ACCOUNT));
         mFolder = intent.getStringExtra(EXTRA_FOLDER);
         mUid = intent.getStringExtra(EXTRA_UID);
-    }
-
-    private void onDisp() throws RakuRakuException, MessagingException {
-        onSlideStop();
     }
 
     private ArrayList<Bitmap> makeBitmapList(ArrayList<AttachmentBean> beanArrayList) {
@@ -365,11 +361,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
 
     private void setViewSlide() {
         mSlideTargetAttachmentList = SlideAttachment.getSlideTargetList(mMessageBean.getAttachmentBeanList());
-        //TODO test
-        for (AttachmentBean bean : mSlideTargetAttachmentList) {
-            Log.d("yokohama", "GallerySlideStop#onDisp bean.getId():" + bean.getId());
-            Log.d("yokohama", "GallerySlideStop#onDisp bean.getContentUrl():" + bean.getContentUrl());
-        }
         //Thumbnail
         ArrayList<AttachmentBean> attachmentBeanList = mSlideTargetAttachmentList;
         if (1 < attachmentBeanList.size()) {
@@ -393,7 +384,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
-    private void onDisp(MessageBean messageBean) throws RakuRakuException {
+    private void onDisp(MessageBean messageBean) {
         mMessageBean = messageBean;
         setViewSlide();
     }
@@ -478,7 +469,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      * @author tooru.oguri
      * @since 0.1-beta1
      */
-    private void onSlideStop() {
+    private void onDispMail() {
         Log.d("yokohama", "GallerySlideStop#onDownloadAttachment");
         new DownloadAttachmentTask(this).execute();
     }
@@ -516,18 +507,14 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
             MessageBean messageBean = new MessageBean();
             try {
                 publishProgress(10);
-                try {
-                    SlideAttachment.downloadAttachment(mAccount, mFolder, SlideMessage.getPreUid(mAccount, mFolder, mMessageBean.getUid()));
-                } catch (MessagingException e) {
-                    Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
-                }
+                SlideAttachment.downloadAttachment(mAccount, mFolder, SlideMessage.getPreUid(mAccount, mFolder, mMessageBean.getUid()));
                 publishProgress(30);
                 messageBean = SlideMessage.getPreMessage(mAccount, mFolder, mMessageBean.getUid());
-                Log.d("yokohama", "DispMailPreTask#doInBackground mMessageBean:" + mMessageBean.getUid());
-                Log.d("yokohama", "DispMailPreTask#doInBackground messageBean:" + messageBean.getUid());
                 publishProgress(60);
             } catch (RakuRakuException e) {
                 Log.e(RakuPhotoMail.LOG_TAG, "DispMailPreTask#doInBackground() 次のメールが取得できず UID:" + mMessageBean.getUid());
+            } catch (MessagingException e) {
+                Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
             }
             return messageBean;
         }
@@ -544,15 +531,11 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
 
         @Override
         protected void onPostExecute(MessageBean messageBean) {
-            try {
-                onDisp(messageBean);
-                publishProgress(80);
-                setMailMoveVisibility(messageBean.getUid());
-                publishProgress(100);
-                onCancelled();
-            } catch (RakuRakuException e) {
-                Log.e(RakuPhotoMail.LOG_TAG, "DispMailPreTask#onPostExecute() 次のメールが表示できず UID:" + mMessageBean.getUid());
-            }
+            onDisp(messageBean);
+            publishProgress(80);
+            setMailMoveVisibility(messageBean.getUid());
+            publishProgress(100);
+            onCancelled();
         }
 
         @Override
@@ -592,25 +575,17 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
          */
         @Override
         protected MessageBean doInBackground(Void... params) {
-            Log.d("yokohama", "DispMailNextTask#doInBackground");
-
             MessageBean messageBean = new MessageBean();
             try {
                 publishProgress(10);
-                try {
-                    Log.d("yokohama", "DispMailNextTask#doInBackground だうそしてー");
-                    SlideAttachment.downloadAttachment(mAccount, mFolder, SlideMessage.getNextUid(mAccount, mFolder, mMessageBean.getUid()));
-                } catch (MessagingException e) {
-                    Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
-                }
+                SlideAttachment.downloadAttachment(mAccount, mFolder, SlideMessage.getNextUid(mAccount, mFolder, mMessageBean.getUid()));
                 publishProgress(30);
-
                 messageBean = SlideMessage.getNextMessage(mAccount, mFolder, mMessageBean.getUid());
-                Log.d("yokohama", "DispMailNextTask#doInBackground mMessageBean:" + mMessageBean.getUid());
-                Log.d("yokohama", "DispMailNextTask#doInBackground messageBean:" + messageBean.getUid());
                 publishProgress(60);
             } catch (RakuRakuException e) {
                 Log.e(RakuPhotoMail.LOG_TAG, "DispMailPreTask#doInBackground() 前のメールが取得できず UID:" + mMessageBean.getUid());
+            } catch (MessagingException e) {
+                Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
             }
             return messageBean;
         }
@@ -627,15 +602,11 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
 
         @Override
         protected void onPostExecute(MessageBean messageBean) {
-            try {
-                onDisp(messageBean);
-                publishProgress(80);
-                setMailMoveVisibility(messageBean.getUid());
-                publishProgress(100);
-                onCancelled();
-            } catch (RakuRakuException e) {
-                Log.e(RakuPhotoMail.LOG_TAG, "DispMailPreTask#onPostExecute() 前のメールが表示できず UID:" + mMessageBean.getUid());
-            }
+            onDisp(messageBean);
+            publishProgress(80);
+            setMailMoveVisibility(messageBean.getUid());
+            publishProgress(100);
+            onCancelled();
         }
 
         @Override
