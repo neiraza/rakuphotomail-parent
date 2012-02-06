@@ -100,7 +100,6 @@ public class SlideAttachment {
      * @throws MessagingException me
      */
     public static void clearCacheForAttachmentFile(Account account, String folderName, String uid) throws MessagingException {
-        Log.d("ikebukuro", "SlideAttachment#clearCacheForAttachmentFile clear uid:" + uid);
         LocalStore.LocalFolder localFolder = null;
         LocalStore localStore = account.getLocalStore();
         localFolder = localStore.getFolder(folderName);
@@ -126,9 +125,7 @@ public class SlideAttachment {
         }
     }
 
-    public static void downloadAttachment(final Account account, final String folder, final String uid)
-            throws MessagingException {
-        Log.d("ikebukuro", "SlideAttachment#download uid:" + uid);
+    public static void downloadAttachment(final Account account, final String folder, final String uid) {
         Folder remoteFolder = null;
         LocalStore.LocalFolder localFolder = null;
         try {
@@ -137,15 +134,7 @@ public class SlideAttachment {
             localFolder.open(Folder.OpenMode.READ_WRITE);
 
             Message message = localFolder.getMessage(uid);
-            if (message.isSet(Flag.X_DOWNLOADED_FULL)) {
-                Log.d("ikebukuro", "SlideAttachment#download 現世 X_DOWNLOADED_FULL");
-                //TODO 必要なくね？
-//                FetchProfile fp = new FetchProfile();
-//                fp.add(FetchProfile.Item.ENVELOPE);
-//                fp.add(FetchProfile.Item.BODY);
-//                localFolder.fetch(new Message[]{message}, fp, null);
-            } else {
-                Log.d("ikebukuro", "SlideAttachment#download 天国 落しにいくぜ");
+            if (!message.isSet(Flag.X_DOWNLOADED_FULL)) {
                 Store remoteStore = account.getRemoteStore();
                 remoteFolder = remoteStore.getFolder(folder);
                 remoteFolder.open(Folder.OpenMode.READ_WRITE);
@@ -162,6 +151,8 @@ public class SlideAttachment {
 
                 message.setFlag(Flag.X_DOWNLOADED_FULL, true);
             }
+        } catch (Exception e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage() + " UID:" + uid);
         } finally {
             closeFolder(remoteFolder);
             closeFolder(localFolder);

@@ -22,7 +22,6 @@ import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.activity.setup.AccountSettings;
 import jp.co.fttx.rakuphotomail.activity.setup.Prefs;
-import jp.co.fttx.rakuphotomail.mail.MessagingException;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
 import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
@@ -513,8 +512,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
                 publishProgress(60);
             } catch (RakuRakuException e) {
                 Log.e(RakuPhotoMail.LOG_TAG, "DispMailPreTask#doInBackground() 次のメールが取得できず UID:" + mMessageBean.getUid());
-            } catch (MessagingException e) {
-                Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
             }
             return messageBean;
         }
@@ -584,8 +581,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
                 publishProgress(60);
             } catch (RakuRakuException e) {
                 Log.e(RakuPhotoMail.LOG_TAG, "DispMailPreTask#doInBackground() 前のメールが取得できず UID:" + mMessageBean.getUid());
-            } catch (MessagingException e) {
-                Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
             }
             return messageBean;
         }
@@ -756,12 +751,8 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         @Override
         protected Void doInBackground(Void... params) {
             Log.d("yokohama", "DownloadAttachmentTask#doInBackground");
-            try {
-                publishProgress(20);
-                SlideAttachment.downloadAttachment(mAccount, mFolder, mUid);
-            } catch (MessagingException e) {
-                Log.e(RakuPhotoMail.LOG_TAG, "DownloadAttachmentTask#doInBackground():" + e.getMessage());
-            }
+            publishProgress(20);
+            SlideAttachment.downloadAttachment(mAccount, mFolder, mUid);
             Log.d("yokohama", "DownloadAttachmentTask#doInBackground wwwwwwwwwwwwwwwwwwwwwwwwwww");
             publishProgress(40);
             return null;

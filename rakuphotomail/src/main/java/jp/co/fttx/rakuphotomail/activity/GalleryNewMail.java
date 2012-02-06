@@ -22,7 +22,6 @@ import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.activity.setup.AccountSettings;
 import jp.co.fttx.rakuphotomail.activity.setup.Prefs;
-import jp.co.fttx.rakuphotomail.mail.MessagingException;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
 import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
@@ -521,8 +520,6 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
                 publishProgress(60);
             } catch (RakuRakuException e) {
                 Log.e(RakuPhotoMail.LOG_TAG, "DispMailPreTask#doInBackground() 次のメールが取得できず UID:" + mMessageBean.getUid());
-            } catch (MessagingException e) {
-                Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
             }
             return messageBean;
         }
@@ -591,8 +588,6 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
                 publishProgress(60);
             } catch (RakuRakuException e) {
                 Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideStop#onMailPre() 前のメールが取得できず UID:" + mMessageBean.getUid());
-            } catch (MessagingException e) {
-                Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
             }
             return messageBean;
         }
@@ -761,12 +756,8 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
          */
         @Override
         protected Void doInBackground(Void... params) {
-            try {
-                publishProgress(20);
-                SlideAttachment.downloadAttachment(mAccount, mFolder, mNewMailUid);
-            } catch (MessagingException e) {
-                Log.e(RakuPhotoMail.LOG_TAG, "DownloadAttachmentTask#doInBackground():" + e.getMessage());
-            }
+            publishProgress(20);
+            SlideAttachment.downloadAttachment(mAccount, mFolder, mNewMailUid);
             publishProgress(40);
             return null;
         }

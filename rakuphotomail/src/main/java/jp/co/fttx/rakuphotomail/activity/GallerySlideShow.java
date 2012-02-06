@@ -152,11 +152,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     /**
      * Handler
      */
-    private Handler mDownloadHandler = new Handler();
-    /**
-     * Handler
-     */
-    private Handler mClearHandler = new Handler();
+    private Handler mProgressHandler = new Handler();
     /**
      *
      */
@@ -230,8 +226,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         mContext = this;
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.gallery_slide_show);
-        mProgressDialog = new ProgressDialog(this);
-        setUpProgressDialog(mProgressDialog);
+        mProgressDialog = new ProgressDialog(mContext);
+        setUpProgressDialog(mProgressDialog,"Please wait","スライドショー情報をサーバーと同期中です。\n完了次第、スライドショーを開始します。\nしばらくお待ちください。");
         onNewIntent(getIntent());
         setupViews();
         doAllFolderSync();
@@ -243,7 +239,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         mTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                Log.d("kyoto", "新着メールをチェックしますね");
+                Log.d("newMailCheck", "新着メールをチェックしますね");
                 // 同期処理で新着メールを見つけられた場合
                 String newMailUid = MessageSync.syncMailboxForCheckNewMail(mAccount, mFolder, mAccount.getMessageLimitCountFromRemote());
                 doSentFolderSync();
@@ -318,14 +314,15 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void doSentFolderSync() {
+        Log.d("slideShowCheck", "GallerySlideShow#doSentFolderSync");
         MessageSync.syncMailboxForCheckNewMail(mAccount, mAccount.getSentFolderName(), 0);
     }
 
-    private void setUpProgressDialog(ProgressDialog progressDialog) {
+    private void setUpProgressDialog(ProgressDialog progressDialog,String title, String message) {
         if (!progressDialog.isShowing()) {
             progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progressDialog.setTitle("しばらくお待ちください");
-            progressDialog.setMessage("サーバーと同期し、スライドショー用の画像をダウンロード中です。\n完了次第、スライドショーを開始します。");
+            progressDialog.setTitle(title);
+            progressDialog.setMessage(message);
             progressDialog.setCancelable(true);
             progressDialog.show();
         }
@@ -516,41 +513,54 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     private void loopInfinite() throws RakuRakuException, MessagingException {
         try {
             while (mIsRepeatUidList) {
+                Log.d("owata", "ループスタート！ loopInfinite");
                 if (!"".equals(mStartUid)) {
+                    Log.d("owata", "mStartUidがないからcreateUidListするね mStartUid:" + mStartUid);
                     createUidList(mStartUid, mAccount.getMessageLimitCountFromDb());
                     mStartUid = "";
                 }
                 dismissProgressDialog(mProgressDialog);
 
-                Log.d("ikebukuro", "GallerySlideShow#loopInfinite download start");
+                mProgressHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mProgressDialog = new ProgressDialog(mContext);
+                        setUpProgressDialog(mProgressDialog,"Please wait","スライドショー情報をサーバーと同期中です。\nしばらくお待ちください。");
+                    }
+                });
                 for (int i = 0; i < mUidList.size(); i++) {
+                    Log.d("owata", "SlideAttachment.downloadAttachmentするね mUidList.get(i):" + mUidList.get(i));
                     SlideAttachment.downloadAttachment(mAccount, mFolder, mUidList.get(i));
                 }
-                Log.d("ikebukuro", "GallerySlideShow#loopInfinite download end");
+                dismissProgressDialog(mProgressDialog);
 
                 //slide show
                 loop();
+                Log.d("owata", "loop() owata");
 
-                Log.d("ikebukuro", "GallerySlideShow#loopInfinite remove用データ取得開始");
                 ArrayList<String> downloadedList = SlideMessage.getMessageUidRemoveTarget(mAccount);
-                Log.d("ikebukuro", "GallerySlideShow#loopInfinite remove用データ取得 downloadedList.toString():" + downloadedList.toString());
                 if (downloadedList.size() > mAccount.getAttachmentCacheLimitCount()) {
+                    mProgressHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            mProgressDialog = new ProgressDialog(mContext);
+                            setUpProgressDialog(mProgressDialog,"Please wait","最適化を行う為にキャッシュ情報を収集中です。\nしばらくお待ちください。");
+                        }
+                    });
+                    Log.d("owata", "clearしまっせ");
                     int removeCount = downloadedList.size() - mAccount.getAttachmentCacheLimitCount();
-                    Log.d("ikebukuro", "GallerySlideShow#loopInfinite remove用データ取得 removeCount:" + removeCount);
                     mRemoveList = new ArrayList<String>();
                     int currentIndex = downloadedList.indexOf(mDispUid);
-                    Log.d("ikebukuro", "GallerySlideShow#loopInfinite remove用データ取得 currentIndex:" + currentIndex);
 
-                    //TODO
                     createRemoveList(downloadedList, currentIndex, removeCount);
-
+                    dismissProgressDialog(mProgressDialog);
                     for (String uid : mRemoveList) {
-                        Log.d("ikebukuro", "GallerySlideShow#loopInfinite remove S uid:" + uid);
+                        Log.d("owata", "clearしまっせ uid:" + uid);
                         SlideAttachment.clearCacheForAttachmentFile(mAccount, mFolder, uid);
-                        Log.d("ikebukuro", "GallerySlideShow#loopInfinite remove E uid:" + uid);
                     }
-                }
 
+                }
+                Log.d("owata", "createUidListしまっせ");
                 createUidList(mDispUid, mAccount.getMessageLimitCountFromDb());
             }
         } catch (MessagingException e) {
@@ -559,22 +569,20 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void createRemoveList(ArrayList<String> downloadedList, int currentIndex, int removeCount) {
+        Log.d("owata", "clearしまっせcreateRemoveList");
         if (0 == currentIndex) {
             //あるばあい リストの先頭で１つ後ろがないので逆にリストの後ろを消していく
-            Log.d("ikebukuro", "GallerySlideShow#loopInfinite remove用データ取得 CASE 1");
             for (int i = (downloadedList.size() - 1); i >= (downloadedList.size() - removeCount); i--) {
                 mRemoveList.add(downloadedList.get(i));
             }
         } else if (0 < currentIndex) {
             //あるばあい
             if (currentIndex >= removeCount) {
-                Log.d("ikebukuro", "GallerySlideShow#loopInfinite remove用データ取得 CASE 2");
                 //currentIndex-1 から -removeCount 件を削除リストにつっこむ
                 for (int i = (currentIndex - 1); i >= (currentIndex - removeCount); i--) {
                     mRemoveList.add(downloadedList.get(i));
                 }
             } else {
-                Log.d("ikebukuro", "GallerySlideShow#loopInfinite remove用データ取得 CASE 3");
                 System.out.println(Math.abs(currentIndex - removeCount));
                 //abs(removeCount) の分だけ後ろからもってくる
                 for (int i = (downloadedList.size() - 1); i >= (downloadedList.size() - Math.abs(currentIndex - removeCount)); i--) {
@@ -586,14 +594,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 }
             }
         } else {
-            Log.d("ikebukuro", "GallerySlideShow#loopInfinite remove用データ取得 CASE 4");
             //ないばあい リストの一番後ろから件数分さくじょ
             for (int i = (downloadedList.size() - 1); i >= (downloadedList.size() - removeCount); i--) {
                 mRemoveList.add(downloadedList.get(i));
             }
         }
-        Log.d("ikebukuro", "GallerySlideShow#loopInfinite mRemoveList:" + mRemoveList.toString());
-        Log.d("ikebukuro", "GallerySlideShow#loopInfinite remove用データ取得完了");
     }
 
     /**
@@ -849,7 +854,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since 0.1-beta1
      */
     private void onSlideShow(String uid) {
-        Log.d("yokosuka", "GallerySlideShow#onDownloadAttachment");
         new SlideShowTask(this).execute(uid);
     }
 
@@ -878,7 +882,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             Log.d("yokosuka", "SlideShowTask#onPreExecute");
             dialog = new ProgressDialog(context);
             dialog.setTitle("Please wait");
-            dialog.setMessage("Loading data...");
+            dialog.setMessage("スライドショーデータをダウンロード中です。\nしばらくお待ちください。");
             dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             dialog.setCancelable(true);
             dialog.setOnCancelListener(this);
@@ -892,13 +896,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
          */
         @Override
         protected Void doInBackground(String... params) {
-            try {
-                publishProgress(20);
-                Log.d("ikebukuro", "SlideShowTask#doInBackground :" + params[0]);
-                SlideAttachment.downloadAttachment(mAccount, mFolder, params[0]);
-            } catch (MessagingException e) {
-                Log.e(RakuPhotoMail.LOG_TAG, "DownloadAttachmentTask#doInBackground():" + e.getMessage());
-            }
+            publishProgress(20);
+            Log.d("ikebukuro", "SlideShowTask#doInBackground :" + params[0]);
+            SlideAttachment.downloadAttachment(mAccount, mFolder, params[0]);
             publishProgress(40);
             return null;
         }
@@ -946,7 +946,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         protected void onPreExecute() {
             dialog = new ProgressDialog(context);
             dialog.setTitle("Please wait");
-            dialog.setMessage("Loading data...");
+            dialog.setMessage("キャッシュをクリアしています。\nしばらくお待ちください。");
             dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             dialog.setCancelable(true);
             dialog.setOnCancelListener(this);
