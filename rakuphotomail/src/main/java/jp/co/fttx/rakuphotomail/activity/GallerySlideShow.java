@@ -18,7 +18,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
@@ -67,6 +66,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     /**
      * Bundle put/get Mail Subject
      */
+    private static final String MESSAGE_SENDER_NAME = "senderName";
+    /**
+     * Bundle put/get Mail Subject
+     */
     private static final String MESSAGE_DATE = "date";
     /**
      * Bundle put/get Mail Subject
@@ -105,14 +108,18 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * context
      */
     private Context mContext;
-    /**
-     * view info layout(subject,date...)
-     */
-    private LinearLayout mInfo;
+//    /**
+//     * view info layout(subject,date...)
+//     */
+//    private LinearLayout mInfo;
     /**
      * view subject
      */
     private TextView mSubject;
+    /**
+     * view subject
+     */
+    private TextView mSenderName;
     /**
      * view slide image default
      */
@@ -170,6 +177,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     private TextView mAnswered;
     /**
+     * mail sent flag
+     */
+    private ImageView mAnsweredMark;
+
+    /**
      * Display Receive Date
      */
     private static final String DATE_FORMAT = "yyyy/MM/dd h:mm a";
@@ -225,7 +237,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         super.onCreate(savedInstanceState);
         mContext = this;
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.gallery_slide_show);
+//        setContentView(R.layout.gallery_slide_show);
+        setContentView(R.layout.gallery_slide_show_postcard1);
         mProgressDialog = new ProgressDialog(mContext);
         setUpProgressDialog(mProgressDialog,"Please wait","スライドショー情報をサーバーと同期中です。\n完了次第、スライドショーを開始します。\nしばらくお待ちください。");
         onNewIntent(getIntent());
@@ -338,30 +351,36 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * view setup
      */
     private void setupViews() {
-        mInfo = (LinearLayout) findViewById(R.id.gallery_info);
+//        mInfo = (LinearLayout) findViewById(R.id.gallery_info);
         setImageViewDefault();
         setImageViewEven();
         setImageViewOdd();
         mSubject = (TextView) findViewById(R.id.gallery_subject);
+        mSenderName = (TextView)findViewById(R.id.gallery_sender_name);
         mSlideHandler = new Handler() {
             public void handleMessage(android.os.Message msg) {
                 setVisibilityImageView().setImageBitmap((Bitmap) msg.obj);
                 Bundle bundle = msg.getData();
                 mDispUid = bundle.get(MESSAGE_UID).toString();
                 mSubject.setText(bundle.get(MESSAGE_SUBJECT).toString());
+                mSenderName.setText(bundle.get(MESSAGE_SENDER_NAME).toString());
                 SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
                 mDate.setText(sdf.format(bundle.get(MESSAGE_DATE)));
                 if ((Boolean) bundle.get(MESSAGE_ANSWERED)) {
                     mAnswered.setVisibility(View.VISIBLE);
+                    mAnsweredMark.setVisibility(View.VISIBLE);
                 } else {
                     mAnswered.setVisibility(View.GONE);
+                    mAnsweredMark.setVisibility(View.GONE);
                 }
                 Log.d("asakusa", "セットされたmSubject:" + bundle.get(MESSAGE_SUBJECT).toString());
             }
         };
         mDate = (TextView) findViewById(R.id.gallery_date);
         mAnswered = (TextView) findViewById(R.id.gallery_sent_flag);
+        mAnsweredMark = (ImageView)findViewById(R.id.gallery_sent_flag_mark);
         mAnswered.setVisibility(View.GONE);
+        mAnsweredMark.setVisibility(View.GONE);
     }
 
     /**
@@ -371,10 +390,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         mImageViewDefault = (ImageView) findViewById(ID_GALLERY_ATTACHMENT_PICTURE_DEFAULT);
         if ("".equals(mStartUid)) {
             mImageViewDefault.setVisibility(View.VISIBLE);
-            mInfo.setVisibility(View.GONE);
+//            mInfo.setVisibility(View.GONE);
         } else {
             mImageViewDefault.setVisibility(View.GONE);
-            mInfo.setVisibility(View.VISIBLE);
+//            mInfo.setVisibility(View.VISIBLE);
         }
     }
 
@@ -525,7 +544,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                     @Override
                     public void run() {
                         mProgressDialog = new ProgressDialog(mContext);
-                        setUpProgressDialog(mProgressDialog,"Please wait","スライドショー情報をサーバーと同期中です。\nしばらくお待ちください。");
+                        setUpProgressDialog(mProgressDialog,"Please wait","スライドショー情報をサーバーと同期中です。\nしばらくお待ちください。  ");
                     }
                 });
                 for (int i = 0; i < mUidList.size(); i++) {
@@ -678,6 +697,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         Bundle bundle = new Bundle();
         bundle.putString(MESSAGE_UID, messageBean.getUid());
         bundle.putString(MESSAGE_SUBJECT, messageBean.getSubject());
+        bundle.putString(MESSAGE_SENDER_NAME, messageBean.getSenderName());
         bundle.putLong(MESSAGE_DATE, messageBean.getDate());
         bundle.putBoolean(MESSAGE_ANSWERED, messageBean.isFlagAnswered());
         msg.setData(bundle);
@@ -720,7 +740,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             mImageViewOdd.setVisibility(View.GONE);
             imageView = mImageViewEven;
         }
-        mInfo.setVisibility(View.VISIBLE);
+//        mInfo.setVisibility(View.VISIBLE);
         return imageView;
     }
 
