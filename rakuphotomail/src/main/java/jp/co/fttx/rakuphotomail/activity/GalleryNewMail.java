@@ -312,7 +312,7 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
         //Thumbnail
         if (1 < mSlideTargetAttachmentList.size()) {
             mGalleryThumbnailLayout.setVisibility(View.VISIBLE);
-            ThumbnailImageAdapter thumbnailAdapter = new ThumbnailImageAdapter(mContext);
+            ThumbnailImageAdapter thumbnailAdapter = new ThumbnailImageAdapter(getApplicationContext());
             thumbnailAdapter.setImageItems(makeBitmapList(mSlideTargetAttachmentList));
             mGalleryThumbnail.setAdapter(thumbnailAdapter);
         } else {
@@ -335,11 +335,11 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
     }
 
     private Bitmap getThumbnailBitmap(AttachmentBean attachmentBean) {
-        return SlideAttachment.getThumbnailBitmap(mContext, mAccount, attachmentBean);
+        return SlideAttachment.getThumbnailBitmap(getApplicationContext(), mAccount, attachmentBean);
     }
 
     private void setImageViewPicture(ArrayList<AttachmentBean> attachmentBeanList, int index) {
-        Bitmap bitmap = SlideAttachment.getBitmap(mContext, getWindowManager().getDefaultDisplay(), mAccount, attachmentBeanList.get(index));
+        Bitmap bitmap = SlideAttachment.getBitmap(getApplicationContext(), getWindowManager().getDefaultDisplay(), mAccount, attachmentBeanList.get(index));
         mImageViewPicture.setImageBitmap(bitmap);
     }
 
