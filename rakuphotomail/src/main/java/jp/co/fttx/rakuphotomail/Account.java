@@ -132,6 +132,7 @@ public class Account implements BaseAccount {
     private int messageLimitCountFromDb = 0;
     //TODO メールサーバーから最大何件取得するか（ユーザー選択に変更したい）
     private int messageLimitCountFromRemote = 0; // 0だと全件
+    private long slideSleepTime = 3500L; // 0だと全件
 
     /**
      * Name of the folder that was last selected for a copy or move operation.
@@ -1424,5 +1425,10 @@ public class Account implements BaseAccount {
         this.attachmentCacheLimitCount = attachmentCacheLimitCount;
     }
 
-
+    public long getSlideSleepTime(){
+        return slideSleepTime;
+    }
+    public void setSlideSleepTime(long sleepTime){
+        this.slideSleepTime = sleepTime;
+    }
 }

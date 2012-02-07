@@ -287,7 +287,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private ArrayList<Bitmap> makeBitmapList(ArrayList<AttachmentBean> beanArrayList) {
-        Log.d("maguro", "GallerySlideStop#makeBitmapList");
         ArrayList<Bitmap> resultList = new ArrayList<Bitmap>();
         for (AttachmentBean attachmentBean : beanArrayList) {
             resultList.add(getThumbnailBitmap(attachmentBean));
@@ -296,11 +295,13 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private Bitmap getThumbnailBitmap(AttachmentBean attachmentBean) {
-        return SlideAttachment.getThumbnailBitmap(mContext, mAccount, attachmentBean);
+        //TODO from mContext to getApplicationContext()
+        return SlideAttachment.getThumbnailBitmap(getApplicationContext(), mAccount, attachmentBean);
     }
 
     private void setImageViewPicture(ArrayList<AttachmentBean> attachmentBeanList, int index) {
-        Bitmap bitmap = SlideAttachment.getBitmap(mContext, getWindowManager().getDefaultDisplay(), mAccount, attachmentBeanList.get(index));
+        //TODO from mContext to getApplicationContext()
+        Bitmap bitmap = SlideAttachment.getBitmap(getApplicationContext(), getWindowManager().getDefaultDisplay(), mAccount, attachmentBeanList.get(index));
         mImageViewPicture.setImageBitmap(bitmap);
     }
 
@@ -364,7 +365,8 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         ArrayList<AttachmentBean> attachmentBeanList = mSlideTargetAttachmentList;
         if (1 < attachmentBeanList.size()) {
             mGalleryThumbnailLayout.setVisibility(View.VISIBLE);
-            ThumbnailImageAdapter thumbnailAdapter = new ThumbnailImageAdapter(mContext);
+            //TODO from mContext to getApplicationContext()
+            ThumbnailImageAdapter thumbnailAdapter = new ThumbnailImageAdapter(getApplicationContext());
             thumbnailAdapter.setImageItems(makeBitmapList(attachmentBeanList));
             mGalleryThumbnail.setAdapter(thumbnailAdapter);
         } else {
@@ -436,7 +438,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Log.d("maguro", "GallerySlideStop#onItemClick id:" + id);
         setImageViewPicture(mSlideTargetAttachmentList, (int) id);
     }
 
