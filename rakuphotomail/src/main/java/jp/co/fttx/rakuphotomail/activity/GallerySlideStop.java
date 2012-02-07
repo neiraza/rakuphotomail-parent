@@ -179,7 +179,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     public static void actionHandle(Context context, Account account, String folder, String uid) {
-        Log.d("yokohama", "GallerySlideStop#actionHandlerFolder uid" + uid);
         Intent intent = new Intent(context, GallerySlideStop.class);
         if (null == account || null == folder || uid == null) {
             Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideStop#actionHandle account:" + account + " folder:" + folder + " uid:" + uid);
@@ -287,7 +286,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private ArrayList<Bitmap> makeBitmapList(ArrayList<AttachmentBean> beanArrayList) {
-        Log.d("maguro", "GallerySlideStop#makeBitmapList");
         ArrayList<Bitmap> resultList = new ArrayList<Bitmap>();
         for (AttachmentBean attachmentBean : beanArrayList) {
             resultList.add(getThumbnailBitmap(attachmentBean));
@@ -296,11 +294,13 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private Bitmap getThumbnailBitmap(AttachmentBean attachmentBean) {
-        return SlideAttachment.getThumbnailBitmap(mContext, mAccount, attachmentBean);
+        //TODO from mContext to getApplicationContext()
+        return SlideAttachment.getThumbnailBitmap(getApplicationContext(), mAccount, attachmentBean);
     }
 
     private void setImageViewPicture(ArrayList<AttachmentBean> attachmentBeanList, int index) {
-        Bitmap bitmap = SlideAttachment.getBitmap(mContext, getWindowManager().getDefaultDisplay(), mAccount, attachmentBeanList.get(index));
+        //TODO from mContext to getApplicationContext()
+        Bitmap bitmap = SlideAttachment.getBitmap(getApplicationContext(), getWindowManager().getDefaultDisplay(), mAccount, attachmentBeanList.get(index));
         mImageViewPicture.setImageBitmap(bitmap);
     }
 
@@ -364,7 +364,8 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         ArrayList<AttachmentBean> attachmentBeanList = mSlideTargetAttachmentList;
         if (1 < attachmentBeanList.size()) {
             mGalleryThumbnailLayout.setVisibility(View.VISIBLE);
-            ThumbnailImageAdapter thumbnailAdapter = new ThumbnailImageAdapter(mContext);
+            //TODO from mContext to getApplicationContext()
+            ThumbnailImageAdapter thumbnailAdapter = new ThumbnailImageAdapter(getApplicationContext());
             thumbnailAdapter.setImageItems(makeBitmapList(attachmentBeanList));
             mGalleryThumbnail.setAdapter(thumbnailAdapter);
         } else {
@@ -436,7 +437,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Log.d("maguro", "GallerySlideStop#onItemClick id:" + id);
         setImageViewPicture(mSlideTargetAttachmentList, (int) id);
     }
 
@@ -445,7 +445,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      * @since 0.1-beta1
      */
     private void onMailPre() {
-        new DispMailPreTask(this).execute();
+        new DispPreMailTask(this).execute();
     }
 
     /**
@@ -453,7 +453,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      * @since 0.1-beta1
      */
     private void onMailNext() {
-        new DispMailNextTask(this).execute();
+        new DispNextMailTask(this).execute();
     }
 
     /**
@@ -469,7 +469,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      * @since 0.1-beta1
      */
     private void onDispMail() {
-        Log.d("yokohama", "GallerySlideStop#onDownloadAttachment");
         new DownloadAttachmentTask(this).execute();
     }
 
@@ -477,11 +476,11 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      * @author tooru.oguri
      * @since 0.1-beta1
      */
-    private class DispMailPreTask extends AsyncTask<Void, Integer, MessageBean> implements DialogInterface.OnCancelListener {
+    private class DispPreMailTask extends AsyncTask<Void, Integer, MessageBean> implements DialogInterface.OnCancelListener {
         ProgressDialog dialog;
         Context context;
 
-        public DispMailPreTask(Context context) {
+        public DispPreMailTask(Context context) {
             this.context = context;
         }
 
@@ -546,11 +545,11 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      * @author tooru.oguri
      * @since 0.1-beta1
      */
-    private class DispMailNextTask extends AsyncTask<Void, Integer, MessageBean> implements DialogInterface.OnCancelListener {
+    private class DispNextMailTask extends AsyncTask<Void, Integer, MessageBean> implements DialogInterface.OnCancelListener {
         ProgressDialog dialog;
         Context context;
 
-        public DispMailNextTask(Context context) {
+        public DispNextMailTask(Context context) {
             this.context = context;
         }
 
@@ -733,7 +732,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
 
         @Override
         protected void onPreExecute() {
-            Log.d("yokohama", "DownloadAttachmentTask#onPreExecute");
             dialog = new ProgressDialog(context);
             dialog.setTitle("Please wait");
             dialog.setMessage("Loading data...");
@@ -750,10 +748,8 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
          */
         @Override
         protected Void doInBackground(Void... params) {
-            Log.d("yokohama", "DownloadAttachmentTask#doInBackground");
             publishProgress(20);
             SlideAttachment.downloadAttachment(mAccount, mFolder, mUid);
-            Log.d("yokohama", "DownloadAttachmentTask#doInBackground wwwwwwwwwwwwwwwwwwwwwwwwwww");
             publishProgress(40);
             return null;
         }
@@ -770,8 +766,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
 
         @Override
         protected void onPostExecute(Void tmp) {
-            Log.d("yokohama", "DownloadAttachmentTask#onPostExecute");
-
             try {
                 mMessageBean = SlideMessage.getMessage(mAccount, mFolder, mUid);
                 publishProgress(75);

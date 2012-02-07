@@ -53,7 +53,6 @@ public class SlideAttachment {
     }
 
     public static Bitmap getThumbnailBitmap(Context context, Account account, AttachmentBean attachmentBean) {
-        Log.d("maguro", "SlideAttachment#getThumbnailBitmap");
         try {
             BitmapFactory.Options options = new BitmapFactory.Options();
             Uri uri = AttachmentProvider.getAttachmentUri(account, attachmentBean.getId());
@@ -66,11 +65,10 @@ public class SlideAttachment {
             int scaleH = options.outHeight / displayH + 1;
             options.inJustDecodeBounds = false;
             options.inSampleSize = Math.max(scaleW, scaleH);
-            Log.d("maguro", "SlideAttachment#getThumbnailBitmap Thumbnailいけそう？");
             return BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null,
                     options);
         } catch (Exception e) {
-            Log.e(RakuPhotoMail.LOG_TAG, "Exception:" + e);
+            Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
         }
         return null;
     }
@@ -100,9 +98,8 @@ public class SlideAttachment {
      * @throws MessagingException me
      */
     public static void clearCacheForAttachmentFile(Account account, String folderName, String uid) throws MessagingException {
-        LocalStore.LocalFolder localFolder = null;
         LocalStore localStore = account.getLocalStore();
-        localFolder = localStore.getFolder(folderName);
+        LocalStore.LocalFolder localFolder = localStore.getFolder(folderName);
         long[] attachmentIdList = localFolder.deleteAttachmentFile(uid);
         for (long attachmentId : attachmentIdList) {
             if (localFolder.clearContentUri(attachmentId)) {

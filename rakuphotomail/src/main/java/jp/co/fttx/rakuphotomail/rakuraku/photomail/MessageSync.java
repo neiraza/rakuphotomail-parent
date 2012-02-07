@@ -6,6 +6,7 @@ package jp.co.fttx.rakuphotomail.rakuraku.photomail;
 
 import android.util.Log;
 import jp.co.fttx.rakuphotomail.Account;
+import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.mail.*;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
 
@@ -34,8 +35,6 @@ public class MessageSync {
      * @since rakuphoto 0.1-beta1
      */
     public static String syncMailboxForCheckNewMail(Account account, String folderName, int messageLimitCountFromRemote) {
-        Log.d("newMailCheck", "MessageSync#syncMailboxForCheckNewMail folderName:" + folderName);
-        Log.d("newMailCheck", "MessageSync#syncMailboxForCheckNewMail messageLimitCountFromRemote:" + messageLimitCountFromRemote);
 
         String newMailUid = null;
 
@@ -101,7 +100,7 @@ public class MessageSync {
             localFolder.setStatus(null);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
         } finally {
             closeFolder(remoteFolder);
             closeFolder(localFolder);

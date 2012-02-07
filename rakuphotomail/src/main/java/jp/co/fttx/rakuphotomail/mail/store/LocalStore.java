@@ -683,15 +683,6 @@ public class LocalStore extends Store implements Serializable {
                                         new String[]{file.getName()}, null, null, null);
                                 if (cursor.moveToNext()) {
                                     if (cursor.getString(0) == null) {
-                                        if (RakuPhotoMail.DEBUG)
-                                            Log.d(RakuPhotoMail.LOG_TAG,
-                                                    "Attachment " + file.getAbsolutePath()
-                                                            + " has no store data, not deleting");
-                                        /*
-                                         * If the attachment has no store data
-                                         * it is not recoverable, so we won't
-                                         * delete it.
-                                         */
                                         continue;
                                     }
                                 }
@@ -1015,12 +1006,9 @@ public class LocalStore extends Store implements Serializable {
             @Override
             public HashMap<Integer, HashMap<String, String>> doDbWork(final SQLiteDatabase db) throws WrappedException {
                 Cursor c = null;
-                Log.d("refs2608@@@", "LocalStore#getAllHeaders");
                 try {
                     String queryString = "select id,message_id,name,value from headers";
-                    Log.d("refs2608@@@", "LocalStore#getAllHeaders queryString:" + queryString);
                     c = db.rawQuery(queryString, null);
-                    Log.d("refs2608@@@", "LocalStore#getAllHeaders c.getCount():" + c.getCount());
                     return setAllHeaders(c);
                 } finally {
                     if (c != null) {
@@ -1036,12 +1024,9 @@ public class LocalStore extends Store implements Serializable {
             @Override
             public HashMap<String, String> doDbWork(final SQLiteDatabase db) throws WrappedException {
                 Cursor c = null;
-                Log.d("refs2608@@@", "LocalStore#getHeaders");
                 try {
                     String queryString = "select id,message_id,name,value from headers where message_id = " + messageId;
-                    Log.d("refs2608@@@", "LocalStore#getHeaders queryString:" + queryString);
                     c = db.rawQuery(queryString, null);
-                    Log.d("refs2608@@@", "LocalStore#getHeaders c.getCount():" + c.getCount());
                     return setHeaders(c);
                 } finally {
                     if (c != null) {
@@ -1053,7 +1038,6 @@ public class LocalStore extends Store implements Serializable {
     }
 
     private HashMap<Integer, HashMap<String, String>> setAllHeaders(Cursor c) {
-        Log.d("refs2608@@@", "LocalStore#setAllHeaders");
         HashMap<Integer, HashMap<String, String>> parentMap = new HashMap<Integer, HashMap<String, String>>();
         HashMap<String, String> childMap = new HashMap<String, String>();
 
@@ -1063,14 +1047,10 @@ public class LocalStore extends Store implements Serializable {
         while (true) {
             if (c.moveToNext()) {
                 int messageId = c.getShort(1);
-                Log.d("refs2608@@@", "LocalStore#setAllHeaders oldMessageId:" + oldMessageId);
-                Log.d("refs2608@@@", "LocalStore#setAllHeaders c.getString(1):" + c.getString(1));
                 if (0 != oldMessageId && messageId != oldMessageId) {
                     parentMap.put(oldMessageId, childMap);
                     childMap = new HashMap<String, String>();
                 }
-                Log.d("refs2608@@@", "LocalStore#setAllHeaders c.getString(2):" + c.getString(2));
-                Log.d("refs2608@@@", "LocalStore#setAllHeaders c.getString(3):" + c.getString(3));
                 childMap.put(c.getString(2), c.getString(3));
                 oldMessageId = messageId;
             } else {
@@ -1081,11 +1061,8 @@ public class LocalStore extends Store implements Serializable {
     }
 
     private HashMap<String, String> setHeaders(Cursor c) {
-        Log.d("refs2608@@@", "LocalStore#setHeaders");
         HashMap<String, String> childMap = new HashMap<String, String>();
         while (c.moveToNext()) {
-            Log.d("refs2608@@@", "LocalStore#setHeaders c.getString(2):" + c.getString(2));
-            Log.d("refs2608@@@", "LocalStore#setHeaders c.getString(3):" + c.getString(3));
             childMap.put(c.getString(2), c.getString(3));
         }
         return childMap;
@@ -1096,14 +1073,12 @@ public class LocalStore extends Store implements Serializable {
             @Override
             public ArrayList<String> doDbWork(final SQLiteDatabase db) throws WrappedException {
                 Cursor c = null;
-                Log.d("refs2608@@@@@", "LocalStore#getHeadersReferences");
                 try {
                     String queryString = "select value from headers where name = 'In-Reply-To' or name = 'References' group by value;";
                     c = db.rawQuery(queryString, null);
 
                     ArrayList<String> result = new ArrayList<String>();
                     while (c.moveToNext()) {
-                        Log.d("refs2608@@@@@", "LocalStore#getHeadersReferences value:" + c.getString(0));
                         result.add(c.getString(0));
                     }
 
@@ -1183,7 +1158,7 @@ public class LocalStore extends Store implements Serializable {
                         i++;
                     }
                 } catch (Exception e) {
-                    Log.d(RakuPhotoMail.LOG_TAG, "Got an exception " + e);
+                    Log.e(RakuPhotoMail.LOG_TAG, "Got an exception " + e);
                 } finally {
                     if (cursor != null) {
                         cursor.close();
@@ -2666,10 +2641,6 @@ public class LocalStore extends Store implements Serializable {
 
                             try {
                                 String sql = "SELECT " + GET_MESSAGES_COLS + "FROM ( SELECT " + GET_MESSAGES_COLS + " FROM MESSAGES AS m WHERE EXISTS ( SELECT * FROM ATTACHMENTS AS a WHERE ( a.NAME LIKE '%.jpg' OR a.NAME LIKE '%.png' OR a.NAME LIKE '%.JPG' OR a.NAME LIKE '%.PNG' OR a.NAME LIKE '%.jpeg' OR a.MIME_TYPE = 'image/jpeg' OR a.MIME_TYPE = 'image/png') AND a.MESSAGE_ID = m.ID)) as mes WHERE ? > mes.UID AND mes.FOLDER_ID = ? ORDER BY mes.UID DESC LIMIT 1;";
-                                Log.d("ucom", "sql:" + sql);
-                                Log.d("ucom", "uid:" + uid);
-                                Log.d("ucom", "folderId:" + folderId);
-
                                 cursor = db.rawQuery(sql, new String[]{
                                         message.getUid(), Long.toString(folderId)});
                                 if (!cursor.moveToNext()) {
@@ -2702,15 +2673,11 @@ public class LocalStore extends Store implements Serializable {
 
         @Override
         public void moveMessages(final Message[] msgs, final Folder destFolder) throws MessagingException {
-            Log.d("refs1961", "LocalFolder#moveMessages");
-
             if (!(destFolder instanceof LocalFolder)) {
                 throw new MessagingException("moveMessages called with non-LocalFolder");
             }
 
             final LocalFolder lDestFolder = (LocalFolder) destFolder;
-            Log.d("refs1961", "LocalFolder#moveMessages lDestFolder.getName():" + lDestFolder.getName());
-
             try {
                 database.execute(false, new DbCallback<Void>() {
                     @Override
@@ -2733,18 +2700,9 @@ public class LocalStore extends Store implements Serializable {
                                 }
 
                                 String oldUID = message.getUid();
-                                Log.d("refs1961", "LocalFolder#moveMessages oldUID:" + oldUID);
-
-                                if (RakuPhotoMail.DEBUG)
-                                    Log.d(RakuPhotoMail.LOG_TAG,
-                                            "Updating folder_id to " + lDestFolder.getId()
-                                                    + " for message with UID " + message.getUid() + ", id "
-                                                    + lMessage.getId() + " currently in folder " + getName());
 
                                 message.setUid(RakuPhotoMail.LOCAL_UID_PREFIX
                                         + UUID.randomUUID().toString());
-                                Log.d("refs1961", "LocalFolder#moveMessages newUID:" + message.getUid());
-
 
                                 db.execSQL("UPDATE messages " + "SET folder_id = ?, uid = ? "
                                         + "WHERE id = ?", new Object[]{lDestFolder.getId(),
@@ -2865,8 +2823,6 @@ public class LocalStore extends Store implements Serializable {
                     @Override
                     public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
                             UnavailableStorageException {
-                        Log.d("refs2608@@", "LocalFolder#appendMessages TEST START");
-
                         try {
                             for (Message message : messages) {
                                 if (!(message instanceof MimeMessage)) {
@@ -2994,7 +2950,6 @@ public class LocalStore extends Store implements Serializable {
                         } catch (MessagingException e) {
                             throw new WrappedException(e);
                         }
-                        Log.d("refs2608@@", "LocalFolder#appendMessages TEST END");
                         return null;
                     }
                 });
@@ -3348,7 +3303,6 @@ public class LocalStore extends Store implements Serializable {
          *
          */
         public void changeUid(final LocalMessage message) throws MessagingException {
-            Log.d("refs1961", "LocalFolder#changeUid message.getUid():" + message.getUid());
             open(OpenMode.READ_WRITE);
             final ContentValues cv = new ContentValues();
             cv.put("uid", message.getUid());
@@ -3364,10 +3318,8 @@ public class LocalStore extends Store implements Serializable {
 
         @Override
         public void setFlags(Message[] messages, Flag[] flags, boolean value) throws MessagingException {
-            Log.d("steinsgate", "LocalFolder#setFlags");
             open(OpenMode.READ_WRITE);
             for (Message message : messages) {
-                Log.d("steinsgate", "LocalFolder#setFlags 1");
                 message.setFlags(flags, value);
             }
         }
@@ -3725,8 +3677,6 @@ public class LocalStore extends Store implements Serializable {
                     return null;
                 }
             });
-            if (RakuPhotoMail.DEBUG)
-                Log.d(RakuPhotoMail.LOG_TAG, "Updated last UID for folder " + mName + " to " + lastUid);
             mLastUid = lastUid;
         }
 
