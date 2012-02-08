@@ -1395,8 +1395,7 @@ public class Account implements BaseAccount {
 
     public int getMessageLimitCountFromDb() {
         //TODO message limit count from DB 応急処置
-        return 10;
-//        return 20;
+        return 5;
 //        return messageLimitCountFromDb;
     }
 
@@ -1415,8 +1414,7 @@ public class Account implements BaseAccount {
 
     public int getAttachmentCacheLimitCount() {
         //TODO limit count 応急処置
-//        return 50;
-        return 15;
+        return 20;
 //        return attachmentCacheLimitCount;
     }
 
