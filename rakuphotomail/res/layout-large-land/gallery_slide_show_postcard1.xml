@@ -76,7 +76,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="18sp"
-                    android:text="string/gallery_sent_flg"
+                    android:text="@string/gallery_sent_flg"
                     android:typeface="sans"/>
             <ImageView
                     android:id="@+id/gallery_sent_flag_mark"
