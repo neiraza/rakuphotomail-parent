@@ -573,7 +573,6 @@ public class ImapStore extends Store {
 
         @Override
         public void open(OpenMode mode) throws MessagingException {
-            Log.d("okinawa", "ImapFolder#open");
             internalOpen(mode);
 
             if (mMessageCount == -1) {

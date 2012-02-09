@@ -33,7 +33,6 @@ import jp.co.fttx.rakuphotomail.rakuraku.photomail.MessageSync;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideAttachment;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideCheck;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideMessage;
-import jp.co.fttx.rakuphotomail.service.AttachmentSyncService;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -416,7 +415,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         mAccount = Preferences.getPreferences(this).getAccount(intent.getStringExtra(EXTRA_ACCOUNT));
         mFolder = intent.getStringExtra(EXTRA_FOLDER);
         mStartUid = intent.getStringExtra(EXTRA_UID);
-        intent.setClass(mContext, AttachmentSyncService.class);
         setIntent(intent);
     }
 

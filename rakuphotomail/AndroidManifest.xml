@@ -275,14 +275,6 @@
             android:screenOrientation="landscape"
         </activity>
 
-        <receiver android:name=".service.AttachmentSyncReceiver">
-            <intent-filter>
-                <action android:name="jp.co.fttx.rakuphotomail.service.AttachmentSyncService.action.SLIDE_SHOW"/>
-            </intent-filter>
-            <intent-filter>
-                <action android:name="jp.co.fttx.rakuphotomail.service.AttachmentSyncService.action.SLIDE_SHOW_STOP"/>
-            </intent-filter>
-        </receiver>
         <receiver
                 android:enabled="true"
                 android:name="jp.co.fttx.rakuphotomail.service.BootReceiver">
@@ -348,10 +340,6 @@
             </intent-filter>
         </receiver>
 
-        <service
-                android:enabled="true"
-                android:name=".service.AttachmentSyncService">
-        </service>
         <service
                 android:enabled="true"
                 android:name="jp.co.fttx.rakuphotomail.service.MailService">

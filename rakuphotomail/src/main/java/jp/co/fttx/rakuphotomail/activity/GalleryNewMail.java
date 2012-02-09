@@ -5,11 +5,12 @@
 package jp.co.fttx.rakuphotomail.activity;
 
 import android.app.ProgressDialog;
-import android.content.*;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,8 +29,6 @@ import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideAttachment;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideMessage;
 import jp.co.fttx.rakuphotomail.rakuraku.util.ThumbnailImageAdapter;
-import jp.co.fttx.rakuphotomail.service.AttachmentSyncReceiver;
-import jp.co.fttx.rakuphotomail.service.AttachmentSyncService;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -137,18 +136,6 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
      */
     private MessageBean mMessageBean;
     /**
-     * service
-     */
-    private AttachmentSyncService mSyncService;
-    /**
-     * isBound
-     */
-    private boolean mIsBound = false;
-    /**
-     * receiver
-     */
-    private AttachmentSyncReceiver mAttachmentReceiver = new AttachmentSyncReceiver();
-    /**
      * thumbnail
      */
     private LinearLayout mGalleryThumbnailInfoLayout;
@@ -247,7 +234,6 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
         onNewIntent(getIntent());
         setMailMoveVisibility(mNewMailUid);
         onDispMail();
-        doBindService();
     }
 
     private void setupViews() {
@@ -364,7 +350,6 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
     @Override
     public void onDestroy() {
         super.onDestroy();
-        doUnbindService();
         finish();
     }
 
@@ -410,39 +395,6 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
             mMailPre.setEnabled(true);
         }
     }
-
-    /**
-     * @author tooru.oguri
-     * @since rakuphoto 0.1-beta1
-     */
-    private void doBindService() {
-        if (!mIsBound) {
-            mIsBound = bindService(getIntent(), mConnection, Context.BIND_AUTO_CREATE);
-            IntentFilter attachmentFilter = new IntentFilter(AttachmentSyncService.ACTION_SLIDE_SHOW_STOP);
-            registerReceiver(mAttachmentReceiver, attachmentFilter);
-        }
-    }
-
-    private void doUnbindService() {
-        if (mIsBound) {
-            unbindService(mConnection);
-            mIsBound = false;
-            unregisterReceiver(mAttachmentReceiver);
-        }
-    }
-
-    /**
-     * ServiceConnection
-     */
-    private ServiceConnection mConnection = new ServiceConnection() {
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            mSyncService = ((AttachmentSyncService.AttachmentSyncBinder) service).getService();
-        }
-
-        public void onServiceDisconnected(ComponentName className) {
-            mSyncService = null;
-        }
-    };
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
