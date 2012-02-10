@@ -30,6 +30,7 @@ import jp.co.fttx.rakuphotomail.mail.MessagingException;
 import jp.co.fttx.rakuphotomail.mail.internet.MimeMessage;
 import jp.co.fttx.rakuphotomail.mail.internet.TextBody;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
+import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.MessageSync;
 
 import java.util.Date;
@@ -285,11 +286,9 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
      * @since 0.1-beta1
      */
     private void onSend(String uid) {
-        Log.d("refs1961", "GallerySendingMail#onSend start");
         sendMessage();
         MessagingController.getInstance(getApplication()).setFlag(mAccount, mAccount.getInboxFolderName(),
                 new String[]{uid}, mMessageReference.flag, true);
-        Log.d("refs1961", "GallerySendingMail#onSend end");
     }
 
     /**
@@ -297,15 +296,14 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
      * @since 0.1-beta1
      */
     private void onSendAfter(Account account, String folderName, String uid) {
-        Log.d("refs1961", "GallerySendingMail#onSendAfter start");
         try {
-            Log.d("refs1961", "GallerySendingMail#onSendAfter folderName:" + folderName);
-            Log.d("refs1961", "GallerySendingMail#onSendAfter uid:" + uid);
             MessageSync.sentMessageAfter(account, folderName, uid);
         } catch (MessagingException e) {
             Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
+        } catch (RakuRakuException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
+            return;
         }
-        Log.d("refs1961", "GallerySendingMail#onSendAfter end");
     }
 
     /**
@@ -319,7 +317,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
         //OUTBOX
 //        MessageSync.syncMailboxForCheckNewMail(account, account.getOutboxFolderName(), 0);
         //Sent
-        Log.d("SendCheck", "GallerySendingMail#onSync");
         MessageSync.syncMailboxForCheckNewMail(account, account.getSentFolderName(), 0);
     }
 
@@ -328,7 +325,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
      * @since 0.1-beta1
      */
     private void sendMessage() {
-        Log.d("refs1961", "GallerySendingMail#sendMessage");
         new SendMessageTask(this).execute();
     }
 
@@ -341,14 +337,11 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
         Context context;
 
         public SendMessageTask(Context context) {
-            Log.d("refs1961", "SendMessageTask constracta start");
             this.context = context;
-            Log.d("refs1961", "SendMessageTask constructor end");
         }
 
         @Override
         protected void onPreExecute() {
-            Log.d("refs1961", "SendMessageTask#onPreExecute start");
             dialog = new ProgressDialog(context);
             dialog.setTitle("Please wait");
             dialog.setMessage("Loading data...");
@@ -358,7 +351,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
             dialog.setMax(100);
             dialog.setProgress(0);
             dialog.show();
-            Log.d("refs1961", "SendMessageTask#onPreExecute end");
         }
 
         /**
@@ -366,7 +358,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
          */
         @Override
         protected Void doInBackground(Void... params) {
-            Log.d("refs1961", "SendMessageTask#doInBackground start");
 
             MimeMessage message;
             try {
@@ -376,42 +367,31 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
                 Log.e(RakuPhotoMail.LOG_TAG, "Failed to create new message for send or save.", me);
                 throw new RuntimeException("Failed to create a new message for send or save.", me);
             }
-            Log.d("refs1961", "SendMessageTask#doInBackground MessagingController#sendMessage前 message.getUid():" + message.getUid());
             String sendTempUid = MessagingController.getInstance(getApplication()).sendMessage(mAccount, message);
-            Log.d("refs1961", "SendMessageTask#doInBackground MessagingController#sendMessage後 message.getUid():" + message.getUid());
             publishProgress(60);
             onSendAfter(mAccount, mAccount.getSentFolderName(), sendTempUid);
             publishProgress(100);
-            Log.d("refs1961", "SendMessageTask#doInBackground end");
             return null;
         }
 
         @Override
         protected void onProgressUpdate(Integer... values) {
-            Log.d("refs1961", "SendMessageTask#onProgressUpdate start");
             dialog.setProgress(values[0]);
-            Log.d("refs1961", "SendMessageTask#onProgressUpdate end");
         }
 
         @Override
         protected void onCancelled() {
-            Log.d("refs1961", "SendMessageTask#onCancelled start");
             dialog.dismiss();
-            Log.d("refs1961", "SendMessageTask#onCancelled end");
         }
 
         @Override
         protected void onPostExecute(Void tmp) {
-            Log.d("refs1961", "SendMessageTask#onPostExecute start");
             onSync(mAccount);
-            Log.d("refs1961", "SendMessageTask#onPostExecute end");
         }
 
         @Override
         public void onCancel(DialogInterface dialog) {
-            Log.d("refs1961", "SendMessageTask#onCancel start");
             this.cancel(true);
-            Log.d("refs1961", "SendMessageTask#onCancel end");
         }
 
     }
@@ -425,7 +405,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
      * @since 0.1-beta1
      */
     private MimeMessage createMessage() throws MessagingException {
-        Log.d("refs1961", "GallerySendingMail#createMessage start");
         MimeMessage message = new MimeMessage();
         message.addSentDate(new Date());
         message.setFrom(mFromAddress);
@@ -441,7 +420,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
         TextBody body = null;
         body = new TextBody("このメールは、らくフォトメールの試験用メールです。");
         message.setBody(body);
-        Log.d("refs1961", "GallerySendingMail#createMessage end");
         return message;
     }
 

@@ -9,6 +9,7 @@ import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.mail.*;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
+import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -99,6 +100,10 @@ public class MessageSync {
             localFolder.setLastChecked(System.currentTimeMillis());
             localFolder.setStatus(null);
 
+        } catch (RakuRakuException re) {
+            Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + re.getMessage());
+            //タイムアウトも返してやろう作戦
+            return null;
         } catch (Exception e) {
             Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
         } finally {
@@ -186,7 +191,7 @@ public class MessageSync {
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
-    public static void sentMessageAfter(Account account, String folderName, String sentMessageUid) throws MessagingException {
+    public static void sentMessageAfter(Account account, String folderName, String sentMessageUid) throws MessagingException, RakuRakuException {
         Log.d("refs1961", "MessageSync#sentMessageAfter");
 
         if (account.getErrorFolderName().equals(folderName)) {
