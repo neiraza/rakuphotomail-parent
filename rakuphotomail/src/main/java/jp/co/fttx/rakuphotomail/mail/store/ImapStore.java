@@ -263,7 +263,6 @@ public class ImapStore extends Store {
 
     @Override
     public Folder getFolder(String name) {
-        Log.d("okinawa", "ImapStore#getFolder");
         ImapFolder folder;
         synchronized (mFolderCache) {
             folder = mFolderCache.get(name);
@@ -918,7 +917,6 @@ public class ImapStore extends Store {
 
         @Override
         public Message getMessage(String uid) throws MessagingException {
-            Log.d("okinawa","ImapFolder#getMessage");
             return new ImapMessage(uid, this);
         }
 

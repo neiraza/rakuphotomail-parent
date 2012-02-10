@@ -178,6 +178,7 @@ public class GalleryNewMail extends RakuPhotoActivity implements View.OnClickLis
      * @since rakuphoto 0.1-beta1
      */
     public static void actionHandle(Context context, Account account, String folder, String newMailUid, String stopUid) {
+        Log.d("pad","新着表示にいくね");
         Intent intent = new Intent(context, GalleryNewMail.class);
         if (null == account || null == folder || newMailUid == null || stopUid == null) {
             Log.w(RakuPhotoMail.LOG_TAG, "GalleryNewMail#actionHandle account:" + account + " folder:"

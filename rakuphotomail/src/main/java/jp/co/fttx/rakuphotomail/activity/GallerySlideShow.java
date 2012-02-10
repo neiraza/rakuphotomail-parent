@@ -289,7 +289,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 }
             }
         }, 180000L, 180000L);
-
     }
 
     /**
@@ -507,7 +506,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     private void onSlide() {
-        mSlideShowThread.start();
+        if(!mSlideShowThread.isAlive()){
+            mSlideShowThread.start();
+        }
     }
 
     /**

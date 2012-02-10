@@ -242,11 +242,9 @@ public class MessageSync {
     //ローカルに落とした証でもマーキングしてんのか？
     private static void setLocalFlaggedCountToRemote(LocalStore.LocalFolder localFolder, Folder remoteFolder)
             throws MessagingException {
-        Log.d("maguro", "MessageSync#setLocalFlaggedCountToRemote start");
 
         int remoteFlaggedMessageCount = remoteFolder.getFlaggedMessageCount();
         if (remoteFlaggedMessageCount != -1) {
-            Log.d("maguro", "MessageSync#setLocalFlaggedCountToRemote setFlaggedMessageCountって何だよwwwwwwwwwww");
             localFolder.setFlaggedMessageCount(remoteFlaggedMessageCount);
         } else {
             int flaggedCount = 0;
@@ -258,7 +256,6 @@ public class MessageSync {
             }
             localFolder.setFlaggedMessageCount(flaggedCount);
         }
-        Log.d("maguro", "MessageSync#setLocalFlaggedCountToRemote end");
     }
 
     private static void closeFolder(Folder f) {
