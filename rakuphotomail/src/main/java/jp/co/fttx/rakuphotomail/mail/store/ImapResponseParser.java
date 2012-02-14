@@ -3,8 +3,11 @@ package jp.co.fttx.rakuphotomail.mail.store;
 import jp.co.fttx.rakuphotomail.mail.MessagingException;
 import jp.co.fttx.rakuphotomail.mail.filter.FixedLengthInputStream;
 import jp.co.fttx.rakuphotomail.mail.filter.PeekableInputStream;
+import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -45,7 +48,7 @@ public class ImapResponseParser {
                 readTokens(response);
             } else if (ch == '+') {
                 response.mCommandContinuationRequested =
-                    parseCommandContinuationRequest();
+                        parseCommandContinuationRequest();
                 //TODO: Add special "resp-text" parsing
                 readTokens(response);
             } else {
@@ -58,14 +61,17 @@ public class ImapResponseParser {
             }
 
             return response;
+        } catch (RakuRakuException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         } finally {
             mResponse.mCallback = null;
             mResponse = null;
             mException = null;
         }
+        return null;
     }
 
-    private void readTokens(ImapResponse response) throws IOException {
+    private void readTokens(ImapResponse response) throws IOException, RakuRakuException {
         response.clear();
         Object token;
         while ((token = readToken(response)) != null) {
@@ -94,7 +100,7 @@ public class ImapResponseParser {
      * @return The next token in the response or null if there are no more
      *         tokens.
      */
-    private Object readToken(ImapResponse response) throws IOException {
+    private Object readToken(ImapResponse response) throws IOException, RakuRakuException {
         while (true) {
             Object token = parseToken(response);
             if (token == null || !(token.equals(")") || token.equals("]"))) {
@@ -103,7 +109,7 @@ public class ImapResponseParser {
         }
     }
 
-    private Object parseToken(ImapList parent) throws IOException {
+    private Object parseToken(ImapList parent) throws IOException, RakuRakuException {
         while (true) {
             int ch = mIn.peek();
             if (ch == '(') {
@@ -149,12 +155,12 @@ public class ImapResponseParser {
     }
 
     // 3 OK [READ-WRITE] Select completed.
-    private String parseTaggedResponse() throws IOException {
+    private String parseTaggedResponse() throws IOException, RakuRakuException {
         String tag = readStringUntil(' ');
         return tag;
     }
 
-    private ImapList parseList(ImapList parent) throws IOException {
+    private ImapList parseList(ImapList parent) throws IOException, RakuRakuException {
         expect('(');
         ImapList list = new ImapList();
         parent.add(list);
@@ -174,7 +180,7 @@ public class ImapResponseParser {
         return list;
     }
 
-    private ImapList parseSequence(ImapList parent) throws IOException {
+    private ImapList parseSequence(ImapList parent) throws IOException, RakuRakuException {
         expect('[');
         ImapList list = new ImapList();
         parent.add(list);
@@ -202,22 +208,22 @@ public class ImapResponseParser {
             if (ch == -1) {
                 throw new IOException("parseAtom(): end of stream reached");
             } else if (ch == '(' || ch == ')' || ch == '{' || ch == ' ' ||
-                       ch == '[' || ch == ']' ||
-                       // docs claim that flags are \ atom but atom isn't supposed to
-                       // contain
-                       // * and some falgs contain *
-                       // ch == '%' || ch == '*' ||
+                    ch == '[' || ch == ']' ||
+                    // docs claim that flags are \ atom but atom isn't supposed to
+                    // contain
+                    // * and some falgs contain *
+                    // ch == '%' || ch == '*' ||
 //                    ch == '%' ||
-                       // TODO probably should not allow \ and should recognize
-                       // it as a flag instead
-                       // ch == '"' || ch == '\' ||
-                       ch == '"' || (ch >= 0x00 && ch <= 0x1f) || ch == 0x7f) {
+                    // TODO probably should not allow \ and should recognize
+                    // it as a flag instead
+                    // ch == '"' || ch == '\' ||
+                    ch == '"' || (ch >= 0x00 && ch <= 0x1f) || ch == 0x7f) {
                 if (sb.length() == 0) {
                     throw new IOException(String.format("parseAtom(): (%04x %c)", ch, ch));
                 }
                 return sb.toString();
             } else {
-                sb.append((char)mIn.read());
+                sb.append((char) mIn.read());
             }
         }
     }
@@ -226,7 +232,7 @@ public class ImapResponseParser {
      * A "{" has been read. Read the rest of the size string, the space and then
      * notify the callback with an InputStream.
      */
-    private Object parseLiteral() throws IOException {
+    private Object parseLiteral() throws IOException, RakuRakuException {
         expect('{');
         int size = Integer.parseInt(readStringUntil('}'));
         expect('\r');
@@ -291,22 +297,26 @@ public class ImapResponseParser {
             } else if (!escape && (ch == '"')) {
                 return sb.toString();
             } else {
-                sb.append((char)ch);
+                sb.append((char) ch);
                 escape = false;
             }
         }
         throw new IOException("parseQuoted(): end of stream reached");
     }
 
-    private String readStringUntil(char end) throws IOException {
+    private String readStringUntil(char end) throws RakuRakuException, IOException {
         StringBuffer sb = new StringBuffer();
         int ch;
-        while ((ch = mIn.read()) != -1) {
-            if (ch == end) {
-                return sb.toString();
-            } else {
-                sb.append((char)ch);
+        try {
+            while ((ch = mIn.read()) != -1) {
+                if (ch == end) {
+                    return sb.toString();
+                } else {
+                    sb.append((char) ch);
+                }
             }
+        } catch (SocketTimeoutException ste) {
+            throw new RakuRakuException("サーバー接続時にタイムアウトが発生しました:" + ste.getMessage());
         }
         throw new IOException("readStringUntil(): end of stream reached");
     }
@@ -314,8 +324,8 @@ public class ImapResponseParser {
     private int expect(char ch) throws IOException {
         int d;
         if ((d = mIn.read()) != ch) {
-            throw new IOException(String.format("Expected %04x (%c) but got %04x (%c)", (int)ch,
-                                                ch, d, (char)d));
+            throw new IOException(String.format("Expected %04x (%c) but got %04x (%c)", (int) ch,
+                    ch, d, (char) d));
         }
         return d;
     }
@@ -328,7 +338,7 @@ public class ImapResponseParser {
         private static final long serialVersionUID = -4067248341419617583L;
 
         public ImapList getList(int index) {
-            return (ImapList)get(index);
+            return (ImapList) get(index);
         }
 
         public Object getObject(int index) {
@@ -336,11 +346,11 @@ public class ImapResponseParser {
         }
 
         public String getString(int index) {
-            return (String)get(index);
+            return (String) get(index);
         }
 
         public InputStream getLiteral(int index) {
-            return (InputStream)get(index);
+            return (InputStream) get(index);
         }
 
         public int getNumber(int index) {
@@ -377,15 +387,15 @@ public class ImapResponseParser {
         }
 
         public ImapList getKeyedList(Object key) {
-            return (ImapList)getKeyedValue(key);
+            return (ImapList) getKeyedValue(key);
         }
 
         public String getKeyedString(Object key) {
-            return (String)getKeyedValue(key);
+            return (String) getKeyedValue(key);
         }
 
         public InputStream getKeyedLiteral(Object key) {
-            return (InputStream)getKeyedValue(key);
+            return (InputStream) getKeyedValue(key);
         }
 
         public int getKeyedNumber(Object key) {
@@ -461,7 +471,7 @@ public class ImapResponseParser {
         boolean mCommandContinuationRequested;
         String mTag;
 
-        public boolean more() throws IOException {
+        public boolean more() throws IOException, RakuRakuException {
             if (mCompleted) {
                 return false;
             }
@@ -490,8 +500,8 @@ public class ImapResponseParser {
 
     public static boolean equalsIgnoreCase(Object o1, Object o2) {
         if (o1 != null && o2 != null && o1 instanceof String && o2 instanceof String) {
-            String s1 = (String)o1;
-            String s2 = (String)o2;
+            String s1 = (String) o1;
+            String s2 = (String) o2;
             return s1.equalsIgnoreCase(s2);
         } else if (o1 != null) {
             return o1.equals(o2);
@@ -512,16 +522,14 @@ public class ImapResponseParser {
          *                 parsed up until now (excluding the literal string).
          * @param literal  FixedLengthInputStream that can be used to access
          *                 the literal string.
-         *
          * @return an Object that will be put in the ImapResponse object at the
          *         place of the literal string.
-         *
          * @throws IOException passed-through if thrown by FixedLengthInputStream
-         * @throws Exception if something goes wrong. Parsing will be resumed
-         *                   and the exception will be thrown after the
-         *                   complete IMAP response has been parsed.
+         * @throws Exception   if something goes wrong. Parsing will be resumed
+         *                     and the exception will be thrown after the
+         *                     complete IMAP response has been parsed.
          */
         public Object foundLiteral(ImapResponse response, FixedLengthInputStream literal)
-        throws IOException, Exception;
+                throws IOException, Exception;
     }
 }

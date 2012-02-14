@@ -23,6 +23,7 @@ import jp.co.fttx.rakuphotomail.mail.internet.*;
 import jp.co.fttx.rakuphotomail.mail.store.ImapResponseParser.ImapList;
 import jp.co.fttx.rakuphotomail.mail.store.ImapResponseParser.ImapResponse;
 import jp.co.fttx.rakuphotomail.mail.transport.imap.ImapSettings;
+import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
@@ -1051,7 +1052,7 @@ public class ImapStore extends Store {
 
         @Override
         public void fetch(Message[] messages, FetchProfile fp, MessageRetrievalListener listener)
-                throws MessagingException {
+                throws MessagingException, RakuRakuException {
             if (messages == null || messages.length == 0) {
                 return;
             }
@@ -1189,7 +1190,7 @@ public class ImapStore extends Store {
 
         @Override
         public void fetchPart(Message message, Part part, MessageRetrievalListener listener)
-                throws MessagingException {
+                throws MessagingException, RakuRakuException {
             checkOpen();
 
             String[] parts = part.getHeader(MimeHeader.HEADER_ANDROID_ATTACHMENT_STORE_DATA);
@@ -1582,7 +1583,7 @@ public class ImapStore extends Store {
          * the IMAP server and sets the Message's UID to the new server UID.
          */
         @Override
-        public void appendMessages(Message[] messages) throws MessagingException {
+        public void appendMessages(Message[] messages) throws RakuRakuException,MessagingException {
             Log.d("refs1961", "ImapStore#appendMessages");
 
             checkOpen();

@@ -27,6 +27,7 @@ import jp.co.fttx.rakuphotomail.mail.store.LocalStore.LocalMessage;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore.PendingCommand;
 import jp.co.fttx.rakuphotomail.mail.store.UnavailableAccountException;
 import jp.co.fttx.rakuphotomail.mail.store.UnavailableStorageException;
+import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 
 import java.io.CharArrayWriter;
 import java.io.PrintWriter;
@@ -1286,12 +1287,12 @@ public class MessagingController implements Runnable {
         }
     }
 
-    public int downloadMessages(final Account account,
-                                final Folder remoteFolder, final LocalFolder localFolder,
-                                List<Message> inputMessages) throws MessagingException {
-        return downloadMessages(account, remoteFolder, localFolder,
-                inputMessages, false);
-    }
+//    public int downloadMessages(final Account account,
+//                                final Folder remoteFolder, final LocalFolder localFolder,
+//                                List<Message> inputMessages) throws MessagingException, RakuRakuException {
+//        return downloadMessages(account, remoteFolder, localFolder,
+//                inputMessages, false);
+//    }
 
     /**
      * Fetches the messages described by inputMessages from the remote store and
@@ -1312,7 +1313,7 @@ public class MessagingController implements Runnable {
     private int downloadMessages(final Account account,
                                  final Folder remoteFolder, final LocalFolder localFolder,
                                  List<Message> inputMessages, boolean flagSyncOnly)
-            throws MessagingException {
+            throws MessagingException, RakuRakuException {
 
         final Date earliestDate = account.getEarliestPollDate();
         Date downloadStarted = new Date(); // now
@@ -1573,7 +1574,7 @@ public class MessagingController implements Runnable {
                                        final ArrayList<Message> smallMessages,
                                        final ArrayList<Message> largeMessages,
                                        final AtomicInteger progress, final int todo, FetchProfile fp)
-            throws MessagingException {
+            throws MessagingException, RakuRakuException {
         final String folder = remoteFolder.getName();
 
         final Date earliestDate = account.getEarliestPollDate();
@@ -1758,7 +1759,7 @@ public class MessagingController implements Runnable {
                                        final Folder remoteFolder, final LocalFolder localFolder,
                                        ArrayList<Message> smallMessages, final AtomicInteger progress,
                                        final int unreadBeforeStart, final AtomicInteger newMessages,
-                                       final int todo, FetchProfile fp) throws MessagingException {
+                                       final int todo, FetchProfile fp) throws MessagingException, RakuRakuException {
         final String folder = remoteFolder.getName();
 
         final Date earliestDate = account.getEarliestPollDate();
@@ -1849,7 +1850,7 @@ public class MessagingController implements Runnable {
                                        final Folder remoteFolder, final LocalFolder localFolder,
                                        ArrayList<Message> largeMessages, final AtomicInteger progress,
                                        final int unreadBeforeStart, final AtomicInteger newMessages,
-                                       final int todo, FetchProfile fp) throws MessagingException {
+                                       final int todo, FetchProfile fp) throws MessagingException, RakuRakuException {
         final String folder = remoteFolder.getName();
 
         final Date earliestDate = account.getEarliestPollDate();
@@ -1984,7 +1985,7 @@ public class MessagingController implements Runnable {
     private void refreshLocalMessageFlags(final Account account,
                                           final Folder remoteFolder, final LocalFolder localFolder,
                                           ArrayList<Message> syncFlagMessages, final AtomicInteger progress,
-                                          final int todo) throws MessagingException {
+                                          final int todo) throws MessagingException, RakuRakuException {
 
         final String folder = remoteFolder.getName();
         if (remoteFolder.supportsFetchingFlags()) {
@@ -2103,13 +2104,15 @@ public class MessagingController implements Runnable {
 					 * Ignore any exceptions from the commands. Commands will be
 					 * processed on the next round.
 					 */
+                } catch (RakuRakuException e) {
+                    Log.e(RakuPhotoMail.LOG_TAG,"ERROR:"+e.getMessage());
                 }
             }
         });
     }
 
     private void processPendingCommandsSynchronous(Account account)
-            throws MessagingException {
+            throws MessagingException, RakuRakuException {
         Log.v(RakuPhotoMail.LOG_TAG,
                 "MessageingController#processPendingCommandsSynchronous");
         LocalStore localStore = account.getLocalStore();
@@ -2221,7 +2224,7 @@ public class MessagingController implements Runnable {
      * @throws MessagingException
      */
     private void processPendingAppend(PendingCommand command, Account account)
-            throws MessagingException {
+            throws MessagingException, RakuRakuException {
         Folder remoteFolder = null;
         LocalFolder localFolder = null;
         try {
@@ -3171,6 +3174,8 @@ public class MessagingController implements Runnable {
                     }
                     addErrorMessage(account, null, me);
 
+                } catch (RakuRakuException e) {
+                    Log.e(RakuPhotoMail.LOG_TAG,"ERROR:"+e.getMessage());
                 } finally {
                     closeFolder(localFolder);
                     closeFolder(remoteFolder);
@@ -3188,7 +3193,7 @@ public class MessagingController implements Runnable {
      * @param part
      */
     public void loadAttachmentMk2(final Account account, final Message message,
-                                  final Part part, final MessagingListener listener) {
+                                  final Part part, final MessagingListener listener) throws RakuRakuException {
         Folder remoteFolder = null;
         LocalFolder localFolder = null;
         try {
@@ -3893,8 +3898,12 @@ public class MessagingController implements Runnable {
         putBackground("moveMessages", null, new Runnable() {
             @Override
             public void run() {
-                moveOrCopyMessageSynchronous(account, srcFolder, messages,
-                        destFolder, false, listener);
+                try {
+                    moveOrCopyMessageSynchronous(account, srcFolder, messages,
+                            destFolder, false, listener);
+                } catch (RakuRakuException e) {
+                    Log.e(RakuPhotoMail.LOG_TAG,"ERROR:"+e.getMessage());
+                }
             }
         });
     }
@@ -3912,8 +3921,12 @@ public class MessagingController implements Runnable {
         putBackground("copyMessages", null, new Runnable() {
             @Override
             public void run() {
-                moveOrCopyMessageSynchronous(account, srcFolder, messages,
-                        destFolder, true, listener);
+                try {
+                    moveOrCopyMessageSynchronous(account, srcFolder, messages,
+                            destFolder, true, listener);
+                } catch (RakuRakuException e) {
+                    Log.e(RakuPhotoMail.LOG_TAG,"ERROR:"+e.getMessage());
+                }
             }
         });
     }
@@ -3928,7 +3941,7 @@ public class MessagingController implements Runnable {
     private void moveOrCopyMessageSynchronous(final Account account,
                                               final String srcFolder, final Message[] inMessages,
                                               final String destFolder, final boolean isCopy,
-                                              MessagingListener listener) {
+                                              MessagingListener listener) throws RakuRakuException {
         try {
             Store localStore = account.getLocalStore();
             Store remoteStore = account.getRemoteStore();

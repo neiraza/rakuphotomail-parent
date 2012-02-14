@@ -5,6 +5,7 @@ import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.controller.MessageRetrievalListener;
+import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 
 import java.util.Date;
 
@@ -101,7 +102,7 @@ public abstract class Folder {
     public abstract Message[] getMessages(String[] uids, MessageRetrievalListener listener)
     throws MessagingException;
 
-    public abstract void appendMessages(Message[] messages) throws MessagingException;
+    public abstract void appendMessages(Message[] messages) throws RakuRakuException,MessagingException;
 
     public void copyMessages(Message[] msgs, Folder folder) throws MessagingException {}
 
@@ -125,10 +126,10 @@ public abstract class Folder {
         {}
 
     public abstract void fetch(Message[] messages, FetchProfile fp,
-                               MessageRetrievalListener listener) throws MessagingException;
+                               MessageRetrievalListener listener) throws RakuRakuException,MessagingException;
 
     public void fetchPart(Message message, Part part,
-                          MessageRetrievalListener listener) throws MessagingException {
+                          MessageRetrievalListener listener) throws RakuRakuException,MessagingException {
         // This is causing trouble. Disabled for now. See issue 1733
         //throw new RuntimeException("fetchPart() not implemented.");
 
