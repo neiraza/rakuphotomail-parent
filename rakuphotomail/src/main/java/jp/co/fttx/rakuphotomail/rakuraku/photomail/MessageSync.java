@@ -36,6 +36,7 @@ public class MessageSync {
      * @since rakuphoto 0.1-beta1
      */
     public static String syncMailboxForCheckNewMail(Account account, String folderName, int messageLimitCountFromRemote) {
+        Log.d("tamachi","syncMailboxForCheckNewMail start");
 
         String newMailUid = null;
 
@@ -101,11 +102,15 @@ public class MessageSync {
             localFolder.setStatus(null);
 
         } catch (RakuRakuException re) {
-            Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + re.getMessage());
+            Log.e(RakuPhotoMail.LOG_TAG, "ERROR:RakuRakuException:" + re.getMessage());
             //タイムアウトも返してやろう作戦
             return null;
+        } catch (MessagingException me){
+            Log.e(RakuPhotoMail.LOG_TAG, "ERROR:MessagingException:" + me.getMessage());
+            Log.d("tamachi","syncMailboxForCheckNewMail MessagingException end");
+            return null;
         } catch (Exception e) {
-            Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
+            Log.e(RakuPhotoMail.LOG_TAG, "ERROR:Exception:" + e.getMessage());
         } finally {
             closeFolder(remoteFolder);
             closeFolder(localFolder);

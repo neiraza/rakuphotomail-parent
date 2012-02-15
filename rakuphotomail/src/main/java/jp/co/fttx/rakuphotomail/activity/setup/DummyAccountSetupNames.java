@@ -3,10 +3,6 @@ package jp.co.fttx.rakuphotomail.activity.setup;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.text.method.TextKeyListener;
-import android.text.method.TextKeyListener.Capitalize;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -16,7 +12,6 @@ import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.activity.RakuPhotoActivity;
-import jp.co.fttx.rakuphotomail.helper.Utility;
 
 public class DummyAccountSetupNames extends RakuPhotoActivity implements OnClickListener {
     private static final String EXTRA_ACCOUNT = "account";
@@ -53,8 +48,8 @@ public class DummyAccountSetupNames extends RakuPhotoActivity implements OnClick
 
         String accountUuid = getIntent().getStringExtra(EXTRA_ACCOUNT);
         mAccount = Preferences.getPreferences(this).getAccount(accountUuid);
-        mAccount.setDescription("おぐりさん");
-        mAccount.setName("おぐりん");
+        mAccount.setDescription("たまちてすと");
+        mAccount.setName("たまちたろう");
 
         Log.d("redbull", "DummyAccountSetupNames#onCreate end");
     }

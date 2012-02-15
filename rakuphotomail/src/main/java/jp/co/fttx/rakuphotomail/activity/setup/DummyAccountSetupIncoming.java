@@ -213,13 +213,14 @@ public class DummyAccountSetupIncoming extends RakuPhotoActivity implements
 			// if (username != null) {
 			// mUsernameView.setText(username);
 			// }
-			mUsernameView.setText("tooru.oguri@rakuphoto.ucom.local");
+            //TODO テスト用アカウント
+			mUsernameView.setText("taro.tamachi@rakuphoto.ucom.local");
 
 			// XXX テスト用
 			// if (password != null) {
 			// mPasswordView.setText(password);
 			// }
-			mPasswordView.setText("ucomrp2011");
+			mPasswordView.setText("ucomadmin");
 
 			if (authType != null) {
 				for (int i = 0; i < authTypes.length; i++) {

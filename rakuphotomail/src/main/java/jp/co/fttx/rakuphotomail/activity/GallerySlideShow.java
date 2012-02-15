@@ -237,10 +237,15 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         setUpProgressDialog(mProgressDialog, "Please wait", "スライドショー情報をサーバーと同期中です。\n完了次第、スライドショーを開始します。\nしばらくお待ちください。");
         onNewIntent(getIntent());
         setupViews();
+        Log.d("tamachi","onCreate doAllFolderSync start");
         doAllFolderSync();
+        Log.d("tamachi","onCreate doAllFolderSync end");
         createUidList(null, mAccount.getMessageLimitCountFromDb());
         mAllUidList = getUidList(null, 0);
         setupSlideShowThread();
+
+        Log.d("tamachi","onCreate mAllUidList size:" + mAllUidList.size());
+
 
         mTimer = new Timer(true);
         mTimer.schedule(new TimerTask() {
@@ -248,7 +253,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             public void run() {
                 // 同期処理で新着メールを見つけられた場合
                 String newMailUid = MessageSync.syncMailboxForCheckNewMail(mAccount, mFolder, mAccount.getMessageLimitCountFromRemote());
+                Log.d("tamachi","TimerTask#run new mail check start");
                 doSentFolderSync();
+                Log.d("tamachi","TimerTask#run new mail check end");
                 if (null != newMailUid && !"".equals(newMailUid) && isSlide(newMailUid)) {
                     mIsRepeatUidList = false;
                     try {
@@ -310,8 +317,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void doAllFolderSync() {
+        Log.d("tamachi","doAllFolderSync start");
         doInBoxFolderSync();
         doSentFolderSync();
+        Log.d("tamachi","doAllFolderSync end");
     }
 
     private void doInBoxFolderSync() {
@@ -319,7 +328,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void doSentFolderSync() {
+        Log.d("tamachi","doSentFolderSync start");
         MessageSync.syncMailboxForCheckNewMail(mAccount, mAccount.getSentFolderName(), 0);
+        Log.d("tamachi","doSentFolderSync end");
     }
 
     private void setUpProgressDialog(ProgressDialog progressDialog, String title, String message) {
@@ -424,8 +435,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     private void createUidList(String currentUid, long limitCount) {
+        Log.d("tamachi","createUidList start");
+
         List<MessageInfo> messageInfoList = SlideMessage.getMessageInfoList(mAccount, mFolder, currentUid, limitCount);
         if (null == messageInfoList || 0 == messageInfoList.size()) {
+            Log.d("tamachi","createUidList messageInfoListがnullか0サイズ");
             if (null != currentUid) {
                 // currentUidがnullではない場合、DBの一番最後の可能性が有るため、最初から取り直す
                 messageInfoList = SlideMessage.getMessageInfoList(mAccount, mFolder, null, limitCount);
@@ -443,20 +457,34 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             }
         }
 
+        Log.d("tamachi","createUidList messageInfoList size:"+messageInfoList.size());
+
         mUidList.clear();
+        Log.d("tamachi","createUidList for前");
         for (MessageInfo messageInfo : messageInfoList) {
             String uid = messageInfo.getUid();
+            Log.d("tamachi","createUidList for内 uid:"+uid);
             ArrayList<Attachments> attachmentsList = SlideMessage.getAttachmentList(mAccount, mFolder, uid);
             for (Attachments attachments : attachmentsList) {
                 //追加対象はスライドする奴のみ（重複UIDは省く）
                 if (SlideCheck.isSlide(attachments) && !mUidList.contains(uid)) {
+                    Log.d("tamachi","createUidList for内 add uid:"+uid);
                     mUidList.add(uid);
                 }
             }
         }
+        //TODO
+        if (0 == mUidList.size()) {
+            Log.w(RakuPhotoMail.LOG_TAG, "現在、サーバー上にスライドショー可能なメールが存在しません");
+            dismissProgressDialog(mProgressDialog);
+            onAlertNoMessage();
+            return;
+        }
+        Log.d("tamachi","createUidList end");
     }
 
     private ArrayList<String> getUidList(String currentUid, long limitCount) {
+        Log.d("tamachi","getUidList start");
         List<MessageInfo> messageInfoList = SlideMessage.getMessageInfoList(mAccount, mFolder, currentUid, limitCount);
         ArrayList<String> uidList = new ArrayList<String>();
         for (MessageInfo messageInfo : messageInfoList) {
@@ -469,6 +497,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 }
             }
         }
+        Log.d("tamachi","getUidList end");
         return uidList;
     }
 
@@ -522,6 +551,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     private void loopInfinite() throws RakuRakuException, MessagingException {
         try {
             while (mIsRepeatUidList) {
+                Log.d("tamachi","loopInfinite while start");
                 if (!"".equals(mStartUid)) {
                     createUidList(mStartUid, mAccount.getMessageLimitCountFromDb());
                     mStartUid = "";
@@ -564,6 +594,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 }
                 createUidList(mDispUid, mAccount.getMessageLimitCountFromDb());
             }
+            Log.d("tamachi","loopInfinite while end");
         } catch (MessagingException e) {
             Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
         }

@@ -105,7 +105,7 @@
                 android:label="@string/app_name"
                 android:launchMode="singleTask"
                 android:screenOrientation="landscape"
-                android:name="jp.co.fttx.rakuphotomail.activity.Accounts">
+                android:name="jp.co.fttx.rakuphotomail.activity.DummyAccounts">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
