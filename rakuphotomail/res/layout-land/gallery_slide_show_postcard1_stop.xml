@@ -62,14 +62,12 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="18sp"
-                        android:text="2012/02/08/ 3:50 午後"
                         android:typeface="sans"/>
                 <TextView
                         android:id="@+id/gallery_mail_sender_name"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="18sp"
-                        android:text="デーブ大久保"
                         android:typeface="sans"/>
                 <LinearLayout
                         android:layout_width="wrap_content"
@@ -112,7 +110,6 @@
                         android:scrollHorizontally="true"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:text="デブが集まるサミット、略してデブサミ2012"
                         android:typeface="sans"/>
             </LinearLayout>
         </LinearLayout>
@@ -150,32 +147,41 @@
         <LinearLayout
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:padding="2dip"
+                android:layout_gravity="center"
+                android:gravity="center"
                 android:orientation="horizontal">
-            <ImageView
+            <Button
                     android:id="@+id/gallery_mail_pre"
-                    android:layout_width="0dip"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:src="@drawable/blue_arrow_left"/>
+                    android:background="@drawable/gallery_stop_pre_button"
+                    android:layout_width="50dip"
+                    android:layout_height="wrap_content" />
             <ImageView
+                    android:src="@drawable/blank"
+                    android:layout_width="75dip"
+                    android:layout_height="wrap_content" />
+            <Button
                     android:id="@+id/gallery_mail_slide"
-                    android:layout_width="0dip"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:src="@drawable/blue_slideshow"/>
+                    android:background="@drawable/gallery_stop_slide_button"
+                    android:layout_width="50dip"
+                    android:layout_height="wrap_content"/>
             <ImageView
+                    android:src="@drawable/blank"
+                    android:layout_width="75dip"
+                    android:layout_height="wrap_content" />
+            <Button
                     android:id="@+id/gallery_mail_reply"
-                    android:layout_width="0dip"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:src="@drawable/blue_mail_reply"/>
+                    android:background="@drawable/gallery_stop_reply_button"
+                    android:layout_width="50dip"
+                    android:layout_height="wrap_content"/>
             <ImageView
+                    android:src="@drawable/blank"
+                    android:layout_width="75dip"
+                    android:layout_height="wrap_content" />
+            <Button
                     android:id="@+id/gallery_mail_next"
-                    android:layout_width="0dip"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:src="@drawable/blue_arrow_right"/>
+                    android:background="@drawable/gallery_stop_next_button"
+                    android:layout_width="50dip"
+                    android:layout_height="wrap_content"/>
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

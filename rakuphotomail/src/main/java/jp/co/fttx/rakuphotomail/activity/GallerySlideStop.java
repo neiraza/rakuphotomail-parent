@@ -98,19 +98,19 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     /**
      * mail pre disp
      */
-    private ImageView mMailPre;
+    private Button mMailPre;
     /**
      * re slide
      */
-    private ImageView mMailSlide;
+    private Button mMailSlide;
     /**
      * mail next disp
      */
-    private ImageView mMailNext;
+    private Button mMailNext;
     /**
      * mail reply
      */
-    private ImageView mMailReply;
+    private Button mMailReply;
     /**
      * user account
      */
@@ -251,13 +251,13 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void setupViewBottomButton() {
-        mMailPre = (ImageView) findViewById(ID_GALLERY_MAIL_PRE);
+        mMailPre = (Button) findViewById(ID_GALLERY_MAIL_PRE);
         mMailPre.setOnClickListener(this);
-        mMailSlide = (ImageView) findViewById(ID_GALLERY_MAIL_SLIDE);
+        mMailSlide = (Button) findViewById(ID_GALLERY_MAIL_SLIDE);
         mMailSlide.setOnClickListener(this);
-        mMailReply = (ImageView) findViewById(ID_GALLERY_MAIL_REPLY);
+        mMailReply = (Button) findViewById(ID_GALLERY_MAIL_REPLY);
         mMailReply.setOnClickListener(this);
-        mMailNext = (ImageView) findViewById(ID_GALLERY_MAIL_NEXT);
+        mMailNext = (Button) findViewById(ID_GALLERY_MAIL_NEXT);
         mMailNext.setOnClickListener(this);
     }
 
@@ -391,15 +391,20 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         setViewSlide();
     }
 
+    //TODO いるんか？
     private void setMailMoveVisibility(String uid) {
         if (!SlideMessage.isNextMessage(mAccount, mFolder, uid)) {
+            Log.d("2727","enabled false");
             mMailNext.setEnabled(false);
         } else {
+            Log.d("2727","enabled true");
             mMailNext.setEnabled(true);
         }
         if (!SlideMessage.isPreMessage(mAccount, mFolder, uid)) {
+            Log.d("2727","enabled false");
             mMailPre.setEnabled(false);
         } else {
+            Log.d("2727","enabled true");
             mMailPre.setEnabled(true);
         }
     }
