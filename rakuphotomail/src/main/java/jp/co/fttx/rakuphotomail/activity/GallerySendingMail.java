@@ -201,7 +201,7 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
      * @since 0.1-beta1
      */
     private void setMToAddressName(String addressToName) {
-        mToName.setText(addressToName);
+        mToName.setText(addressToName.trim());
     }
 
     /**

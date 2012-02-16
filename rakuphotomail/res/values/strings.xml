@@ -38,7 +38,7 @@
     <string name="folder_list_title">
         <xliff:g id="account">%s</xliff:g>
     </string>
-    <string name="shortcuts_title">らくフォトメール Accounts</string>
+    <string name="shortcuts_title">Rakuphoto Mail Accounts</string>
 
     <string name="message_list_title"><xliff:g id="account">%s</xliff:g>:
         <xliff:g id="folder">%s</xliff:g>
@@ -1249,8 +1249,10 @@
     <string name="attachment_save_desc">No file browser found. Where would you like to save this attachment?</string>
 
     <string name="gallery_slide">"slide"</string>
-    <string name="gallery_separator">" | "</string>
     <string name="gallery_reply">"reply"</string>
+    <string name="gallery_pre">"pre"</string>
+    <string name="gallery_next">"next"</string>
+    <string name="gallery_sent_flg">"sent"</string>
 
     <string name="gallery_mail_detail_subject">"Subject："</string>
     <string name="gallery_mail_detail_date">"Date："</string>
@@ -1261,4 +1263,7 @@
     <string name="gallery_mail_detail_open">"View details"</string>
     <string name="gallery_mail_detail_close">"close"</string>
     <string name="gallery_mail_detail_title">"Message details"</string>
+
+    <string name="create_sending_mail">"reply message"</string>
+
 </resources>

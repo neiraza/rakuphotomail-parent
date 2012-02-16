@@ -203,15 +203,15 @@ public class DummyAccountSetupOutgoing extends RakuPhotoActivity implements OnCl
 //                mRequireLoginView.setChecked(true);
 //            }
             //TODO テスト用アカウント
-//            mUsernameView.setText("tooru.oguri@rakuphoto.ucom.local");
-            mUsernameView.setText("taro.tamachi@rakuphoto.ucom.local");
+            mUsernameView.setText("tooru.oguri@rakuphoto.ucom.local");
+//            mUsernameView.setText("taro.tamachi@rakuphoto.ucom.local");
 
             // XXX テスト用
 //            if (password != null) {
 //                mPasswordView.setText(password);
 //            }
-            mPasswordView.setText("ucomadmin");
-//            mPasswordView.setText("ucomrp2011");
+//            mPasswordView.setText("ucomadmin");
+            mPasswordView.setText("ucomrp2011");
 
 
             if (authType != null) {

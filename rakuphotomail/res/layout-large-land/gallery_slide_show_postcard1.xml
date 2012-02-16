@@ -3,17 +3,15 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:background="@drawable/frameframe"
+        android:background="@drawable/frame2"
         android:orientation="horizontal">
     <LinearLayout
-            android:id="@+id/gallery_info"
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"
             android:layout_weight="2"
             android:background="@drawable/frame"
             android:orientation="vertical">
         <LinearLayout
-                android:id="@+id/gallery_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="top|right"
@@ -49,7 +47,6 @@
                     android:src="@drawable/number_rect3"/>
         </LinearLayout>
         <LinearLayout
-                android:id="@+id/gallery_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dip"
@@ -67,7 +64,6 @@
                     android:textSize="18sp"
                     android:typeface="sans"/>
             <LinearLayout
-                    android:id="@+id/gallery_info"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
@@ -75,6 +71,8 @@
                     android:id="@+id/gallery_sent_flag"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:gravity="center"
                     android:textSize="18sp"
                     android:text="@string/gallery_sent_flg"
                     android:typeface="sans"/>
@@ -82,11 +80,11 @@
                     android:id="@+id/gallery_sent_flag_mark"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="left"
                     android:src="@drawable/overlay_ok"/>
             </LinearLayout>
         </LinearLayout>
         <LinearLayout
-                android:id="@+id/gallery_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"

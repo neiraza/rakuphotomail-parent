@@ -30,6 +30,9 @@ import java.util.Arrays;
 public class SlideAttachment {
     private SlideAttachment() {
     }
+    
+    private static Bitmap photo;
+    private static Bitmap thumbnail;
 
     public static Bitmap getBitmap(Context context, Display display, Account account, AttachmentBean attachmentBean) {
         try {
@@ -37,15 +40,16 @@ public class SlideAttachment {
             Uri uri = AttachmentProvider.getAttachmentUri(account, attachmentBean.getId());
             options.inJustDecodeBounds = true;
             context.getContentResolver().openInputStream(uri);
-            BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
+            photo = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
             int displayW = display.getWidth();
             int displayH = display.getHeight();
             int scaleW = options.outWidth / displayW + 1;
             int scaleH = options.outHeight / displayH + 1;
             options.inJustDecodeBounds = false;
             options.inSampleSize = Math.max(scaleW, scaleH);
-            return BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null,
+            photo = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null,
                     options);
+            return photo;
         } catch (Exception e) {
             Log.e(RakuPhotoMail.LOG_TAG, "Exception:" + e);
         }
@@ -58,15 +62,16 @@ public class SlideAttachment {
             Uri uri = AttachmentProvider.getAttachmentUri(account, attachmentBean.getId());
             options.inJustDecodeBounds = true;
             context.getContentResolver().openInputStream(uri);
-            BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
+            thumbnail =  BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
             int displayW = 150;
             int displayH = 100;
             int scaleW = options.outWidth / displayW + 1;
             int scaleH = options.outHeight / displayH + 1;
             options.inJustDecodeBounds = false;
             options.inSampleSize = Math.max(scaleW, scaleH);
-            return BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null,
+            thumbnail = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null,
                     options);
+            return thumbnail;
         } catch (Exception e) {
             Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
         }

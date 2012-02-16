@@ -92,21 +92,25 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      */
     private TextView mAnswered;
     /**
+     * mail sent flag
+     */
+    private ImageView mAnsweredMark;
+    /**
      * mail pre disp
      */
-    private TextView mMailPre;
+    private ImageView mMailPre;
     /**
      * re slide
      */
-    private TextView mMailSlide;
+    private ImageView mMailSlide;
     /**
      * mail next disp
      */
-    private TextView mMailNext;
+    private ImageView mMailNext;
     /**
      * mail reply
      */
-    private TextView mMailReply;
+    private ImageView mMailReply;
     /**
      * user account
      */
@@ -159,7 +163,10 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      *
      */
     private boolean isDispMailLayout = true;
-
+    /**
+     * view subject
+     */
+    private TextView mSenderName;
     /**
      * @param context context
      * @param account account info
@@ -216,7 +223,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         super.onCreate(savedInstanceState);
         mContext = this;
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.gallery_slide_show_stop);
+        setContentView(R.layout.gallery_slide_show_postcard1_stop);
         setupViews();
         onNewIntent(getIntent());
         setMailMoveVisibility(mUid);
@@ -236,26 +243,30 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     private void setupViewTopMailInfo() {
         mMailSubject = (TextView) findViewById(R.id.gallery_mail_subject);
         mMailDate = (TextView) findViewById(R.id.gallery_mail_date);
+        mSenderName = (TextView) findViewById(R.id.gallery_mail_sender_name);
         mAnswered = (TextView) findViewById(R.id.gallery_mail_sent_flag);
         mAnswered.setVisibility(View.GONE);
+        mAnsweredMark = (ImageView) findViewById(R.id.gallery_mail_sent_flag_mark);
+        mAnsweredMark.setVisibility(View.GONE);
     }
 
     private void setupViewBottomButton() {
-        mMailPre = (TextView) findViewById(ID_GALLERY_MAIL_PRE);
+        mMailPre = (ImageView) findViewById(ID_GALLERY_MAIL_PRE);
         mMailPre.setOnClickListener(this);
-        mMailSlide = (TextView) findViewById(ID_GALLERY_MAIL_SLIDE);
+        mMailSlide = (ImageView) findViewById(ID_GALLERY_MAIL_SLIDE);
         mMailSlide.setOnClickListener(this);
-        mMailReply = (TextView) findViewById(ID_GALLERY_MAIL_REPLY);
+        mMailReply = (ImageView) findViewById(ID_GALLERY_MAIL_REPLY);
         mMailReply.setOnClickListener(this);
-        mMailNext = (TextView) findViewById(ID_GALLERY_MAIL_NEXT);
+        mMailNext = (ImageView) findViewById(ID_GALLERY_MAIL_NEXT);
         mMailNext.setOnClickListener(this);
     }
 
     private void setupViewGalleryThumbnail() {
-        mGalleryThumbnailInfoLayout = (LinearLayout) findViewById(R.id.gallery_thumbnail_info_layout);
-        mGalleryThumbnailInfoLayout.setVisibility(View.GONE);
-        mGalleryThumbnailInfo = (TextView) findViewById(R.id.gallery_thumbnail_info);
-        mGalleryThumbnailInfo.setOnClickListener(this);
+        //TODO 必要だっけ？
+//        mGalleryThumbnailInfoLayout = (LinearLayout) findViewById(R.id.gallery_thumbnail_info_layout);
+//        mGalleryThumbnailInfoLayout.setVisibility(View.GONE);
+//        mGalleryThumbnailInfo = (TextView) findViewById(R.id.gallery_thumbnail_info);
+//        mGalleryThumbnailInfo.setOnClickListener(this);
         mGalleryThumbnailLayout = (LinearLayout) findViewById(R.id.gallery_thumbnail_layout);
         mGalleryThumbnailLayout.setVisibility(View.GONE);
         mGalleryThumbnail = (Gallery) findViewById(R.id.gallery_thumbnail);
@@ -301,8 +312,10 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     private void setAnswered(boolean isFlagAnswered) {
         if (isFlagAnswered) {
             mAnswered.setVisibility(View.VISIBLE);
+            mAnsweredMark.setVisibility(View.VISIBLE);
         } else {
             mAnswered.setVisibility(View.GONE);
+            mAnsweredMark.setVisibility(View.GONE);
         }
     }
 
@@ -362,6 +375,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         setImageViewPicture(mSlideTargetAttachmentList, 0);
         //TODO 140文字に制限します(config)
         mMailSubject.setText(RakuPhotoStringUtils.limitMessage(mMessageBean.getSubject(), 140));
+        mSenderName.setText(mMessageBean.getSenderName().trim());
         setDate(mMessageBean.getDate());
         setAnswered(mMessageBean.isFlagAnswered());
     }
@@ -644,7 +658,8 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
                 return true;
             }
             case R.id.buttons_disabled: {
-                onButtonsDisp();
+                //TODO 対策を考える
+//                onButtonsDisp();
                 return true;
             }
             default: {

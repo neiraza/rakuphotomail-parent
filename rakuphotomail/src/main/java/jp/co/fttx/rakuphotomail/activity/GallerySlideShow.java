@@ -18,6 +18,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
@@ -110,6 +111,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     private Context mContext;
     /**
+     *
+     */
+    private LinearLayout mInfo;
+    /**
      * view subject
      */
     private TextView mSubject;
@@ -145,6 +150,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * Handler
      */
     private Handler mSlideHandler;
+    /**
+     * bitmap
+     */
+    private Bitmap mBitmap;
     /**
      * Thread SlideShow
      */
@@ -234,7 +243,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         super.onCreate(savedInstanceState);
         mContext = this;
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.gallery_slide_show_postcard1);
+        setContentView(R.layout.gallery_slide_show);
         mProgressDialog = new ProgressDialog(mContext);
         setUpProgressDialog(mProgressDialog, "Please wait", "スライドショー情報をサーバーと同期中です。\n完了次第、スライドショーを開始します。\nしばらくお待ちください。");
         onNewIntent(getIntent());
@@ -346,6 +355,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * view setup
      */
     private void setupViews() {
+        mInfo = (LinearLayout) findViewById(R.id.gallery_info);
         setImageViewDefault();
         setImageViewEven();
         setImageViewOdd();
@@ -357,7 +367,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 Bundle bundle = msg.getData();
                 mDispUid = bundle.get(MESSAGE_UID).toString();
                 mSubject.setText(bundle.get(MESSAGE_SUBJECT).toString());
-                mSenderName.setText(bundle.get(MESSAGE_SENDER_NAME).toString());
+                String senderName = bundle.get(MESSAGE_SENDER_NAME).toString();
+                mSenderName.setText(senderName.trim());
                 SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
                 mDate.setText(sdf.format(bundle.get(MESSAGE_DATE)));
                 if ((Boolean) bundle.get(MESSAGE_ANSWERED)) {
@@ -383,10 +394,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         mImageViewDefault = (ImageView) findViewById(ID_GALLERY_ATTACHMENT_PICTURE_DEFAULT);
         if ("".equals(mStartUid)) {
             mImageViewDefault.setVisibility(View.VISIBLE);
-//            mInfo.setVisibility(View.GONE);
+            mInfo.setVisibility(View.GONE);
         } else {
             mImageViewDefault.setVisibility(View.GONE);
-//            mInfo.setVisibility(View.VISIBLE);
+            mInfo.setVisibility(View.VISIBLE);
         }
     }
 
@@ -565,7 +576,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                     jp.co.fttx.rakuphotomail.mail.Message message = localFolder.getMessage(uid);
                     if (!message.isSet(Flag.X_DOWNLOADED_FULL)) {
                         startProgressDialogHandler("Please wait", "スライドショー情報をサーバーと同期中です。\nしばらくお待ちください。");
-                        SlideAttachment.downloadAttachment(mAccount, mFolder,uid);
+                        SlideAttachment.downloadAttachment(mAccount, mFolder, uid);
                         dismissProgressDialog(mProgressDialog);
                     }
                 }
@@ -690,13 +701,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         ArrayList<AttachmentBean> attachmentBeanList = messageBean.getAttachmentBeanList();
         for (AttachmentBean attachmentBean : attachmentBeanList) {
             if (SlideCheck.isSlide(attachmentBean)) {
-                //TODO from mContext to getApplicationContext()
-                Bitmap bitmap = SlideAttachment.getBitmap(getApplicationContext(), getWindowManager().getDefaultDisplay(), mAccount, attachmentBean);
-                if (null == bitmap) {
+                mBitmap = SlideAttachment.getBitmap(getApplicationContext(), getWindowManager().getDefaultDisplay(), mAccount, attachmentBean);
+                if (null == mBitmap) {
                     return;
                 }
                 Message msg = setSendMessage(messageBean);
-                msg.obj = bitmap;
+                msg.obj = mBitmap;
                 mSlideHandler.sendMessage(msg);
                 sleepSlide(mAccount.getSlideSleepTime());
             }
@@ -757,7 +767,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             mImageViewOdd.setVisibility(View.GONE);
             imageView = mImageViewEven;
         }
-//        mInfo.setVisibility(View.VISIBLE);
+        mInfo.setVisibility(View.VISIBLE);
         return imageView;
     }
 

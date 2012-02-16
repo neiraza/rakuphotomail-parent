@@ -106,7 +106,22 @@
             android:layout_gravity="top|left"
             android:layout_margin="20dip"
             android:orientation="vertical">
-
+        <TextView
+                android:id="@+id/gallery_mail_date"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/gallery_view_shadow_background"
+                android:textColor="@color/gallery_view_shadow"
+                android:textSize="22sp"
+                android:typeface="sans"/>
+        <TextView
+                android:id="@+id/gallery_mail_sender_name"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/gallery_view_shadow_background"
+                android:textColor="@color/gallery_view_shadow"
+                android:textSize="20sp"
+                android:typeface="sans"/>
         <TextView
                 android:id="@+id/gallery_mail_subject"
                 android:layout_width="fill_parent"
@@ -116,15 +131,6 @@
                 android:textColor="@color/gallery_view_shadow"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:typeface="sans"/>
-
-        <TextView
-                android:id="@+id/gallery_mail_date"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/gallery_view_shadow_background"
-                android:textColor="@color/gallery_view_shadow"
-                android:textSize="20sp"
                 android:typeface="sans"/>
         <TextView
                 android:id="@+id/gallery_mail_sent_flag"
