@@ -443,7 +443,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         protected void onPreExecute() {
             dialog = new ProgressDialog(context);
             dialog.setTitle("Please wait");
-            dialog.setMessage("Loading data...");
+            dialog.setMessage("\"表示中のメールより１件古いメールを表示中です。\\nしばらくお待ちください。\".");
             dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             dialog.setCancelable(true);
             dialog.setOnCancelListener(this);
@@ -465,7 +465,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
                 messageBean = SlideMessage.getPreMessage(mAccount, mFolder, mMessageBean.getUid());
                 publishProgress(60);
             } catch (RakuRakuException e) {
-                Log.e(RakuPhotoMail.LOG_TAG, "DispMailPreTask#doInBackground() 次のメールが取得できず UID:" + mMessageBean.getUid());
+                Log.e(RakuPhotoMail.LOG_TAG, "DispMailPreTask#doInBackground() 前のメールが取得できず UID:" + mMessageBean.getUid());
             }
             return messageBean;
         }
@@ -512,7 +512,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         protected void onPreExecute() {
             dialog = new ProgressDialog(context);
             dialog.setTitle("Please wait");
-            dialog.setMessage("Loading data...");
+            dialog.setMessage("表示中のメールより１件新しいメールを表示中です。\nしばらくお待ちください。");
             dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             dialog.setCancelable(true);
             dialog.setOnCancelListener(this);
@@ -534,7 +534,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
                 messageBean = SlideMessage.getNextMessage(mAccount, mFolder, mMessageBean.getUid());
                 publishProgress(60);
             } catch (RakuRakuException e) {
-                Log.e(RakuPhotoMail.LOG_TAG, "DispMailPreTask#doInBackground() 前のメールが取得できず UID:" + mMessageBean.getUid());
+                Log.e(RakuPhotoMail.LOG_TAG, "DispMailPreTask#doInBackground() 次のメールが取得できず UID:" + mMessageBean.getUid());
             }
             return messageBean;
         }
@@ -689,7 +689,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         protected void onPreExecute() {
             dialog = new ProgressDialog(context);
             dialog.setTitle("Please wait");
-            dialog.setMessage("Loading data...");
+            dialog.setMessage("スライドショー情報をサーバーと同期中です。\nしばらくお待ちください。");
             dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             dialog.setCancelable(true);
             dialog.setOnCancelListener(this);

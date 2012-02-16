@@ -23,7 +23,9 @@ import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
+import jp.co.fttx.rakuphotomail.mail.Flag;
 import jp.co.fttx.rakuphotomail.mail.MessagingException;
+import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore.Attachments;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore.MessageInfo;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
@@ -465,20 +467,29 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     private ArrayList<String> setStartUidList(ArrayList<String> dest, String currentUid, long limitCount) {
         ArrayList<String> src = new ArrayList<String>();
 
-        int index = dest.indexOf(currentUid);
-        int maxSize = dest.size();
-        Log.d("tamachi", "setStartUidList index:" + index);
-        Log.d("tamachi", "setStartUidList maxSize:" + maxSize);
+        if (null != currentUid) {
+            int loopStartTerms = dest.indexOf(currentUid);
+            int loopEndTerms = (int) limitCount + loopStartTerms;
+            addList(dest, src, loopStartTerms, loopEndTerms);
 
-        for (int i = index; i < ((int) limitCount + index); i++) {
-            if (maxSize - 1 >= i) {
-                Log.d("tamachi", "setStartUidList i:" + i);
-                Log.d("tamachi", "setStartUidList dest.get(i):" + dest.get(i));
+            int srcMaxSize = src.size();
+            //残数分を頭から獲得しとく
+            if (srcMaxSize < limitCount) {
+                int loopEndTerms2 = (int) limitCount - srcMaxSize;
+                addList(dest, src, 0, loopEndTerms2);
+            }
+        } else {
+            addList(dest, src, 0, (int) limitCount);
+        }
+        return src;
+    }
+
+    private void addList(ArrayList<String> dest, ArrayList<String> src, int loopStartTerms, int loopEndTerms) {
+        for (int i = loopStartTerms; i < loopEndTerms; i++) {
+            if (dest.size() - 1 >= i && !src.contains(dest.get(i))) {
                 src.add(dest.get(i));
             }
         }
-
-        return src;
     }
 
     private ArrayList<String> getUidList(String currentUid, long limitCount) {
@@ -523,7 +534,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         Log.d("tamachi", "onResume");
 
         super.onResume();
-        ArrayList<String> mSlideAllUidList = createUidList();
+        mSlideAllUidList = createUidList();
+        Log.d("tamachi", "onResume mSlideAllUidList.size():" + mSlideAllUidList.size());
         if (null != mSlideAllUidList && 0 < mSlideAllUidList.size()) {
             onSlide();
         }
@@ -559,43 +571,38 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                     mStartUid = "";
                 } else if (!"".equals(mDispUid)) {
                     uidList = setStartUidList(mSlideAllUidList, mDispUid, mAccount.getMessageLimitCountFromDb());
+                } else {
+                    uidList = setStartUidList(mSlideAllUidList, null, mAccount.getMessageLimitCountFromDb());
                 }
                 dismissProgressDialog(mProgressDialog);
 
-                mProgressHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mProgressDialog = new ProgressDialog(mContext);
-                        setUpProgressDialog(mProgressDialog, "Please wait", "スライドショー情報をサーバーと同期中です。\nしばらくお待ちください。  ");
-                    }
-                });
+                LocalStore localStore = mAccount.getLocalStore();
+                LocalStore.LocalFolder localFolder = localStore.getFolder(mFolder);
                 for (int i = 0; i < uidList.size(); i++) {
-                    Log.d("tamachi", "loopInfinite downloadAttachment uidList.get(i):" + uidList.get(i));
-                    SlideAttachment.downloadAttachment(mAccount, mFolder, uidList.get(i));
+                    String uid = uidList.get(i);
+                    Log.d("tamachi", "loopInfinite downloadAttachment uid:" + uid);
+                    jp.co.fttx.rakuphotomail.mail.Message message = localFolder.getMessage(uid);
+                    if (!message.isSet(Flag.X_DOWNLOADED_FULL)) {
+                        startProgressDialogHandler("Please wait", "スライドショー情報をサーバーと同期中です。\nしばらくお待ちください。");
+                        SlideAttachment.downloadAttachment(mAccount, mFolder,uid);
+                        dismissProgressDialog(mProgressDialog);
+                    }
                 }
-                dismissProgressDialog(mProgressDialog);
 
                 //slide show
                 loop(uidList);
 
                 ArrayList<String> downloadedList = SlideMessage.getMessageUidRemoveTarget(mAccount);
                 if (downloadedList.size() > mAccount.getAttachmentCacheLimitCount()) {
-                    mProgressHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            mProgressDialog = new ProgressDialog(mContext);
-                            setUpProgressDialog(mProgressDialog, "Please wait", "最適化を行う為にキャッシュ情報を収集中です。\nしばらくお待ちください。");
-                        }
-                    });
+                    startProgressDialogHandler("Please wait", "最適化を行う為にキャッシュ情報を収集中です。\nしばらくお待ちください。");
                     int removeCount = downloadedList.size() - mAccount.getAttachmentCacheLimitCount();
                     mRemoveList = new ArrayList<String>();
                     int currentIndex = downloadedList.indexOf(mDispUid);
-
                     createRemoveList(downloadedList, currentIndex, removeCount);
-                    dismissProgressDialog(mProgressDialog);
                     for (String uid : mRemoveList) {
                         SlideAttachment.clearCacheForAttachmentFile(mAccount, mFolder, uid);
                     }
+                    dismissProgressDialog(mProgressDialog);
                 }
             }
             Log.d("tamachi", "loopInfinite while end");
@@ -603,6 +610,17 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
         }
     }
+
+    private void startProgressDialogHandler(final String title, final String message) {
+        mProgressHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                mProgressDialog = new ProgressDialog(mContext);
+                setUpProgressDialog(mProgressDialog, title, message);
+            }
+        });
+    }
+
 
     private void createRemoveList(ArrayList<String> downloadedList, int currentIndex, int removeCount) {
         if (0 == currentIndex) {
@@ -851,10 +869,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     private void onSlideStop(String uid) throws InterruptedException {
         if (null != mDispUid) {
+            startProgressDialogHandler("Please wait", "スライドショーを停止中です。\nしばらくお待ちください。");
             try {
                 mIsRepeatUidList = false;
                 mSlideShowThread.join();
                 GallerySlideStop.actionHandle(mContext, mAccount, mFolder, uid);
+                dismissProgressDialog(mProgressDialog);
                 finish();
             } catch (InterruptedException e) {
                 Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow#onStop Error:" + e.getMessage());
