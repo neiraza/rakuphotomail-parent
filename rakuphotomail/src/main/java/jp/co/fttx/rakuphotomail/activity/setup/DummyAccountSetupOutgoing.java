@@ -203,6 +203,7 @@ public class DummyAccountSetupOutgoing extends RakuPhotoActivity implements OnCl
 //                mRequireLoginView.setChecked(true);
 //            }
             //TODO テスト用アカウント
+//            mUsernameView.setText("tooru.oguri@rakuphoto.ucom.local");
             mUsernameView.setText("taro.tamachi@rakuphoto.ucom.local");
 
             // XXX テスト用
@@ -210,6 +211,8 @@ public class DummyAccountSetupOutgoing extends RakuPhotoActivity implements OnCl
 //                mPasswordView.setText(password);
 //            }
             mPasswordView.setText("ucomadmin");
+//            mPasswordView.setText("ucomrp2011");
+
 
             if (authType != null) {
                 for (int i = 0; i < authTypes.length; i++) {
