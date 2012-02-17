@@ -104,12 +104,6 @@
                 android:configChanges="locale"
                 android:launchMode="standard"
                 android:screenOrientation="landscape"
-                android:name="jp.co.fttx.rakuphotomail.activity.GalleryNewMail">
-        </activity>
-        <activity
-                android:configChanges="locale"
-                android:launchMode="standard"
-                android:screenOrientation="landscape"
                 android:name="jp.co.fttx.rakuphotomail.activity.GallerySlideShow">
         </activity>
         <activity
