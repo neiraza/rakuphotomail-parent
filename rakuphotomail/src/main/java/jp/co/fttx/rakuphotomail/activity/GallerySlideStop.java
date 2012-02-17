@@ -152,14 +152,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      */
     private ArrayList<AttachmentBean> mSlideTargetAttachmentList = new ArrayList<AttachmentBean>();
     /**
-     * mail layout
-     */
-    private LinearLayout mGalleryMailButtonLayout;
-    /**
-     * mail layout
-     */
-    private LinearLayout mGalleryMailInfoLayout;
-    /**
      *
      */
     private boolean isDispMailLayout = true;
@@ -231,8 +223,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void setupViews() {
-        mGalleryMailButtonLayout = (LinearLayout) findViewById(R.id.gallery_mail_button_layout);
-        mGalleryMailInfoLayout = (LinearLayout) findViewById(R.id.gallery_mail_info_layout);
         mImageViewPicture = (ImageView) findViewById(R.id.gallery_mail_picture);
         mImageViewPicture.setVisibility(View.VISIBLE);
         setupViewTopMailInfo();
@@ -262,11 +252,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void setupViewGalleryThumbnail() {
-        //TODO 必要だっけ？
-//        mGalleryThumbnailInfoLayout = (LinearLayout) findViewById(R.id.gallery_thumbnail_info_layout);
-//        mGalleryThumbnailInfoLayout.setVisibility(View.GONE);
-//        mGalleryThumbnailInfo = (TextView) findViewById(R.id.gallery_thumbnail_info);
-//        mGalleryThumbnailInfo.setOnClickListener(this);
         mGalleryThumbnailLayout = (LinearLayout) findViewById(R.id.gallery_thumbnail_layout);
         mGalleryThumbnailLayout.setVisibility(View.GONE);
         mGalleryThumbnail = (Gallery) findViewById(R.id.gallery_thumbnail);
@@ -462,7 +447,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         protected void onPreExecute() {
             dialog = new ProgressDialog(context);
             dialog.setTitle("Please wait");
-            dialog.setMessage("\"表示中のメールより１件古いメールを表示中です。\\nしばらくお待ちください。\".");
+            dialog.setMessage("表示中のメールより１件古いメールを表示中です。\nしばらくお待ちください。");
             dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             dialog.setCancelable(true);
             dialog.setOnCancelListener(this);
@@ -663,8 +648,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
                 return true;
             }
             case R.id.buttons_disabled: {
-                //TODO 対策を考える
-//                onButtonsDisp();
+                onButtonsDisp();
                 return true;
             }
             default: {
@@ -684,12 +668,10 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     private void onButtonsDisp() {
         if (isDispMailLayout) {
             isDispMailLayout = false;
-            mGalleryMailButtonLayout.setVisibility(View.INVISIBLE);
-            mGalleryMailInfoLayout.setVisibility(View.INVISIBLE);
+            mGalleryThumbnailLayout.setVisibility(View.INVISIBLE);
         } else {
             isDispMailLayout = true;
-            mGalleryMailButtonLayout.setVisibility(View.VISIBLE);
-            mGalleryMailInfoLayout.setVisibility(View.VISIBLE);
+            mGalleryThumbnailLayout.setVisibility(View.VISIBLE);
         }
     }
 

@@ -82,7 +82,7 @@
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
-        <activity
+        <!--<activity
                 android:configChanges="locale"
                 android:launchMode="standard"
                 android:screenOrientation="landscape"
@@ -93,7 +93,7 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-        </activity>
+        </activity>-->
         <activity
                 android:configChanges="locale"
                 android:launchMode="standard"
