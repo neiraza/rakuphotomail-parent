@@ -256,13 +256,26 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         mTimer.schedule(new TimerTask() {
             @Override
             public void run() {
+                startProgressDialogHandler("Please wait", "サーバーと同期し、新着メールをチェックしています。\nしばらくお待ちください。");
+                mIsRepeatUidList = false;
+                try {
+                    if (mSlideShowThread.isAlive()) {
+                        mSlideShowThread.join();
+                    }
+                } catch (InterruptedException e) {
+                    Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e.getMessage());
+                }
+
                 // 同期処理で新着メールを見つけられた場合
                 String newMailUid = MessageSync.syncMailboxForCheckNewMail(mAccount, mFolder, mAccount.getMessageLimitCountFromRemote());
                 doSentFolderSync();
 
                 mSlideAllUidList = createUidList();
 
+                boolean isSlideShow = false;
+
                 if (null != newMailUid && !"".equals(newMailUid) && isSlide(newMailUid)) {
+                    isSlideShow = true;
                     mIsRepeatUidList = false;
                     try {
                         if (mSlideShowThread.isAlive()) {
@@ -283,30 +296,37 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                     finish();
                 }
 
-                // サーバーとつながってる状態で新着メールがローカル取り込み完了している場合
-                ArrayList<String> newUidList = getUidList(null, mAccount.getMessageLimitCountFromDb());
-                for (String uid : newUidList) {
-                    if (!mAllUidList.contains(uid) && isSlide(uid)) {
-                        mIsRepeatUidList = false;
-                        try {
-                            if (mSlideShowThread.isAlive()) {
-                                mSlideShowThread.join();
-                            } else {
-                                mDispUid = uid;
+                if (!isSlideShow) {
+                    // サーバーとつながってる状態で新着メールがローカル取り込み完了している場合
+                    ArrayList<String> newUidList = getUidList(null, mAccount.getMessageLimitCountFromDb());
+                    for (String uid : newUidList) {
+                        if (!mAllUidList.contains(uid) && isSlide(uid)) {
+                            isSlideShow = true;
+                            mIsRepeatUidList = false;
+                            try {
+                                if (mSlideShowThread.isAlive()) {
+                                    mSlideShowThread.join();
+                                } else {
+                                    mDispUid = uid;
+                                }
+                            } catch (InterruptedException e) {
+                                Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e.getMessage());
                             }
-                        } catch (InterruptedException e) {
-                            Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e.getMessage());
-                        }
 
-                        try {
-                            onSlideStop(newMailUid);
-                        } catch (InterruptedException e) {
-                            Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
+                            try {
+                                onSlideStop(newMailUid);
+                            } catch (InterruptedException e) {
+                                Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
+                            }
+                            mAllUidList.clear();
+                            mAllUidList = getUidList(null, 0);
+                            finish();
                         }
-                        mAllUidList.clear();
-                        mAllUidList = getUidList(null, 0);
-                        finish();
                     }
+                }
+                if (!isSlideShow) {
+                    GallerySlideShow.actionSlideShow(mContext, mAccount, mFolder, mDispUid);
+                    dismissProgressDialog(mProgressDialog);
                 }
             }
         }, 180000L, 180000L);
@@ -869,7 +889,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         startProgressDialogHandler("Please wait", "スライドショーを停止中です。\nしばらくお待ちください。");
         try {
             mIsRepeatUidList = false;
-            mSlideShowThread.join();
+            if (mSlideShowThread.isAlive()) {
+                mSlideShowThread.join();
+            }
             GallerySlideStop.actionHandle(mContext, mAccount, mFolder, uid);
             dismissProgressDialog(mProgressDialog);
             finish();
