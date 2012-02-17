@@ -12,10 +12,7 @@ import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.Window;
+import android.view.*;
 import android.widget.*;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
@@ -80,9 +77,17 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      */
     private ImageView mImageViewPicture;
     /**
+     *
+     */
+    private LinearLayout mMailSubjectLayout;
+    /**
      * mail subject
      */
     private TextView mMailSubject;
+    /**
+     * mail subject
+     */
+    private String mSubject;
     /**
      * mail receive date
      */
@@ -160,6 +165,15 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      */
     private TextView mSenderName;
     /**
+     *
+     */
+    PopupWindow pWindowMailDetail;
+    /**
+     *
+     */
+    boolean mMessagePopup = false;
+
+    /**
      * @param context context
      * @param account account info
      * @param folder  receive mail folder name
@@ -231,6 +245,8 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void setupViewTopMailInfo() {
+        mMailSubjectLayout = (LinearLayout) findViewById(R.id.gallery_mail_subject_layout);
+        mMailSubjectLayout.setOnClickListener(this);
         mMailSubject = (TextView) findViewById(R.id.gallery_mail_subject);
         mMailDate = (TextView) findViewById(R.id.gallery_mail_date);
         mSenderName = (TextView) findViewById(R.id.gallery_mail_sender_name);
@@ -279,12 +295,10 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private Bitmap getThumbnailBitmap(AttachmentBean attachmentBean) {
-        //TODO from mContext to getApplicationContext()
         return SlideAttachment.getThumbnailBitmap(getApplicationContext(), mAccount, attachmentBean);
     }
 
     private void setImageViewPicture(ArrayList<AttachmentBean> attachmentBeanList, int index) {
-        //TODO from mContext to getApplicationContext()
         Bitmap bitmap = SlideAttachment.getBitmap(getApplicationContext(), getWindowManager().getDefaultDisplay(), mAccount, attachmentBeanList.get(index));
         mImageViewPicture.setImageBitmap(bitmap);
     }
@@ -330,6 +344,10 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
             case ID_GALLERY_MAIL_NEXT:
                 onMailNext();
                 break;
+            case R.id.gallery_mail_subject_layout:
+                mMailSubjectLayout.setEnabled(false);
+                onMessageDetail();
+                break;
             default:
                 Log.w(RakuPhotoMail.LOG_TAG, "onClick is no Action !!!!");
         }
@@ -350,7 +368,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         ArrayList<AttachmentBean> attachmentBeanList = mSlideTargetAttachmentList;
         if (1 < attachmentBeanList.size()) {
             mGalleryThumbnailLayout.setVisibility(View.VISIBLE);
-            //TODO from mContext to getApplicationContext()
             ThumbnailImageAdapter thumbnailAdapter = new ThumbnailImageAdapter(getApplicationContext());
             thumbnailAdapter.setImageItems(makeBitmapList(attachmentBeanList));
             mGalleryThumbnail.setAdapter(thumbnailAdapter);
@@ -359,7 +376,8 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         }
         setImageViewPicture(mSlideTargetAttachmentList, 0);
         //TODO 140文字に制限します(config)
-        mMailSubject.setText(RakuPhotoStringUtils.limitMessage(mMessageBean.getSubject(), 140));
+        mSubject = RakuPhotoStringUtils.limitMessage(mMessageBean.getSubject(), 140);
+        mMailSubject.setText(mSubject);
         mSenderName.setText(mMessageBean.getSenderName().trim());
         setDate(mMessageBean.getDate());
         setAnswered(mMessageBean.isFlagAnswered());
@@ -376,26 +394,62 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         setViewSlide();
     }
 
-    //TODO いるんか？
+    private void onMessageDetail() {
+        showPopupWindow(getApplicationContext(), this.findViewById(R.id.gallery_mail_subject_layout));
+    }
+
+    private void showPopupWindow(Context context, View parent) {
+        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        final View vPopupWindow = inflater.inflate(R.layout.gallery_message_detail_popup, null, false);
+        Display display = getWindowManager().getDefaultDisplay();
+        pWindowMailDetail = new PopupWindow(vPopupWindow, display.getWidth() / 2, display.getHeight() / 2, true);
+        setupPopupWindowViews(vPopupWindow);
+        pWindowMailDetail.showAtLocation(parent, Gravity.CENTER, 0, 0);
+    }
+
+    private void setupPopupWindowViews(View vPopupWindow) {
+        TextView subject = (TextView) vPopupWindow.findViewById(R.id.gallery_message_detail);
+        subject.setText(mSubject);
+        TextView close = (TextView) vPopupWindow.findViewById(R.id.gallery_message_detail_popup_close);
+        /* 閉じる */
+        close.setOnClickListener(new PopupClickEvent());
+    }
+
+    private void onMailInfoClose() {
+        mMessagePopup = false;
+        pWindowMailDetail.dismiss();
+    }
+
+    private class PopupClickEvent implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
+                case R.id.gallery_message_detail_popup_close:
+                    mMailSubjectLayout.setEnabled(true);
+                    onMailInfoClose();
+                    break;
+                default:
+                    Log.w(RakuPhotoMail.LOG_TAG, "PopupClickEvent#onClick is no Action !!!!");
+            }
+        }
+    }
+
     private void setMailMoveVisibility(String uid) {
         if (!SlideMessage.isNextMessage(mAccount, mFolder, uid)) {
-            Log.d("2727","enabled false");
             mMailNext.setEnabled(false);
         } else {
-            Log.d("2727","enabled true");
             mMailNext.setEnabled(true);
         }
         if (!SlideMessage.isPreMessage(mAccount, mFolder, uid)) {
-            Log.d("2727","enabled false");
             mMailPre.setEnabled(false);
         } else {
-            Log.d("2727","enabled true");
             mMailPre.setEnabled(true);
         }
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        mMessagePopup = true;
         setImageViewPicture(mSlideTargetAttachmentList, (int) id);
     }
 

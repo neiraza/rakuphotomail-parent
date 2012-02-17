@@ -93,18 +93,19 @@
                             android:src="@drawable/overlay_ok"/>
                 </LinearLayout>
             </LinearLayout>
+            <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="10dip"
+                    android:paddingBottom="10dip"
+                    android:src="@drawable/separator"/>
             <LinearLayout
+                    android:id="@+id/gallery_mail_subject_layout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1.5"
                     android:layout_margin="5dip"
                     android:orientation="vertical">
-                <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:paddingTop="10dip"
-                        android:paddingBottom="10dip"
-                        android:src="@drawable/separator"/>
                 <TextView
                         android:id="@+id/gallery_mail_subject"
                         android:layout_width="wrap_content"

@@ -1194,7 +1194,9 @@
     <string name="gallery_mail_detail_bcc">"Bcc："</string>
     <string name="gallery_mail_detail_open">"詳細を表示する"</string>
     <string name="gallery_mail_detail_close">"閉じる"</string>
-    <string name="gallery_mail_detail_title">"メッセージの詳細"</string>
+    <string name="gallery_mail_detail_title">"メッセージ"</string>
+
+    <string name="gallery_message_detail_popup_title">"メッセージ"</string>
 
     <string name="create_sending_mail">"返信メッセージ作成"</string>
 
