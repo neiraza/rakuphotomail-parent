@@ -126,13 +126,15 @@ public class Account implements BaseAccount {
 
     private CryptoProvider mCryptoProvider = null;
 
-    // デバイス内に画像ファイルをキャッシュする最大数（ユーザー非公開OK）
+    //TODO コンフィグ候補たち
+    // デバイス内に画像ファイルをキャッシュする最大数（ユーザー選択に変更したい）
     private int attachmentCacheLimitCount = 0;
     // デバイス内のDBから何件づつメッセージを取得するか（ユーザー非公開OK）
     private int messageLimitCountFromDb = 0;
-    //TODO メールサーバーから最大何件取得するか（ユーザー選択に変更したい）
-    private int messageLimitCountFromRemote = 0; // 0だと全件
-    private long slideSleepTime = 3500L; // 0だと全件
+    private int messageLimitCountFromRemote = 0; // 0だと全件(変更不可)
+    private long slideSleepTimeDuration = 3500L;
+    private long serverSyncInitStartTimeDuration = 180000L;
+    private long serverSyncTimeDuration = 180000L;
 
     /**
      * Name of the folder that was last selected for a copy or move operation.
@@ -1423,10 +1425,27 @@ public class Account implements BaseAccount {
         this.attachmentCacheLimitCount = attachmentCacheLimitCount;
     }
 
-    public long getSlideSleepTime(){
-        return slideSleepTime;
+    public long getSlideSleepTime() {
+        return slideSleepTimeDuration;
     }
-    public void setSlideSleepTime(long sleepTime){
-        this.slideSleepTime = sleepTime;
+
+    public void setSlideSleepTime(long sleepTime) {
+        this.slideSleepTimeDuration = sleepTime;
+    }
+
+    public long getServerSyncTimeDuration() {
+        return serverSyncTimeDuration;
+    }
+
+    public void setServerSyncTimeDuration(long serverSyncTimeDuration) {
+        this.serverSyncTimeDuration = serverSyncTimeDuration;
+    }
+
+    public long getServerSyncInitStartTimeDuration() {
+        return serverSyncInitStartTimeDuration;
+    }
+
+    public void setServerSyncInitStartTimeDuration(long serverSyncInitStartTimeDuration) {
+        this.serverSyncInitStartTimeDuration = serverSyncInitStartTimeDuration;
     }
 }

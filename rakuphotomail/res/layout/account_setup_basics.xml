@@ -65,21 +65,11 @@
         android:layout_height="fill_parent"
         android:layout_width="fill_parent">
         <Button
-            android:id="@+id/manual_setup"
-            android:text="@string/account_setup_basics_manual_setup_action"
-            android:minWidth="@dimen/button_minWidth"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_marginBottom="-4dip" 
-            android:layout_alignParentLeft="true"
-            android:layout_centerVertical="false" 
-            />
-        <Button
             android:id="@+id/next"
             android:text="@string/next_action"
             android:minWidth="@dimen/button_minWidth"
             android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
+            android:layout_width="fill_parent"
             android:drawableRight="@drawable/button_indicator_next"
             android:layout_marginBottom="-4dip" 
             android:layout_alignParentRight="true"

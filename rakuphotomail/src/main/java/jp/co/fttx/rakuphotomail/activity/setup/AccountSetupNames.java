@@ -19,7 +19,7 @@ import jp.co.fttx.rakuphotomail.helper.Utility;
 public class AccountSetupNames extends RakuPhotoActivity implements OnClickListener {
     private static final String EXTRA_ACCOUNT = "account";
 
-    private EditText mDescription;
+//    private EditText mDescription;
 
     private EditText mName;
 
@@ -37,7 +37,7 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_names);
-        mDescription = (EditText)findViewById(R.id.account_description);
+//        mDescription = (EditText)findViewById(R.id.account_description);
         mName = (EditText)findViewById(R.id.account_name);
         mDoneButton = (Button)findViewById(R.id.done);
         mDoneButton.setOnClickListener(this);
@@ -65,7 +65,7 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
          * the user fills in a value we'll reset the current value, otherwise we
          * just leave the saved value alone.
          */
-        // mDescription.setText(mAccount.getDescription());
+//        mDescription.setText(mAccount.getDescription());
         if (mAccount.getName() != null) {
             mName.setText(mAccount.getName());
         }
@@ -81,13 +81,11 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
 
     @Override
     protected void onNext() {
-        //XXX 勝手にかきかえましたよ
 //        if (Utility.requiredFieldValid(mDescription)) {
 //            mAccount.setDescription(mDescription.getText().toString());
+            mAccount.setDescription(mAccount.getDescription());
 //        }
-//        mAccount.setName(mName.getText().toString());
-        mAccount.setDescription("おぐりさん");
-        mAccount.setName("おぐりん");
+        mAccount.setName(mName.getText().toString());
         mAccount.save(Preferences.getPreferences(this));
         finish();
     }

@@ -34,10 +34,6 @@ public class DummyAccountSetupIncoming extends RakuPhotoActivity implements
 	private static final int imapPorts[] = { 143, 993, 993, 143, 143 };
 	private static final String imapSchemes[] = { "imap", "imap+ssl",
 			"imap+ssl+", "imap+tls", "imap+tls+" };
-	private static final int webdavPorts[] = { 80, 443, 443, 443, 443 };
-	private static final String webdavSchemes[] = { "webdav", "webdav+ssl",
-			"webdav+ssl+", "webdav+tls", "webdav+tls+" };
-
 	private static final String authTypes[] = { "PLAIN", "CRAM_MD5" };
 
 	private int mAccountPorts[];
@@ -48,10 +44,7 @@ public class DummyAccountSetupIncoming extends RakuPhotoActivity implements
 	private EditText mPortView;
 	private Spinner mSecurityTypeView;
 	private Spinner mAuthTypeView;
-	private EditText mImapPathPrefixView;
-	private EditText mWebdavPathPrefixView;
-	private EditText mWebdavAuthPathView;
-	private EditText mWebdavMailboxPathView;
+//	private EditText mImapPathPrefixView;
 	private Button mNextButton;
 	private Account mAccount;
 	private boolean mMakeDefault;
@@ -62,19 +55,17 @@ public class DummyAccountSetupIncoming extends RakuPhotoActivity implements
 
 	public static void actionIncomingSettings(Activity context,
 			Account account, boolean makeDefault) {
-        Log.d("refs#2169", "DummyAccountSetupIncoming#actionIncomingSettings start");
+
 
 		Intent i = new Intent(context, DummyAccountSetupIncoming.class);
 		i.putExtra(EXTRA_ACCOUNT, account.getUuid());
 		i.putExtra(EXTRA_MAKE_DEFAULT, makeDefault);
 		context.startActivity(i);
-        Log.d("refs#2169", "DummyAccountSetupIncoming#actionIncomingSettings end");
 
 	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-        Log.d("refs#2169", "DummyAccountSetupIncoming#onCreate start");
 
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.account_setup_incoming);
@@ -86,15 +77,9 @@ public class DummyAccountSetupIncoming extends RakuPhotoActivity implements
 		mPortView = (EditText) findViewById(R.id.account_port);
 		mSecurityTypeView = (Spinner) findViewById(R.id.account_security_type);
 		mAuthTypeView = (Spinner) findViewById(R.id.account_auth_type);
-		mImapPathPrefixView = (EditText) findViewById(R.id.imap_path_prefix);
-		mWebdavPathPrefixView = (EditText) findViewById(R.id.webdav_path_prefix);
-		mWebdavAuthPathView = (EditText) findViewById(R.id.webdav_auth_path);
-		mWebdavMailboxPathView = (EditText) findViewById(R.id.webdav_mailbox_path);
+//		mImapPathPrefixView = (EditText) findViewById(R.id.imap_path_prefix);
 		mNextButton = (Button) findViewById(R.id.next);
-		mCompressionMobile = (CheckBox) findViewById(R.id.compression_mobile);
-		mCompressionWifi = (CheckBox) findViewById(R.id.compression_wifi);
-		mCompressionOther = (CheckBox) findViewById(R.id.compression_other);
-		mSubscribedFoldersOnly = (CheckBox) findViewById(R.id.subscribed_folders_only);
+//		mSubscribedFoldersOnly = (CheckBox) findViewById(R.id.subscribed_folders_only);
 
 		mNextButton.setOnClickListener(this);
 
@@ -237,18 +222,8 @@ public class DummyAccountSetupIncoming extends RakuPhotoActivity implements
 						.setText(R.string.account_setup_incoming_pop_server_label);
 				mAccountPorts = popPorts;
 				mAccountSchemes = popSchemes;
-				findViewById(R.id.imap_path_prefix_section).setVisibility(
-						View.GONE);
-				findViewById(R.id.webdav_advanced_header).setVisibility(
-						View.GONE);
-				findViewById(R.id.webdav_mailbox_alias_section).setVisibility(
-						View.GONE);
-				findViewById(R.id.webdav_owa_path_section).setVisibility(
-						View.GONE);
-				findViewById(R.id.webdav_auth_path_section).setVisibility(
-						View.GONE);
-				findViewById(R.id.compression_section).setVisibility(View.GONE);
-				findViewById(R.id.compression_label).setVisibility(View.GONE);
+//				findViewById(R.id.imap_path_prefix_section).setVisibility(
+//						View.GONE);
 				mSubscribedFoldersOnly.setVisibility(View.GONE);
 				mAccount.setDeletePolicy(Account.DELETE_POLICY_NEVER);
 			} else if (uri.getScheme().startsWith("imap")) {
@@ -257,66 +232,16 @@ public class DummyAccountSetupIncoming extends RakuPhotoActivity implements
 				mAccountPorts = imapPorts;
 				mAccountSchemes = imapSchemes;
 
-				if (uri.getPath() != null && uri.getPath().length() > 0) {
-					mImapPathPrefixView.setText(uri.getPath().substring(1));
-				}
+//				if (uri.getPath() != null && uri.getPath().length() > 0) {
+//					mImapPathPrefixView.setText(uri.getPath().substring(1));
+//				}
 
-				findViewById(R.id.webdav_advanced_header).setVisibility(
-						View.GONE);
-				findViewById(R.id.webdav_mailbox_alias_section).setVisibility(
-						View.GONE);
-				findViewById(R.id.webdav_owa_path_section).setVisibility(
-						View.GONE);
-				findViewById(R.id.webdav_auth_path_section).setVisibility(
-						View.GONE);
 				mAccount.setDeletePolicy(Account.DELETE_POLICY_ON_DELETE);
 
-				if (!Intent.ACTION_EDIT.equals(getIntent().getAction())) {
-					findViewById(R.id.imap_folder_setup_section).setVisibility(
-							View.GONE);
-				}
-			} else if (uri.getScheme().startsWith("webdav")) {
-				serverLabelView
-						.setText(R.string.account_setup_incoming_webdav_server_label);
-				mAccountPorts = webdavPorts;
-				mAccountSchemes = webdavSchemes;
-
-				/** Hide the unnecessary fields */
-				findViewById(R.id.imap_path_prefix_section).setVisibility(
-						View.GONE);
-				findViewById(R.id.account_auth_type_label).setVisibility(
-						View.GONE);
-				findViewById(R.id.account_auth_type).setVisibility(View.GONE);
-				findViewById(R.id.compression_section).setVisibility(View.GONE);
-				findViewById(R.id.compression_label).setVisibility(View.GONE);
-				mSubscribedFoldersOnly.setVisibility(View.GONE);
-				if (uri.getPath() != null && uri.getPath().length() > 0) {
-					String[] pathParts = uri.getPath().split("\\|");
-
-					for (int i = 0, count = pathParts.length; i < count; i++) {
-						if (i == 0) {
-							if (pathParts[0] != null
-									&& pathParts[0].length() > 1) {
-								mWebdavPathPrefixView.setText(pathParts[0]
-										.substring(1));
-							}
-						} else if (i == 1) {
-							if (pathParts[1] != null
-									&& pathParts[1].length() > 1) {
-								mWebdavAuthPathView.setText(pathParts[1]);
-							}
-						} else if (i == 2) {
-							if (pathParts[2] != null
-									&& pathParts[2].length() > 1) {
-								mWebdavMailboxPathView.setText(pathParts[2]);
-							}
-						}
-					}
-				}
-				mAccount.setDeletePolicy(Account.DELETE_POLICY_ON_DELETE);
-			} else {
-				throw new Exception("Unknown account type: "
-						+ mAccount.getStoreUri());
+//				if (!Intent.ACTION_EDIT.equals(getIntent().getAction())) {
+//					findViewById(R.id.imap_folder_setup_section).setVisibility(
+//							View.GONE);
+//				}
 			}
 
 			for (int i = 0; i < mAccountSchemes.length; i++) {
@@ -350,19 +275,16 @@ public class DummyAccountSetupIncoming extends RakuPhotoActivity implements
 			failure(e);
 		}
 
-        Log.d("refs#2169", "DummyAccountSetupIncoming#onCreate end");
 
 	}
 
     @Override
     public void onResume(){
-        Log.d("refs#2169", "DummyAccountSetupIncoming#onResume start");
 
         super.onResume();
 
         //TODO ショートカットさん
         next();
-        Log.d("refs#2169", "DummyAccountSetupIncoming#onResume end");
 
     }
 
@@ -391,7 +313,6 @@ public class DummyAccountSetupIncoming extends RakuPhotoActivity implements
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d("refs#2169", "DummyAccountSetupIncoming#onActivityResult start");
 
 		if (resultCode == RESULT_OK) {
 			if (Intent.ACTION_EDIT.equals(getIntent().getAction())) {
@@ -429,24 +350,17 @@ public class DummyAccountSetupIncoming extends RakuPhotoActivity implements
 				finish();
 			}
 		}
-        Log.d("refs#2169", "DummyAccountSetupIncoming#onActivityResult end");
 
 	}
 
 	@Override
 	protected void onNext() {
-        Log.d("refs#2169", "DummyAccountSetupIncoming#onNext start");
 		try {
 			int securityType = (Integer) ((SpinnerOption) mSecurityTypeView
 					.getSelectedItem()).value;
 			String path = null;
-			if (mAccountSchemes[securityType].startsWith("imap")) {
-				path = "/" + mImapPathPrefixView.getText();
-			} else if (mAccountSchemes[securityType].startsWith("webdav")) {
-				path = "/" + mWebdavPathPrefixView.getText();
-				path = path + "|" + mWebdavAuthPathView.getText();
-				path = path + "|" + mWebdavMailboxPathView.getText();
-			}
+//				path = "/" + mImapPathPrefixView.getText();
+				path = "/";
 
 			final String userInfo;
 			String user = mUsernameView.getText().toString();
@@ -488,23 +402,16 @@ public class DummyAccountSetupIncoming extends RakuPhotoActivity implements
 		} catch (Exception e) {
 			failure(e);
 		}
-        Log.d("refs#2169", "DummyAccountSetupIncoming#onNext end");
 	}
 
 	public void next() {
-        Log.d("refs#2169", "DummyAccountSetupIncoming#next start");
 
 		try {
 			int securityType = (Integer) ((SpinnerOption) mSecurityTypeView
 					.getSelectedItem()).value;
 			String path = null;
-			if (mAccountSchemes[securityType].startsWith("imap")) {
-				path = "/" + mImapPathPrefixView.getText();
-			} else if (mAccountSchemes[securityType].startsWith("webdav")) {
-				path = "/" + mWebdavPathPrefixView.getText();
-				path = path + "|" + mWebdavAuthPathView.getText();
-				path = path + "|" + mWebdavMailboxPathView.getText();
-			}
+				path = "/";
+//				path = "/" + mImapPathPrefixView.getText();
 
 			final String userInfo;
 			String user = mUsernameView.getText().toString();
@@ -546,7 +453,6 @@ public class DummyAccountSetupIncoming extends RakuPhotoActivity implements
 		} catch (Exception e) {
 			failure(e);
 		}
-        Log.d("refs#2169", "DummyAccountSetupIncoming#next end");
 
 	}
 

@@ -23,6 +23,7 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="?android:attr/textColorPrimary"
         android:focusable="true" />
+     <!--
     <TextView
         android:text="@string/account_setup_names_account_name_label"
         android:layout_height="wrap_content"
@@ -35,6 +36,7 @@
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
         android:contentDescription="@string/account_setup_names_account_name_label" />
+        -->
     <TextView
         android:text="@string/account_setup_names_user_name_label"
         android:layout_height="wrap_content"
@@ -65,7 +67,7 @@
             android:id="@+id/done"
             android:text="@string/done_action"
             android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
+            android:layout_width="fill_parent"
             android:drawableRight="@drawable/button_indicator_next"
             android:layout_marginBottom="-4dip" 
             android:layout_alignParentRight="true"

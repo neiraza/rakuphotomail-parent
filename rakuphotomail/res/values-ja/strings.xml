@@ -457,7 +457,7 @@
     <string name="quiet_time_ends">終了時刻</string>
 
 
-    <string name="account_setup_basics_title">電子メールセットアップ</string>
+    <string name="account_setup_basics_title">メールアカウントセットアップ</string>
     <string name="account_setup_basics_instructions">このアカウントで使用するメールアドレスを入力して下さい</string>
     <string name="account_setup_basics_instructions2_fmt">(追加する場合は
         <xliff:g id="number_accounts">%d</xliff:g>
@@ -485,7 +485,7 @@
     <string name="account_setup_check_settings_finishing_msg">終了\u2026</string>
     <string name="account_setup_check_settings_canceling_msg">中断\u2026</string>
 
-    <string name="account_setup_names_title">電子メールセットアップ</string>
+    <string name="account_setup_names_title">メールアカウントセットアップ</string>
     <string name="account_setup_names_instructions">アカウントのセットアップとメール設定を行っています</string>
     <string name="account_setup_names_account_name_label">アカウントの名前を付けます (オプション):</string>
     <string name="account_setup_names_user_name_label">名前を入力します (送信メールの表示名):</string>

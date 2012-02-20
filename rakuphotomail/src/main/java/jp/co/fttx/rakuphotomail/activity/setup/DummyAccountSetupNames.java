@@ -16,7 +16,7 @@ import jp.co.fttx.rakuphotomail.activity.RakuPhotoActivity;
 public class DummyAccountSetupNames extends RakuPhotoActivity implements OnClickListener {
     private static final String EXTRA_ACCOUNT = "account";
 
-    private EditText mDescription;
+//    private EditText mDescription;
 
     private EditText mName;
 
@@ -40,7 +40,7 @@ public class DummyAccountSetupNames extends RakuPhotoActivity implements OnClick
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_names);
-        mDescription = (EditText)findViewById(R.id.account_description);
+//        mDescription = (EditText)findViewById(R.id.account_description);
         mName = (EditText)findViewById(R.id.account_name);
         mDoneButton = (Button)findViewById(R.id.done);
         mDoneButton.setOnClickListener(this);
