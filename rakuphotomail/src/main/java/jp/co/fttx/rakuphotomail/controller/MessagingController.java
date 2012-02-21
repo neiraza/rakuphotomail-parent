@@ -514,24 +514,24 @@ public class MessagingController implements Runnable {
         });
     }
 
-    /**
-     * List the messages in the local message store for the given folder
-     * asynchronously.
-     *
-     * @param account
-     * @param folder
-     * @param listener
-     * @throws MessagingException
-     */
-    public void listLocalMessages(final Account account, final String folder,
-                                  final MessagingListener listener) {
-        threadPool.execute(new Runnable() {
-            @Override
-            public void run() {
-                listLocalMessagesSynchronous(account, folder, listener);
-            }
-        });
-    }
+//    /**
+//     * List the messages in the local message store for the given folder
+//     * asynchronously.
+//     *
+//     * @param account
+//     * @param folder
+//     * @param listener
+//     * @throws MessagingException
+//     */
+//    public void listLocalMessages(final Account account, final String folder,
+//                                  final MessagingListener listener) {
+//        threadPool.execute(new Runnable() {
+//            @Override
+//            public void run() {
+//                listLocalMessagesSynchronous(account, folder, listener);
+//            }
+//        });
+//    }
 
     /**
      * List the messages in the local message store for the given folder
@@ -846,29 +846,29 @@ public class MessagingController implements Runnable {
         }
     }
 
-    public void loadMoreMessages(Account account, String folder,
-                                 MessagingListener listener) {
-        try {
-            LocalStore localStore = account.getLocalStore();
-            LocalFolder localFolder = localStore.getFolder(folder);
-            if (localFolder.getVisibleLimit() > 0) {
-                localFolder.setVisibleLimit(localFolder.getVisibleLimit()
-                        + localFolder.getMessageCount());
-            }
-            synchronizeMailbox(account, folder, listener, null);
-        } catch (MessagingException me) {
-            addErrorMessage(account, null, me);
+//    public void loadMoreMessages(Account account, String folder,
+//                                 MessagingListener listener) {
+//        try {
+//            LocalStore localStore = account.getLocalStore();
+//            LocalFolder localFolder = localStore.getFolder(folder);
+//            if (localFolder.getVisibleLimit() > 0) {
+//                localFolder.setVisibleLimit(localFolder.getVisibleLimit()
+//                        + localFolder.getMessageCount());
+//            }
+//            synchronizeMailbox(account, folder, listener, null);
+//        } catch (MessagingException me) {
+//            addErrorMessage(account, null, me);
+//
+//            throw new RuntimeException("Unable to set visible limit on folder",
+//                    me);
+//        }
+//    }
 
-            throw new RuntimeException("Unable to set visible limit on folder",
-                    me);
-        }
-    }
-
-    public void resetVisibleLimits(Collection<Account> accounts) {
-        for (Account account : accounts) {
-            account.resetVisibleLimits();
-        }
-    }
+//    public void resetVisibleLimits(Collection<Account> accounts) {
+//        for (Account account : accounts) {
+//            account.resetVisibleLimits();
+//        }
+//    }
 
     //TODO kokokokokokoko
 

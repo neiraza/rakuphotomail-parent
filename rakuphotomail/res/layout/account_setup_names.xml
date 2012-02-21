@@ -1,75 +1,137 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical">
-
-<ScrollView
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:layout_marginBottom="54dip" 
-    android:padding="6dip"
-    android:fadingEdge="none"
-    android:scrollbarStyle="outsideInset">
-    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="vertical">
-    <TextView
-        android:text="@string/account_setup_names_instructions"
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="?android:attr/textColorPrimary"
-        android:focusable="true" />
-    <TextView
-        android:text="@string/account_setup_names_account_name_label"
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:textColor="?android:attr/textColorPrimary" />
-    <EditText
-        android:id="@+id/account_description"
-        android:singleLine="true"
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        android:contentDescription="@string/account_setup_names_account_name_label" />
-    <TextView
-        android:text="@string/account_setup_names_user_name_label"
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:textColor="?android:attr/textColorPrimary" />
-    <EditText
-        android:id="@+id/account_name"
-        android:singleLine="true"
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        android:contentDescription="@string/account_setup_names_user_name_label" />
-    <View
-        android:layout_height="0dip"
-        android:layout_width="fill_parent"
-        android:layout_weight="1" />
-</LinearLayout>
-</ScrollView>
+
+    <ScrollView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_marginBottom="54dip"
+            android:padding="6dip"
+            android:fadingEdge="none"
+            android:scrollbarStyle="outsideInset">
+        <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:orientation="vertical">
+            <TextView
+                    android:text="@string/account_setup_names_instructions"
+                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:focusable="true"/>
+            <TextView
+                    android:text="@string/account_setup_names_user_name_label"
+                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="?android:attr/textColorPrimary"/>
+            <EditText
+                    android:id="@+id/account_name"
+                    android:singleLine="true"
+                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent"
+                    android:contentDescription="@string/account_setup_names_user_name_label"/>
+
+             <!-- attachmentCacheLimitCount -->
+            <TextView
+                    android:text="@string/account_settings_download_cache_description"
+                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="?android:attr/textColorPrimary"/>
+            <Spinner
+                    android:id="@+id/account_option_download_cache"
+                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent"
+                    android:contentDescription="@string/account_settings_download_cache_label"
+                    android:entries="@array/account_settings_download_cache_entries"
+                    android:prompt="@string/account_settings_download_cache_label"/>
+
+            <!-- slideSleepTimeDuration -->
+            <TextView
+                    android:text="@string/account_settings_slide_change_duration_description"
+                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="?android:attr/textColorPrimary"/>
+            <Spinner
+                    android:id="@+id/slideSleepTimeDuration"
+                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent"
+                    android:contentDescription="@string/account_settings_slide_change_duration_label"
+                    android:entries="@array/account_settings_slide_change_duration_entries"
+                    android:prompt="@string/account_settings_slide_change_duration_label"/>
+
+            <!-- serverSyncTimeDuration -->
+            <TextView
+                    android:text="@string/account_settings_server_sync_description"
+                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="?android:attr/textColorPrimary"/>
+            <Spinner
+                    android:id="@+id/account_option_server_sync"
+                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent"
+                    android:contentDescription="@string/account_settings_server_sync_label"
+                    android:entries="@array/account_settings_server_sync_entries"
+                    android:prompt="@string/account_settings_server_sync_label"/>
+
+            <TextView
+                    android:text="@string/account_settings_scale_ratio_description"
+                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="?android:attr/textColorPrimary"/>
+            <Spinner
+                    android:id="@+id/account_option_scale_ratio"
+                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent"
+                    android:contentDescription="@string/account_settings_scale_ratio_label"
+                    android:entries="@array/account_settings_scale_ratio_entries"
+                    android:prompt="@string/account_settings_scale_ratio_label"/>
+
+            <TextView
+                    android:text="@string/account_settings_download_message_size_description"
+                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="?android:attr/textColorPrimary"/>
+            <Spinner
+                    android:id="@+id/account_option_download_message_size"
+                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent"
+                    android:contentDescription="@string/account_settings_download_message_size_label"
+                    android:entries="@array/account_settings_download_message_size_entries"
+                    android:prompt="@string/account_settings_download_message_size_label"/>
+
+            <View
+                    android:layout_height="0dip"
+                    android:layout_width="fill_parent"
+                    android:layout_weight="1"/>
+        </LinearLayout>
+    </ScrollView>
     <RelativeLayout
-        android:layout_marginTop="-45dip" 
-        android:padding="0dip"
-        android:layout_alignParentBottom="true"
-        android:gravity="bottom|right" 
-        android:background="@android:drawable/bottom_bar"
-        android:layout_height="fill_parent"
-        android:layout_width="fill_parent">
+            android:layout_marginTop="-45dip"
+            android:padding="0dip"
+            android:layout_alignParentBottom="true"
+            android:gravity="bottom|right"
+            android:background="@android:drawable/bottom_bar"
+            android:layout_height="fill_parent"
+            android:layout_width="fill_parent">
         <Button
-            android:id="@+id/done"
-            android:text="@string/done_action"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:drawableRight="@drawable/button_indicator_next"
-            android:layout_marginBottom="-4dip" 
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="false" 
-            />
+                android:id="@+id/done"
+                android:text="@string/done_action"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:drawableRight="@drawable/button_indicator_next"
+                android:layout_marginBottom="-4dip"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="false"
+                />
     </RelativeLayout>
 </LinearLayout>

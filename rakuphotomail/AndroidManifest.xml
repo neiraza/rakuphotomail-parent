@@ -123,12 +123,6 @@
                 android:configChanges="locale"
                 android:label="@string/account_setup_basics_title"
                 android:screenOrientation="landscape"
-                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupBasics">
-        </activity>
-        <activity
-                android:configChanges="locale"
-                android:label="@string/account_setup_basics_title"
-                android:screenOrientation="landscape"
                 android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupBasics">
         </activity>
         <activity
@@ -139,21 +133,9 @@
         </activity>
         <activity
                 android:configChanges="locale"
-                android:label="@string/account_setup_account_type_title"
-                android:screenOrientation="landscape"
-                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupAccountType">
-        </activity>
-        <activity
-                android:configChanges="locale"
                 android:label="@string/account_setup_incoming_title"
                 android:screenOrientation="landscape"
                 android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupIncoming">
-        </activity>
-        <activity
-                android:configChanges="locale"
-                android:label="@string/account_setup_incoming_title"
-                android:screenOrientation="landscape"
-                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupIncoming">
         </activity>
         <activity
                 android:configChanges="locale"
@@ -169,33 +151,15 @@
         </activity>
         <activity
                 android:configChanges="locale"
-                android:label="@string/account_setup_outgoing_title"
-                android:screenOrientation="landscape"
-                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupOutgoing">
-        </activity>
-        <activity
-                android:configChanges="locale"
                 android:label="@string/account_setup_options_title"
                 android:screenOrientation="landscape"
                 android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupOptions">
         </activity>
         <activity
                 android:configChanges="locale"
-                android:label="@string/account_setup_options_title"
-                android:screenOrientation="landscape"
-                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupOptions">
-        </activity>
-        <activity
-                android:configChanges="locale"
                 android:label="@string/account_setup_names_title"
                 android:screenOrientation="landscape"
                 android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupNames">
-        </activity>
-        <activity
-                android:configChanges="locale"
-                android:label="@string/account_setup_names_title"
-                android:screenOrientation="landscape"
-                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupNames">
         </activity>
         <activity
                 android:configChanges="locale"
@@ -234,12 +198,6 @@
                 android:label="@string/account_setup_check_settings_title"
                 android:screenOrientation="landscape"
                 android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupCheckSettings">
-        </activity>
-        <activity
-                android:configChanges="keyboardHidden|orientation|locale"
-                android:label="@string/account_setup_check_settings_title"
-                android:screenOrientation="landscape"
-                android:name="jp.co.fttx.rakuphotomail.activity.setup.DummyAccountSetupCheckSettings">
         </activity>
         <activity
                 android:configChanges="locale"

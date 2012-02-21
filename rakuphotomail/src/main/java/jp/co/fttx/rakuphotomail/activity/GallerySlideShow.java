@@ -207,6 +207,14 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      *
      */
     private ArrayList<String> mRemoveList = new ArrayList<String>();
+    /**
+     *
+     */
+    private static long serverSyncTimeDuration;
+    /**
+     *
+     */
+    private static long serverSyncInitStartTimeDuration;
 
 
     /**
@@ -251,6 +259,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         doAllFolderSync();
         mAllUidList = getUidList(null, 0);
         setupSlideShowThread();
+
+        serverSyncTimeDuration = mAccount.getServerSyncTimeDuration();
+        serverSyncInitStartTimeDuration = mAccount.getServerSyncInitStartTimeDuration();
 
         mTimer = new Timer(true);
         mTimer.schedule(new TimerTask() {
@@ -329,7 +340,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                     dismissProgressDialog(mProgressDialog);
                 }
             }
-        }, 180000L, 180000L);
+        }, serverSyncInitStartTimeDuration, serverSyncTimeDuration);
     }
 
     /**

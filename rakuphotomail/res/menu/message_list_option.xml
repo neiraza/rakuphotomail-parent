@@ -10,16 +10,11 @@
                     android:title="@string/account_settings_action"
                     android:icon="@android:drawable/ic_menu_preferences"
                     />
-            <item
-                    android:id="@+id/app_settings"
-                    android:title="@string/global_settings_action"
-                    android:icon="@android:drawable/ic_menu_preferences"
-                    />
         </menu>
     </item>
     <item
             android:id="@+id/buttons_disabled"
-            android:title="サムネイル ON / OFF"
+            android:title="@string/gallery_thumbnail_switch"
             android:icon="@drawable/ic_menu_edit">
     </item>
 </menu>

@@ -1266,4 +1266,6 @@
 
     <string name="create_sending_mail">"reply message"</string>
 
+    <string name="gallery_thumbnail_switch">"thumbnail ON / OFF"</string>
+
 </resources>

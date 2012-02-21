@@ -5,8 +5,6 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.util.Log;
-import jp.co.fttx.rakuphotomail.crypto.Apg;
-import jp.co.fttx.rakuphotomail.crypto.CryptoProvider;
 import jp.co.fttx.rakuphotomail.helper.Utility;
 import jp.co.fttx.rakuphotomail.mail.Address;
 import jp.co.fttx.rakuphotomail.mail.MessagingException;
@@ -19,19 +17,8 @@ import jp.co.fttx.rakuphotomail.view.ColorChip;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Account stores all of the settings for a single account defined by the user. It is able to save
- * and delete itself given a Preferences to work with. Each account is defined by a UUID.
- */
 public class Account implements BaseAccount {
-    /**
-     * Default value for the inbox folder (never changes for POP3 and IMAP)
-     */
     public static final String INBOX = "INBOX";
-
-    /**
-     * This local folder is used to store messages to be sent.
-     */
     public static final String OUTBOX = "OUTBOX";
 
     public static final String EXPUNGE_IMMEDIATELY = "EXPUNGE_IMMEDIATELY";
@@ -54,23 +41,11 @@ public class Account implements BaseAccount {
     private static final boolean DEFAULT_QUOTED_TEXT_SHOWN = true;
     private static final boolean DEFAULT_REPLY_AFTER_QUOTE = false;
 
-    /**
-     * <pre>
-     * 0 - Never (DELETE_POLICY_NEVER)
-     * 1 - After 7 days (DELETE_POLICY_7DAYS)
-     * 2 - When I delete from inbox (DELETE_POLICY_ON_DELETE)
-     * 3 - Mark as read (DELETE_POLICY_MARK_AS_READ)
-     * </pre>
-     */
     private int mDeletePolicy;
 
     private final String mUuid;
     private String mStoreUri;
 
-    /**
-     * Storage provider ID, used to locate and manage the underlying DB/file
-     * storage
-     */
     private String mLocalStorageProviderId;
     private String mTransportUri;
     private String mDescription;
@@ -92,15 +67,10 @@ public class Account implements BaseAccount {
     private FolderMode mFolderDisplayMode;
     private FolderMode mFolderSyncMode;
     private FolderMode mFolderPushMode;
-    private FolderMode mFolderTargetMode;
     private int mAccountNumber;
     private boolean mSaveAllHeaders;
     private boolean mPushPollOnConnect;
     private boolean mNotifySync;
-    private ScrollButtons mScrollMessageViewButtons;
-    private ScrollButtons mScrollMessageViewMoveButtons;
-    private ShowPictures mShowPictures;
-    private boolean mEnableMoveButtons;
     private boolean mIsSignatureBeforeQuotedText;
     private String mExpungePolicy = EXPUNGE_IMMEDIATELY;
     private int mMaxPushFolders;
@@ -110,10 +80,7 @@ public class Account implements BaseAccount {
     private final Map<String, Boolean> compressionMap = new ConcurrentHashMap<String, Boolean>();
     private Searchable searchableFolders;
     private boolean subscribedFoldersOnly;
-    private int maximumPolledMessageAge;
     private int maximumAutoDownloadMessageSize;
-    // Tracks if we have sent a notification for this account for
-    // current set of fetched messages
     private boolean mRingNotified;
     private MessageFormat mMessageFormat;
     private QuoteStyle mQuoteStyle;
@@ -121,25 +88,18 @@ public class Account implements BaseAccount {
     private boolean mDefaultQuotedTextShown;
     private boolean mReplyAfterQuote;
     private boolean mSyncRemoteDeletions;
-    private String mCryptoApp;
-    private boolean mCryptoAutoSignature;
 
-    private CryptoProvider mCryptoProvider = null;
+    //TODO コンフィグ候補たち
+    private int attachmentCacheLimitCount; //20;
+    private long slideSleepTimeDuration; //20000L;
+    private long serverSyncTimeDuration; //180000L;
+    private int scaleRatio; //1;
 
-    // デバイス内に画像ファイルをキャッシュする最大数（ユーザー非公開OK）
-    private int attachmentCacheLimitCount = 0;
-    // デバイス内のDBから何件づつメッセージを取得するか（ユーザー非公開OK）
-    private int messageLimitCountFromDb = 0;
-    //TODO メールサーバーから最大何件取得するか（ユーザー選択に変更したい）
-    private int messageLimitCountFromRemote = 0; // 0だと全件
-    private long slideSleepTime = 3500L; // 0だと全件
+    /*仕様上、現在は変更不可*/
+    private int messageLimitCountFromDb = 5; //(変更不可)
+    private int messageLimitCountFromRemote = 0; // 0だと全件(変更不可)
+    private long serverSyncInitStartTimeDuration = 180000L;//(変更不可)
 
-    /**
-     * Name of the folder that was last selected for a copy or move operation.
-     * <p/>
-     * Note: For now this value isn't persisted. So it will be reset when
-     * UCOM Mail is restarted.
-     */
     private String lastSelectedFolderName = null;
 
     private List<Identity> identities;
@@ -172,7 +132,6 @@ public class Account implements BaseAccount {
 
     protected Account(Context context) {
         mUuid = UUID.randomUUID().toString();
-        //TODO FROM Application TO Context
         mLocalStorageProviderId =
                 StorageManager.getInstance(context).getDefaultProviderId();
         mAutomaticCheckIntervalMinutes = -1;
@@ -181,17 +140,12 @@ public class Account implements BaseAccount {
         mPushPollOnConnect = true;
         mDisplayCount = RakuPhotoMail.DEFAULT_VISIBLE_LIMIT;
         mAccountNumber = -1;
-        mNotifyNewMail = true;
-        mNotifySync = true;
-        mNotifySelfNewMail = true;
+        mNotifyNewMail = false;
+        mNotifySync = false;
+        mNotifySelfNewMail = false;
         mFolderDisplayMode = FolderMode.NOT_SECOND_CLASS;
         mFolderSyncMode = FolderMode.FIRST_CLASS;
         mFolderPushMode = FolderMode.FIRST_CLASS;
-        mFolderTargetMode = FolderMode.NOT_SECOND_CLASS;
-        mScrollMessageViewButtons = ScrollButtons.NEVER;
-        mScrollMessageViewMoveButtons = ScrollButtons.NEVER;
-        mShowPictures = ShowPictures.NEVER;
-        mEnableMoveButtons = false;
         mIsSignatureBeforeQuotedText = false;
         mExpungePolicy = EXPUNGE_IMMEDIATELY;
         mAutoExpandFolderName = INBOX;
@@ -201,7 +155,6 @@ public class Account implements BaseAccount {
         goToUnreadMessageSearch = false;
         mNotificationShowsUnreadCount = true;
         subscribedFoldersOnly = false;
-        maximumPolledMessageAge = -1;
         maximumAutoDownloadMessageSize = 32768;
         mMessageFormat = DEFAULT_MESSAGE_FORMAT;
         mQuoteStyle = DEFAULT_QUOTE_STYLE;
@@ -209,8 +162,6 @@ public class Account implements BaseAccount {
         mDefaultQuotedTextShown = DEFAULT_QUOTED_TEXT_SHOWN;
         mReplyAfterQuote = DEFAULT_REPLY_AFTER_QUOTE;
         mSyncRemoteDeletions = true;
-        mCryptoApp = Apg.NAME;
-        mCryptoAutoSignature = false;
 
         searchableFolders = Searchable.ALL;
 
@@ -276,7 +227,6 @@ public class Account implements BaseAccount {
         goToUnreadMessageSearch = prefs.getBoolean(mUuid + ".goToUnreadMessageSearch", false);
         mNotificationShowsUnreadCount = prefs.getBoolean(mUuid + ".notificationUnreadCount", true);
         subscribedFoldersOnly = prefs.getBoolean(mUuid + ".subscribedFoldersOnly", false);
-        maximumPolledMessageAge = prefs.getInt(mUuid + ".maximumPolledMessageAge", -1);
         maximumAutoDownloadMessageSize =
                 prefs.getInt(mUuid + ".maximumAutoDownloadMessageSize", 32768);
         mMessageFormat = MessageFormat
@@ -305,30 +255,12 @@ public class Account implements BaseAccount {
                         (random.nextInt(0x70) * 0xffff) +
                         0xff000000);
 
-        try {
-            mScrollMessageViewButtons =
-                    ScrollButtons.valueOf(prefs.getString(mUuid + ".hideButtonsEnum",
-                            ScrollButtons.NEVER.name()));
-        } catch (Exception e) {
-            mScrollMessageViewButtons = ScrollButtons.NEVER;
-        }
 
-        try {
-            mScrollMessageViewMoveButtons =
-                    ScrollButtons.valueOf(prefs.getString(mUuid + ".hideMoveButtonsEnum",
-                            ScrollButtons.NEVER.name()));
-        } catch (Exception e) {
-            mScrollMessageViewMoveButtons = ScrollButtons.NEVER;
-        }
-
-        try {
-            mShowPictures = ShowPictures.valueOf(prefs.getString(mUuid + ".showPicturesEnum",
-                    ShowPictures.NEVER.name()));
-        } catch (Exception e) {
-            mShowPictures = ShowPictures.NEVER;
-        }
-
-        mEnableMoveButtons = prefs.getBoolean(mUuid + ".enableMoveButtons", false);
+        //TODO 新規についkしたお
+        attachmentCacheLimitCount = prefs.getInt(mUuid + ".attachmentCacheLimitCount", 20);
+        slideSleepTimeDuration = prefs.getLong(mUuid + ".slideSleepTimeDuration", 20000L);
+        serverSyncTimeDuration = prefs.getLong(mUuid + ".serverSyncTimeDuration", 180000L);
+        scaleRatio = prefs.getInt(mUuid + ".scaleRatio", 1);
 
         mNotificationSetting.setVibrate(prefs.getBoolean(mUuid + ".vibrate", false));
         mNotificationSetting.setVibratePattern(prefs.getInt(mUuid + ".vibratePattern", 0));
@@ -361,13 +293,6 @@ public class Account implements BaseAccount {
         }
 
         try {
-            mFolderTargetMode = FolderMode.valueOf(prefs.getString(mUuid + ".folderTargetMode",
-                    FolderMode.NOT_SECOND_CLASS.name()));
-        } catch (Exception e) {
-            mFolderTargetMode = FolderMode.NOT_SECOND_CLASS;
-        }
-
-        try {
             searchableFolders = Searchable.valueOf(prefs.getString(mUuid + ".searchableFolders",
                     Searchable.ALL.name()));
         } catch (Exception e) {
@@ -378,8 +303,6 @@ public class Account implements BaseAccount {
                 prefs.getBoolean(mUuid + ".signatureBeforeQuotedText", false);
         identities = loadIdentities(prefs);
 
-        mCryptoApp = prefs.getString(mUuid + ".cryptoApp", Apg.NAME);
-        mCryptoAutoSignature = prefs.getBoolean(mUuid + ".cryptoAutoSignature", false);
     }
 
 
@@ -464,17 +387,6 @@ public class Account implements BaseAccount {
         SharedPreferences.Editor editor = preferences.getPreferences().edit();
 
         if (!preferences.getPreferences().getString("accountUuids", "").contains(mUuid)) {
-            /*
-             * When the account is first created we assign it a unique account number. The
-             * account number will be unique to that account for the lifetime of the account.
-             * So, we get all the existing account numbers, sort them ascending, loop through
-             * the list and check if the number is greater than 1 + the previous number. If so
-             * we use the previous number + 1 as the account number. This refills gaps.
-             * mAccountNumber starts as -1 on a newly created account. It must be -1 for this
-             * algorithm to work.
-             *
-             * I bet there is a much smarter way to do this. Anyone like to suggest it?
-             */
             Account[] accounts = preferences.getAccounts();
             int[] accountNumbers = new int[accounts.length];
             for (int i = 0; i < accounts.length; i++) {
@@ -518,14 +430,9 @@ public class Account implements BaseAccount {
         editor.putString(mUuid + ".spamFolderName", mSpamFolderName);
         editor.putString(mUuid + ".autoExpandFolderName", mAutoExpandFolderName);
         editor.putInt(mUuid + ".accountNumber", mAccountNumber);
-        editor.putString(mUuid + ".hideButtonsEnum", mScrollMessageViewButtons.name());
-        editor.putString(mUuid + ".hideMoveButtonsEnum", mScrollMessageViewMoveButtons.name());
-        editor.putString(mUuid + ".showPicturesEnum", mShowPictures.name());
-        editor.putBoolean(mUuid + ".enableMoveButtons", mEnableMoveButtons);
         editor.putString(mUuid + ".folderDisplayMode", mFolderDisplayMode.name());
         editor.putString(mUuid + ".folderSyncMode", mFolderSyncMode.name());
         editor.putString(mUuid + ".folderPushMode", mFolderPushMode.name());
-        editor.putString(mUuid + ".folderTargetMode", mFolderTargetMode.name());
         editor.putBoolean(mUuid + ".signatureBeforeQuotedText", this.mIsSignatureBeforeQuotedText);
         editor.putString(mUuid + ".expungePolicy", mExpungePolicy);
         editor.putBoolean(mUuid + ".syncRemoteDeletions", mSyncRemoteDeletions);
@@ -535,15 +442,12 @@ public class Account implements BaseAccount {
         editor.putBoolean(mUuid + ".goToUnreadMessageSearch", goToUnreadMessageSearch);
         editor.putBoolean(mUuid + ".notificationUnreadCount", mNotificationShowsUnreadCount);
         editor.putBoolean(mUuid + ".subscribedFoldersOnly", subscribedFoldersOnly);
-        editor.putInt(mUuid + ".maximumPolledMessageAge", maximumPolledMessageAge);
         editor.putInt(mUuid + ".maximumAutoDownloadMessageSize", maximumAutoDownloadMessageSize);
         editor.putString(mUuid + ".messageFormat", mMessageFormat.name());
         editor.putString(mUuid + ".quoteStyle", mQuoteStyle.name());
         editor.putString(mUuid + ".quotePrefix", mQuotePrefix);
         editor.putBoolean(mUuid + ".defaultQuotedTextShown", mDefaultQuotedTextShown);
         editor.putBoolean(mUuid + ".replyAfterQuote", mReplyAfterQuote);
-        editor.putString(mUuid + ".cryptoApp", mCryptoApp);
-        editor.putBoolean(mUuid + ".cryptoAutoSignature", mCryptoAutoSignature);
 
         editor.putBoolean(mUuid + ".vibrate", mNotificationSetting.shouldVibrate());
         editor.putInt(mUuid + ".vibratePattern", mNotificationSetting.getVibratePattern());
@@ -552,6 +456,12 @@ public class Account implements BaseAccount {
         editor.putString(mUuid + ".ringtone", mNotificationSetting.getRingtone());
         editor.putBoolean(mUuid + ".led", mNotificationSetting.isLed());
         editor.putInt(mUuid + ".ledColor", mNotificationSetting.getLedColor());
+
+        //TODO 新規についkしたお
+        editor.putInt(mUuid + ".attachmentCacheLimitCount", attachmentCacheLimitCount);
+        editor.putLong(mUuid + ".slideSleepTimeDuration", slideSleepTimeDuration);
+        editor.putLong(mUuid + ".serverSyncTimeDuration", serverSyncTimeDuration);
+        editor.putInt(mUuid + ".scaleRatio", scaleRatio);
 
         for (String type : networkTypes) {
             Boolean useCompression = compressionMap.get(type);
@@ -722,14 +632,6 @@ public class Account implements BaseAccount {
 
     }
 
-//    public synchronized void setLocalStoreUri(String localStoreUri)
-//    {
-//        this.mLocalStoreUri = localStoreUri;
-//    }
-
-    /**
-     * Returns -1 for never.
-     */
     public synchronized int getAutomaticCheckIntervalMinutes() {
         return mAutomaticCheckIntervalMinutes;
     }
@@ -857,6 +759,7 @@ public class Account implements BaseAccount {
         return OUTBOX;
     }
 
+    //TODO こいつを使えばINBOX以外をスライドショー対象以外にもいけるかも
     public synchronized String getAutoExpandFolderName() {
         return mAutoExpandFolderName;
     }
@@ -913,39 +816,6 @@ public class Account implements BaseAccount {
 
     public synchronized void setShowOngoing(boolean showOngoing) {
         this.mNotifySync = showOngoing;
-    }
-
-    public synchronized ScrollButtons getScrollMessageViewButtons() {
-        return mScrollMessageViewButtons;
-    }
-
-    public synchronized void setScrollMessageViewButtons(ScrollButtons scrollMessageViewButtons) {
-        mScrollMessageViewButtons = scrollMessageViewButtons;
-    }
-
-    public synchronized ScrollButtons getScrollMessageViewMoveButtons() {
-        return mScrollMessageViewMoveButtons;
-    }
-
-    public synchronized void setScrollMessageViewMoveButtons(
-            ScrollButtons scrollMessageViewButtons) {
-        mScrollMessageViewMoveButtons = scrollMessageViewButtons;
-    }
-
-    public synchronized ShowPictures getShowPictures() {
-        return mShowPictures;
-    }
-
-    public synchronized void setShowPictures(ShowPictures showPictures) {
-        mShowPictures = showPictures;
-    }
-
-    public synchronized FolderMode getFolderTargetMode() {
-        return mFolderTargetMode;
-    }
-
-    public synchronized void setFolderTargetMode(FolderMode folderTargetMode) {
-        mFolderTargetMode = folderTargetMode;
     }
 
     public synchronized boolean isSignatureBeforeQuotedText() {
@@ -1227,14 +1097,6 @@ public class Account implements BaseAccount {
         this.subscribedFoldersOnly = subscribedFoldersOnly;
     }
 
-    public synchronized int getMaximumPolledMessageAge() {
-        return maximumPolledMessageAge;
-    }
-
-    public synchronized void setMaximumPolledMessageAge(int maximumPolledMessageAge) {
-        this.maximumPolledMessageAge = maximumPolledMessageAge;
-    }
-
     public synchronized int getMaximumAutoDownloadMessageSize() {
         return maximumAutoDownloadMessageSize;
     }
@@ -1244,7 +1106,7 @@ public class Account implements BaseAccount {
     }
 
     public Date getEarliestPollDate() {
-        int age = getMaximumPolledMessageAge();
+        int age = -1;
         if (age >= 0) {
             Calendar now = Calendar.getInstance();
             now.set(Calendar.HOUR_OF_DAY, 0);
@@ -1317,32 +1179,6 @@ public class Account implements BaseAccount {
         mReplyAfterQuote = replyAfterQuote;
     }
 
-    public boolean getEnableMoveButtons() {
-        return mEnableMoveButtons;
-    }
-
-    public void setEnableMoveButtons(boolean enableMoveButtons) {
-        mEnableMoveButtons = enableMoveButtons;
-    }
-
-    public String getCryptoApp() {
-        return mCryptoApp;
-    }
-
-    public void setCryptoApp(String cryptoApp) {
-        mCryptoApp = cryptoApp;
-        // invalidate the provider
-        mCryptoProvider = null;
-    }
-
-    public boolean getCryptoAutoSignature() {
-        return mCryptoAutoSignature;
-    }
-
-    public void setCryptoAutoSignature(boolean cryptoAutoSignature) {
-        mCryptoAutoSignature = cryptoAutoSignature;
-    }
-
     public String getInboxFolderName() {
         return mInboxFolderName;
     }
@@ -1367,13 +1203,6 @@ public class Account implements BaseAccount {
         lastSelectedFolderName = folderName;
     }
 
-    public synchronized CryptoProvider getCryptoProvider() {
-        if (mCryptoProvider == null) {
-            mCryptoProvider = CryptoProvider.createInstance(getCryptoApp());
-        }
-        return mCryptoProvider;
-    }
-
     public synchronized NotificationSetting getNotificationSetting() {
         return mNotificationSetting;
     }
@@ -1394,39 +1223,47 @@ public class Account implements BaseAccount {
     }
 
     public int getMessageLimitCountFromDb() {
-        //TODO message limit count from DB 応急処置
-        return 5;
-//        return messageLimitCountFromDb;
-    }
-
-    public void setMessageLimitCountFromDb(int limitCountFromDb) {
-        this.messageLimitCountFromDb = limitCountFromDb;
+        return messageLimitCountFromDb;
     }
 
     public int getMessageLimitCountFromRemote() {
         return messageLimitCountFromRemote;
     }
 
-    public void setMessageLimitCountFromRemote(int messageLimitCountFromRemote) {
-        //TODO remote messeage synq count どっかでセットしないとな
-        this.messageLimitCountFromRemote = messageLimitCountFromRemote;
-    }
-
     public int getAttachmentCacheLimitCount() {
-        //TODO limit count 応急処置
-        return 20;
-//        return attachmentCacheLimitCount;
+        return attachmentCacheLimitCount;
     }
 
     public void setAttachmentCacheLimitCount(int attachmentCacheLimitCount) {
-        //TODO remote messeage synq count どっかでセットしないとな
         this.attachmentCacheLimitCount = attachmentCacheLimitCount;
     }
 
-    public long getSlideSleepTime(){
-        return slideSleepTime;
+    public long getSlideSleepTime() {
+        Log.d("sleep", "slideSleepTimeDuration:" + slideSleepTimeDuration);
+        return slideSleepTimeDuration;
     }
-    public void setSlideSleepTime(long sleepTime){
-        this.slideSleepTime = sleepTime;
+
+    public void setSlideSleepTime(long sleepTime) {
+        this.slideSleepTimeDuration = sleepTime;
+    }
+
+    public long getServerSyncTimeDuration() {
+        return serverSyncTimeDuration;
+    }
+
+    public void setServerSyncTimeDuration(long serverSyncTimeDuration) {
+        this.serverSyncTimeDuration = serverSyncTimeDuration;
+    }
+
+    public long getServerSyncInitStartTimeDuration() {
+        return serverSyncInitStartTimeDuration;
+    }
+
+    public int getScaleRatio() {
+        return this.scaleRatio;
+    }
+
+    public void setScaleRatio(int scaleRatio) {
+        this.scaleRatio = scaleRatio;
     }
 }

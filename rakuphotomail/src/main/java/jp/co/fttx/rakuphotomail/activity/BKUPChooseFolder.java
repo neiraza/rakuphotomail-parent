@@ -1,4 +1,3 @@
-
 package jp.co.fttx.rakuphotomail.activity;
 
 import android.content.Intent;
@@ -9,22 +8,22 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Filter;
-import android.widget.ListView;
-import android.widget.TextView;
-import jp.co.fttx.rakuphotomail.*;
+import android.widget.*;
+import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Account.FolderMode;
+import jp.co.fttx.rakuphotomail.Preferences;
+import jp.co.fttx.rakuphotomail.R;
+import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.controller.MessagingController;
 import jp.co.fttx.rakuphotomail.controller.MessagingListener;
 import jp.co.fttx.rakuphotomail.mail.Folder;
 import jp.co.fttx.rakuphotomail.mail.MessagingException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-public class ChooseFolder extends RakuphotoListActivity {
+public class BKUPChooseFolder extends RakuphotoListActivity {
     String mFolder;
     String mSelectFolder;
     Account mAccount;
@@ -39,14 +38,14 @@ public class ChooseFolder extends RakuphotoListActivity {
     /**
      * What folders to display.<br/>
      * Initialized to whatever is configured
-     * but can be overridden via {@link #onOptionsItemSelected(MenuItem)}
+     * but can be overridden via {@link #onOptionsItemSelected(android.view.MenuItem)}
      * while this activity is showing.
      */
-    private Account.FolderMode mMode;
+    private FolderMode mMode;
     /**
      * Current filter used by our ArrayAdapter.<br/>
      * Created on the fly and invalidated if a new
-     * set of folders is chosen via {@link #onOptionsItemSelected(MenuItem)}
+     * set of folders is chosen via {@link #onOptionsItemSelected(android.view.MenuItem)}
      */
     private FolderListFilter<String> myFilter = null;
 
@@ -100,7 +99,7 @@ public class ChooseFolder extends RakuphotoListActivity {
         setListAdapter(mAdapter);
 
 
-        mMode = mAccount.getFolderTargetMode();
+//        mMode = mAccount.getFolderTargetMode();
         MessagingController.getInstance(getApplication()).listFolders(mAccount, false, mListener);
 
 
@@ -241,7 +240,7 @@ public class ChooseFolder extends RakuphotoListActivity {
             if (!account.equals(mAccount)) {
                 return;
             }
-            Account.FolderMode aMode = mMode;
+            FolderMode aMode = mMode;
             Preferences prefs = Preferences.getPreferences(getApplication().getApplicationContext());
             ArrayList<String> localFolders = new ArrayList<String>();
 
@@ -257,11 +256,11 @@ public class ChooseFolder extends RakuphotoListActivity {
                     folder.refresh(prefs);
                     Folder.FolderClass fMode = folder.getDisplayClass();
 
-                    if ((aMode == Account.FolderMode.FIRST_CLASS && fMode != Folder.FolderClass.FIRST_CLASS)
-                            || (aMode == Account.FolderMode.FIRST_AND_SECOND_CLASS &&
+                    if ((aMode == FolderMode.FIRST_CLASS && fMode != Folder.FolderClass.FIRST_CLASS)
+                            || (aMode == FolderMode.FIRST_AND_SECOND_CLASS &&
                                 fMode != Folder.FolderClass.FIRST_CLASS &&
                                 fMode != Folder.FolderClass.SECOND_CLASS)
-                    || (aMode == Account.FolderMode.NOT_SECOND_CLASS && fMode == Folder.FolderClass.SECOND_CLASS)) {
+                    || (aMode == FolderMode.NOT_SECOND_CLASS && fMode == Folder.FolderClass.SECOND_CLASS)) {
                         continue;
                     }
                 } catch (MessagingException me) {

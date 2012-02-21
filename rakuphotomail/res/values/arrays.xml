@@ -93,59 +93,20 @@
         <item>168</item>
         <item>365</item>
     </string-array>
-    <string-array name="account_settings_autodownload_message_size_entries">
-<!--         <item>@string/account_settings_autodownload_message_size_1</item>
-        <item>@string/account_settings_autodownload_message_size_2</item>
-        <item>@string/account_settings_autodownload_message_size_4</item>
-        <item>@string/account_settings_autodownload_message_size_8</item>
-        <item>@string/account_settings_autodownload_message_size_16</item>
-        <item>@string/account_settings_autodownload_message_size_32</item>
-        <item>@string/account_settings_autodownload_message_size_64</item>
-        <item>@string/account_settings_autodownload_message_size_128</item>
-        <item>@string/account_settings_autodownload_message_size_256</item>
-        <item>@string/account_settings_autodownload_message_size_512</item>
-        <item>@string/account_settings_autodownload_message_size_1024</item>
-        <item>@string/account_settings_autodownload_message_size_2048</item> -->
-        <item>@string/account_settings_autodownload_message_size_51200</item>
-        <item>@string/account_settings_autodownload_message_size_51200</item>
-        <item>@string/account_settings_autodownload_message_size_51200</item>
-        <item>@string/account_settings_autodownload_message_size_51200</item>
-        <item>@string/account_settings_autodownload_message_size_51200</item>
-        <item>@string/account_settings_autodownload_message_size_51200</item>
-        <item>@string/account_settings_autodownload_message_size_51200</item>
-        <item>@string/account_settings_autodownload_message_size_51200</item>
-        <item>@string/account_settings_autodownload_message_size_51200</item>
-        <item>@string/account_settings_autodownload_message_size_51200</item>
-        <item>@string/account_settings_autodownload_message_size_51200</item>
-        <item>@string/account_settings_autodownload_message_size_51200</item>
-        <item>@string/account_settings_autodownload_message_size_51200</item>
+    <string-array name="account_settings_download_message_size_entries">
+        <item>@string/account_settings_download_message_size_1024</item>
+        <item>@string/account_settings_download_message_size_2048</item>
+        <item>@string/account_settings_download_message_size_5120</item>
+        <item>@string/account_settings_download_message_size_10240</item>
+        <item>@string/account_settings_download_message_size_20480</item>
+        <item>@string/account_settings_download_message_size_any</item>
     </string-array>
-    <string-array name="account_settings_autodownload_message_size_values">
-       <!--   <item>1024</item>
-        <item>2048</item>
-        <item>4096</item>
-        <item>8192</item>
-        <item>16384</item>
-        <item>32768</item>
-        <item>65536</item>
-        <item>131072</item>
-        <item>262144</item>
-        <item>524288</item>
+    <string-array name="account_settings_download_message_size_values">
         <item>1048576</item>
-        <item>2097152</item>-->
-        <item>52428800</item>
-        <item>52428800</item>
-        <item>52428800</item>
-        <item>52428800</item>
-        <item>52428800</item>
-        <item>52428800</item>
-        <item>52428800</item>
-        <item>52428800</item>
-        <item>52428800</item>
-        <item>52428800</item>
-        <item>52428800</item>
-        <item>52428800</item>
-        <item>52428800</item>
+        <item>2097152</item>
+        <item>5242880</item>
+        <item>10485760</item>
+        <item>20971520</item>
     </string-array>
     <string-array name="account_settings_folder_display_mode_entries">
         <item>@string/account_settings_folder_display_mode_all</item>
@@ -665,4 +626,59 @@
         <item>HTML</item>
     </string-array>
 
+    <string-array name="account_settings_slide_change_duration_entries">
+        <item>@string/account_settings_slide_change_duration_sec_3</item>
+        <item>@string/account_settings_slide_change_duration_sec_7</item>
+        <item>@string/account_settings_slide_change_duration_sec_20</item>
+        <item>@string/account_settings_slide_change_duration_min_1</item>
+        <item>@string/account_settings_slide_change_duration_min_5</item>
+        <item>@string/account_settings_slide_change_duration_min_30</item>
+        <item>@string/account_settings_slide_change_duration_hour_1</item>
+    </string-array>
+    <string-array name="account_settings_slide_change_duration_values">
+        <item>3500</item>
+        <item>7500</item>
+        <item>20000</item>
+        <item>60000</item>
+        <item>300000</item>
+        <item>1800000</item>
+        <item>3840000</item>
+    </string-array>
+
+    <string-array name="account_settings_server_sync_entries">
+        <item>@string/account_settings_server_sync_min_3</item>
+        <item>@string/account_settings_server_sync_min_7</item>
+        <item>@string/account_settings_server_sync_min_20</item>
+        <item>@string/account_settings_server_sync_hour_1</item>
+        <item>@string/account_settings_server_sync_hour_6</item>
+    </string-array>
+    <string-array name="account_settings_server_sync_values">
+        <item>180000</item>
+        <item>420000</item>
+        <item>1200000</item>
+        <item>3840000</item>
+        <item>23040000</item>
+    </string-array>
+
+    <string-array name="account_settings_download_cache_entries">
+        <item>@string/account_settings_download_cache_20</item>
+        <item>@string/account_settings_download_cache_50</item>
+        <item>@string/account_settings_download_cache_100</item>
+    </string-array>
+    <string-array name="account_settings_download_cache_values">
+        <item>20</item>
+        <item>50</item>
+        <item>100</item>
+    </string-array>
+
+    <string-array name="account_settings_scale_ratio_entries">
+        <item>@string/account_settings_scale_ratio_1</item>
+        <item>@string/account_settings_scale_ratio_2</item>
+        <item>@string/account_settings_scale_ratio_4</item>
+    </string-array>
+    <string-array name="account_settings_scale_ratio_duration_values">
+        <item>1</item>
+        <item>2</item>
+        <item>4</item>
+    </string-array>
 </resources>

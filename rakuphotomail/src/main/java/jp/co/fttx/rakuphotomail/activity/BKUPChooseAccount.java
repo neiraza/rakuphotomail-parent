@@ -13,33 +13,28 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.TextView;
-
-import jp.co.fttx.rakuphotomail.Account;
-import jp.co.fttx.rakuphotomail.Identity;
-import jp.co.fttx.rakuphotomail.RakuPhotoMail;
-import jp.co.fttx.rakuphotomail.Preferences;
-import jp.co.fttx.rakuphotomail.R;
+import jp.co.fttx.rakuphotomail.*;
 
 import java.util.List;
 
 /**
  * Activity displaying list of accounts/identity for user choice
  * 
- * @see RakuphotoExpandableListActivity
+ * @see jp.co.fttx.rakuphotomail.activity.RakuphotoExpandableListActivity
  */
-public class ChooseAccount extends RakuphotoExpandableListActivity {
+public class BKUPChooseAccount extends RakuphotoExpandableListActivity {
 
 	/**
-	 * {@link Intent} extended data name for storing {@link Account#getUuid()
+	 * {@link android.content.Intent} extended data name for storing {@link jp.co.fttx.rakuphotomail.Account#getUuid()
 	 * account UUID}
 	 */
-	public static final String EXTRA_ACCOUNT = ChooseAccount.class.getName()
+	public static final String EXTRA_ACCOUNT = BKUPChooseAccount.class.getName()
 			+ "_account";
 
 	/**
-	 * {@link Intent} extended data name for storing serialized {@link Identity}
+	 * {@link android.content.Intent} extended data name for storing serialized {@link jp.co.fttx.rakuphotomail.Identity}
 	 */
-	public static final String EXTRA_IDENTITY = ChooseAccount.class.getName()
+	public static final String EXTRA_IDENTITY = BKUPChooseAccount.class.getName()
 			+ "_identity";
 
 	@Override
@@ -121,11 +116,11 @@ public class ChooseAccount extends RakuphotoExpandableListActivity {
 
 	/**
 	 * Dynamically provides accounts/identities data for
-	 * {@link ExpandableListView#setAdapter(ExpandableListAdapter)}:
-	 * 
+	 * {@link android.widget.ExpandableListView#setAdapter(android.widget.ExpandableListAdapter)}:
+	 *
 	 * <ul>
-	 * <li>Groups represent {@link Account accounts}</li>
-	 * <li>Children represent {@link Identity identities} of the parent account</li>
+	 * <li>Groups represent {@link jp.co.fttx.rakuphotomail.Account accounts}</li>
+	 * <li>Children represent {@link jp.co.fttx.rakuphotomail.Identity identities} of the parent account</li>
 	 * </ul>
 	 */
 	public static class IdentitiesAdapter extends BaseExpandableListAdapter {
