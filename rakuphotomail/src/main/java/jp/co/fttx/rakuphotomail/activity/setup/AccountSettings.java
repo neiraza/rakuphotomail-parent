@@ -27,29 +27,15 @@ import java.util.Map;
 public class AccountSettings extends RakuphotoPreferenceActivity {
     private static final String EXTRA_ACCOUNT = "account";
 
-    private static final int SELECT_AUTO_EXPAND_FOLDER = 1;
-
-    private static final int ACTIVITY_MANAGE_IDENTITIES = 2;
-
-    private static final String PREFERENCE_SCREEN_COMPOSING = "composing";
-
     private static final String PREFERENCE_DESCRIPTION = "account_description";
-    private static final String PREFERENCE_COMPOSITION = "composition";
-    private static final String PREFERENCE_MANAGE_IDENTITIES = "manage_identities";
     private static final String PREFERENCE_INCOMING = "incoming";
     private static final String PREFERENCE_OUTGOING = "outgoing";
     private static final String PREFERENCE_AUTO_EXPAND_FOLDER = "account_setup_auto_expand_folder";
-    private static final String PREFERENCE_NOTIFICATION_UNREAD_COUNT = "notification_unread_count";
     private static final String PREFERENCE_MESSAGE_SIZE = "account_download_size";
     private static final String PREFERENCE_SLIDE_CHANGE_DURATION = "account_slide_change_duration";
     private static final String PREFERENCE_SCALE_RATIO = "account_scale_ratio";
     private static final String PREFERENCE_SERVER_SYNC = "account_server_sync";
     private static final String PREFERENCE_DOWNLOAD_CACHE = "account_download_cache";
-    private static final String PREFERENCE_MESSAGE_FORMAT = "message_format";
-    private static final String PREFERENCE_QUOTE_PREFIX = "account_quote_prefix";
-    private static final String PREFERENCE_QUOTE_STYLE = "quote_style";
-    private static final String PREFERENCE_DEFAULT_QUOTED_TEXT_SHOWN = "default_quoted_text_shown";
-    private static final String PREFERENCE_REPLY_AFTER_QUOTE = "reply_after_quote";
 
     private static final String PREFERENCE_LOCAL_STORAGE_PROVIDER = "local_storage_provider";
     private static final String PREFERENCE_DRAFTS_FOLDER = "drafts_folder";
@@ -60,9 +46,6 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
 
     private Account mAccount;
     private boolean mIsPushCapable = false;
-    private boolean mIsExpungeCapable = false;
-
-    private PreferenceScreen mComposingScreen;
 
     private EditTextPreference mAccountDescription;
     private ListPreference mSlideChangeDuration;
@@ -70,16 +53,7 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
     private ListPreference mServerSync;
     private ListPreference mDownloadCache;
     private ListPreference mMessageSize;
-    private CheckBoxPreference mAccountDefault;
-    private ListPreference mSearchableFolders;
     private ListPreference mAutoExpandFolder;
-    private Preference mLedColor;
-    private boolean mIncomingChanged = false;
-    private ListPreference mMessageFormat;
-    private ListPreference mQuoteStyle;
-    private EditTextPreference mAccountQuotePrefix;
-    private CheckBoxPreference mAccountDefaultQuotedTextShown;
-    private CheckBoxPreference mReplyAfterQuote;
 
     private ListPreference mLocalStorageProvider;
 
@@ -105,7 +79,6 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
         try {
             final Store store = mAccount.getRemoteStore();
             mIsPushCapable = store.isPushCapable();
-            mIsExpungeCapable = store.isExpungeCapable();
         } catch (Exception e) {
             Log.e(RakuPhotoMail.LOG_TAG, "Could not get remote store", e);
         }
@@ -123,62 +96,6 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
                 return false;
             }
         });
-
-        mMessageFormat = (ListPreference) findPreference(PREFERENCE_MESSAGE_FORMAT);
-        mMessageFormat.setValue(mAccount.getMessageFormat().name());
-        mMessageFormat.setSummary(mMessageFormat.getEntry());
-        mMessageFormat.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                final String summary = newValue.toString();
-                int index = mMessageFormat.findIndexOfValue(summary);
-                mMessageFormat.setSummary(mMessageFormat.getEntries()[index]);
-                mMessageFormat.setValue(summary);
-                return false;
-            }
-        });
-
-        mAccountQuotePrefix = (EditTextPreference) findPreference(PREFERENCE_QUOTE_PREFIX);
-        mAccountQuotePrefix.setSummary(mAccount.getQuotePrefix());
-        mAccountQuotePrefix.setText(mAccount.getQuotePrefix());
-        mAccountQuotePrefix.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                final String value = newValue.toString();
-                mAccountQuotePrefix.setSummary(value);
-                mAccountQuotePrefix.setText(value);
-                return false;
-            }
-        });
-
-        mAccountDefaultQuotedTextShown = (CheckBoxPreference) findPreference(PREFERENCE_DEFAULT_QUOTED_TEXT_SHOWN);
-        mAccountDefaultQuotedTextShown.setChecked(mAccount.isDefaultQuotedTextShown());
-
-        mReplyAfterQuote = (CheckBoxPreference) findPreference(PREFERENCE_REPLY_AFTER_QUOTE);
-        mReplyAfterQuote.setChecked(mAccount.isReplyAfterQuote());
-
-        mComposingScreen = (PreferenceScreen) findPreference(PREFERENCE_SCREEN_COMPOSING);
-
-        Preference.OnPreferenceChangeListener quoteStyleListener = new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                final QuoteStyle style = QuoteStyle.valueOf(newValue.toString());
-                int index = mQuoteStyle.findIndexOfValue(newValue.toString());
-                mQuoteStyle.setSummary(mQuoteStyle.getEntries()[index]);
-                if (style == QuoteStyle.PREFIX) {
-                    mComposingScreen.addPreference(mAccountQuotePrefix);
-                    mComposingScreen.addPreference(mReplyAfterQuote);
-                } else if (style == QuoteStyle.HEADER) {
-                    mComposingScreen.removePreference(mAccountQuotePrefix);
-                    mComposingScreen.removePreference(mReplyAfterQuote);
-                }
-                return true;
-            }
-        };
-        mQuoteStyle = (ListPreference) findPreference(PREFERENCE_QUOTE_STYLE);
-        mQuoteStyle.setValue(mAccount.getQuoteStyle().name());
-        mQuoteStyle.setSummary(mQuoteStyle.getEntry());
-        mQuoteStyle.setOnPreferenceChangeListener(quoteStyleListener);
-        quoteStyleListener.onPreferenceChange(mQuoteStyle, mAccount.getQuoteStyle().name());
 
         mSlideChangeDuration = (ListPreference) findPreference(PREFERENCE_SLIDE_CHANGE_DURATION);
         mSlideChangeDuration.setValue(String.valueOf(mAccount.getSlideSleepTime()));
@@ -272,26 +189,9 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
 
         new PopulateFolderPrefsTask().execute();
 
-        findPreference(PREFERENCE_COMPOSITION).setOnPreferenceClickListener(
-                new Preference.OnPreferenceClickListener() {
-                    public boolean onPreferenceClick(Preference preference) {
-                        onCompositionSettings();
-                        return true;
-                    }
-                });
-
-        findPreference(PREFERENCE_MANAGE_IDENTITIES).setOnPreferenceClickListener(
-                new Preference.OnPreferenceClickListener() {
-                    public boolean onPreferenceClick(Preference preference) {
-                        onManageIdentities();
-                        return true;
-                    }
-                });
-
         findPreference(PREFERENCE_INCOMING).setOnPreferenceClickListener(
                 new Preference.OnPreferenceClickListener() {
                     public boolean onPreferenceClick(Preference preference) {
-                        mIncomingChanged = true;
                         onIncomingSettings();
                         return true;
                     }
@@ -312,9 +212,6 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
     }
 
     private void saveSettings() {
-        if (mAccountDefault.isChecked()) {
-            Preferences.getPreferences(this).setDefaultAccount(mAccount);
-        }
 
         mAccount.setDescription(mAccountDescription.getText());
         mAccount.setNotifyNewMail(false);
@@ -336,12 +233,11 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
         mAccount.setExpungePolicy("EXPUNGE_IMMEDIATELY");
         mAccount.setSyncRemoteDeletions(true);
         mAccount.setSaveAllHeaders(true);
-        mAccount.setSearchableFolders(Account.Searchable.valueOf(mSearchableFolders.getValue()));
-        mAccount.setMessageFormat(Account.MessageFormat.valueOf(mMessageFormat.getValue()));
-        mAccount.setQuoteStyle(QuoteStyle.valueOf(mQuoteStyle.getValue()));
-        mAccount.setQuotePrefix(mAccountQuotePrefix.getText());
-        mAccount.setDefaultQuotedTextShown(mAccountDefaultQuotedTextShown.isChecked());
-        mAccount.setReplyAfterQuote(mReplyAfterQuote.isChecked());
+        mAccount.setMessageFormat(Account.MessageFormat.valueOf("HTML"));
+        mAccount.setQuoteStyle(QuoteStyle.valueOf("PREFIX"));
+        mAccount.setQuotePrefix(">");
+        mAccount.setDefaultQuotedTextShown(false);
+        mAccount.setReplyAfterQuote(false);
         mAccount.setLocalStorageProviderId(mLocalStorageProvider.getValue());
 
         mAccount.setAutoExpandFolderName(reverseTranslateFolder(mAutoExpandFolder.getValue()));
@@ -372,16 +268,6 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
             saveSettings();
         }
         return super.onKeyDown(keyCode, event);
-    }
-
-    private void onCompositionSettings() {
-        AccountSetupComposition.actionEditCompositionSettings(this, mAccount);
-    }
-
-    private void onManageIdentities() {
-        Intent intent = new Intent(this, ManageIdentities.class);
-        intent.putExtra(ChooseIdentity.EXTRA_ACCOUNT, mAccount.getUuid());
-        startActivityForResult(intent, ACTIVITY_MANAGE_IDENTITIES);
     }
 
     private void onIncomingSettings() {
