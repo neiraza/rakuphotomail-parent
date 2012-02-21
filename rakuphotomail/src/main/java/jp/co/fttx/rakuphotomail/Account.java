@@ -97,10 +97,10 @@ public class Account implements BaseAccount {
     private boolean mSaveAllHeaders;
     private boolean mPushPollOnConnect;
     private boolean mNotifySync;
-    private ScrollButtons mScrollMessageViewButtons;
-    private ScrollButtons mScrollMessageViewMoveButtons;
-    private ShowPictures mShowPictures;
-    private boolean mEnableMoveButtons;
+//    private ScrollButtons mScrollMessageViewButtons;
+//    private ScrollButtons mScrollMessageViewMoveButtons;
+//    private ShowPictures mShowPictures;
+//    private boolean mEnableMoveButtons;
     private boolean mIsSignatureBeforeQuotedText;
     private String mExpungePolicy = EXPUNGE_IMMEDIATELY;
     private int mMaxPushFolders;
@@ -135,6 +135,7 @@ public class Account implements BaseAccount {
     private long slideSleepTimeDuration = 3500L;
     private long serverSyncInitStartTimeDuration = 180000L;
     private long serverSyncTimeDuration = 180000L;
+    private int scaleRatio = 1;
 
     /**
      * Name of the folder that was last selected for a copy or move operation.
@@ -183,17 +184,17 @@ public class Account implements BaseAccount {
         mPushPollOnConnect = true;
         mDisplayCount = RakuPhotoMail.DEFAULT_VISIBLE_LIMIT;
         mAccountNumber = -1;
-        mNotifyNewMail = true;
-        mNotifySync = true;
-        mNotifySelfNewMail = true;
+        mNotifyNewMail = false;
+        mNotifySync = false;
+        mNotifySelfNewMail = false;
         mFolderDisplayMode = FolderMode.NOT_SECOND_CLASS;
         mFolderSyncMode = FolderMode.FIRST_CLASS;
         mFolderPushMode = FolderMode.FIRST_CLASS;
         mFolderTargetMode = FolderMode.NOT_SECOND_CLASS;
-        mScrollMessageViewButtons = ScrollButtons.NEVER;
-        mScrollMessageViewMoveButtons = ScrollButtons.NEVER;
-        mShowPictures = ShowPictures.NEVER;
-        mEnableMoveButtons = false;
+//        mScrollMessageViewButtons = ScrollButtons.NEVER;
+//        mScrollMessageViewMoveButtons = ScrollButtons.NEVER;
+//        mShowPictures = ShowPictures.NEVER;
+//        mEnableMoveButtons = false;
         mIsSignatureBeforeQuotedText = false;
         mExpungePolicy = EXPUNGE_IMMEDIATELY;
         mAutoExpandFolderName = INBOX;
@@ -307,30 +308,30 @@ public class Account implements BaseAccount {
                         (random.nextInt(0x70) * 0xffff) +
                         0xff000000);
 
-        try {
-            mScrollMessageViewButtons =
-                    ScrollButtons.valueOf(prefs.getString(mUuid + ".hideButtonsEnum",
-                            ScrollButtons.NEVER.name()));
-        } catch (Exception e) {
-            mScrollMessageViewButtons = ScrollButtons.NEVER;
-        }
+//        try {
+//            mScrollMessageViewButtons =
+//                    ScrollButtons.valueOf(prefs.getString(mUuid + ".hideButtonsEnum",
+//                            ScrollButtons.NEVER.name()));
+//        } catch (Exception e) {
+//            mScrollMessageViewButtons = ScrollButtons.NEVER;
+//        }
 
-        try {
-            mScrollMessageViewMoveButtons =
-                    ScrollButtons.valueOf(prefs.getString(mUuid + ".hideMoveButtonsEnum",
-                            ScrollButtons.NEVER.name()));
-        } catch (Exception e) {
-            mScrollMessageViewMoveButtons = ScrollButtons.NEVER;
-        }
+//        try {
+//            mScrollMessageViewMoveButtons =
+//                    ScrollButtons.valueOf(prefs.getString(mUuid + ".hideMoveButtonsEnum",
+//                            ScrollButtons.NEVER.name()));
+//        } catch (Exception e) {
+//            mScrollMessageViewMoveButtons = ScrollButtons.NEVER;
+//        }
 
-        try {
-            mShowPictures = ShowPictures.valueOf(prefs.getString(mUuid + ".showPicturesEnum",
-                    ShowPictures.NEVER.name()));
-        } catch (Exception e) {
-            mShowPictures = ShowPictures.NEVER;
-        }
+//        try {
+//            mShowPictures = ShowPictures.valueOf(prefs.getString(mUuid + ".showPicturesEnum",
+//                    ShowPictures.NEVER.name()));
+//        } catch (Exception e) {
+//            mShowPictures = ShowPictures.NEVER;
+//        }
 
-        mEnableMoveButtons = prefs.getBoolean(mUuid + ".enableMoveButtons", false);
+//        mEnableMoveButtons = prefs.getBoolean(mUuid + ".enableMoveButtons", false);
 
         mNotificationSetting.setVibrate(prefs.getBoolean(mUuid + ".vibrate", false));
         mNotificationSetting.setVibratePattern(prefs.getInt(mUuid + ".vibratePattern", 0));
@@ -520,10 +521,10 @@ public class Account implements BaseAccount {
         editor.putString(mUuid + ".spamFolderName", mSpamFolderName);
         editor.putString(mUuid + ".autoExpandFolderName", mAutoExpandFolderName);
         editor.putInt(mUuid + ".accountNumber", mAccountNumber);
-        editor.putString(mUuid + ".hideButtonsEnum", mScrollMessageViewButtons.name());
-        editor.putString(mUuid + ".hideMoveButtonsEnum", mScrollMessageViewMoveButtons.name());
-        editor.putString(mUuid + ".showPicturesEnum", mShowPictures.name());
-        editor.putBoolean(mUuid + ".enableMoveButtons", mEnableMoveButtons);
+//        editor.putString(mUuid + ".hideButtonsEnum", mScrollMessageViewButtons.name());
+//        editor.putString(mUuid + ".hideMoveButtonsEnum", mScrollMessageViewMoveButtons.name());
+//        editor.putString(mUuid + ".showPicturesEnum", mShowPictures.name());
+//        editor.putBoolean(mUuid + ".enableMoveButtons", mEnableMoveButtons);
         editor.putString(mUuid + ".folderDisplayMode", mFolderDisplayMode.name());
         editor.putString(mUuid + ".folderSyncMode", mFolderSyncMode.name());
         editor.putString(mUuid + ".folderPushMode", mFolderPushMode.name());
@@ -917,30 +918,30 @@ public class Account implements BaseAccount {
         this.mNotifySync = showOngoing;
     }
 
-    public synchronized ScrollButtons getScrollMessageViewButtons() {
-        return mScrollMessageViewButtons;
-    }
+//    public synchronized ScrollButtons getScrollMessageViewButtons() {
+//        return mScrollMessageViewButtons;
+//    }
 
-    public synchronized void setScrollMessageViewButtons(ScrollButtons scrollMessageViewButtons) {
-        mScrollMessageViewButtons = scrollMessageViewButtons;
-    }
+//    public synchronized void setScrollMessageViewButtons(ScrollButtons scrollMessageViewButtons) {
+//        mScrollMessageViewButtons = scrollMessageViewButtons;
+//    }
 
-    public synchronized ScrollButtons getScrollMessageViewMoveButtons() {
-        return mScrollMessageViewMoveButtons;
-    }
+//    public synchronized ScrollButtons getScrollMessageViewMoveButtons() {
+//        return mScrollMessageViewMoveButtons;
+//    }
+//
+//    public synchronized void setScrollMessageViewMoveButtons(
+//            ScrollButtons scrollMessageViewButtons) {
+//        mScrollMessageViewMoveButtons = scrollMessageViewButtons;
+//    }
 
-    public synchronized void setScrollMessageViewMoveButtons(
-            ScrollButtons scrollMessageViewButtons) {
-        mScrollMessageViewMoveButtons = scrollMessageViewButtons;
-    }
+//    public synchronized ShowPictures getShowPictures() {
+//        return mShowPictures;
+//    }
 
-    public synchronized ShowPictures getShowPictures() {
-        return mShowPictures;
-    }
-
-    public synchronized void setShowPictures(ShowPictures showPictures) {
-        mShowPictures = showPictures;
-    }
+//    public synchronized void setShowPictures(ShowPictures showPictures) {
+//        mShowPictures = showPictures;
+//    }
 
     public synchronized FolderMode getFolderTargetMode() {
         return mFolderTargetMode;
@@ -1319,13 +1320,13 @@ public class Account implements BaseAccount {
         mReplyAfterQuote = replyAfterQuote;
     }
 
-    public boolean getEnableMoveButtons() {
-        return mEnableMoveButtons;
-    }
-
-    public void setEnableMoveButtons(boolean enableMoveButtons) {
-        mEnableMoveButtons = enableMoveButtons;
-    }
+//    public boolean getEnableMoveButtons() {
+//        return mEnableMoveButtons;
+//    }
+//
+//    public void setEnableMoveButtons(boolean enableMoveButtons) {
+//        mEnableMoveButtons = enableMoveButtons;
+//    }
 
     public String getCryptoApp() {
         return mCryptoApp;
@@ -1447,5 +1448,13 @@ public class Account implements BaseAccount {
 
     public void setServerSyncInitStartTimeDuration(long serverSyncInitStartTimeDuration) {
         this.serverSyncInitStartTimeDuration = serverSyncInitStartTimeDuration;
+    }
+    
+    public int getScaleRatio(){
+        return this.scaleRatio;
+    }
+
+    public void setScaleRatio(int scaleRatio){
+        this.scaleRatio = scaleRatio;
     }
 }

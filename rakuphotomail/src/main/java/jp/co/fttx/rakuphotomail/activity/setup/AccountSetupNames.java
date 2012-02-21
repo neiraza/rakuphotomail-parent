@@ -1,4 +1,3 @@
-
 package jp.co.fttx.rakuphotomail.activity.setup;
 
 import android.content.Context;
@@ -19,8 +18,6 @@ import jp.co.fttx.rakuphotomail.helper.Utility;
 public class AccountSetupNames extends RakuPhotoActivity implements OnClickListener {
     private static final String EXTRA_ACCOUNT = "account";
 
-//    private EditText mDescription;
-
     private EditText mName;
 
     private Account mAccount;
@@ -37,9 +34,8 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_names);
-//        mDescription = (EditText)findViewById(R.id.account_description);
-        mName = (EditText)findViewById(R.id.account_name);
-        mDoneButton = (Button)findViewById(R.id.done);
+        mName = (EditText) findViewById(R.id.account_name);
+        mDoneButton = (Button) findViewById(R.id.done);
         mDoneButton.setOnClickListener(this);
 
         TextWatcher validationTextWatcher = new TextWatcher() {
@@ -65,7 +61,6 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
          * the user fills in a value we'll reset the current value, otherwise we
          * just leave the saved value alone.
          */
-//        mDescription.setText(mAccount.getDescription());
         if (mAccount.getName() != null) {
             mName.setText(mAccount.getName());
         }
@@ -81,10 +76,7 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
 
     @Override
     protected void onNext() {
-//        if (Utility.requiredFieldValid(mDescription)) {
-//            mAccount.setDescription(mDescription.getText().toString());
-            mAccount.setDescription(mAccount.getDescription());
-//        }
+        mAccount.setDescription(mAccount.getDescription());
         mAccount.setName(mName.getText().toString());
         mAccount.save(Preferences.getPreferences(this));
         finish();
@@ -92,9 +84,9 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
 
     public void onClick(View v) {
         switch (v.getId()) {
-        case R.id.done:
-            onNext();
-            break;
+            case R.id.done:
+                onNext();
+                break;
         }
     }
 }

@@ -10,32 +10,21 @@ import android.os.Vibrator;
 import android.preference.*;
 import android.util.Log;
 import android.view.KeyEvent;
-
-import java.util.Iterator;
-import java.util.Map;
-import java.util.LinkedList;
-import java.util.List;
-
-import jp.co.fttx.rakuphotomail.Account;
+import jp.co.fttx.rakuphotomail.*;
 import jp.co.fttx.rakuphotomail.Account.FolderMode;
 import jp.co.fttx.rakuphotomail.Account.QuoteStyle;
-import jp.co.fttx.rakuphotomail.Account.ScrollButtons;
-import jp.co.fttx.rakuphotomail.RakuPhotoMail;
-import jp.co.fttx.rakuphotomail.NotificationSetting;
-import jp.co.fttx.rakuphotomail.Preferences;
-import jp.co.fttx.rakuphotomail.R;
-import jp.co.fttx.rakuphotomail.mail.Folder;
-import jp.co.fttx.rakuphotomail.activity.ChooseFolder;
-import jp.co.fttx.rakuphotomail.activity.ChooseIdentity;
-import jp.co.fttx.rakuphotomail.activity.ColorPickerDialog;
-import jp.co.fttx.rakuphotomail.activity.RakuphotoPreferenceActivity;
-import jp.co.fttx.rakuphotomail.activity.ManageIdentities;
+import jp.co.fttx.rakuphotomail.activity.*;
 import jp.co.fttx.rakuphotomail.crypto.Apg;
+import jp.co.fttx.rakuphotomail.mail.Folder;
 import jp.co.fttx.rakuphotomail.mail.Store;
+import jp.co.fttx.rakuphotomail.mail.store.LocalStore.LocalFolder;
+import jp.co.fttx.rakuphotomail.mail.store.StorageManager;
 import jp.co.fttx.rakuphotomail.service.MailService;
 
-import jp.co.fttx.rakuphotomail.mail.store.StorageManager;
-import jp.co.fttx.rakuphotomail.mail.store.LocalStore.LocalFolder;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 
 public class AccountSettings extends RakuphotoPreferenceActivity {
@@ -53,10 +42,10 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
     private static final String PREFERENCE_FREQUENCY = "account_check_frequency";
     private static final String PREFERENCE_DISPLAY_COUNT = "account_display_count";
     private static final String PREFERENCE_DEFAULT = "account_default";
-    private static final String PREFERENCE_HIDE_BUTTONS = "hide_buttons_enum";
-    private static final String PREFERENCE_HIDE_MOVE_BUTTONS = "hide_move_buttons_enum";
-    private static final String PREFERENCE_SHOW_PICTURES = "show_pictures_enum";
-    private static final String PREFERENCE_ENABLE_MOVE_BUTTONS = "enable_move_buttons";
+//    private static final String PREFERENCE_HIDE_BUTTONS = "hide_buttons_enum";
+//    private static final String PREFERENCE_HIDE_MOVE_BUTTONS = "hide_move_buttons_enum";
+//    private static final String PREFERENCE_SHOW_PICTURES = "show_pictures_enum";
+//    private static final String PREFERENCE_ENABLE_MOVE_BUTTONS = "enable_move_buttons";
     private static final String PREFERENCE_NOTIFY = "account_notify";
     private static final String PREFERENCE_NOTIFY_SELF = "account_notify_self";
     private static final String PREFERENCE_NOTIFY_SYNC = "account_notify_sync";
@@ -78,7 +67,7 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
     private static final String PREFERENCE_EXPUNGE_POLICY = "expunge_policy";
     private static final String PREFERENCE_AUTO_EXPAND_FOLDER = "account_setup_auto_expand_folder";
     private static final String PREFERENCE_SEARCHABLE_FOLDERS = "searchable_folders";
-    private static final String PREFERENCE_CHIP_COLOR = "chip_color";
+//    private static final String PREFERENCE_CHIP_COLOR = "chip_color";
     private static final String PREFERENCE_LED_COLOR = "led_color";
     private static final String PREFERENCE_NOTIFICATION_OPENS_UNREAD = "notification_opens_unread";
     private static final String PREFERENCE_NOTIFICATION_UNREAD_COUNT = "notification_unread_count";
@@ -120,10 +109,10 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
     private CheckBoxPreference mAccountDefault;
     private CheckBoxPreference mAccountNotify;
     private CheckBoxPreference mAccountNotifySelf;
-    private ListPreference mAccountScrollButtons;
-    private ListPreference mAccountScrollMoveButtons;
-    private ListPreference mAccountShowPictures;
-    private CheckBoxPreference mAccountEnableMoveButtons;
+//    private ListPreference mAccountScrollButtons;
+//    private ListPreference mAccountScrollMoveButtons;
+//    private ListPreference mAccountShowPictures;
+//    private CheckBoxPreference mAccountEnableMoveButtons;
     private CheckBoxPreference mAccountNotifySync;
     private CheckBoxPreference mAccountVibrate;
     private CheckBoxPreference mAccountLed;
@@ -138,7 +127,7 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
     private ListPreference mExpungePolicy;
     private ListPreference mSearchableFolders;
     private ListPreference mAutoExpandFolder;
-    private Preference mChipColor;
+//    private Preference mChipColor;
     private Preference mLedColor;
     private boolean mIncomingChanged = false;
     private CheckBoxPreference mNotificationOpensUnread;
@@ -415,49 +404,49 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
         mAccountDefault.setChecked(
             mAccount.equals(Preferences.getPreferences(this).getDefaultAccount()));
 
-        mAccountScrollButtons = (ListPreference) findPreference(PREFERENCE_HIDE_BUTTONS);
-        mAccountScrollButtons.setValue("" + mAccount.getScrollMessageViewButtons());
-        mAccountScrollButtons.setSummary(mAccountScrollButtons.getEntry());
-        mAccountScrollButtons.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                final String summary = newValue.toString();
-                int index = mAccountScrollButtons.findIndexOfValue(summary);
-                mAccountScrollButtons.setSummary(mAccountScrollButtons.getEntries()[index]);
-                mAccountScrollButtons.setValue(summary);
-                return false;
-            }
-        });
+//        mAccountScrollButtons = (ListPreference) findPreference(PREFERENCE_HIDE_BUTTONS);
+//        mAccountScrollButtons.setValue("" + mAccount.getScrollMessageViewButtons());
+//        mAccountScrollButtons.setSummary(mAccountScrollButtons.getEntry());
+//        mAccountScrollButtons.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+//            public boolean onPreferenceChange(Preference preference, Object newValue) {
+//                final String summary = newValue.toString();
+//                int index = mAccountScrollButtons.findIndexOfValue(summary);
+//                mAccountScrollButtons.setSummary(mAccountScrollButtons.getEntries()[index]);
+//                mAccountScrollButtons.setValue(summary);
+//                return false;
+//            }
+//        });
 
-        mAccountEnableMoveButtons = (CheckBoxPreference) findPreference(PREFERENCE_ENABLE_MOVE_BUTTONS);
-        mAccountEnableMoveButtons.setEnabled(mIsMoveCapable);
-        mAccountEnableMoveButtons.setChecked(mAccount.getEnableMoveButtons());
+//        mAccountEnableMoveButtons = (CheckBoxPreference) findPreference(PREFERENCE_ENABLE_MOVE_BUTTONS);
+//        mAccountEnableMoveButtons.setEnabled(mIsMoveCapable);
+//        mAccountEnableMoveButtons.setChecked(mAccount.getEnableMoveButtons());
 
-        mAccountScrollMoveButtons = (ListPreference) findPreference(PREFERENCE_HIDE_MOVE_BUTTONS);
-        mAccountScrollMoveButtons.setEnabled(mIsMoveCapable);
-        mAccountScrollMoveButtons.setValue("" + mAccount.getScrollMessageViewMoveButtons());
-        mAccountScrollMoveButtons.setSummary(mAccountScrollMoveButtons.getEntry());
-        mAccountScrollMoveButtons.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                final String summary = newValue.toString();
-                int index = mAccountScrollMoveButtons.findIndexOfValue(summary);
-                mAccountScrollMoveButtons.setSummary(mAccountScrollMoveButtons.getEntries()[index]);
-                mAccountScrollMoveButtons.setValue(summary);
-                return false;
-            }
-        });
+//        mAccountScrollMoveButtons = (ListPreference) findPreference(PREFERENCE_HIDE_MOVE_BUTTONS);
+//        mAccountScrollMoveButtons.setEnabled(mIsMoveCapable);
+//        mAccountScrollMoveButtons.setValue("" + mAccount.getScrollMessageViewMoveButtons());
+//        mAccountScrollMoveButtons.setSummary(mAccountScrollMoveButtons.getEntry());
+//        mAccountScrollMoveButtons.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+//            public boolean onPreferenceChange(Preference preference, Object newValue) {
+//                final String summary = newValue.toString();
+//                int index = mAccountScrollMoveButtons.findIndexOfValue(summary);
+//                mAccountScrollMoveButtons.setSummary(mAccountScrollMoveButtons.getEntries()[index]);
+//                mAccountScrollMoveButtons.setValue(summary);
+//                return false;
+//            }
+//        });
 
-        mAccountShowPictures = (ListPreference) findPreference(PREFERENCE_SHOW_PICTURES);
-        mAccountShowPictures.setValue("" + mAccount.getShowPictures());
-        mAccountShowPictures.setSummary(mAccountShowPictures.getEntry());
-        mAccountShowPictures.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                final String summary = newValue.toString();
-                int index = mAccountShowPictures.findIndexOfValue(summary);
-                mAccountShowPictures.setSummary(mAccountShowPictures.getEntries()[index]);
-                mAccountShowPictures.setValue(summary);
-                return false;
-            }
-        });
+//        mAccountShowPictures = (ListPreference) findPreference(PREFERENCE_SHOW_PICTURES);
+//        mAccountShowPictures.setValue("" + mAccount.getShowPictures());
+//        mAccountShowPictures.setSummary(mAccountShowPictures.getEntry());
+//        mAccountShowPictures.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+//            public boolean onPreferenceChange(Preference preference, Object newValue) {
+//                final String summary = newValue.toString();
+//                int index = mAccountShowPictures.findIndexOfValue(summary);
+//                mAccountShowPictures.setSummary(mAccountShowPictures.getEntries()[index]);
+//                mAccountShowPictures.setValue(summary);
+//                return false;
+//            }
+//        });
 
 
         mLocalStorageProvider = (ListPreference) findPreference(PREFERENCE_LOCAL_STORAGE_PROVIDER);
@@ -580,13 +569,13 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
 
         new PopulateFolderPrefsTask().execute();
 
-        mChipColor = findPreference(PREFERENCE_CHIP_COLOR);
-        mChipColor.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            public boolean onPreferenceClick(Preference preference) {
-                onChooseChipColor();
-                return false;
-            }
-        });
+//        mChipColor = findPreference(PREFERENCE_CHIP_COLOR);
+//        mChipColor.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+//            public boolean onPreferenceClick(Preference preference) {
+//                onChooseChipColor();
+//                return false;
+//            }
+//        });
 
         mLedColor = findPreference(PREFERENCE_LED_COLOR);
         mLedColor.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -730,13 +719,13 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
             mAccount.setMaxPushFolders(Integer.parseInt(mMaxPushFolders.getValue()));
         }
 
-        if (!mIsMoveCapable) {
-            mAccount.setEnableMoveButtons(false);
-            mAccount.setScrollMessageViewMoveButtons(ScrollButtons.NEVER);
-        } else {
-            mAccount.setEnableMoveButtons(mAccountEnableMoveButtons.isChecked());
-            mAccount.setScrollMessageViewMoveButtons(Account.ScrollButtons.valueOf(mAccountScrollMoveButtons.getValue()));
-        }
+//        if (!mIsMoveCapable) {
+//            mAccount.setEnableMoveButtons(false);
+//            mAccount.setScrollMessageViewMoveButtons(ScrollButtons.NEVER);
+//        } else {
+//            mAccount.setEnableMoveButtons(mAccountEnableMoveButtons.isChecked());
+//            mAccount.setScrollMessageViewMoveButtons(Account.ScrollButtons.valueOf(mAccountScrollMoveButtons.getValue()));
+//        }
 
         boolean needsRefresh = mAccount.setAutomaticCheckIntervalMinutes(Integer.parseInt(mCheckFrequency.getValue()));
         needsRefresh |= mAccount.setFolderSyncMode(Account.FolderMode.valueOf(mSyncMode.getValue()));
@@ -760,8 +749,8 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
             }
         }
 
-        mAccount.setScrollMessageViewButtons(Account.ScrollButtons.valueOf(mAccountScrollButtons.getValue()));
-        mAccount.setShowPictures(Account.ShowPictures.valueOf(mAccountShowPictures.getValue()));
+//        mAccount.setScrollMessageViewButtons(Account.ScrollButtons.valueOf(mAccountScrollButtons.getValue()));
+//        mAccount.setShowPictures(Account.ShowPictures.valueOf(mAccountShowPictures.getValue()));
         mAccount.save(Preferences.getPreferences(this));
 
         if (needsRefresh && needsPushRestart) {

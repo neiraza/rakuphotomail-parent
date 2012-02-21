@@ -19,7 +19,6 @@ import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.activity.setup.AccountSettings;
-import jp.co.fttx.rakuphotomail.activity.setup.Prefs;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
 import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
@@ -693,10 +692,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
         switch (itemId) {
-            case R.id.app_settings: {
-                onEditPrefs();
-                return true;
-            }
             case R.id.account_settings: {
                 onEditAccount();
                 return true;
@@ -709,10 +704,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
                 return super.onOptionsItemSelected(item);
             }
         }
-    }
-
-    private void onEditPrefs() {
-        Prefs.actionPrefs(this);
     }
 
     private void onEditAccount() {

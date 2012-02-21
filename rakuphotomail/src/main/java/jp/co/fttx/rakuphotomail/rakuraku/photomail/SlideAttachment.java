@@ -30,7 +30,7 @@ import java.util.Arrays;
 public class SlideAttachment {
     private SlideAttachment() {
     }
-    
+
     private static Bitmap photo;
     private static Bitmap thumbnail;
 
@@ -39,17 +39,26 @@ public class SlideAttachment {
             BitmapFactory.Options options = new BitmapFactory.Options();
             Uri uri = AttachmentProvider.getAttachmentUri(account, attachmentBean.getId());
             options.inJustDecodeBounds = true;
-            context.getContentResolver().openInputStream(uri);
             photo = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
             int displayW = display.getWidth();
             int displayH = display.getHeight();
-            int scaleW = options.outWidth / displayW + 1;
-            int scaleH = options.outHeight / displayH + 1;
+            int scaleRatio = account.getScaleRatio();
+            int scaleW = options.outWidth / displayW + scaleRatio;
+            int scaleH = options.outHeight / displayH + scaleRatio;
             options.inJustDecodeBounds = false;
             options.inSampleSize = Math.max(scaleW, scaleH);
-            photo = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null,
-                    options);
+//            Log.d("memory", "displayW:" + displayW);
+//            Log.d("memory", "displayH:" + displayH);
+//            Log.d("memory", "scaleW:" + scaleW);
+//            Log.d("memory", "scaleH:" + scaleH);
+//            Log.d("memory", "uri:" + attachmentBean.getContentUrl());
+//            Log.d("memory", "inSampleSize:" + Math.max(scaleW, scaleH));
+            photo = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
             return photo;
+        } catch (OutOfMemoryError ooe) {
+            //TODO 強引に続行する方向で押してみた
+            Log.e(RakuPhotoMail.LOG_TAG, "Exception:" + ooe.getMessage() + " ...処理を続行します（らくふぉと）");
+            return null;
         } catch (Exception e) {
             Log.e(RakuPhotoMail.LOG_TAG, "Exception:" + e);
         }
@@ -62,7 +71,7 @@ public class SlideAttachment {
             Uri uri = AttachmentProvider.getAttachmentUri(account, attachmentBean.getId());
             options.inJustDecodeBounds = true;
             context.getContentResolver().openInputStream(uri);
-            thumbnail =  BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
+            thumbnail = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
             int displayW = 150;
             int displayH = 100;
             int scaleW = options.outWidth / displayW + 1;

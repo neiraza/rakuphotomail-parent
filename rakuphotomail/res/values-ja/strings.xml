@@ -1200,4 +1200,6 @@
 
     <string name="create_sending_mail">"返信メッセージ作成"</string>
 
+    <string name="gallery_thumbnail_switch">"サムネイル ON / OFF"</string>
+
 </resources>

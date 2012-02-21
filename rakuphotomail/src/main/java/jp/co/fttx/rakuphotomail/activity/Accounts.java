@@ -1,10 +1,12 @@
 package jp.co.fttx.rakuphotomail.activity;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.Button;
 import jp.co.fttx.rakuphotomail.*;
 import jp.co.fttx.rakuphotomail.activity.setup.AccountSetupBasics;
 import jp.co.fttx.rakuphotomail.controller.MessagingController;
@@ -13,6 +15,8 @@ import jp.co.fttx.rakuphotomail.controller.MessagingController;
 public class Accounts extends RakuPhotoActivity implements OnClickListener {
 
     private Context mContext;
+    private Button mNext;
+    private ProgressDialog mDialog;
 
     ActivityListener mListener = new ActivityListener() {
         @Override
@@ -65,8 +69,8 @@ public class Accounts extends RakuPhotoActivity implements OnClickListener {
             GallerySlideShow.actionSlideShow(this, accounts[0], accounts[0].getInboxFolderName(), null);
             finish();
         }
-
-        findViewById(R.id.next).setOnClickListener(this);
+         mNext = (Button)findViewById(R.id.next);
+        mNext.setOnClickListener(this);
     }
 
     @Override
@@ -91,6 +95,15 @@ public class Accounts extends RakuPhotoActivity implements OnClickListener {
 
     private void onAddNewAccount() {
         AccountSetupBasics.actionNewAccount(this);
+        mNext.setEnabled(false);
+        mDialog = new ProgressDialog(mContext);
+        mDialog.setTitle("Please wait");
+        mDialog.setMessage("現在、設定を読み込み中です。");
+        mDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        mDialog.setCancelable(true);
+        mDialog.setMax(100);
+        mDialog.setProgress(0);
+        mDialog.show();
     }
 
     public void onClick(View view) {
