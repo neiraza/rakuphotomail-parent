@@ -34,7 +34,7 @@ public class SlideAttachment {
     private static Bitmap photo;
     private static Bitmap thumbnail;
 
-    public static Bitmap getBitmap(Context context, Display display, Account account, AttachmentBean attachmentBean) {
+    public static Bitmap getBitmap(Context context, Display display, Account account, AttachmentBean attachmentBean) throws RakuRakuException {
         try {
             BitmapFactory.Options options = new BitmapFactory.Options();
             Uri uri = AttachmentProvider.getAttachmentUri(account, attachmentBean.getId());
@@ -47,18 +47,11 @@ public class SlideAttachment {
             int scaleH = options.outHeight / displayH + scaleRatio;
             options.inJustDecodeBounds = false;
             options.inSampleSize = Math.max(scaleW, scaleH);
-//            Log.d("memory", "displayW:" + displayW);
-//            Log.d("memory", "displayH:" + displayH);
-//            Log.d("memory", "scaleW:" + scaleW);
-//            Log.d("memory", "scaleH:" + scaleH);
-//            Log.d("memory", "uri:" + attachmentBean.getContentUrl());
-//            Log.d("memory", "inSampleSize:" + Math.max(scaleW, scaleH));
             photo = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
             return photo;
         } catch (OutOfMemoryError ooe) {
-            //TODO 強引に続行する方向で押してみた
-            Log.e(RakuPhotoMail.LOG_TAG, "Exception:" + ooe.getMessage() + " ...処理を続行します（らくふぉと）");
-            return null;
+            Log.e(RakuPhotoMail.LOG_TAG, "Exception:" + ooe.getMessage());
+            throw new RakuRakuException(ooe);
         } catch (Exception e) {
             Log.e(RakuPhotoMail.LOG_TAG, "Exception:" + e);
         }
