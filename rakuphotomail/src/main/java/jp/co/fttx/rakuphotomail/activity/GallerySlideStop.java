@@ -4,6 +4,7 @@
  */
 package jp.co.fttx.rakuphotomail.activity;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -298,8 +299,13 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void setImageViewPicture(ArrayList<AttachmentBean> attachmentBeanList, int index) {
-        Bitmap bitmap = SlideAttachment.getBitmap(getApplicationContext(), getWindowManager().getDefaultDisplay(), mAccount, attachmentBeanList.get(index));
-        mImageViewPicture.setImageBitmap(bitmap);
+        Bitmap bitmap = null;
+        try {
+            bitmap = SlideAttachment.getBitmap(getApplicationContext(), getWindowManager().getDefaultDisplay(), mAccount, attachmentBeanList.get(index));
+            mImageViewPicture.setImageBitmap(bitmap);
+        } catch (RakuRakuException e) {
+            onAlertNoImage();
+        }
     }
 
     private void setDate(long date) {
@@ -783,5 +789,28 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         public void onCancel(DialogInterface dialog) {
             this.cancel(true);
         }
+    }
+
+    private void onAlertNoImage() {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setTitle("らくフォトメール");
+        alertDialogBuilder.setMessage("メモリリークにより、画像が表示できません。\n続行してよろしいでしょうか。\nなお同じ症状が頻発する場合は、設定により\n画像表示サイズを小さくすることをお勧めします。");
+        alertDialogBuilder.setPositiveButton("はい、続行します",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                });
+        alertDialogBuilder.setNegativeButton("いいえ、終了します",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                });
+        alertDialogBuilder.setCancelable(false);
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
     }
 }

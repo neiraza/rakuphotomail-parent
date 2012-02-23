@@ -157,7 +157,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     /**
      * Thread SlideShow
      */
-    private Thread mSlideShowThread;
+    private SlideShowThread mSlideShowThread;
     /**
      * Handler
      */
@@ -269,14 +269,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             public void run() {
                 startProgressDialogHandler("Please wait", "サーバーと同期し、新着メールをチェックしています。\nしばらくお待ちください。");
                 mIsRepeatUidList = false;
-                try {
-                    if (mSlideShowThread.isAlive()) {
-                        mSlideShowThread.join();
-                    }
-                } catch (InterruptedException e) {
-                    Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e.getMessage());
+                if (mSlideShowThread.isAlive()) {
+                    mSlideShowThread.interrupt();
                 }
-
                 // 同期処理で新着メールを見つけられた場合
                 String newMailUid = MessageSync.syncMailboxForCheckNewMail(mAccount, mFolder, mAccount.getMessageLimitCountFromRemote());
                 doSentFolderSync();
@@ -288,14 +283,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 if (null != newMailUid && !"".equals(newMailUid) && isSlide(newMailUid)) {
                     isSlideShow = true;
                     mIsRepeatUidList = false;
-                    try {
-                        if (mSlideShowThread.isAlive()) {
-                            mSlideShowThread.join();
-                        } else {
-                            mDispUid = newMailUid;
-                        }
-                    } catch (InterruptedException e) {
-                        Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e.getMessage());
+                    if (mSlideShowThread.isAlive()) {
+                        mSlideShowThread.interrupt();
+                    } else {
+                        mDispUid = newMailUid;
                     }
                     try {
                         onSlideStop(newMailUid);
@@ -314,14 +305,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                         if (!mAllUidList.contains(uid) && isSlide(uid)) {
                             isSlideShow = true;
                             mIsRepeatUidList = false;
-                            try {
-                                if (mSlideShowThread.isAlive()) {
-                                    mSlideShowThread.join();
-                                } else {
-                                    mDispUid = uid;
-                                }
-                            } catch (InterruptedException e) {
-                                Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e.getMessage());
+                            if (mSlideShowThread.isAlive()) {
+                                mSlideShowThread.interrupt();
+                            } else {
+                                mDispUid = uid;
                             }
 
                             try {
@@ -545,8 +532,20 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         return uidList;
     }
 
+    class SlideShowThread extends Thread {
+        public SlideShowThread(Runnable runnable) {
+            super(runnable);
+        }
+
+        public void sleepKing(long time) throws InterruptedException {
+            Log.e(RakuPhotoMail.LOG_TAG, "SlideShowThread#sleepKing time:" + time);
+            super.sleep(time);
+        }
+
+    }
+
     private void setupSlideShowThread() {
-        mSlideShowThread = new Thread(new Runnable() {
+        mSlideShowThread = new SlideShowThread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -717,7 +716,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             });
             while (!isDownloaded) {
                 try {
-                    Thread.sleep(1500L);
+                    mSlideShowThread.sleepKing(1500L);
                 } catch (InterruptedException e) {
                     Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
                 }
@@ -738,17 +737,22 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     private void dispSlide(MessageBean messageBean) {
         dismissProgressDialog(mProgressDialog);
         ArrayList<AttachmentBean> attachmentBeanList = messageBean.getAttachmentBeanList();
-        for (AttachmentBean attachmentBean : attachmentBeanList) {
-            if (SlideCheck.isSlide(attachmentBean)) {
-                mBitmap = SlideAttachment.getBitmap(getApplicationContext(), getWindowManager().getDefaultDisplay(), mAccount, attachmentBean);
-                if (null == mBitmap) {
-                    return;
+        try {
+            for (AttachmentBean attachmentBean : attachmentBeanList) {
+                if (SlideCheck.isSlide(attachmentBean)) {
+                    mBitmap = SlideAttachment.getBitmap(getApplicationContext(), getWindowManager().getDefaultDisplay(), mAccount, attachmentBean);
+                    if (null == mBitmap) {
+                        return;
+                    }
+                    Message msg = setSendMessage(messageBean);
+                    msg.obj = mBitmap;
+                    mSlideHandler.sendMessage(msg);
+                    sleepSlide(mAccount.getSlideSleepTime());
                 }
-                Message msg = setSendMessage(messageBean);
-                msg.obj = mBitmap;
-                mSlideHandler.sendMessage(msg);
-                sleepSlide(mAccount.getSlideSleepTime());
             }
+        } catch (RakuRakuException rre) {
+            //TODO メモリエラー対策）いったん頭に戻ってみよう、すっきりするかもよ
+            actionSlideShow(mContext, mAccount, mFolder, mDispUid);
         }
     }
 
@@ -777,9 +781,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     private void sleepSlide(long sleepTime) {
         try {
-            Thread.sleep(sleepTime);
+            mSlideShowThread.sleepKing(sleepTime);
         } catch (InterruptedException e) {
-            Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#stopSlide error:" + e);
+            Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#sleepSlide " + e.getMessage());
         }
     }
 
@@ -815,10 +819,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         super.onStop();
         try {
             mIsRepeatUidList = false;
-            mSlideShowThread.join();
-        } catch (InterruptedException e) {
-            Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow#onStop Error:" + e.getMessage());
-            finish();
+            mSlideShowThread.interrupt();
         } catch (ClassCastException cce) {
             Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow#onStop Error:" + cce.getMessage());
         }
@@ -828,8 +829,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     public void onDestroy() {
         super.onDestroy();
         try {
-            mTimer.cancel();
-            mTimer = null;
+            if (null != mTimer) {
+                mTimer.cancel();
+                mTimer = null;
+            }
         } catch (ClassCastException cce) {
             Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow#onDestroy Error:" + cce.getMessage());
         }
@@ -898,18 +901,15 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     private void onSlideStop(String uid) throws InterruptedException {
         startProgressDialogHandler("Please wait", "スライドショーを停止中です。\nしばらくお待ちください。");
-        try {
-            mIsRepeatUidList = false;
-            if (mSlideShowThread.isAlive()) {
-                mSlideShowThread.join();
-            }
-            GallerySlideStop.actionHandle(mContext, mAccount, mFolder, uid);
-            dismissProgressDialog(mProgressDialog);
-            finish();
-        } catch (InterruptedException e) {
-            Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow#onStop Error:" + e.getMessage());
-            finish();
+        mIsRepeatUidList = false;
+        if (mSlideShowThread.isAlive()) {
+            mSlideShowThread.interrupt();
         }
+        mTimer.cancel();
+        mTimer = null;
+        GallerySlideStop.actionHandle(mContext, mAccount, mFolder, uid);
+        dismissProgressDialog(mProgressDialog);
+        finish();
     }
 
     private void onAlertNoMessage() {
