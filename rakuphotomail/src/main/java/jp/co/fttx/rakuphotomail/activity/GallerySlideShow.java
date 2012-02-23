@@ -532,7 +532,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         return uidList;
     }
 
-    class SlideShowThread extends Thread {
+    private class SlideShowThread extends Thread {
         public SlideShowThread(Runnable runnable) {
             super(runnable);
         }
