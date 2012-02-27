@@ -15,6 +15,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.widget.ImageView;
@@ -24,6 +26,7 @@ import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
+import jp.co.fttx.rakuphotomail.activity.setup.AccountSettings;
 import jp.co.fttx.rakuphotomail.mail.Flag;
 import jp.co.fttx.rakuphotomail.mail.MessagingException;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
@@ -1000,5 +1003,36 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             this.cancel(true);
         }
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        Log.d("menuCreate", "onCreateOptionsMenu start");
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.message_list_option, menu);
+        menu.findItem(R.id.buttons_disabled).setVisible(false);
+        Log.d("menuCreate", "onCreateOptionsMenu end");
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Log.d("menuCreate", "onOptionsItemSelected start");
+        int itemId = item.getItemId();
+        switch (itemId) {
+            case R.id.account_settings: {
+                Log.d("menuCreate", "onOptionsItemSelected R.id.account_settings");
+                onEditAccount();
+                return true;
+            }
+            default: {
+                return super.onOptionsItemSelected(item);
+            }
+        }
+    }
+
+    private void onEditAccount() {
+        Log.d("menuCreate", "onEditAccount start");
+        AccountSettings.actionSettings(this, mAccount);
     }
 }

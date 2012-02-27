@@ -139,19 +139,15 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     /**
      * thumbnail
      */
-    private LinearLayout mGalleryThumbnailInfoLayout;
-    /**
-     * thumbnail
-     */
-    private TextView mGalleryThumbnailInfo;
-    /**
-     * thumbnail
-     */
     private LinearLayout mGalleryThumbnailLayout;
     /**
      * thumbnail
      */
     private Gallery mGalleryThumbnail;
+    /**
+     * thumbnail
+     */
+    private boolean isThumbnail;
     /**
      * slide target attachment list
      */
@@ -272,6 +268,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         mGalleryThumbnailLayout.setVisibility(View.GONE);
         mGalleryThumbnail = (Gallery) findViewById(R.id.gallery_thumbnail);
         mGalleryThumbnail.setOnItemClickListener((AdapterView.OnItemClickListener) mContext);
+        isThumbnail = false;
     }
 
     /**
@@ -368,6 +365,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void setViewSlide() {
+        isDispMailLayout = true;
         mSlideTargetAttachmentList = SlideAttachment.getSlideTargetList(mMessageBean.getAttachmentBeanList());
         //Thumbnail
         ArrayList<AttachmentBean> attachmentBeanList = mSlideTargetAttachmentList;
@@ -376,9 +374,12 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
             ThumbnailImageAdapter thumbnailAdapter = new ThumbnailImageAdapter(getApplicationContext());
             thumbnailAdapter.setImageItems(makeBitmapList(attachmentBeanList));
             mGalleryThumbnail.setAdapter(thumbnailAdapter);
+            isThumbnail = true;
         } else {
             mGalleryThumbnailLayout.setVisibility(View.GONE);
+            isThumbnail = false;
         }
+
         setImageViewPicture(mSlideTargetAttachmentList, 0);
         //TODO 140文字に制限します(config)
         mSubject = RakuPhotoStringUtils.limitMessage(mMessageBean.getSubject(), 140);
@@ -690,9 +691,19 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.message_list_option, menu);
-
         return true;
     }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu){
+        if (isThumbnail) {
+            menu.findItem(R.id.buttons_disabled).setVisible(true);
+        } else {
+            menu.findItem(R.id.buttons_disabled).setVisible(false);
+        }
+        return true;
+    }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
