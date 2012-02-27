@@ -205,6 +205,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     /**
      *
      */
+    private boolean isOptionMenu = false;
+    /**
+     *
+     */
     private static boolean isClear = false;
     /**
      *
@@ -458,6 +462,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         mAccount = Preferences.getPreferences(this).getAccount(intent.getStringExtra(EXTRA_ACCOUNT));
         mFolder = intent.getStringExtra(EXTRA_FOLDER);
         mStartUid = intent.getStringExtra(EXTRA_UID);
+        isOptionMenu = false;
         setIntent(intent);
     }
 
@@ -567,11 +572,15 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     @Override
     public void onResume() {
-
         super.onResume();
-        mSlideAllUidList = createUidList();
-        if (null != mSlideAllUidList && 0 < mSlideAllUidList.size()) {
-            onSlide();
+        if (isOptionMenu) {
+            actionSlideShow(mContext, mAccount, mFolder, mDispUid);
+            finish();
+        } else {
+            mSlideAllUidList = createUidList();
+            if (null != mSlideAllUidList && 0 < mSlideAllUidList.size()) {
+                onSlide();
+            }
         }
     }
 
@@ -785,7 +794,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         try {
             mSlideShowThread.sleepKing(sleepTime);
         } catch (InterruptedException e) {
-            Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#sleepSlide " + e.getMessage());
+            Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#sleepSlide 割り込み開始の為、許容範囲内です");
         }
     }
 
@@ -1007,21 +1016,23 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        Log.d("menuCreate", "onCreateOptionsMenu start");
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.message_list_option, menu);
         menu.findItem(R.id.buttons_disabled).setVisible(false);
-        Log.d("menuCreate", "onCreateOptionsMenu end");
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        isOptionMenu = true;
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        Log.d("menuCreate", "onOptionsItemSelected start");
         int itemId = item.getItemId();
         switch (itemId) {
             case R.id.account_settings: {
-                Log.d("menuCreate", "onOptionsItemSelected R.id.account_settings");
                 onEditAccount();
                 return true;
             }
@@ -1032,7 +1043,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void onEditAccount() {
-        Log.d("menuCreate", "onEditAccount start");
         AccountSettings.actionSettings(this, mAccount);
     }
 }
