@@ -28,6 +28,7 @@
             android:inputType="textEmailAddress"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
+            android:hint="@string/account_setup_incoming_username_label_hint"
             android:contentDescription="@string/account_setup_incoming_username_label" />
         <TextView
             android:text="@string/account_setup_incoming_password_label"
@@ -41,6 +42,7 @@
             android:inputType="textPassword"
             android:singleLine="true"
             android:layout_height="wrap_content"
+            android:hint="@string/account_password_hint"
             android:layout_width="fill_parent" />
         <TextView
             android:id="@+id/account_server_label"
@@ -55,6 +57,7 @@
             android:singleLine="true"
             android:inputType="textUri"
             android:layout_height="wrap_content"
+            android:hint="@string/account_incoming_server_hint"
             android:layout_width="fill_parent" />
         <TextView
             android:text="@string/account_setup_incoming_security_label"
@@ -91,6 +94,7 @@
             android:inputType="number"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
+            android:hint="@string/account_incoming_port_hint"
             android:contentDescription="@string/account_setup_incoming_port_label" />
         <View
             android:layout_width="fill_parent"

@@ -1268,4 +1268,34 @@
 
     <string name="gallery_thumbnail_switch">"thumbnail ON / OFF"</string>
 
+    <string name="account_settings_slide_change_duration_label">"slide change duration"</string>
+    <string name="account_settings_slide_change_duration_description">"configure slide change duration"</string>
+    <string name="account_settings_slide_change_duration_sec_3">"3sec"</string>
+    <string name="account_settings_slide_change_duration_sec_7">"7sec"</string>
+    <string name="account_settings_slide_change_duration_sec_20">"20sec"</string>
+    <string name="account_settings_slide_change_duration_min_1">"1min"</string>
+    <string name="account_settings_slide_change_duration_min_5">"5min"</string>
+    <string name="account_settings_slide_change_duration_min_30">"30min"</string>
+    <string name="account_settings_slide_change_duration_hour_1">"1hour"</string>
+
+    <string name="account_settings_server_sync_label">"mail server sync duration"</string>
+    <string name="account_settings_server_sync_description">"configure server sync duration"</string>
+    <string name="account_settings_server_sync_min_3">"3min"</string>
+    <string name="account_settings_server_sync_min_7">"7min"</string>
+    <string name="account_settings_server_sync_min_20">"20min"</string>
+    <string name="account_settings_server_sync_hour_1">"1hour"</string>
+    <string name="account_settings_server_sync_hour_6">"6hour"</string>
+
+    <string name="account_settings_download_cache_label">"download file local cache"</string>
+    <string name="account_settings_download_cache_description">"configure download file local cache"</string>
+    <string name="account_settings_download_cache_20">"20"</string>
+    <string name="account_settings_download_cache_50">"50"</string>
+    <string name="account_settings_download_cache_100">"100"</string>
+
+    <string name="account_settings_scale_ratio_label">"image display size"</string>
+    <string name="account_settings_scale_ratio_description">"configure image display size"</string>
+    <string name="account_settings_scale_ratio_1">"same"</string>
+    <string name="account_settings_scale_ratio_2">"slightly smaller"</string>
+    <string name="account_settings_scale_ratio_4">"more small"</string>
+
 </resources>

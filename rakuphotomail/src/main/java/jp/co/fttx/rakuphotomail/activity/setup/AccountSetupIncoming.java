@@ -40,7 +40,6 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
     private EditText mPortView;
     private Spinner mSecurityTypeView;
     private Spinner mAuthTypeView;
-//    private EditText mImapPathPrefixView;
     private Button mNextButton;
     private Account mAccount;
     private boolean mMakeDefault;

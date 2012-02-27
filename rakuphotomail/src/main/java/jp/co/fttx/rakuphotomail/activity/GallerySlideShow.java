@@ -538,7 +538,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         }
 
         public void sleepKing(long time) throws InterruptedException {
-            Log.e(RakuPhotoMail.LOG_TAG, "SlideShowThread#sleepKing time:" + time);
             super.sleep(time);
         }
 

@@ -12,6 +12,7 @@
                 android:singleLine="true"
                 android:title="@string/account_settings_description_label"
                 android:summary=""
+                android:hint="@string/account_settings_description_hint"
                 android:dialogTitle="@string/account_settings_description_label"/>
 
         <ListPreference

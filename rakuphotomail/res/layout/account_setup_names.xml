@@ -34,6 +34,7 @@
                     android:singleLine="true"
                     android:layout_height="wrap_content"
                     android:layout_width="fill_parent"
+                    android:hint="@string/account_setup_names_user_name_hint"
                     android:contentDescription="@string/account_setup_names_user_name_label"/>
 
              <!-- attachmentCacheLimitCount -->

@@ -41,6 +41,7 @@
                         android:id="@+id/gallery_message_detail"
                         android:typeface="sans"
                         android:textSize="16sp"
+                        android:paddingLeft="3dp"
                         android:textColor="#000000"
                         android:scrollHorizontally="false"
                         android:layout_width="fill_parent"

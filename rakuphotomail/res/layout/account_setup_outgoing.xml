@@ -28,6 +28,7 @@
             android:inputType="textUri"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
+            android:hint="account_outgoing_server_hint"
             android:contentDescription="@string/account_setup_outgoing_smtp_server_label" />
         <TextView
             android:text="@string/account_setup_outgoing_security_label"
@@ -52,6 +53,7 @@
             android:inputType="number"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
+            android:hint="account_outgoing_port_hint"
             android:contentDescription="@string/account_setup_outgoing_port_label" />
         <CheckBox
             android:id="@+id/account_require_login"

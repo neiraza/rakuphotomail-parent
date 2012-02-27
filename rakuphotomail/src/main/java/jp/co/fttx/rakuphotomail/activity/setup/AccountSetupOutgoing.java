@@ -37,16 +37,6 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
     private static final String smtpSchemes[] = {
         "smtp", "smtp+ssl", "smtp+ssl+", "smtp+tls", "smtp+tls+"
     };
-    /*
-    private static final int webdavPorts[] =
-    {
-        80, 443, 443, 443, 443
-    };
-    private static final String webdavSchemes[] =
-    {
-        "webdav", "webdav+ssl", "webdav+ssl+", "webdav+tls", "webdav+tls+"
-    };
-    */
     private static final String authTypes[] = {
         SmtpTransport.AUTH_AUTOMATIC,
         SmtpTransport.AUTH_LOGIN,

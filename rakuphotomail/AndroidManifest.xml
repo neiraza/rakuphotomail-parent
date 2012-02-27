@@ -122,63 +122,50 @@
         <activity
                 android:configChanges="locale"
                 android:label="@string/account_setup_basics_title"
-                android:screenOrientation="landscape"
+                android:screenOrientation="unspecified"
                 android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupBasics">
         </activity>
         <activity
                 android:configChanges="locale"
                 android:label="@string/account_setup_account_type_title"
-                android:screenOrientation="landscape"
+                android:screenOrientation="unspecified"
                 android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupAccountType">
         </activity>
         <activity
                 android:configChanges="locale"
                 android:label="@string/account_setup_incoming_title"
-                android:screenOrientation="landscape"
+                android:screenOrientation="unspecified"
                 android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupIncoming">
         </activity>
         <activity
                 android:configChanges="locale"
                 android:label="@string/account_settings_composition_title"
-                android:screenOrientation="landscape"
+                android:screenOrientation="unspecified"
                 android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupComposition">
         </activity>
         <activity
                 android:configChanges="locale"
                 android:label="@string/account_setup_outgoing_title"
-                android:screenOrientation="landscape"
+                android:screenOrientation="unspecified"
                 android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupOutgoing">
         </activity>
         <activity
                 android:configChanges="locale"
                 android:label="@string/account_setup_options_title"
-                android:screenOrientation="landscape"
+                android:screenOrientation="unspecified"
                 android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupOptions">
         </activity>
         <activity
                 android:configChanges="locale"
                 android:label="@string/account_setup_names_title"
-                android:screenOrientation="landscape"
+                android:screenOrientation="unspecified"
                 android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSetupNames">
-        </activity>
-        <activity
-                android:configChanges="locale"
-                android:label="@string/choose_folder_title"
-                android:screenOrientation="landscape"
-                android:name="jp.co.fttx.rakuphotomail.activity.ChooseFolder"
-                android:theme="@style/Theme.K9Dialog">
         </activity>
         <activity
                 android:configChanges="locale"
                 android:label="@string/choose_identity_title"
                 android:screenOrientation="landscape"
                 android:name="jp.co.fttx.rakuphotomail.activity.ChooseIdentity"
-                android:theme="@style/Theme.K9Dialog">
-        </activity>
-        <activity
-                android:label="@string/choose_account_title"
-                android:screenOrientation="landscape"
-                android:name="jp.co.fttx.rakuphotomail.activity.ChooseAccount"
                 android:theme="@style/Theme.K9Dialog">
         </activity>
         <activity
@@ -202,7 +189,7 @@
         <activity
                 android:configChanges="locale"
                 android:label="@string/account_settings_title_fmt"
-                android:screenOrientation="landscape"
+                android:screenOrientation="unspecified"
                 android:name="jp.co.fttx.rakuphotomail.activity.setup.AccountSettings">
         </activity>
         <activity

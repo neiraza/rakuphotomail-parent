@@ -1195,7 +1195,6 @@
 
     <string name="gallery_thumbnail_switch">"サムネイル ON / OFF"</string>
 
-    <!-- TODO ja以外にも追加しないとな -->
     <string name="account_settings_slide_change_duration_label">"スライド切り替え間隔"</string>
     <string name="account_settings_slide_change_duration_description">"スライド切り替え間隔を設定します"</string>
     <string name="account_settings_slide_change_duration_sec_3">"3秒"</string>
@@ -1225,5 +1224,16 @@
     <string name="account_settings_scale_ratio_1">"そのまま"</string>
     <string name="account_settings_scale_ratio_2">"少し小さく"</string>
     <string name="account_settings_scale_ratio_4">"もっと小さく"</string>
+
+    <!-- 日本語以外も -->
+    <string name="account_setup_incoming_username_label_hint">アカウント名</string>
+    <string name="account_password_hint">アカウントパスワード</string>
+    <string name="account_incoming_server_hint">受信サーバ名</string>
+    <string name="account_incoming_port_hint">受信サーバポート</string>
+    <string name="account_outgoing_server_hint">送信サーバ名</string>
+    <string name="account_outgoing_port_hint">送信サーバポート</string>
+    <string name="account_setup_names_user_name_hint">送信メールの表示名</string>
+    <string name="account_settings_description_hint">アカウント名</string>
+
 
 </resources>
