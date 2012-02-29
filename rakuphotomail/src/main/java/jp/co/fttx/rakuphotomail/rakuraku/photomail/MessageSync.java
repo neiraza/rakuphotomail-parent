@@ -20,6 +20,7 @@ import java.util.HashMap;
  */
 public class MessageSync {
 
+    //TODO こいつを封印しよう
     /**
      * @param account    User Account Info(Account Class)
      * @param folderName Folder Name(String)
@@ -36,7 +37,7 @@ public class MessageSync {
      * @since rakuphoto 0.1-beta1
      */
     public static String syncMailboxForCheckNewMail(Account account, String folderName, int messageLimitCountFromRemote) {
-        Log.d("tamachi","syncMailboxForCheckNewMail start");
+        Log.d("pgr", "syncMailboxForCheckNewMail start");
 
         String newMailUid = null;
 
@@ -51,6 +52,7 @@ public class MessageSync {
             Message[] localMessages = localFolder.getMessages(null);
             HashMap<String, Message> localUidMap = new HashMap<String, Message>();
             for (Message message : localMessages) {
+                Log.d("pgr", "syncMailboxForCheckNewMail message.getUid():" + message.getUid());
                 localUidMap.put(message.getUid(), message);
             }
 
@@ -58,6 +60,7 @@ public class MessageSync {
             remoteFolder = remoteStore.getFolder(folderName);
             remoteFolder.open(Folder.OpenMode.READ_WRITE);
             int remoteMessageCount = remoteFolder.getMessageCount();
+            Log.d("pgr", "syncMailboxForCheckNewMail remoteMessageCount:" + remoteMessageCount);
 
             Message[] remoteMessageArray = new Message[0];
             HashMap<String, Message> remoteUidMap = new HashMap<String, Message>();
@@ -65,12 +68,20 @@ public class MessageSync {
             if (remoteMessageCount > 0) {
                 int remoteStart = getRemoteStart(remoteMessageCount, messageLimitCountFromRemote);
                 int remoteEnd = remoteMessageCount;
-                remoteMessageArray = remoteFolder.getMessages(remoteStart, remoteEnd, null, null);
+                Log.d("pgr", "syncMailboxForCheckNewMail remoteStart:" + remoteStart);
+                Log.d("pgr", "syncMailboxForCheckNewMail remoteEnd:" + remoteEnd);
 
+                remoteMessageArray = remoteFolder.getMessages(remoteStart, remoteEnd, null, null);
+                Log.d("pgr", "syncMailboxForCheckNewMail remoteMessageArray:" + remoteMessageArray.length);
+
+                //TODO ここでスライド対象外も全部DBに突っ込むと自滅するわな
                 for (Message thisMessage : remoteMessageArray) {
+                    Log.d("pgr", "syncMailboxForCheckNewMail チェック前 thisMessage:" + thisMessage.getUid());
+
                     Message localMessage = localUidMap.get(thisMessage.getUid()); // このUIDは更新前もあるかなー？
                     remoteUidMap.put(thisMessage.getUid(), thisMessage); // 新規に増えたやつかな
                     if (localMessage == null) {
+                        Log.d("pgr", "syncMailboxForCheckNewMail 新規ぽい thisMessage:" + thisMessage.getUid());
                         FetchProfile fp = new FetchProfile();
                         fp.add(FetchProfile.Item.BODY);
                         remoteFolder.fetch(new Message[]{thisMessage}, fp, null);
@@ -86,7 +97,7 @@ public class MessageSync {
             } else if (remoteMessageCount < 0) {
                 throw new Exception("Message count " + remoteMessageCount + " for folder " + folderName);
             }
-
+            Log.d("pgr", "syncMailboxForCheckNewMail あとはdestroyMessagesとかしておわりなので割愛");
             ArrayList<Message> destroyMessages = new ArrayList<Message>();
             for (Message localMessage : localMessages) {
                 if (remoteUidMap.get(localMessage.getUid()) == null) {
@@ -105,9 +116,8 @@ public class MessageSync {
             Log.e(RakuPhotoMail.LOG_TAG, "ERROR:RakuRakuException:" + re.getMessage());
             //タイムアウトも返してやろう作戦
             return null;
-        } catch (MessagingException me){
+        } catch (MessagingException me) {
             Log.e(RakuPhotoMail.LOG_TAG, "ERROR:MessagingException:" + me.getMessage());
-            Log.d("tamachi","syncMailboxForCheckNewMail MessagingException end");
             return null;
         } catch (Exception e) {
             Log.e(RakuPhotoMail.LOG_TAG, "ERROR:Exception:" + e.getMessage());
@@ -119,6 +129,8 @@ public class MessageSync {
     }
 
     public static void syncMailbox(Account account, String folderName, int messageLimitCountFromRemote) {
+        Log.d("pgr", "syncMailbox start");
+
         Folder remoteFolder = null;
         LocalStore.LocalFolder localFolder = null;
         try {
@@ -129,6 +141,8 @@ public class MessageSync {
             Message[] localMessages = localFolder.getMessages(null);
             HashMap<String, Message> localUidMap = new HashMap<String, Message>();
             for (Message message : localMessages) {
+                Log.d("pgr", "syncMailbox message.getUid():" + message.getUid());
+
                 localUidMap.put(message.getUid(), message);
             }
 
@@ -136,6 +150,7 @@ public class MessageSync {
             remoteFolder = remoteStore.getFolder(folderName);
             remoteFolder.open(Folder.OpenMode.READ_WRITE);
             int remoteMessageCount = remoteFolder.getMessageCount();
+            Log.d("pgr", "syncMailbox remoteMessageCount:" + remoteMessageCount);
 
             Message[] remoteMessageArray = new Message[0];
             HashMap<String, Message> remoteUidMap = new HashMap<String, Message>();
@@ -143,18 +158,26 @@ public class MessageSync {
             if (remoteMessageCount > 0) {
                 int remoteStart = getRemoteStart(remoteMessageCount, messageLimitCountFromRemote);
                 int remoteEnd = remoteMessageCount;
+                Log.d("pgr", "syncMailbox remoteStart:" + remoteStart);
+                Log.d("pgr", "syncMailbox remoteEnd:" + remoteEnd);
                 remoteMessageArray = remoteFolder.getMessages(remoteStart, remoteEnd, null, null);
 
+                Log.d("pgr", "syncMailbox remoteMessageArray:" + remoteMessageArray.length);
+
                 for (Message thisMessage : remoteMessageArray) {
+                    Log.d("pgr", "syncMailbox thisMessage:" + thisMessage.getUid());
+
                     remoteUidMap.put(thisMessage.getUid(), thisMessage);
                 }
                 remoteMessageArray = null;
             } else if (remoteMessageCount < 0) {
                 throw new Exception("Message count " + remoteMessageCount + " for folder " + folderName);
             }
+            Log.d("pgr", "syncMailboxForCheckNewMail あとはdestroyMessagesとかしておわりなので割愛");
 
             ArrayList<Message> destroyMessages = new ArrayList<Message>();
             for (Message localMessage : localMessages) {
+
                 if (remoteUidMap.get(localMessage.getUid()) == null) {
                     destroyMessages.add(localMessage);
                 }
@@ -197,7 +220,6 @@ public class MessageSync {
      * @since rakuphoto 0.1-beta1
      */
     public static void sentMessageAfter(Account account, String folderName, String sentMessageUid) throws MessagingException, RakuRakuException {
-        Log.d("refs1961", "MessageSync#sentMessageAfter");
 
         if (account.getErrorFolderName().equals(folderName)) {
             return;
@@ -214,24 +236,19 @@ public class MessageSync {
                     .getMessage(sentMessageUid);
 
             if (localMessage == null) {
-                Log.d("refs1961", "MessageSync#sentMessageAfter localMessage is null");
                 return;
             }
 
             Store remoteStore = account.getRemoteStore();
             remoteFolder = remoteStore.getFolder(folderName);
-            Log.d("refs1961", "MessageSync#sentMessageAfter !remoteFolder.exists():" + !remoteFolder.exists());
             if (!remoteFolder.exists()) {
                 if (!remoteFolder.create(Folder.FolderType.HOLDS_MESSAGES)) {
-                    Log.d("refs1961", "MessageSync#sentMessageAfter FolderType?");
                     return;
                 }
             }
 
             remoteFolder.open(Folder.OpenMode.READ_WRITE);
             if (remoteFolder.getMode() != Folder.OpenMode.READ_WRITE) {
-                Log.d("refs1961", "MessageSync#sentMessageAfter remoteFolder.getMode():" + remoteFolder.getMode());
-                return;
             }
 
             FetchProfile fp = new FetchProfile();

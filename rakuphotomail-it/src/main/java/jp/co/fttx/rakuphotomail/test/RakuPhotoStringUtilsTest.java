@@ -13,7 +13,7 @@ public class RakuPhotoStringUtilsTest extends TestCase {
     }
 
     public void testNgOver1() {
-        String result = RakuPhotoStringUtils.limitMessage("あいうえおかきくけこさしすせそたちつてとな", 20);
+        String result = RakuPhotoStringUtils.lcd ..imitMessage("あいうえおかきくけこさしすせそたちつてとな", 20);
         assertEquals("あいうえおかきくけこさしすせそたちつてと...", result);
     }
 

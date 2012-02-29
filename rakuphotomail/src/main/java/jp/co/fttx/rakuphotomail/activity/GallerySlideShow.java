@@ -41,10 +41,7 @@ import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideCheck;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideMessage;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 /**
  * @author tooru.oguri
@@ -233,6 +230,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     public static void actionSlideShow(Context context, Account account, String folder, String uid) {
+        Log.d("pgr", "actionSlideShow start");
+
         Intent intent = new Intent(context, GallerySlideShow.class);
         if (account != null) {
             intent.putExtra(EXTRA_ACCOUNT, account.getUuid());
@@ -255,6 +254,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.d("pgr", "onCreate start");
+
         super.onCreate(savedInstanceState);
         mContext = this;
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -263,8 +264,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         setUpProgressDialog(mProgressDialog, "Please wait", "スライドショー情報をサーバーと同期中です。\n完了次第、スライドショーを開始します。\nしばらくお待ちください。");
         onNewIntent(getIntent());
         setupViews();
+        Log.d("pgr", "onCreate doAllFolderSync start");
         doAllFolderSync();
-        mAllUidList = getUidList(null, 0);
+        Log.d("pgr", "onCreate doAllFolderSync end");
+//        mAllUidList = getUidList(null, 0);
+        Log.d("pgr", "onCreate mAllUidList created");
         setupSlideShowThread();
 
         serverSyncTimeDuration = mAccount.getServerSyncTimeDuration();
@@ -274,62 +278,73 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         mTimer.schedule(new TimerTask() {
             @Override
             public void run() {
+                Log.d("pgr", "mTimer start");
+
                 startProgressDialogHandler("Please wait", "サーバーと同期し、新着メールをチェックしています。\nしばらくお待ちください。");
                 mIsRepeatUidList = false;
                 if (mSlideShowThread.isAlive()) {
                     mSlideShowThread.interrupt();
                 }
+                Log.d("pgr", "mTimer mSlideShowThread 割り込み");
+
                 // 同期処理で新着メールを見つけられた場合
                 String newMailUid = MessageSync.syncMailboxForCheckNewMail(mAccount, mFolder, mAccount.getMessageLimitCountFromRemote());
+
                 doSentFolderSync();
 
-                mSlideAllUidList = createUidList();
+                Log.d("pgr", "mTimer sync 完了");
+
+
+                //TODO これ必要か？
+//                mSlideAllUidList = createUidList();
 
                 boolean isSlideShow = false;
 
                 if (null != newMailUid && !"".equals(newMailUid) && isSlide(newMailUid)) {
                     isSlideShow = true;
-                    mIsRepeatUidList = false;
-                    if (mSlideShowThread.isAlive()) {
-                        mSlideShowThread.interrupt();
-                    } else {
-                        mDispUid = newMailUid;
-                    }
+//                    mIsRepeatUidList = false;
+//                    if (mSlideShowThread.isAlive()) {
+//                        mSlideShowThread.interrupt();
+//                    } else {
+//                    mDispUid = newMailUid;
+//                    }
                     try {
                         onSlideStop(newMailUid);
                     } catch (InterruptedException e) {
                         Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
                     }
-                    mAllUidList.clear();
-                    mAllUidList = getUidList(null, 0);
+//                    mAllUidList.clear();
+//                    mAllUidList = getUidList(null, 0);
                     finish();
+                    Log.d("pgr", "mTimer after finish");
                 }
 
+//                if (!isSlideShow) {
+//                    // サーバーとつながってる状態で新着メールがローカル取り込み完了している場合
+//                    ArrayList<String> newUidList = getUidList(null, mAccount.getMessageLimitCountFromDb());
+//                    for (String uid : newUidList) {
+//                        if (!mAllUidList.contains(uid) && isSlide(uid)) {
+//                            isSlideShow = true;
+////                            mIsRepeatUidList = false;
+////                            if (mSlideShowThread.isAlive()) {
+////                                mSlideShowThread.interrupt();
+////                            } else {
+//                            mDispUid = uid;
+////                            }
+//
+//                            try {
+//                                onSlideStop(newMailUid);
+//                            } catch (InterruptedException e) {
+//                                Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
+//                            }
+////                            mAllUidList.clear();
+////                            mAllUidList = getUidList(null, 0);
+//                            finish();
+//                        }
+//                    }
+//                }
                 if (!isSlideShow) {
-                    // サーバーとつながってる状態で新着メールがローカル取り込み完了している場合
-                    ArrayList<String> newUidList = getUidList(null, mAccount.getMessageLimitCountFromDb());
-                    for (String uid : newUidList) {
-                        if (!mAllUidList.contains(uid) && isSlide(uid)) {
-                            isSlideShow = true;
-                            mIsRepeatUidList = false;
-                            if (mSlideShowThread.isAlive()) {
-                                mSlideShowThread.interrupt();
-                            } else {
-                                mDispUid = uid;
-                            }
-
-                            try {
-                                onSlideStop(newMailUid);
-                            } catch (InterruptedException e) {
-                                Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
-                            }
-                            mAllUidList.clear();
-                            mAllUidList = getUidList(null, 0);
-                            finish();
-                        }
-                    }
-                }
-                if (!isSlideShow) {
+                    Log.d("pgr", "mTimer GallerySlideShow#actionSlideShow");
                     GallerySlideShow.actionSlideShow(mContext, mAccount, mFolder, mDispUid);
                     dismissProgressDialog(mProgressDialog);
                 }
@@ -556,6 +571,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             @Override
             public void run() {
                 try {
+                    Log.d("pgr", "setupSlideShowThread loopInfinite start");
                     loopInfinite();
                 } catch (RakuRakuException e) {
                     Log.e(RakuPhotoMail.LOG_TAG, "GallerySlideShow#onSlide thread Error:" + e);
@@ -572,6 +588,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     @Override
     public void onResume() {
+        Log.d("pgr", "onResume start");
+
         super.onResume();
         if (isOptionMenu) {
             actionSlideShow(mContext, mAccount, mFolder, mDispUid);
@@ -581,6 +599,14 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             if (null != mSlideAllUidList && 0 < mSlideAllUidList.size()) {
                 onSlide();
             }
+        }
+
+        //TODO log
+        if (0 != mAllUidList.size()) {
+            Log.d("pgr", "onResume mAllUidList:" + Arrays.toString(mAllUidList.toArray()));
+        }
+        if (0 != mSlideAllUidList.size()) {
+            Log.d("pgr", "onResume mSlideAllUidList:" + Arrays.toString(mSlideAllUidList.toArray()));
         }
     }
 
@@ -911,6 +937,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     private void onSlideStop(String uid) throws InterruptedException {
+        Log.d("pgr", "onSlideStop start");
+
         startProgressDialogHandler("Please wait", "スライドショーを停止中です。\nしばらくお待ちください。");
         mIsRepeatUidList = false;
         if (mSlideShowThread.isAlive()) {

@@ -176,7 +176,7 @@ public class SlideMessage {
             }
 
         } catch (MessagingException e) {
-            Log.e(RakuPhotoMail.LOG_TAG, "SlideMessage#getMessageInfoList error:" + e);
+            Log.e(RakuPhotoMail.LOG_TAG, "SlideMessage#getMessMessageMdfafaageInfoList error:" + e);
         } finally {
             closeFolder(localFolder);
         }

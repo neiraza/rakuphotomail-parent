@@ -870,8 +870,6 @@ public class MessagingController implements Runnable {
 //        }
 //    }
 
-    //TODO kokokokokokoko
-
     /**
      * Start background synchronization of the specified folder.
      *
