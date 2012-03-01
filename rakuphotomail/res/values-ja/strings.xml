@@ -1234,6 +1234,19 @@
     <string name="account_outgoing_port_hint">送信サーバポート</string>
     <string name="account_setup_names_user_name_hint">送信メールの表示名</string>
     <string name="account_settings_description_hint">アカウント名</string>
+    <string name="progress_please_wait">Please wait</string>
+    <string name="progress_slideshow_server_sync">スライドショー情報をサーバーと同期中です。
+        \n完了次第、スライドショーを開始します。
+        \nしばらくお待ちください。</string>
+    <string name="error_rakuraku_exception">ERROR:RakuRakuException:</string>
+    <string name="error_rakuraku_exception_message">メールサーバーのメール件数取得時に不正な値が返却されました:</string>
+    <string name="error_messaging_exception">ERROR:MessagingException:</string>
+    <string name="warning_server_no_message">現在、サーバー上に受信メールが存在しません</string>
+    <string name="warning_server_no_message_alert">サーバー上にメールが存在しません。\n終了しますか？\n（注）このまま新着メールの待ち受けも可能です。</string>
+    <string name="warning_server_no_message_alert_yes">はい、終了します</string>
+    <string name="warning_server_no_message_alert_no">いいえ、待ち受けます</string>
+
+
 
 
 </resources>

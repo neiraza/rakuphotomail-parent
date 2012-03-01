@@ -155,7 +155,47 @@ public class SlideAttachment {
 
                 message.setFlag(Flag.X_DOWNLOADED_FULL, true);
             }
-        } catch (Exception e) {
+        } catch (MessagingException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage() + " UID:" + uid);
+        } finally {
+            closeFolder(remoteFolder);
+            closeFolder(localFolder);
+        }
+    }
+
+    /**
+     * 添付ファイルをダウンロードする際に、メッセージ毎同期してしまうので注意.
+     * @param account user account
+     * @param folder user IMAP folder
+     * @param remoteMessage user IMAP Server Message
+     */
+    public static void downloadAttachment(final Account account, final String folder, final Message remoteMessage) {
+        Folder remoteFolder = null;
+        LocalStore.LocalFolder localFolder = null;
+        final String uid = remoteMessage.getUid();
+        try {
+            LocalStore localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folder);
+            localFolder.open(Folder.OpenMode.READ_WRITE);
+
+            Message message = localFolder.getMessage(uid);
+            if (!message.isSet(Flag.X_DOWNLOADED_FULL)) {
+                Store remoteStore = account.getRemoteStore();
+                remoteFolder = remoteStore.getFolder(folder);
+                remoteFolder.open(Folder.OpenMode.READ_WRITE);
+
+                FetchProfile fp = new FetchProfile();
+                fp.add(FetchProfile.Item.BODY);
+                remoteFolder.fetch(new Message[]{remoteMessage}, fp, null);
+
+                localFolder.appendMessages(new Message[]{remoteMessage});
+                fp.add(FetchProfile.Item.ENVELOPE);
+                message = localFolder.getMessage(uid);
+                localFolder.fetch(new Message[]{message}, fp, null);
+
+                message.setFlag(Flag.X_DOWNLOADED_FULL, true);
+            }
+        } catch (MessagingException e) {
             Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage() + " UID:" + uid);
         } finally {
             closeFolder(remoteFolder);

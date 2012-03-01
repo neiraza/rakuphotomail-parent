@@ -8,6 +8,7 @@ import android.util.Log;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.mail.*;
+import jp.co.fttx.rakuphotomail.mail.internet.MimeUtility;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
 import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 
@@ -21,6 +22,7 @@ import java.util.HashMap;
 public class MessageSync {
 
     //TODO こいつを封印しよう
+
     /**
      * @param account    User Account Info(Account Class)
      * @param folderName Folder Name(String)
@@ -65,6 +67,7 @@ public class MessageSync {
             Message[] remoteMessageArray = new Message[0];
             HashMap<String, Message> remoteUidMap = new HashMap<String, Message>();
 
+            //TODO ここに創意工夫をこらすか
             if (remoteMessageCount > 0) {
                 int remoteStart = getRemoteStart(remoteMessageCount, messageLimitCountFromRemote);
                 int remoteEnd = remoteMessageCount;
@@ -128,6 +131,33 @@ public class MessageSync {
         return newMailUid;
     }
 
+    public static boolean isSlideRemoteMail(final Account account, final String folder, final Message remoteMessage) throws MessagingException {
+        Folder remoteFolder = null;
+        try {
+            Store remoteStore = account.getRemoteStore();
+            remoteFolder = remoteStore.getFolder(folder);
+
+            remoteFolder.open(Folder.OpenMode.READ_WRITE);
+            FetchProfile fp = new FetchProfile();
+            fp.add(FetchProfile.Item.BODY);
+            remoteFolder.fetch(new Message[]{remoteMessage}, fp, null);
+
+            ArrayList<Part> Unnecessary = new ArrayList<Part>();
+            ArrayList<Part> attachments = new ArrayList<Part>();
+            MimeUtility.collectParts(remoteMessage, Unnecessary, attachments);
+
+            for (Part attachment : attachments) {
+                if (SlideCheck.isSlide(attachment)) {
+                    return true;
+                }
+            }
+            return false;
+        } finally {
+            closeFolder(remoteFolder);
+        }
+    }
+
+
     public static void syncMailbox(Account account, String folderName, int messageLimitCountFromRemote) {
         Log.d("pgr", "syncMailbox start");
 
@@ -143,6 +173,7 @@ public class MessageSync {
             for (Message message : localMessages) {
                 Log.d("pgr", "syncMailbox message.getUid():" + message.getUid());
 
+                //TODO これ使ってなくね？
                 localUidMap.put(message.getUid(), message);
             }
 
@@ -198,6 +229,41 @@ public class MessageSync {
         }
     }
 
+    public static ArrayList<Message> getRemoteAllMessage(final Account account, final String folderName) throws MessagingException, RakuRakuException {
+
+        Folder remoteFolder = null;
+        try {
+            Store remoteStore = account.getRemoteStore();
+            remoteFolder = remoteStore.getFolder(folderName);
+            remoteFolder.open(Folder.OpenMode.READ_WRITE);
+            int remoteMessageCount = remoteFolder.getMessageCount();
+            Message[] remoteMessageArray;
+            ArrayList<Message> allMessageList = new ArrayList<Message>();
+            if (remoteMessageCount > 0) {
+                int remoteStart = 1;
+                int remoteEnd = remoteMessageCount;
+                remoteMessageArray = remoteFolder.getMessages(remoteStart, remoteEnd, null, null);
+                for (Message thisMessage : remoteMessageArray) {
+                    allMessageList.add(thisMessage);
+                }
+                remoteMessageArray = null;
+            } else if (remoteMessageCount < 0) {
+                throw new RakuRakuException("Message count " + remoteMessageCount + " for folder " + folderName);
+            }
+            return allMessageList;
+        } finally {
+            closeFolder(remoteFolder);
+        }
+    }
+
+    public static void syncMail(final Account account, final String folder, final Message remoteMessage) throws MessagingException {
+        Log.d("ahokato", "syncMail start");
+
+        if (!isMessage(account, folder, remoteMessage.getUid())) {
+            SlideAttachment.downloadAttachment(account, folder, remoteMessage);
+        }
+    }
+
     private static int getRemoteStart(int remoteMessageCount, int messageLimitCountFromRemote) {
         if (0 >= messageLimitCountFromRemote) {
             return 1;
@@ -210,6 +276,23 @@ public class MessageSync {
         }
     }
 
+    /**
+     * @param account    User Account Info(Account Class)
+     * @param folderName Folder Name(String)
+     * @throws MessagingException exception
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    public static boolean isMessage(Account account, String folderName, String uid) throws MessagingException {
+        LocalStore.LocalFolder localFolder = null;
+        try {
+            LocalStore localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folderName);
+            return localFolder.isMessage(uid);
+        } finally {
+            closeFolder(localFolder);
+        }
+    }
 
     /**
      * @param account        User Account Info(Account Class)

@@ -1052,7 +1052,7 @@ public class ImapStore extends Store {
 
         @Override
         public void fetch(Message[] messages, FetchProfile fp, MessageRetrievalListener listener)
-                throws MessagingException, RakuRakuException {
+                throws MessagingException {
             if (messages == null || messages.length == 0) {
                 return;
             }
@@ -1583,7 +1583,7 @@ public class ImapStore extends Store {
          * the IMAP server and sets the Message's UID to the new server UID.
          */
         @Override
-        public void appendMessages(Message[] messages) throws RakuRakuException,MessagingException {
+        public void appendMessages(Message[] messages) throws RakuRakuException, MessagingException {
             Log.d("refs1961", "ImapStore#appendMessages");
 
             checkOpen();

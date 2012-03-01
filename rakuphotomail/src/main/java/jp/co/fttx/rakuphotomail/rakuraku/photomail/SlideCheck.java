@@ -5,6 +5,9 @@
 package jp.co.fttx.rakuphotomail.rakuraku.photomail;
 
 import android.util.Log;
+import jp.co.fttx.rakuphotomail.mail.MessagingException;
+import jp.co.fttx.rakuphotomail.mail.Part;
+import jp.co.fttx.rakuphotomail.mail.internet.MimeUtility;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
@@ -18,6 +21,19 @@ import java.util.ArrayList;
 public class SlideCheck {
     private SlideCheck() {
         Log.d("maguro", "SlideCheck Construct");
+    }
+
+    /**
+     * @param part attachment
+     * @return slide OK/NG
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    public static boolean isSlide(Part attachment) throws MessagingException {
+        String mimeType = attachment.getMimeType();
+        String fileName = MimeUtility.unfoldAndDecode(MimeUtility.getHeaderParameter(
+                attachment.getContentType(), "name"));
+        return isSlide(mimeType, fileName);
     }
 
     /**

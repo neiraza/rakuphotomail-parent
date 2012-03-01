@@ -988,7 +988,7 @@ public class LocalStore extends Store implements Serializable {
                     String queryString = "SELECT m.uid FROM messages AS m WHERE EXISTS ( SELECT * FROM attachments AS a WHERE a.content_uri IS NOT NULL AND m.id = a.message_id) ORDER BY m.date DESC";
                     c = db.rawQuery(queryString, null);
                     ArrayList<String> reslut = new ArrayList<String>();
-                    while(c.moveToNext()){
+                    while (c.moveToNext()) {
                         reslut.add(c.getString(0));
                     }
                     return reslut;
@@ -2546,6 +2546,39 @@ public class LocalStore extends Store implements Serializable {
             }
         }
 
+        public boolean isMessage(final String uid) throws MessagingException {
+            try {
+                return database.execute(false, new DbCallback<Boolean>() {
+                    @Override
+                    public Boolean doDbWork(final SQLiteDatabase db) throws WrappedException,
+                            UnavailableStorageException {
+                        try {
+                            open(OpenMode.READ_WRITE);
+                            LocalMessage message = new LocalMessage(uid, LocalFolder.this);
+                            Cursor cursor = null;
+                            int count = 0;
+                            try {
+                                cursor = db.rawQuery("SELECT COUNT(id) FROM messages WHERE uid = ? AND folder_id = ?", new String[]{
+                                        message.getUid(), Long.toString(mFolderId)});
+                                if (cursor.moveToNext()) {
+                                    count = cursor.getInt(0);
+                                }
+                                return count == 0 ? false : true;
+                            } finally {
+                                if (cursor != null) {
+                                    cursor.close();
+                                }
+                            }
+                        } catch (MessagingException e) {
+                            throw new WrappedException(e);
+                        }
+                    }
+                });
+            } catch (WrappedException e) {
+                throw (MessagingException) e.getCause();
+            }
+        }
+
         @Override
         public Message[] getMessages(MessageRetrievalListener listener) throws MessagingException {
             return getMessages(listener, true);
@@ -3441,7 +3474,7 @@ public class LocalStore extends Store implements Serializable {
             return PERMANENT_FLAGS;
         }
 
-            public Boolean clearContentUri(final long attachmentId) throws MessagingException {
+        public Boolean clearContentUri(final long attachmentId) throws MessagingException {
             open(OpenMode.READ_WRITE);
             return database.execute(false, new DbCallback<Boolean>() {
                 @Override
@@ -3562,7 +3595,7 @@ public class LocalStore extends Store implements Serializable {
          * calculateContentPreview Takes a plain text message body as a string.
          * Returns a message summary as a string suitable for showing in a
          * message list
-         * 
+         *
          * A message summary should be about the first 160 characters of unique
          * text written by the message sender Quoted text, "On $date" and so on
          * will be stripped out. All newlines and whitespace will be compressed.
