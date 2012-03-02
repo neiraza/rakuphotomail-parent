@@ -37,11 +37,15 @@ public class SlideMessage {
      * @since rakuphoto 0.1-beta1
      */
     public static LocalStore.LocalMessage getLocalMessage(final Account account, final String folder, final String uid) {
+        Log.d("ahokato", "SlideMessage#getLocalMessage UID:" + uid);
+
         LocalStore.LocalFolder localFolder = null;
         try {
             localFolder = getLocalFolder(null, account, folder);
             LocalStore.LocalMessage message = (LocalStore.LocalMessage) localFolder.getMessage(uid);
-
+            if (null == message) {
+                return null;
+            }
             FetchProfile fp = new FetchProfile();
             fp.add(FetchProfile.Item.ENVELOPE);
             fp.add(FetchProfile.Item.BODY);
@@ -269,6 +273,7 @@ public class SlideMessage {
     }
 
     public static MessageBean getMessage(final Account account, final String folder, final String uid) throws RakuRakuException {
+        Log.d("ahokato", "SlideMessage#getMessage UID:" + uid);
         LocalStore.LocalMessage localMessage = getLocalMessage(account, folder, uid);
         if (null == localMessage) {
             throw new RakuRakuException("SlideMessage#getMesasge localMessage is null...");

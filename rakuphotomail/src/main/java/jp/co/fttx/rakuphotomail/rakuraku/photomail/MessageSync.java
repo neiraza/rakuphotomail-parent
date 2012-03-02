@@ -7,6 +7,8 @@ package jp.co.fttx.rakuphotomail.rakuraku.photomail;
 import android.util.Log;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
+import jp.co.fttx.rakuphotomail.controller.MessagingController;
+import jp.co.fttx.rakuphotomail.controller.MessagingListener;
 import jp.co.fttx.rakuphotomail.mail.*;
 import jp.co.fttx.rakuphotomail.mail.internet.MimeUtility;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
@@ -14,6 +16,9 @@ import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * @author tooru.oguri
@@ -21,7 +26,9 @@ import java.util.HashMap;
  */
 public class MessageSync {
 
-    //TODO こいつを封印しよう
+    private static Set<MessagingListener> mListeners = new CopyOnWriteArraySet<MessagingListener>();
+    private static MessagingListener mListener;
+    private static MessagingController.MemorizingListener memorizingListener = new MessagingController.MemorizingListener();
 
     /**
      * @param account    User Account Info(Account Class)
@@ -246,6 +253,8 @@ public class MessageSync {
                 for (Message thisMessage : remoteMessageArray) {
                     allMessageList.add(thisMessage);
                 }
+                //TODO sortせな
+
                 remoteMessageArray = null;
             } else if (remoteMessageCount < 0) {
                 throw new RakuRakuException("Message count " + remoteMessageCount + " for folder " + folderName);
@@ -256,8 +265,57 @@ public class MessageSync {
         }
     }
 
+    public static String getHighestRemoteUid(final Account account, final String folderName) throws MessagingException, RakuRakuException {
+
+        Folder remoteFolder = null;
+        try {
+            Store remoteStore = account.getRemoteStore();
+            remoteFolder = remoteStore.getFolder(folderName);
+            remoteFolder.open(Folder.OpenMode.READ_WRITE);
+            int remoteMessageCount = remoteFolder.getMessageCount();
+            Message[] remoteMessageArray;
+            ArrayList<String> allUidList = new ArrayList<String>();
+            if (remoteMessageCount > 0) {
+                int remoteStart = 1;
+                int remoteEnd = remoteMessageCount;
+                //TODO 一件だけとかとれんかな
+                remoteMessageArray = remoteFolder.getMessages(remoteEnd, remoteEnd, null, null);
+                for (Message thisMessage : remoteMessageArray) {
+                    allUidList.add(thisMessage.getUid());
+                }
+                remoteMessageArray = null;
+            } else if (remoteMessageCount < 0) {
+                throw new RakuRakuException("Message count " + remoteMessageCount + " for folder " + folderName);
+            }
+            if (!allUidList.isEmpty()) {
+                return allUidList.get(0);
+            } else {
+                return null;
+            }
+        } finally {
+            closeFolder(remoteFolder);
+        }
+    }
+
+    public static void synchronizeMailboxFinished(final Account account, final String folder) throws MessagingException {
+        Log.d("ahokato", "MessageSync#synchronizeMailboxFinished start");
+        mListener.synchronizeMailboxFinished(account, folder, 0, 0);
+    }
+
+    public static void syncMailUseDelegate(final Account account, final String folder, final Message remoteMessage) throws MessagingException {
+        Log.d("ahokato", "MessageSync#syncMailUseDelegate start");
+
+        if (!isMessage(account, folder, remoteMessage.getUid())) {
+            SlideAttachment.downloadAttachment(account, folder, remoteMessage);
+            Log.d("ahokato", "MessageSync#syncMailUseDelegate SlideAttachment#downloadAttachment end");
+
+            Log.d("ahokato", "MessageSync#syncMailUseDelegate synchronizeMailboxFinished");
+            mListener.synchronizeMailboxFinished(account, folder, 0, 0);
+        }
+    }
+
     public static void syncMail(final Account account, final String folder, final Message remoteMessage) throws MessagingException {
-        Log.d("ahokato", "syncMail start");
+        Log.d("ahokato", "MessageSync#syncMail start");
 
         if (!isMessage(account, folder, remoteMessage.getUid())) {
             SlideAttachment.downloadAttachment(account, folder, remoteMessage);
@@ -372,5 +430,40 @@ public class MessageSync {
         if (f != null) {
             f.close();
         }
+    }
+
+    public static void addListeners(MessagingListener listener) {
+        mListeners.add(listener);
+        refreshListener(listener);
+    }
+
+    public static void addListener(MessagingListener listener) {
+        mListener = listener;
+        refreshListener(listener);
+    }
+
+    public static void refreshListener(MessagingListener listener) {
+        if (memorizingListener != null && listener != null) {
+            memorizingListener.refreshOther(listener);
+        }
+    }
+
+    public static void removeListeners(MessagingListener listener) {
+        mListeners.remove(listener);
+    }
+
+    public static void removeListener(MessagingListener listener) {
+        mListener = null;
+    }
+
+    public static Set<MessagingListener> getListeners(MessagingListener listener) {
+        if (listener == null) {
+            return mListeners;
+        }
+
+        Set<MessagingListener> listeners = new HashSet<MessagingListener>(
+                mListeners);
+        listeners.add(listener);
+        return listeners;
     }
 }

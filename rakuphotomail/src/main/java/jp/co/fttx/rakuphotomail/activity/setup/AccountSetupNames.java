@@ -7,6 +7,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.method.TextKeyListener;
 import android.text.method.TextKeyListener.Capitalize;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -16,8 +17,11 @@ import android.widget.Spinner;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
+import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.activity.RakuPhotoActivity;
 import jp.co.fttx.rakuphotomail.helper.Utility;
+import jp.co.fttx.rakuphotomail.mail.MessagingException;
+import jp.co.fttx.rakuphotomail.rakuraku.photomail.MessageSync;
 
 public class AccountSetupNames extends RakuPhotoActivity implements OnClickListener {
     private static final String EXTRA_ACCOUNT = "account";
@@ -48,6 +52,8 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.d("ahokato", "AccountSetupNames#onCreate");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_names);
         mName = (EditText) findViewById(R.id.account_name);
@@ -103,7 +109,7 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
         mSlideSleepTimeDuration.setSelection(2);
         mSlideSleepTimeDuration.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                  mAccount.setSlideSleepTime(Long.parseLong(slideSleepTimeDuration[position]));
+                mAccount.setSlideSleepTime(Long.parseLong(slideSleepTimeDuration[position]));
             }
 
             public void onNothingSelected(AdapterView<?> parent) {
@@ -158,9 +164,16 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
 
     @Override
     protected void onNext() {
+        Log.d("ahokato", "AccountSetupNames#onNext");
+
         mAccount.setDescription(mAccount.getDescription());
         mAccount.setName(mName.getText().toString());
         mAccount.save(Preferences.getPreferences(this));
+        try {
+            MessageSync.synchronizeMailboxFinished(mAccount, mAccount.getInboxFolderName());
+        } catch (MessagingException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, getString(R.string.error_messaging_exception) + e.getMessage());
+        }
         finish();
     }
 

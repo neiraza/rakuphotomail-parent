@@ -5267,7 +5267,7 @@ public class MessagingController implements Runnable {
         return taccount.getDescription() + ":" + tfolderName;
     }
 
-    static class MemorizingListener extends MessagingListener {
+    public static class MemorizingListener extends MessagingListener {
         HashMap<String, Memory> memories = new HashMap<String, Memory>(31);
 
         Memory getMemory(Account account, String folderName) {
@@ -5320,7 +5320,7 @@ public class MessagingController implements Runnable {
             memory.failureMessage = message;
         }
 
-        synchronized void refreshOther(MessagingListener other) {
+        public synchronized void refreshOther(MessagingListener other) {
             if (other != null) {
 
                 Memory syncStarted = null;

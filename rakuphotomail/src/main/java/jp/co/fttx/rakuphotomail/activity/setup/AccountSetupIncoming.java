@@ -63,6 +63,8 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.d("ahokato", "AccountSetupIncoming#onCreate");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_incoming);
 
@@ -257,6 +259,8 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d("ahokato", "AccountSetupIncoming#onActivityResult");
+
         if (resultCode == RESULT_OK) {
             if (Intent.ACTION_EDIT.equals(getIntent().getAction())) {
                 mAccount.save(Preferences.getPreferences(this));
@@ -287,6 +291,8 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
 
     @Override
     protected void onNext() {
+        Log.d("ahokato", "AccountSetupIncoming#onNext");
+
         try {
             int securityType = (Integer) ((SpinnerOption) mSecurityTypeView
                     .getSelectedItem()).value;

@@ -138,7 +138,7 @@ public class SlideAttachment {
             localFolder.open(Folder.OpenMode.READ_WRITE);
 
             Message message = localFolder.getMessage(uid);
-            if (!message.isSet(Flag.X_DOWNLOADED_FULL)) {
+            if (null != message && !message.isSet(Flag.X_DOWNLOADED_FULL)) {
                 Store remoteStore = account.getRemoteStore();
                 remoteFolder = remoteStore.getFolder(folder);
                 remoteFolder.open(Folder.OpenMode.READ_WRITE);
@@ -165,21 +165,27 @@ public class SlideAttachment {
 
     /**
      * 添付ファイルをダウンロードする際に、メッセージ毎同期してしまうので注意.
-     * @param account user account
-     * @param folder user IMAP folder
+     *
+     * @param account       user account
+     * @param folder        user IMAP folder
      * @param remoteMessage user IMAP Server Message
      */
     public static void downloadAttachment(final Account account, final String folder, final Message remoteMessage) {
+        Log.d("ahokato", "SlideAttachment#downloadAttachment start");
         Folder remoteFolder = null;
         LocalStore.LocalFolder localFolder = null;
         final String uid = remoteMessage.getUid();
+        Log.d("ahokato", "SlideAttachment#downloadAttachment uid:" + uid);
+
         try {
             LocalStore localStore = account.getLocalStore();
             localFolder = localStore.getFolder(folder);
             localFolder.open(Folder.OpenMode.READ_WRITE);
 
             Message message = localFolder.getMessage(uid);
-            if (!message.isSet(Flag.X_DOWNLOADED_FULL)) {
+            Log.d("ahokato", "SlideAttachment#downloadAttachment message:" + message);
+
+            if (null == message || !message.isSet(Flag.X_DOWNLOADED_FULL)) {
                 Store remoteStore = account.getRemoteStore();
                 remoteFolder = remoteStore.getFolder(folder);
                 remoteFolder.open(Folder.OpenMode.READ_WRITE);

@@ -1,4 +1,3 @@
-
 package jp.co.fttx.rakuphotomail.activity.setup;
 
 import android.app.Activity;
@@ -15,29 +14,30 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import jp.co.fttx.rakuphotomail.*;
+import jp.co.fttx.rakuphotomail.Account;
+import jp.co.fttx.rakuphotomail.Preferences;
+import jp.co.fttx.rakuphotomail.R;
+import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.activity.RakuPhotoActivity;
 import jp.co.fttx.rakuphotomail.controller.MessagingController;
-import jp.co.fttx.rakuphotomail.mail.AuthenticationFailedException;
-import jp.co.fttx.rakuphotomail.mail.CertificateValidationException;
-import jp.co.fttx.rakuphotomail.mail.Store;
-import jp.co.fttx.rakuphotomail.mail.Transport;
+import jp.co.fttx.rakuphotomail.mail.*;
+import jp.co.fttx.rakuphotomail.mail.filter.Hex;
 import jp.co.fttx.rakuphotomail.mail.store.TrustManagerFactory;
 import jp.co.fttx.rakuphotomail.mail.store.WebDavStore;
-import jp.co.fttx.rakuphotomail.mail.filter.Hex;
+import jp.co.fttx.rakuphotomail.rakuraku.photomail.MessageSync;
 
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.X509Certificate;
-import java.security.NoSuchAlgorithmException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.List;
 
 /**
  * Checks the given settings to make sure that they can be used to send and
  * receive mail.
- *
+ * <p/>
  * XXX NOTE: The manifest for this app has it ignore config changes, because
  * it doesn't correctly deal with restarting while its thread is running.
  */
@@ -78,11 +78,13 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.d("ahokato", "AccountSetupCheckSettings#onCreate");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_check_settings);
-        mMessageView = (TextView)findViewById(R.id.message);
-        mProgressBar = (ProgressBar)findViewById(R.id.progress);
-        ((Button)findViewById(R.id.cancel)).setOnClickListener(this);
+        mMessageView = (TextView) findViewById(R.id.message);
+        mProgressBar = (ProgressBar) findViewById(R.id.progress);
+        ((Button) findViewById(R.id.cancel)).setOnClickListener(this);
 
         setMessage(R.string.account_setup_check_settings_retr_info_msg);
         mProgressBar.setIndeterminate(true);
@@ -106,6 +108,8 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                         return;
                     }
                     if (mCheckIncoming) {
+                        Log.d("ahokato", "AccountSetupCheckSettings#onCreate mCheckIncoming");
+
                         store = mAccount.getRemoteStore();
 
                         if (store instanceof WebDavStore) {
@@ -118,8 +122,24 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                         if (store instanceof WebDavStore) {
                             setMessage(R.string.account_setup_check_settings_fetch);
                         }
+
                         MessagingController.getInstance(getApplication()).listFoldersSynchronous(mAccount, true, null);
-                        MessagingController.getInstance(getApplication()).synchronizeMailbox(mAccount, mAccount.getInboxFolderName(), null, null);
+
+                        Folder remoteFolder = null;
+                        Store remoteStore = mAccount.getRemoteStore();
+                        String folder = mAccount.getInboxFolderName();
+                        remoteFolder = remoteStore.getFolder(folder);
+                        remoteFolder.open(Folder.OpenMode.READ_WRITE);
+                        String uid = MessageSync.getHighestRemoteUid(mAccount, folder);
+                        Log.d("ahokato", "AccountSetupCheckSetting#onCreate highest uid:" + uid);
+                        Message remoteMessage = null;
+                        if (null == uid) {
+                            remoteMessage = null;
+                        } else {
+                            remoteMessage = remoteFolder.getMessage(uid);
+                        }
+//                        MessageSync.syncMailUseDelegate(mAccount, folder, remoteMessage);
+//                        MessagingController.getInstance(getApplication()).synchronizeMailbox(mAccount, mAccount.getInboxFolderName(), null, null);
                     }
                     if (mDestroyed) {
                         return;
@@ -129,6 +149,8 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                         return;
                     }
                     if (mCheckOutgoing) {
+                        Log.d("ahokato", "AccountSetupCheckSettings#onCreate mCheckOutgoing");
+
                         if (!(mAccount.getRemoteStore() instanceof WebDavStore)) {
                             setMessage(R.string.account_setup_check_settings_check_outgoing_msg);
                         }
@@ -149,24 +171,24 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                 } catch (final AuthenticationFailedException afe) {
                     Log.e(RakuPhotoMail.LOG_TAG, "Error while testing settings", afe);
                     showErrorDialog(
-                        R.string.account_setup_failed_dlg_auth_message_fmt,
-                        afe.getMessage() == null ? "" : afe.getMessage());
+                            R.string.account_setup_failed_dlg_auth_message_fmt,
+                            afe.getMessage() == null ? "" : afe.getMessage());
                 } catch (final CertificateValidationException cve) {
                     Log.e(RakuPhotoMail.LOG_TAG, "Error while testing settings", cve);
                     acceptKeyDialog(
-                        R.string.account_setup_failed_dlg_certificate_message_fmt,
-                        cve);
+                            R.string.account_setup_failed_dlg_certificate_message_fmt,
+                            cve);
                 } catch (final Throwable t) {
                     Log.e(RakuPhotoMail.LOG_TAG, "Error while testing settings", t);
                     showErrorDialog(
-                        R.string.account_setup_failed_dlg_server_message_fmt,
-                        (t.getMessage() == null ? "" : t.getMessage()));
+                            R.string.account_setup_failed_dlg_server_message_fmt,
+                            (t.getMessage() == null ? "" : t.getMessage()));
 
                 }
             }
 
         }
-        .start();
+                .start();
     }
 
     @Override
@@ -195,30 +217,31 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                 }
                 mProgressBar.setIndeterminate(false);
                 new AlertDialog.Builder(AccountSetupCheckSettings.this)
-                .setTitle(getString(R.string.account_setup_failed_dlg_title))
-                .setMessage(getString(msgResId, args))
-                .setCancelable(true)
-                .setNegativeButton(
-                    getString(R.string.account_setup_failed_dlg_continue_action),
+                        .setTitle(getString(R.string.account_setup_failed_dlg_title))
+                        .setMessage(getString(msgResId, args))
+                        .setCancelable(true)
+                        .setNegativeButton(
+                                getString(R.string.account_setup_failed_dlg_continue_action),
 
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        mCanceled = false;
-                        setResult(RESULT_OK);
-                        finish();
-                    }
-                })
-                .setPositiveButton(
-                    getString(R.string.account_setup_failed_dlg_edit_details_action),
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                })
-                .show();
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        mCanceled = false;
+                                        setResult(RESULT_OK);
+                                        finish();
+                                    }
+                                })
+                        .setPositiveButton(
+                                getString(R.string.account_setup_failed_dlg_edit_details_action),
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        finish();
+                                    }
+                                })
+                        .show();
             }
         });
     }
+
     private void acceptKeyDialog(final int msgResId, final Object... args) {
         mHandler.post(new Runnable() {
             public void run() {
@@ -228,7 +251,7 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                 final X509Certificate[] chain = TrustManagerFactory.getLastCertChain();
                 String exMessage = "Unknown Error";
 
-                Exception ex = ((Exception)args[0]);
+                Exception ex = ((Exception) args[0]);
                 if (ex != null) {
                     if (ex.getCause() != null) {
                         if (ex.getCause().getCause() != null) {
@@ -252,7 +275,7 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                 }
                 for (int i = 0; i < chain.length; i++) {
                     // display certificate chain information
-                	//TODO: localize this strings
+                    //TODO: localize this strings
                     chainInfo.append("Certificate chain[" + i + "]:\n");
                     chainInfo.append("Subject: " + chain[i].getSubjectDN().toString() + "\n");
 
@@ -261,68 +284,68 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                     //  by a subjectDN not matching the server even though a
                     //  SubjectAltName matches)
                     try {
-						final Collection<List<?>> subjectAlternativeNames = chain[i].getSubjectAlternativeNames();
-						if (subjectAlternativeNames != null) {
-							// The list of SubjectAltNames may be very long
-		                	//TODO: localize this string
-							StringBuffer altNamesText = new StringBuffer("Subject has " + subjectAlternativeNames.size() + " alternative names\n");
+                        final Collection<List<?>> subjectAlternativeNames = chain[i].getSubjectAlternativeNames();
+                        if (subjectAlternativeNames != null) {
+                            // The list of SubjectAltNames may be very long
+                            //TODO: localize this string
+                            StringBuffer altNamesText = new StringBuffer("Subject has " + subjectAlternativeNames.size() + " alternative names\n");
 
-							// we need these for matching
-							String storeURIHost = (Uri.parse(mAccount.getStoreUri())).getHost();
-							String transportURIHost = (Uri.parse(mAccount.getTransportUri())).getHost();
+                            // we need these for matching
+                            String storeURIHost = (Uri.parse(mAccount.getStoreUri())).getHost();
+                            String transportURIHost = (Uri.parse(mAccount.getTransportUri())).getHost();
 
-							for (List<?> subjectAlternativeName : subjectAlternativeNames) {
-								Integer type = (Integer)subjectAlternativeName.get(0);
-							    Object value = subjectAlternativeName.get(1);
-							    String name = "";
-							    switch (type.intValue()) {
-							      case 0:
-							    	  Log.w(RakuPhotoMail.LOG_TAG, "SubjectAltName of type OtherName not supported.");
-							    	  continue;
-							      case 1: // RFC822Name
-							    	  name = (String)value;
-							        break;
-							      case 2:  // DNSName
-							    	  name = (String)value;
-							        break;
-							      case 3:
-							    	  Log.w(RakuPhotoMail.LOG_TAG, "unsupported SubjectAltName of type x400Address");
-							    	  continue;
-							      case 4:
-							    	  Log.w(RakuPhotoMail.LOG_TAG, "unsupported SubjectAltName of type directoryName");
-							    	  continue;
-							      case 5:
-							    	  Log.w(RakuPhotoMail.LOG_TAG, "unsupported SubjectAltName of type ediPartyName");
-							    	  continue;
-							      case 6:  // Uri
-							    	  name = (String)value;
-							        break;
-							      case 7: // ip-address
-							    	  name = (String)value;
-							        break;
-							      default:
-							    	  Log.w(RakuPhotoMail.LOG_TAG, "unsupported SubjectAltName of unknown type");
-							    	  continue;
-							   }
+                            for (List<?> subjectAlternativeName : subjectAlternativeNames) {
+                                Integer type = (Integer) subjectAlternativeName.get(0);
+                                Object value = subjectAlternativeName.get(1);
+                                String name = "";
+                                switch (type.intValue()) {
+                                    case 0:
+                                        Log.w(RakuPhotoMail.LOG_TAG, "SubjectAltName of type OtherName not supported.");
+                                        continue;
+                                    case 1: // RFC822Name
+                                        name = (String) value;
+                                        break;
+                                    case 2:  // DNSName
+                                        name = (String) value;
+                                        break;
+                                    case 3:
+                                        Log.w(RakuPhotoMail.LOG_TAG, "unsupported SubjectAltName of type x400Address");
+                                        continue;
+                                    case 4:
+                                        Log.w(RakuPhotoMail.LOG_TAG, "unsupported SubjectAltName of type directoryName");
+                                        continue;
+                                    case 5:
+                                        Log.w(RakuPhotoMail.LOG_TAG, "unsupported SubjectAltName of type ediPartyName");
+                                        continue;
+                                    case 6:  // Uri
+                                        name = (String) value;
+                                        break;
+                                    case 7: // ip-address
+                                        name = (String) value;
+                                        break;
+                                    default:
+                                        Log.w(RakuPhotoMail.LOG_TAG, "unsupported SubjectAltName of unknown type");
+                                        continue;
+                                }
 
-							    // if some of the SubjectAltNames match the store or transport -host,
-							    // display them
-							    if (name.equalsIgnoreCase(storeURIHost) || name.equalsIgnoreCase(transportURIHost)) {
-				                	//TODO: localize this string
-        	                        altNamesText.append("Subject(alt): " + name + ",...\n");
-							    } else if (name.startsWith("*.")) {
-							    	if (storeURIHost.endsWith(name.substring(2)) || transportURIHost.endsWith(name.substring(2))) {
-					                	//TODO: localize this string
-							    		altNamesText.append("Subject(alt): " + name + ",...\n");
-							    	}
-							    }
-							}
-							chainInfo.append(altNamesText);
-						}
-					} catch (Exception e1) {
-						// don't fail just because of subjectAltNames
-						Log.w(RakuPhotoMail.LOG_TAG, "cannot display SubjectAltNames in dialog", e1);
-					}
+                                // if some of the SubjectAltNames match the store or transport -host,
+                                // display them
+                                if (name.equalsIgnoreCase(storeURIHost) || name.equalsIgnoreCase(transportURIHost)) {
+                                    //TODO: localize this string
+                                    altNamesText.append("Subject(alt): " + name + ",...\n");
+                                } else if (name.startsWith("*.")) {
+                                    if (storeURIHost.endsWith(name.substring(2)) || transportURIHost.endsWith(name.substring(2))) {
+                                        //TODO: localize this string
+                                        altNamesText.append("Subject(alt): " + name + ",...\n");
+                                    }
+                                }
+                            }
+                            chainInfo.append(altNamesText);
+                        }
+                    } catch (Exception e1) {
+                        // don't fail just because of subjectAltNames
+                        Log.w(RakuPhotoMail.LOG_TAG, "cannot display SubjectAltNames in dialog", e1);
+                    }
 
                     chainInfo.append("Issuer: " + chain[i].getIssuerDN().toString() + "\n");
                     if (sha1 != null) {
@@ -337,42 +360,42 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                 }
 
                 new AlertDialog.Builder(AccountSetupCheckSettings.this)
-                .setTitle(getString(R.string.account_setup_failed_dlg_invalid_certificate_title))
-                //.setMessage(getString(R.string.account_setup_failed_dlg_invalid_certificate)
-                .setMessage(getString(msgResId, exMessage)
-                            + " " + chainInfo.toString()
-                           )
-                .setCancelable(true)
-                .setPositiveButton(
-                    getString(R.string.account_setup_failed_dlg_invalid_certificate_accept),
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        try {
-                            String alias = mAccount.getUuid();
-                            if (mCheckIncoming) {
-                                alias = alias + ".incoming";
-                            }
-                            if (mCheckOutgoing) {
-                                alias = alias + ".outgoing";
-                            }
-                            TrustManagerFactory.addCertificateChain(alias, chain);
-                        } catch (CertificateException e) {
-                            showErrorDialog(
-                                R.string.account_setup_failed_dlg_certificate_message_fmt,
-                                e.getMessage() == null ? "" : e.getMessage());
-                        }
-                        AccountSetupCheckSettings.actionCheckSettings(AccountSetupCheckSettings.this, mAccount,
-                                mCheckIncoming, mCheckOutgoing);
-                    }
-                })
-                .setNegativeButton(
-                    getString(R.string.account_setup_failed_dlg_invalid_certificate_reject),
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                })
-                .show();
+                        .setTitle(getString(R.string.account_setup_failed_dlg_invalid_certificate_title))
+                                //.setMessage(getString(R.string.account_setup_failed_dlg_invalid_certificate)
+                        .setMessage(getString(msgResId, exMessage)
+                                + " " + chainInfo.toString()
+                        )
+                        .setCancelable(true)
+                        .setPositiveButton(
+                                getString(R.string.account_setup_failed_dlg_invalid_certificate_accept),
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        try {
+                                            String alias = mAccount.getUuid();
+                                            if (mCheckIncoming) {
+                                                alias = alias + ".incoming";
+                                            }
+                                            if (mCheckOutgoing) {
+                                                alias = alias + ".outgoing";
+                                            }
+                                            TrustManagerFactory.addCertificateChain(alias, chain);
+                                        } catch (CertificateException e) {
+                                            showErrorDialog(
+                                                    R.string.account_setup_failed_dlg_certificate_message_fmt,
+                                                    e.getMessage() == null ? "" : e.getMessage());
+                                        }
+                                        AccountSetupCheckSettings.actionCheckSettings(AccountSetupCheckSettings.this, mAccount,
+                                                mCheckIncoming, mCheckOutgoing);
+                                    }
+                                })
+                        .setNegativeButton(
+                                getString(R.string.account_setup_failed_dlg_invalid_certificate_reject),
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        finish();
+                                    }
+                                })
+                        .show();
             }
         });
     }
@@ -391,9 +414,9 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
 
     public void onClick(View v) {
         switch (v.getId()) {
-        case R.id.cancel:
-            onCancel();
-            break;
+            case R.id.cancel:
+                onCancel();
+                break;
         }
     }
 }
