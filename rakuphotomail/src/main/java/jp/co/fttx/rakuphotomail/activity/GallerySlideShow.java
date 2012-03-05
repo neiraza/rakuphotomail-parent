@@ -23,6 +23,7 @@ import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
+import jp.co.fttx.rakuphotomail.controller.MessageUidComparator;
 import jp.co.fttx.rakuphotomail.mail.MessagingException;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
@@ -34,6 +35,9 @@ import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideMessage;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * @author tooru.oguri
@@ -389,6 +393,13 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             //TODO onCreateでやるべきか、onResumeでやるべきか
             //スライド対象外も含めた全件リスト
             mAllMessageList = MessageSync.getRemoteAllMessage(mAccount, mAccount.getInboxFolderName());
+            for (jp.co.fttx.rakuphotomail.mail.Message message : mAllMessageList) {
+                Log.d("ahokato", "GallerySlideShow#onResume sort before:" + message.getUid());
+            }
+            doSort(mAllMessageList, new MessageUidComparator());
+            for (jp.co.fttx.rakuphotomail.mail.Message message : mAllMessageList) {
+                Log.d("ahokato", "GallerySlideShow#onResume sort after:" + message.getUid());
+            }
             if (mAllMessageList.isEmpty()) {
                 Log.w(RakuPhotoMail.LOG_TAG, getString(R.string.warning_server_no_message));
 //                dismissProgressDialog(mProgressDialog);
@@ -551,6 +562,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         setVisibilityImageView().setImageBitmap(mBitmap);
     }
 
+    private void doSort(List list, Comparator comparator) {
+        Collections.sort(list, comparator);
+    }
 
     @Override
     public void onClick(View v) {
