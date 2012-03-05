@@ -1249,6 +1249,7 @@
         \nしばらくお待ちください。</string>
     <string name="progress_slideshow_start">スライドショーを開始しようとしています。
         \nしばらくお待ちください。</string>
-
+    <string name="progress_slideshow_stop">スライドショーを停止しようとしています。
+        \nしばらくお待ちください。</string>
 
 </resources>
