@@ -1245,8 +1245,10 @@
     <string name="warning_server_no_message_alert">サーバー上にメールが存在しません。\n終了しますか？\n（注）このまま新着メールの待ち受けも可能です。</string>
     <string name="warning_server_no_message_alert_yes">はい、終了します</string>
     <string name="warning_server_no_message_alert_no">いいえ、待ち受けます</string>
-
-
+    <string name="progress_slideshow_disp_preparation">スライドショーを表示しようとしています。
+        \nしばらくお待ちください。</string>
+    <string name="progress_slideshow_start">スライドショーを開始しようとしています。
+        \nしばらくお待ちください。</string>
 
 
 </resources>

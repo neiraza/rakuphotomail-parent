@@ -37,7 +37,6 @@ public class SlideMessage {
      * @since rakuphoto 0.1-beta1
      */
     public static LocalStore.LocalMessage getLocalMessage(final Account account, final String folder, final String uid) {
-        Log.d("ahokato", "SlideMessage#getLocalMessage UID:" + uid);
 
         LocalStore.LocalFolder localFolder = null;
         try {
@@ -273,7 +272,6 @@ public class SlideMessage {
     }
 
     public static MessageBean getMessage(final Account account, final String folder, final String uid) throws RakuRakuException {
-        Log.d("ahokato", "SlideMessage#getMessage UID:" + uid);
         LocalStore.LocalMessage localMessage = getLocalMessage(account, folder, uid);
         if (null == localMessage) {
             throw new RakuRakuException("SlideMessage#getMesasge localMessage is null...");
@@ -346,12 +344,12 @@ public class SlideMessage {
         return messageBean;
     }
 
-    public static String getNextUid(final Account account, final String folder, final String uid) throws RakuRakuException {
+    public static String getNextUid(final Account account, final String folder, final String uid) {
         LocalStore.LocalMessage localMessage = getNextLocalMessage(account, folder, uid);
         return localMessage.getUid();
     }
 
-    public static String getPreUid(final Account account, final String folder, final String uid) throws RakuRakuException {
+    public static String getPreUid(final Account account, final String folder, final String uid) {
         LocalStore.LocalMessage localMessage = getPreLocalMessage(account, folder, uid);
         return localMessage.getUid();
     }

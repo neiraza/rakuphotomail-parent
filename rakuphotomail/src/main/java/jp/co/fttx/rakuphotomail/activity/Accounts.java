@@ -18,6 +18,7 @@ public class Accounts extends RakuPhotoActivity implements OnClickListener {
     private Context mContext;
     private Button mNext;
     private ProgressDialog mDialog;
+    private ProgressDialog mProgressDialog;
 
     private Account mAccount;
 
@@ -48,8 +49,6 @@ public class Accounts extends RakuPhotoActivity implements OnClickListener {
             Log.d("ahokato", "Accounts#synchronizeMailboxFinished");
             GallerySlideShow.actionSlideShow(mContext, accounts[0], accounts[0].getInboxFolderName(), null);
             finish();
-//            startActivity(new Intent(mContext, Accounts.class));
-//            finish();
         }
 
         @Override
@@ -73,13 +72,14 @@ public class Accounts extends RakuPhotoActivity implements OnClickListener {
         super.onCreate(icicle);
         mContext = this;
         setContentView(R.layout.accounts);
+        mProgressDialog = new ProgressDialog(mContext);
         Account[] accounts = Preferences.getPreferences(this).getAccounts();
         if (accounts.length == 1 && accounts[0].isAvailable(this)) {
             Log.d("ahokato", "Accounts#onCreate GallerySlideShow start!");
             GallerySlideShow.actionSlideShow(this, accounts[0], accounts[0].getInboxFolderName(), null);
             finish();
         }
-         mNext = (Button)findViewById(R.id.next);
+        mNext = (Button) findViewById(R.id.next);
         mNext.setOnClickListener(this);
     }
 
@@ -105,23 +105,44 @@ public class Accounts extends RakuPhotoActivity implements OnClickListener {
         super.onPause();
         MessagingController.getInstance(getApplication()).removeListener(
                 mListener);
-//        MessageSync.removeListener(mListener);
+//        MessageSync.rem   oveListener(mListener);
     }
 
     private void onAddNewAccount() {
+        setUpProgressDialog(mProgressDialog, getString(R.string.progress_please_wait), getString(R.string.progress_slideshow_start));
         AccountSetupBasics.actionNewAccount(this);
         mNext.setEnabled(false);
-        mDialog = new ProgressDialog(mContext);
-        mDialog.setTitle("Please wait");
-        mDialog.setMessage("現在、設定を読み込み中です。");
-        mDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        mDialog.setCancelable(true);
-        mDialog.setMax(100);
-        mDialog.setProgress(0);
-        mDialog.show();
     }
 
     public void onClick(View view) {
         onAddNewAccount();
+    }
+
+    /**
+     * @param progressDialog progressDialog
+     * @param title          title
+     * @param message        message
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private void setUpProgressDialog(ProgressDialog progressDialog, String title, String message) {
+        if (!progressDialog.isShowing()) {
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progressDialog.setTitle(title);
+            progressDialog.setMessage(message);
+            progressDialog.setCancelable(true);
+            progressDialog.show();
+        }
+    }
+
+    /**
+     * @param progressDialog progressDialog
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private void dismissProgressDialog(ProgressDialog progressDialog) {
+        if (progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
     }
 }
