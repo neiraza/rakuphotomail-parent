@@ -101,11 +101,9 @@ public class Accounts extends RakuPhotoActivity implements OnClickListener {
     @Override
     public void onPause() {
         Log.d("ahokato", "Accounts#onPause");
-
         super.onPause();
         MessagingController.getInstance(getApplication()).removeListener(
                 mListener);
-//        MessageSync.rem   oveListener(mListener);
     }
 
     private void onAddNewAccount() {

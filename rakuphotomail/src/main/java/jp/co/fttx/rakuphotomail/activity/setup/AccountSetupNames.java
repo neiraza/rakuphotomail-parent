@@ -1,5 +1,6 @@
 package jp.co.fttx.rakuphotomail.activity.setup;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -44,6 +45,8 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
     private String[] ratioValues;
     private String[] downloadSize;
 
+    private ProgressDialog mProgressDialog;
+
     public static void actionSetNames(Context context, Account account) {
         Intent i = new Intent(context, AccountSetupNames.class);
         i.putExtra(EXTRA_ACCOUNT, account.getUuid());
@@ -59,6 +62,7 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
         mName = (EditText) findViewById(R.id.account_name);
         mDoneButton = (Button) findViewById(R.id.done);
         mDoneButton.setOnClickListener(this);
+        mProgressDialog = new ProgressDialog(this);
 
         TextWatcher validationTextWatcher = new TextWatcher() {
             public void afterTextChanged(Editable s) {
@@ -142,8 +146,7 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
             }
         });
 
-
-        /* Donwload Size / mail  */
+        /* Download Size / mail  */
         downloadSize = getResources().getStringArray(R.array.account_settings_download_message_size_values);
         mDownloadSize = (Spinner) findViewById(R.id.account_option_download_message_size);
         mDownloadSize.setSelection(3);
@@ -165,7 +168,7 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
     @Override
     protected void onNext() {
         Log.d("ahokato", "AccountSetupNames#onNext");
-
+        setUpProgressDialog(mProgressDialog,"TEST","TEST");
         mAccount.setDescription(mAccount.getDescription());
         mAccount.setName(mName.getText().toString());
         mAccount.save(Preferences.getPreferences(this));
@@ -174,6 +177,7 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
         } catch (MessagingException e) {
             Log.e(RakuPhotoMail.LOG_TAG, getString(R.string.error_messaging_exception) + e.getMessage());
         }
+        dismissProgressDialog(mProgressDialog);
         finish();
     }
 
@@ -182,6 +186,34 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
             case R.id.done:
                 onNext();
                 break;
+        }
+    }
+
+    /**
+     * @param progressDialog progressDialog
+     * @param title          title
+     * @param message        message
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private void setUpProgressDialog(ProgressDialog progressDialog, String title, String message) {
+        if (!progressDialog.isShowing()) {
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progressDialog.setTitle(title);
+            progressDialog.setMessage(message);
+            progressDialog.setCancelable(true);
+            progressDialog.show();
+        }
+    }
+
+    /**
+     * @param progressDialog progressDialog
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private void dismissProgressDialog(ProgressDialog progressDialog) {
+        if (null != progressDialog && progressDialog.isShowing()) {
+            progressDialog.dismiss();
         }
     }
 }

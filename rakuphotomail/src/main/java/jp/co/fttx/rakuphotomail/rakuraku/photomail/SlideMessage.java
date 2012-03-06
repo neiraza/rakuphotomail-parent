@@ -272,6 +272,7 @@ public class SlideMessage {
     }
 
     public static MessageBean getMessage(final Account account, final String folder, final String uid) throws RakuRakuException {
+        Log.d("ahokato", "SlideMessage#getMessage start uid:" + uid);
         LocalStore.LocalMessage localMessage = getLocalMessage(account, folder, uid);
         if (null == localMessage) {
             throw new RakuRakuException("SlideMessage#getMesasge localMessage is null...");

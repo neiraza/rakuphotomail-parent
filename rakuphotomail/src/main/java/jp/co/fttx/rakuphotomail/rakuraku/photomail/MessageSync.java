@@ -12,6 +12,7 @@ import jp.co.fttx.rakuphotomail.controller.MessagingListener;
 import jp.co.fttx.rakuphotomail.mail.*;
 import jp.co.fttx.rakuphotomail.mail.internet.MimeUtility;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
+import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
 import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 
 import java.util.ArrayList;
@@ -253,8 +254,6 @@ public class MessageSync {
                 for (Message thisMessage : remoteMessageArray) {
                     allMessageList.add(thisMessage);
                 }
-                //TODO sortせな
-
                 remoteMessageArray = null;
             } else if (remoteMessageCount < 0) {
                 throw new RakuRakuException("Message count " + remoteMessageCount + " for folder " + folderName);
@@ -264,6 +263,32 @@ public class MessageSync {
             closeFolder(remoteFolder);
         }
     }
+
+//    public static ArrayList<String> getRemoteAllUid(final Account account, final String folderName) throws MessagingException, RakuRakuException {
+//        Folder remoteFolder = null;
+//        try {
+//            Store remoteStore = account.getRemoteStore();
+//            remoteFolder = remoteStore.getFolder(folderName);
+//            remoteFolder.open(Folder.OpenMode.READ_WRITE);
+//            int remoteMessageCount = remoteFolder.getMessageCount();
+//            Message[] remoteMessageArray;
+//            ArrayList<String> result = new ArrayList<String>();
+//            if (remoteMessageCount > 0) {
+//                int remoteStart = 1;
+//                int remoteEnd = remoteMessageCount;
+//                remoteMessageArray = remoteFolder.getMessages(remoteStart, remoteEnd, null, null);
+//                for (Message thisMessage : remoteMessageArray) {
+//                    result.add(thisMessage.getUid());
+//                }
+//                remoteMessageArray = null;
+//            } else if (remoteMessageCount < 0) {
+//                throw new RakuRakuException("Message count " + remoteMessageCount + " for folder " + folderName);
+//            }
+//            return result;
+//        } finally {
+//            closeFolder(remoteFolder);
+//        }
+//    }
 
     public static String getHighestRemoteUid(final Account account, final String folderName) throws MessagingException, RakuRakuException {
 
@@ -302,24 +327,28 @@ public class MessageSync {
         mListener.synchronizeMailboxFinished(account, folder, 0, 0);
     }
 
-    public static void syncMailUseDelegate(final Account account, final String folder, final Message remoteMessage) throws MessagingException {
-        Log.d("ahokato", "MessageSync#syncMailUseDelegate start");
+//    public static void syncMailUseDelegate(final Account account, final String folder, final Message remoteMessage) throws MessagingException {
+//        Log.d("ahokato", "MessageSync#syncMailUseDelegate start");
+//
+//        if (!isMessage(account, folder, remoteMessage.getUid())) {
+//            SlideAttachment.downloadAttachment(account, folder, remoteMessage);
+//            Log.d("ahokato", "MessageSync#syncMailUseDelegate SlideAttachment#downloadAttachment end");
+//
+//            Log.d("ahokato", "MessageSync#syncMailUseDelegate synchronizeMailboxFinished");
+//            mListener.synchronizeMailboxFinished(account, folder, 0, 0);
+//        }
+//    }
 
-        if (!isMessage(account, folder, remoteMessage.getUid())) {
-            SlideAttachment.downloadAttachment(account, folder, remoteMessage);
-            Log.d("ahokato", "MessageSync#syncMailUseDelegate SlideAttachment#downloadAttachment end");
-
-            Log.d("ahokato", "MessageSync#syncMailUseDelegate synchronizeMailboxFinished");
-            mListener.synchronizeMailboxFinished(account, folder, 0, 0);
+    public static void syncMailForAttachmentDownload(final Account account, final String folder, final MessageBean messageBean) throws MessagingException {
+        Log.d("ahokato", "MessageSync#syncMail(final Account account, final String folder, final MessageBean messageBean)");
+        if (isMessage(account, folder, messageBean.getUid()) && !SlideCheck.isDownloadedAttachment(messageBean)) {
+            SlideAttachment.downloadAttachment(account, folder, messageBean.getUid());
         }
     }
 
-    public static void syncMail(final Account account, final String folder, final Message remoteMessage) throws MessagingException {
-        Log.d("ahokato", "MessageSync#syncMail start");
-
-        if (!isMessage(account, folder, remoteMessage.getUid())) {
-            SlideAttachment.downloadAttachment(account, folder, remoteMessage);
-        }
+    public static void syncMail(final Account account, final String folder, final String uid) throws MessagingException {
+        Log.d("ahokato", "MessageSync#syncMail(final Account account, final String folder, final String uid) uid:" + uid);
+        SlideAttachment.downloadAttachment(account, folder, uid);
     }
 
     private static int getRemoteStart(int remoteMessageCount, int messageLimitCountFromRemote) {
@@ -465,5 +494,79 @@ public class MessageSync {
                 mListeners);
         listeners.add(listener);
         return listeners;
+    }
+
+    /**
+     * [Account#getAttachmentCacheLimitCount() / 2] Cache Delete
+     *
+     * @param account user account
+     * @param folder  imap folder
+     * @param dispUid current dispUid
+     * @throws MessagingException me
+     * @throws RakuRakuException  rre
+     */
+    public static void removeCache(Account account, String folder, String dispUid) throws MessagingException, RakuRakuException {
+        Log.d("ahokato", "MessageSync#removeCache start");
+        ArrayList<String> downloadedList = SlideMessage.getMessageUidRemoveTarget(account);
+        if (downloadedList.size() > account.getAttachmentCacheLimitCount()) {
+            int removeCount = account.getAttachmentCacheLimitCount() / 2;
+            Log.d("ahokato", "MessageSync#removeCache removeCount:" + removeCount);
+            int currentIndex = downloadedList.indexOf(dispUid);
+            Log.d("ahokato", "MessageSync#removeCache currentIndex:" + currentIndex);
+            ArrayList<String> removeList = createRemoveList(downloadedList, currentIndex, removeCount);
+            for (String uid : removeList) {
+                Log.d("ahokato", "MessageSync#removeCache uid:" + uid);
+                SlideAttachment.clearCacheForAttachmentFile(account, folder, uid);
+            }
+        }
+    }
+
+    /**
+     * [All] Cache Delete
+     *
+     * @param account user account
+     * @param folder  imap folder
+     * @throws MessagingException me
+     * @throws RakuRakuException  rre
+     */
+    public static void removeAllCache(Account account, String folder) throws MessagingException, RakuRakuException {
+        ArrayList<String> downloadedList = SlideMessage.getMessageUidRemoveTarget(account);
+        for (String uid : downloadedList) {
+            SlideAttachment.clearCacheForAttachmentFile(account, folder, uid);
+        }
+    }
+
+    private static ArrayList<String> createRemoveList(ArrayList<String> src, int currentIndex, int removeCount) {
+        ArrayList<String> dest = new ArrayList<String>();
+        if (0 == currentIndex) {
+            //あるばあい リストの先頭で１つ後ろがないので逆にリストの後ろを消していく
+            for (int i = (src.size() - 1); i >= (src.size() - removeCount); i--) {
+                dest.add(src.get(i));
+            }
+        } else if (0 < currentIndex) {
+            //あるばあい
+            if (currentIndex >= removeCount) {
+                //currentIndex-1 から -removeCount 件を削除リストにつっこむ
+                for (int i = (currentIndex - 1); i >= (currentIndex - removeCount); i--) {
+                    dest.add(src.get(i));
+                }
+            } else {
+                System.out.println(Math.abs(currentIndex - removeCount));
+                //abs(removeCount) の分だけ後ろからもってくる
+                for (int i = (src.size() - 1); i >= (src.size() - Math.abs(currentIndex - removeCount)); i--) {
+                    dest.add(src.get(i));
+                }
+                // currentIndex-1 から 先頭まで削除
+                for (int i = (currentIndex - 1); i >= 0; i--) {
+                    dest.add(src.get(i));
+                }
+            }
+        } else {
+            //ないばあい リストの一番後ろから件数分さくじょ
+            for (int i = (src.size() - 1); i >= (src.size() - removeCount); i--) {
+                dest.add(src.get(i));
+            }
+        }
+        return dest;
     }
 }

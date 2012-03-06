@@ -1,8 +1,14 @@
 package jp.co.fttx.rakuphotomail.rakuraku.util;
 
+import android.util.Log;
+import jp.co.fttx.rakuphotomail.Account;
+import jp.co.fttx.rakuphotomail.controller.UidComparator;
 import jp.co.fttx.rakuphotomail.mail.Message;
+import jp.co.fttx.rakuphotomail.mail.MessagingException;
+import jp.co.fttx.rakuphotomail.rakuraku.photomail.MessageSync;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * Created by IntelliJ IDEA.
@@ -50,4 +56,40 @@ public class RakuPhotoListUtil {
         return null;
     }
 
+    public static ArrayList<String> getNewUidList(ArrayList<Message> oldList, ArrayList<Message> newList) throws MessagingException {
+        Log.d("ahokato", "GallerySlideShow#getNewUidList start");
+
+        ArrayList<String> resultUid = new ArrayList<String>();
+        for (Message newMessage : newList) {
+            String newUid = newMessage.getUid();
+            boolean is = false;
+            for (Message oldMessage : oldList) {
+                if (newUid.equals(oldMessage.getUid())) {
+                    is = true;
+                }
+            }
+            if (!is) {
+                resultUid.add(newUid);
+            }
+        }
+        Collections.sort(resultUid, new UidComparator(UidComparator.DESC));
+        return resultUid;
+    }
+
+    public static String getNewUid(Account account, String folder, ArrayList<String> resultUid, ArrayList<Message> newList) throws MessagingException {
+        if (0 < resultUid.size()) {
+            for (String newUid : resultUid) {
+                Message resultMessage = null;
+                for (Message newMessage : newList) {
+                    if (newUid.equals(newMessage.getUid())) {
+                        resultMessage = newMessage;
+                    }
+                }
+                if (null != resultMessage && MessageSync.isSlideRemoteMail(account, folder, resultMessage)) {
+                    return newUid;
+                }
+            }
+        }
+        return null;
+    }
 }

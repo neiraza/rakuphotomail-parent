@@ -103,23 +103,22 @@ public class SlideAttachment {
      * @param folderName user mail folder name
      * @param uid        message uid
      * @throws MessagingException me
+     * @throws RakuRakuException rre
      */
-    public static void clearCacheForAttachmentFile(Account account, String folderName, String uid) throws MessagingException {
+    public static void clearCacheForAttachmentFile(Account account, String folderName, String uid) throws MessagingException, RakuRakuException {
+        Log.d("ahokato", "SlideAttachment#clearCacheForAttachmentFile uid:" + uid);
         LocalStore localStore = account.getLocalStore();
         LocalStore.LocalFolder localFolder = localStore.getFolder(folderName);
         long[] attachmentIdList = localFolder.deleteAttachmentFile(uid);
         for (long attachmentId : attachmentIdList) {
+            Log.d("ahokato", "SlideAttachment#clearCacheForAttachmentFile attachmentId:" + attachmentId);
             if (localFolder.clearContentUri(attachmentId)) {
-                MessageBean messageBean = new MessageBean();
-                try {
-                    messageBean = SlideMessage.getMessage(account, account.getInboxFolderName(), uid);
-                } catch (RakuRakuException e) {
-                    e.printStackTrace();
-                }
+                MessageBean messageBean = SlideMessage.getMessage(account, folderName, uid);
                 String[] arr = RakuPhotoStringUtils.splitFlags(messageBean.getFlags());
                 if (0 < arr.length) {
                     ArrayList<String> arrayList = new ArrayList<String>(Arrays.asList(arr));
                     int index = arrayList.indexOf("X_DOWNLOADED_FULL");
+                    Log.d("ahokato", "SlideAttachment#clearCacheForAttachmentFile index:" + index);
                     if (0 <= index) {
                         arrayList.remove(index);
                         localStore.setFlagAnswered(uid, arrayList.toArray(new String[arrayList.size()]));
@@ -138,7 +137,7 @@ public class SlideAttachment {
             localFolder.open(Folder.OpenMode.READ_WRITE);
 
             Message message = localFolder.getMessage(uid);
-            if (null != message && !message.isSet(Flag.X_DOWNLOADED_FULL)) {
+            if (null == message || !message.isSet(Flag.X_DOWNLOADED_FULL)) {
                 Store remoteStore = account.getRemoteStore();
                 remoteFolder = remoteStore.getFolder(folder);
                 remoteFolder.open(Folder.OpenMode.READ_WRITE);
@@ -171,42 +170,8 @@ public class SlideAttachment {
      * @param remoteMessage user IMAP Server Message
      */
     public static void downloadAttachment(final Account account, final String folder, final Message remoteMessage) {
-        Log.d("ahokato", "SlideAttachment#downloadAttachment start");
-        Folder remoteFolder = null;
-        LocalStore.LocalFolder localFolder = null;
         final String uid = remoteMessage.getUid();
-        Log.d("ahokato", "SlideAttachment#downloadAttachment uid:" + uid);
-
-        try {
-            LocalStore localStore = account.getLocalStore();
-            localFolder = localStore.getFolder(folder);
-            localFolder.open(Folder.OpenMode.READ_WRITE);
-
-            Message message = localFolder.getMessage(uid);
-            Log.d("ahokato", "SlideAttachment#downloadAttachment message:" + message);
-
-            if (null == message || !message.isSet(Flag.X_DOWNLOADED_FULL)) {
-                Store remoteStore = account.getRemoteStore();
-                remoteFolder = remoteStore.getFolder(folder);
-                remoteFolder.open(Folder.OpenMode.READ_WRITE);
-
-                FetchProfile fp = new FetchProfile();
-                fp.add(FetchProfile.Item.BODY);
-                remoteFolder.fetch(new Message[]{remoteMessage}, fp, null);
-
-                localFolder.appendMessages(new Message[]{remoteMessage});
-                fp.add(FetchProfile.Item.ENVELOPE);
-                message = localFolder.getMessage(uid);
-                localFolder.fetch(new Message[]{message}, fp, null);
-
-                message.setFlag(Flag.X_DOWNLOADED_FULL, true);
-            }
-        } catch (MessagingException e) {
-            Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage() + " UID:" + uid);
-        } finally {
-            closeFolder(remoteFolder);
-            closeFolder(localFolder);
-        }
+        downloadAttachment(account, folder, uid);
     }
 
     private static void closeFolder(Folder f) {
