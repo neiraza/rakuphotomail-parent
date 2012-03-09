@@ -1053,6 +1053,8 @@ public class ImapStore extends Store {
         @Override
         public void fetch(Message[] messages, FetchProfile fp, MessageRetrievalListener listener)
                 throws MessagingException {
+            Log.d("ahokato", "ImapStore#fetch start");
+
             if (messages == null || messages.length == 0) {
                 return;
             }
@@ -1060,7 +1062,6 @@ public class ImapStore extends Store {
             List<String> uids = new ArrayList<String>(messages.length);
             HashMap<String, Message> messageMap = new HashMap<String, Message>();
             for (int i = 0, count = messages.length; i < count; i++) {
-
                 String uid = messages[i].getUid();
                 uids.add(uid);
                 messageMap.put(uid, messages[i]);
@@ -1097,6 +1098,11 @@ public class ImapStore extends Store {
             for (int windowStart = 0; windowStart < messages.length; windowStart += (FETCH_WINDOW_SIZE)) {
                 List<String> uidWindow = uids.subList(windowStart,
                         Math.min((windowStart + FETCH_WINDOW_SIZE), messages.length));
+
+                Log.d("ahokato", "ImapStore#fetch command:" + String.format("UID FETCH %s (%s)", Utility.combine(
+                        uidWindow.toArray(new String[uidWindow.size()]), ','),
+                        Utility.combine(
+                                fetchFields.toArray(new String[fetchFields.size()]), ' ')));
 
                 try {
                     mConnection
@@ -1141,6 +1147,8 @@ public class ImapStore extends Store {
                                 }
                             }
 
+                            Log.d("ahokato", "ImapStore#fetch response:" + response.toString());
+
                             Message message = messageMap.get(uid);
                             if (message == null) {
                                 if (RakuPhotoMail.DEBUG)
@@ -1161,6 +1169,8 @@ public class ImapStore extends Store {
                             if (literal != null) {
                                 if (literal instanceof String) {
                                     String bodyString = (String) literal;
+                                    Log.d("ahokato", "ImapStore#fetch bodyString:" + bodyString);
+
                                     InputStream bodyStream = new ByteArrayInputStream(bodyString.getBytes());
                                     imapMessage.parse(bodyStream);
                                 } else if (literal instanceof Integer) {
@@ -1186,6 +1196,7 @@ public class ImapStore extends Store {
                     throw ioExceptionHandler(mConnection, ioe);
                 }
             }
+            Log.d("ahokato", "ImapStore#fetch end");
         }
 
         @Override
@@ -1596,15 +1607,6 @@ public class ImapStore extends Store {
                             combineFlags(message.getFlags()), message.calculateSize()), false);
                     ImapResponse response;
 
-//                    //TODO 追加してみたけど、これじゃない気がする
-//                    synchronized (this) {
-//                        Log.d("refs1961", "ImapStore#appendMessages synchronized mConnection");
-//                        if (mConnection == null) {
-//                            Log.d("refs1961", "ImapStore#appendMessages mConnection:" + mConnection);
-//                            mConnection = getConnection();
-//                        }
-//                    }
-
                     do {
                         response = mConnection.readResponse();
                         handleUntaggedResponse(response);
@@ -1634,6 +1636,7 @@ public class ImapStore extends Store {
                 throw ioExceptionHandler(mConnection, ioe);
             }
         }
+
 
         @Override
         public String getUidFromMessageId(Message message) throws MessagingException {

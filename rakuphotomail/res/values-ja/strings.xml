@@ -1244,9 +1244,9 @@
     <string name="error_rakuraku_exception_message">メールサーバーのメール件数取得時に不正な値が返却されました:</string>
     <string name="error_messaging_exception">ERROR:MessagingException:</string>
     <string name="warning_server_no_message">現在、サーバー上に受信メールが存在しません</string>
-    <string name="warning_server_no_message_alert">サーバー上にメールが存在しません。\n終了しますか？\n（注）このまま新着メールの待ち受けも可能です。</string>
+    <string name="warning_server_no_message_alert">サーバー上にメールが存在しません。\n終了しますか？</string>
     <string name="warning_server_no_message_alert_yes">はい、終了します</string>
-    <string name="warning_server_no_message_alert_no">いいえ、待ち受けます</string>
+    <string name="warning_server_no_message_alert_no">いいえ、再度メールチェックを実施します</string>
     <string name="progress_slideshow_disp_preparation">スライドショーを表示しようとしています。
         \nしばらくお待ちください。</string>
     <string name="progress_slideshow_start">スライドショーを開始しようとしています。
@@ -1258,6 +1258,8 @@
     <string name="disp_next_mail_task_message">表示中のメールより１件新しいメールを表示中です。
         \nしばらくお待ちください。</string>
     <string name="disp_slide_start_task_message">スライドショーを開始中です。
+        \nしばらくお待ちください。</string>
+    <string name="new_mail_check_task_message">新着メッセージをサーバに確認しています。
         \nしばらくお待ちください。</string>
     <string name="download_attachment_task_message">スライドショー情報をサーバーと同期中です。
         \nしばらくお待ちください。</string>

@@ -139,19 +139,65 @@ public class MessageSync {
         return newMailUid;
     }
 
-    public static boolean isSlideRemoteMail(final Account account, final String folder, final Message remoteMessage) throws MessagingException {
+    public static ArrayList<String> isSlideRemoteMailList(final Account account, final String folder, final Message[] remoteMessages) throws MessagingException {
+        Log.d("ahokato", "MessageSync#isSlideRemoteMailList start");
+
         Folder remoteFolder = null;
+        FetchProfile fp = null;
+        ArrayList<Part> Unnecessary = null;
+        ArrayList<Part> attachments = null;
         try {
             Store remoteStore = account.getRemoteStore();
             remoteFolder = remoteStore.getFolder(folder);
 
             remoteFolder.open(Folder.OpenMode.READ_WRITE);
-            FetchProfile fp = new FetchProfile();
+            fp = new FetchProfile();
             fp.add(FetchProfile.Item.BODY);
-            remoteFolder.fetch(new Message[]{remoteMessage}, fp, null);
+            remoteFolder.fetch(remoteMessages, fp, null);
 
-            ArrayList<Part> Unnecessary = new ArrayList<Part>();
-            ArrayList<Part> attachments = new ArrayList<Part>();
+            ArrayList<String> result = new ArrayList<String>();
+
+            for (Message remoteMessage : remoteMessages) {
+                Log.d("ahokato", "MessageSync#isSlideRemoteMailList remoteMessage:" + remoteMessage.getUid());
+                Unnecessary = new ArrayList<Part>();
+                attachments = new ArrayList<Part>();
+                MimeUtility.collectParts(remoteMessage, Unnecessary, attachments);
+                for (Part attachment : attachments) {
+                    if (SlideCheck.isSlide(attachment)) {
+                        Log.d("ahokato", "MessageSync#isSlideRemoteMailList add result:" + remoteMessage.getUid());
+                        result.add(remoteMessage.getUid());
+                    }
+                }
+            }
+            return result;
+        } finally {
+            fp = null;
+            Unnecessary = null;
+            attachments = null;
+            closeFolder(remoteFolder);
+        }
+    }
+
+    public static boolean isSlideRemoteMail(final Account account, final String folder, final Message remoteMessage) throws MessagingException {
+        Log.d("ahokato", "MessageSync#isSlideRemoteMail start");
+
+        Folder remoteFolder = null;
+        FetchProfile fp = null;
+        ArrayList<Part> Unnecessary = null;
+        ArrayList<Part> attachments = null;
+        Message[] messages = null;
+        try {
+            Store remoteStore = account.getRemoteStore();
+            remoteFolder = remoteStore.getFolder(folder);
+
+            remoteFolder.open(Folder.OpenMode.READ_WRITE);
+            fp = new FetchProfile();
+            fp.add(FetchProfile.Item.BODY);
+            messages = new Message[]{remoteMessage};
+            remoteFolder.fetch(messages, fp, null);
+
+            Unnecessary = new ArrayList<Part>();
+            attachments = new ArrayList<Part>();
             MimeUtility.collectParts(remoteMessage, Unnecessary, attachments);
 
             for (Part attachment : attachments) {
@@ -161,10 +207,13 @@ public class MessageSync {
             }
             return false;
         } finally {
+            fp = null;
+            Unnecessary = null;
+            attachments = null;
+            messages = null;
             closeFolder(remoteFolder);
         }
     }
-
 
     public static void syncMailbox(Account account, String folderName, int messageLimitCountFromRemote) {
         Log.d("pgr", "syncMailbox start");
@@ -234,6 +283,31 @@ public class MessageSync {
         } finally {
             closeFolder(remoteFolder);
             closeFolder(localFolder);
+        }
+    }
+
+    public static ArrayList<Message> getRemoteMessage(final Account account, final String folderName,final ArrayList<String> uids) throws MessagingException, RakuRakuException {
+
+        Folder remoteFolder = null;
+        try {
+            Store remoteStore = account.getRemoteStore();
+            remoteFolder = remoteStore.getFolder(folderName);
+            remoteFolder.open(Folder.OpenMode.READ_WRITE);
+            int remoteMessageCount = remoteFolder.getMessageCount();
+            Message[] remoteMessageArray;
+            ArrayList<Message> messageList = new ArrayList<Message>();
+            if (remoteMessageCount > 0) {
+                remoteMessageArray = remoteFolder.getMessages(uids.toArray(new String[uids.size()]), null);
+                for (Message thisMessage : remoteMessageArray) {
+                    messageList.add(thisMessage);
+                }
+                remoteMessageArray = null;
+            } else if (remoteMessageCount < 0) {
+                throw new RakuRakuException("Message count " + remoteMessageCount + " for folder " + folderName);
+            }
+            return messageList;
+        } finally {
+            closeFolder(remoteFolder);
         }
     }
 
@@ -371,6 +445,8 @@ public class MessageSync {
      * @since rakuphoto 0.1-beta1
      */
     public static boolean isMessage(Account account, String folderName, String uid) throws MessagingException {
+        Log.d("ahokato", "MessageSync#isMessage uid:" + uid);
+
         LocalStore.LocalFolder localFolder = null;
         try {
             LocalStore localStore = account.getLocalStore();

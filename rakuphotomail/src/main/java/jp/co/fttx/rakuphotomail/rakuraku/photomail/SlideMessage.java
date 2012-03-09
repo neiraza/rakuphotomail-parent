@@ -231,7 +231,6 @@ public class SlideMessage {
             localStore = account.getLocalStore();
             localFolder = getLocalFolder(localStore, account, folder);
 
-            //TODO refs#2611(#2612)
             LocalStore.MessageInfo message = localStore.getPreMessage(uid, localFolder.getId());
             Log.d("refs#2611", "SlideMessage#isPreMessage message.getId():" + message.getId());
             return isSlide(localStore, message.getId());
