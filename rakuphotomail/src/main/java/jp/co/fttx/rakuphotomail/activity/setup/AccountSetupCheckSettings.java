@@ -19,8 +19,10 @@ import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.activity.RakuPhotoActivity;
-import jp.co.fttx.rakuphotomail.controller.MessagingController;
-import jp.co.fttx.rakuphotomail.mail.*;
+import jp.co.fttx.rakuphotomail.mail.AuthenticationFailedException;
+import jp.co.fttx.rakuphotomail.mail.CertificateValidationException;
+import jp.co.fttx.rakuphotomail.mail.Store;
+import jp.co.fttx.rakuphotomail.mail.Transport;
 import jp.co.fttx.rakuphotomail.mail.filter.Hex;
 import jp.co.fttx.rakuphotomail.mail.store.TrustManagerFactory;
 import jp.co.fttx.rakuphotomail.mail.store.WebDavStore;
@@ -108,36 +110,35 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                         return;
                     }
                     if (mCheckIncoming) {
-                        Log.d("ahokato", "AccountSetupCheckSettings#onCreate mCheckIncoming");
+//                        store = mAccount.getRemoteStore();
+//
+//                        if (store instanceof WebDavStore) {
+//                            setMessage(R.string.account_setup_check_settings_authenticate);
+//                        } else {
+//                            setMessage(R.string.account_setup_check_settings_check_incoming_msg);
+//                        }
+//                        store.checkSettings();
 
-                        store = mAccount.getRemoteStore();
+//                        if (store instanceof WebDavStore) {
+//                            setMessage(R.string.account_setup_check_settings_fetch);
+//                        }
 
-                        if (store instanceof WebDavStore) {
-                            setMessage(R.string.account_setup_check_settings_authenticate);
-                        } else {
-                            setMessage(R.string.account_setup_check_settings_check_incoming_msg);
-                        }
-                        store.checkSettings();
+//                        MessagingController.getInstance(getApplication()).listFoldersSynchronous(mAccount, true, null);
 
-                        if (store instanceof WebDavStore) {
-                            setMessage(R.string.account_setup_check_settings_fetch);
-                        }
-
-                        MessagingController.getInstance(getApplication()).listFoldersSynchronous(mAccount, true, null);
-
-                        Folder remoteFolder = null;
-                        Store remoteStore = mAccount.getRemoteStore();
-                        String folder = mAccount.getInboxFolderName();
-                        remoteFolder = remoteStore.getFolder(folder);
-                        remoteFolder.open(Folder.OpenMode.READ_WRITE);
-                        String uid = MessageSync.getHighestRemoteUid(mAccount, folder);
+//                        Folder remoteFolder = null;
+//                        Store remoteStore = mAccount.getRemoteStore();
+//                        String folder = mAccount.getInboxFolderName();
+//                        remoteFolder = remoteStore.getFolder(folder);
+//                        remoteFolder.open(Folder.OpenMode.READ_WRITE);
+                        String uid = MessageSync.getHighestRemoteUid(mAccount, mAccount.getInboxFolderName());
                         Log.d("ahokato", "AccountSetupCheckSetting#onCreate highest uid:" + uid);
-                        Message remoteMessage = null;
-                        if (null == uid) {
-                            remoteMessage = null;
-                        } else {
-                            remoteMessage = remoteFolder.getMessage(uid);
-                        }
+                        mAccount.setHighestUid(uid);
+//                        Message remoteMessage = null;
+//                        if (null == uid) {
+//                            remoteMessage = null;
+//                        } else {
+//                            remoteMessage = remoteFolder.getMessage(uid);
+//                        }
 //                        MessageSync.syncMailUseDelegate(mAccount, folder, remoteMessage);
 //                        MessagingController.getInstance(getApplication()).synchronizeMailbox(mAccount, mAccount.getInboxFolderName(), null, null);
                     }
@@ -149,7 +150,6 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                         return;
                     }
                     if (mCheckOutgoing) {
-                        Log.d("ahokato", "AccountSetupCheckSettings#onCreate mCheckOutgoing");
 
                         if (!(mAccount.getRemoteStore() instanceof WebDavStore)) {
                             setMessage(R.string.account_setup_check_settings_check_outgoing_msg);

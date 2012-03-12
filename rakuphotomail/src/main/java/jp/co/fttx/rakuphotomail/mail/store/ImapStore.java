@@ -930,6 +930,7 @@ public class ImapStore extends Store {
         protected Message[] getMessages(final int start, final int end, Date earliestDate,
                                         final boolean includeDeleted, final MessageRetrievalListener listener)
                 throws MessagingException {
+
             if (start < 1 || end < 1 || end < start) {
                 throw new MessagingException(String.format("Invalid message set %d %d", start, end));
             }

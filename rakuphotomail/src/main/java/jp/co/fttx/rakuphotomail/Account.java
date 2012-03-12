@@ -101,6 +101,8 @@ public class Account implements BaseAccount {
     private int messageLimitCountFromRemote = 5; // 0だと全件(変更不可)
     private long serverSyncInitStartTimeDuration = 180000L;//(変更不可)
 
+    private String highestUid = null;
+
     private String lastSelectedFolderName = null;
 
     private List<Identity> identities;
@@ -1266,5 +1268,13 @@ public class Account implements BaseAccount {
 
     public void setScaleRatio(int scaleRatio) {
         this.scaleRatio = scaleRatio;
+    }
+
+    public String getHighestUid() {
+        return this.highestUid;
+    }
+
+    public void setHighestUid(String highestUid) {
+        this.highestUid = highestUid;
     }
 }

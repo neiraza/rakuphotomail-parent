@@ -5,6 +5,7 @@
 package jp.co.fttx.rakuphotomail.rakuraku.photomail;
 
 import android.util.Log;
+import jp.co.fttx.rakuphotomail.mail.Message;
 import jp.co.fttx.rakuphotomail.mail.MessagingException;
 import jp.co.fttx.rakuphotomail.mail.Part;
 import jp.co.fttx.rakuphotomail.mail.internet.MimeUtility;
@@ -24,7 +25,7 @@ public class SlideCheck {
     }
 
     /**
-     * @param part attachment
+     * @param attachment attachment
      * @return slide OK/NG
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
@@ -108,4 +109,17 @@ public class SlideCheck {
                 || fileName.endsWith(".jpg") || fileName.endsWith(".jpeg"));
     }
 
+    public static boolean isSlide(Message message) throws MessagingException {
+        ArrayList<Part> Unnecessary = new ArrayList<Part>();
+        ArrayList<Part> attachments = new ArrayList<Part>();
+        MimeUtility.collectParts(message, Unnecessary, attachments);
+        for (Part attachment : attachments) {
+            if (SlideCheck.isSlide(attachment)) {
+                return true;
+            }
+        }
+        Unnecessary = null;
+        attachments = null;
+        return false;
+    }
 }

@@ -2546,6 +2546,39 @@ public class LocalStore extends Store implements Serializable {
             }
         }
 
+        public ArrayList<String> getUidList() throws MessagingException {
+            try {
+                return database.execute(false, new DbCallback<ArrayList<String>>() {
+                    @Override
+                    public ArrayList<String> doDbWork(final SQLiteDatabase db) throws WrappedException,
+                            UnavailableStorageException {
+                        ArrayList<String> list = new ArrayList<String>();
+                        try {
+                            open(OpenMode.READ_WRITE);
+                            Cursor cursor = null;
+
+                            try {
+                                cursor = db.rawQuery("SELECT uid FROM messages WHERE folder_id = ?", new String[]{
+                                        Long.toString(mFolderId)});
+                                while (cursor.moveToNext()) {
+                                    list.add(cursor.getString(0));
+                                }
+                            } finally {
+                                if (cursor != null) {
+                                    cursor.close();
+                                }
+                            }
+                        } catch (MessagingException e) {
+                            throw new WrappedException(e);
+                        }
+                        return list;
+                    }
+                });
+            } catch (WrappedException e) {
+                throw (MessagingException) e.getCause();
+            }
+        }
+
         public boolean isMessage(final String uid) throws MessagingException {
             try {
                 return database.execute(false, new DbCallback<Boolean>() {

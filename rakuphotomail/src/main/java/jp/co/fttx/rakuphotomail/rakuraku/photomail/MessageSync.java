@@ -175,6 +175,7 @@ public class MessageSync {
             Unnecessary = null;
             attachments = null;
             closeFolder(remoteFolder);
+            remoteFolder = null;
         }
     }
 
@@ -286,7 +287,7 @@ public class MessageSync {
         }
     }
 
-    public static ArrayList<Message> getRemoteMessage(final Account account, final String folderName,final ArrayList<String> uids) throws MessagingException, RakuRakuException {
+    public static ArrayList<Message> getRemoteMessage(final Account account, final String folderName, final ArrayList<String> uids) throws MessagingException, RakuRakuException {
 
         Folder remoteFolder = null;
         try {
@@ -377,7 +378,6 @@ public class MessageSync {
             if (remoteMessageCount > 0) {
                 int remoteStart = 1;
                 int remoteEnd = remoteMessageCount;
-                //TODO 一件だけとかとれんかな
                 remoteMessageArray = remoteFolder.getMessages(remoteEnd, remoteEnd, null, null);
                 for (Message thisMessage : remoteMessageArray) {
                     allUidList.add(thisMessage.getUid());
@@ -454,6 +454,25 @@ public class MessageSync {
             return localFolder.isMessage(uid);
         } finally {
             closeFolder(localFolder);
+        }
+    }
+
+    public static Message getRemoteMessage(final Account account, final String folderName, final String uid) throws MessagingException, RakuRakuException {
+
+        Folder remoteFolder = null;
+        try {
+            Store remoteStore = account.getRemoteStore();
+            remoteFolder = remoteStore.getFolder(folderName);
+            remoteFolder.open(Folder.OpenMode.READ_WRITE);
+
+            Message remoteMessage = null;
+            if (null != uid) {
+                remoteMessage = remoteFolder.getMessage(uid);
+            }
+            return remoteMessage;
+
+        } finally {
+            closeFolder(remoteFolder);
         }
     }
 
@@ -644,5 +663,104 @@ public class MessageSync {
             }
         }
         return dest;
+    }
+
+    /**
+     * destroyはしないよ
+     *
+     * @param account
+     * @param folderName
+     * @param start
+     * @param end
+     */
+    public static void syncMailbox(Account account, String folderName, int start, int end) {
+        Log.d("ahokato", "MessageSync#syncMailbox start");
+
+        Folder remoteFolder = null;
+        LocalStore.LocalFolder localFolder = null;
+        try {
+            Store remoteStore = account.getRemoteStore();
+            remoteFolder = remoteStore.getFolder(folderName);
+            remoteFolder.open(Folder.OpenMode.READ_WRITE);
+            int remoteMessageCount = remoteFolder.getMessageCount();
+
+            if (remoteMessageCount > 0) {
+                localFolder = account.getLocalStore().getFolder(folderName);
+                localFolder.open(Folder.OpenMode.READ_WRITE);
+                localFolder.updateLastUid();
+
+                Message[] localMessages = localFolder.getMessages(null);
+                HashMap<String, Message> localUidMap = new HashMap<String, Message>();
+                for (Message message : localMessages) {
+                    localUidMap.put(message.getUid(), message);
+                }
+
+                Message[] remoteMessageArray = null;
+                remoteMessageArray = remoteFolder.getMessages(start, end, null, null);
+                Log.d("ahokato", "MessageSync#syncMailbox remoteMessageArray:" + remoteMessageArray.length);
+                Message localMessage = null;
+
+                for (Message thisMessage : remoteMessageArray) {
+                    Log.d("ahokato", "MessageSync#syncMailbox thisMessage:" + thisMessage.getUid());
+                    localMessage = localUidMap.get(thisMessage.getUid());
+                    if (localMessage == null) {
+                        Log.d("ahokato", "MessageSync#syncMailbox new mail:" + thisMessage.getUid());
+                        FetchProfile fp = new FetchProfile();
+                        fp.add(FetchProfile.Item.BODY);
+                        Message[] messageArray = new Message[]{thisMessage};
+                        remoteFolder.fetch(messageArray, fp, null);
+
+                        Message[] localMessageArray = null;
+                        Message lMessage = null;
+                        if (SlideCheck.isSlide(messageArray[0])) {
+                            Log.d("ahokato", "MessageSync#syncMailbox Slide対象:" + thisMessage.getUid());
+                            localFolder.appendMessages(messageArray);
+                            fp.add(FetchProfile.Item.ENVELOPE);
+                            lMessage = localFolder.getMessage(thisMessage.getUid());
+                            localMessageArray = new Message[]{lMessage};
+                            localFolder.fetch(localMessageArray, fp, null);
+                            lMessage.setFlag(Flag.X_DOWNLOADED_FULL, true);
+                        }
+
+                        messageArray = null;
+                        localMessageArray = null;
+                        fp = null;
+                        lMessage = null;
+                        localMessage = null;
+                    }
+                }
+                remoteMessageArray = null;
+                localMessages = null;
+                localUidMap = null;
+
+                localFolder.setLastChecked(System.currentTimeMillis());
+                localFolder.setStatus(null);
+                Log.d("ahokato", "MessageSync#syncMailbox end");
+            }
+        } catch (MessagingException me) {
+            Log.e(RakuPhotoMail.LOG_TAG, "ERROR:MessagingException:" + me.getMessage());
+        } finally {
+            closeFolder(remoteFolder);
+            closeFolder(localFolder);
+            remoteFolder = null;
+            localFolder = null;
+        }
+    }
+
+    public static int getRemoteMessageCount(Account account, String folderName) throws MessagingException {
+        Log.d("ahokato", "MessageSync#getRemoteMessageCount start");
+
+        Folder remoteFolder = null;
+        int result = 0;
+        try {
+            Store remoteStore = account.getRemoteStore();
+            remoteFolder = remoteStore.getFolder(folderName);
+            remoteFolder.open(Folder.OpenMode.READ_WRITE);
+            result = remoteFolder.getMessageCount();
+        } finally {
+            closeFolder(remoteFolder);
+            remoteFolder = null;
+        }
+        return result;
     }
 }

@@ -497,4 +497,28 @@ public class SlideMessage {
         ArrayList<String> list = localStore.getHeadersReferences();
         return list.contains(messageBean.getMessageId());
     }
+
+    public static ArrayList<String> getUidList(Account account, String folderName) throws MessagingException {
+        Log.d("ahokato", "MessageSync#getUidList start");
+        LocalStore.LocalFolder localFolder = null;
+        LocalStore localStore = null;
+        try {
+            localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folderName);
+            return localFolder.getUidList();
+        } finally {
+            localStore = null;
+            closeFolder(localFolder);
+            localFolder = null;
+        }
+    }
+
+    public static ArrayList<MessageBean> getMessageBeanList(Account account, String folderName) throws RakuRakuException, MessagingException {
+        ArrayList<String> uidList = getUidList(account, folderName);
+        ArrayList<MessageBean> result = new ArrayList<MessageBean>();
+        for (String uid : uidList) {
+            result.add(getMessage(account, folderName, uid));
+        }
+        return result;
+    }
 }

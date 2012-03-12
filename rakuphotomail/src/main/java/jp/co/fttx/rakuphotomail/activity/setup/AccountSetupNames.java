@@ -55,8 +55,6 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.d("ahokato", "AccountSetupNames#onCreate");
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_names);
         mName = (EditText) findViewById(R.id.account_name);
@@ -167,7 +165,6 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
 
     @Override
     protected void onNext() {
-        Log.d("ahokato", "AccountSetupNames#onNext");
         setUpProgressDialog(mProgressDialog,"TEST","TEST");
         mAccount.setDescription(mAccount.getDescription());
         mAccount.setName(mName.getText().toString());
