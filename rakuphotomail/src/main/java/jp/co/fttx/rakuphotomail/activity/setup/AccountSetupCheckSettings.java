@@ -132,7 +132,6 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
 //                        remoteFolder.open(Folder.OpenMode.READ_WRITE);
                         String uid = MessageSync.getHighestRemoteUid(mAccount, mAccount.getInboxFolderName());
                         Log.d("ahokato", "AccountSetupCheckSetting#onCreate highest uid:" + uid);
-                        mAccount.setHighestUid(uid);
 //                        Message remoteMessage = null;
 //                        if (null == uid) {
 //                            remoteMessage = null;

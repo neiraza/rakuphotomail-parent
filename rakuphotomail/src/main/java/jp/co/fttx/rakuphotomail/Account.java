@@ -14,6 +14,8 @@ import jp.co.fttx.rakuphotomail.mail.store.StorageManager;
 import jp.co.fttx.rakuphotomail.mail.store.StorageManager.StorageProvider;
 import jp.co.fttx.rakuphotomail.view.ColorChip;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -100,8 +102,16 @@ public class Account implements BaseAccount {
     //TODO 5件ずつサーバ同期
     private int messageLimitCountFromRemote = 5; // 0だと全件(変更不可)
     private long serverSyncInitStartTimeDuration = 180000L;//(変更不可)
-
-    private String highestUid = null;
+    // 全件チェック時の開始地点
+    private int checkStartId = 0;
+    // 全件チェック時の終了地点
+    private int checkEndId = 0;
+    // 全件チェックFlag
+    private boolean isAllSync = true;
+    // 最新ID（このIDを境に過去と未来を分ける）
+    private int latestId = 0;
+    private Date latestReceiveDate = new Date();
+    private static final String DATE_PATTERN = "yyyy/MM/dd HH:mm";
 
     private String lastSelectedFolderName = null;
 
@@ -264,6 +274,16 @@ public class Account implements BaseAccount {
         slideSleepTimeDuration = prefs.getLong(mUuid + ".slideSleepTimeDuration", 20000L);
         serverSyncTimeDuration = prefs.getLong(mUuid + ".serverSyncTimeDuration", 180000L);
         scaleRatio = prefs.getInt(mUuid + ".scaleRatio", 1);
+        checkStartId = prefs.getInt(mUuid + ".checkStartId", 0);
+        checkEndId = prefs.getInt(mUuid + ".checkEndId", 0);
+        isAllSync = prefs.getBoolean(mUuid + ".isAllSync", false);
+        latestId = prefs.getInt(mUuid + ".latestId", 0);
+        SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
+        try {
+            latestReceiveDate = sdf.parse(prefs.getString(mUuid + ".latestReceiveDate", "2011/03/11 14:26"));
+        } catch (ParseException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, e.getMessage());
+        }
 
         mNotificationSetting.setVibrate(prefs.getBoolean(mUuid + ".vibrate", false));
         mNotificationSetting.setVibratePattern(prefs.getInt(mUuid + ".vibratePattern", 0));
@@ -465,6 +485,12 @@ public class Account implements BaseAccount {
         editor.putLong(mUuid + ".slideSleepTimeDuration", slideSleepTimeDuration);
         editor.putLong(mUuid + ".serverSyncTimeDuration", serverSyncTimeDuration);
         editor.putInt(mUuid + ".scaleRatio", scaleRatio);
+        editor.putInt(mUuid + ".checkStartId", checkStartId);
+        editor.putInt(mUuid + ".checkEndId", checkEndId);
+        editor.putBoolean(mUuid + ".isAllSync", isAllSync);
+        editor.putInt(mUuid + ".latestId", latestId);
+        SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
+        editor.putString(sdf.format(latestReceiveDate), "2011/03/11 14:26");
 
         for (String type : networkTypes) {
             Boolean useCompression = compressionMap.get(type);
@@ -1270,11 +1296,43 @@ public class Account implements BaseAccount {
         this.scaleRatio = scaleRatio;
     }
 
-    public String getHighestUid() {
-        return this.highestUid;
+    public int getCheckStartId() {
+        return this.checkStartId;
     }
 
-    public void setHighestUid(String highestUid) {
-        this.highestUid = highestUid;
+    public void setCheckStartId(int checkStartId) {
+        this.checkStartId = checkStartId;
+    }
+
+    public int getCheckEndId() {
+        return this.checkEndId;
+    }
+
+    public void setCheckEndId(int checkEndId) {
+        this.checkEndId = checkEndId;
+    }
+
+    public int getLatestId() {
+        return this.latestId;
+    }
+
+    public void setLatestId(int latestId) {
+        this.latestId = latestId;
+    }
+
+    public Date getLatestReceiveDate() {
+        return this.latestReceiveDate;
+    }
+
+    public void setLatestReceiveDate(Date latestReceiveDate) {
+        this.latestReceiveDate = latestReceiveDate;
+    }
+
+    public boolean isAllSync() {
+        return this.isAllSync;
+    }
+
+    public void setAllSync(boolean tf) {
+        this.isAllSync = tf;
     }
 }
