@@ -1,5 +1,8 @@
 package jp.co.fttx.rakuphotomail.rakuraku.util;
 
+import android.util.Log;
+import jp.co.fttx.rakuphotomail.RakuPhotoMail;
+
 /**
  * @author tooru.oguri
  */
@@ -46,5 +49,19 @@ public class RakuPhotoStringUtils {
             return sb.toString();
         }
 
+    }
+
+    public static boolean isNotBlank(String... params) {
+        for (String param : params) {
+            if (null == param) {
+                Log.w(RakuPhotoMail.LOG_TAG,"paramsの中にnullがいたお");
+                return false;
+            }
+            if ("".equals(param)) {
+                Log.w(RakuPhotoMail.LOG_TAG,"paramsの中にblankがいたお");
+                return false;
+            }
+        }
+        return true;
     }
 }

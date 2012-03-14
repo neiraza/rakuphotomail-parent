@@ -513,6 +513,27 @@ public class SlideMessage {
         }
     }
 
+    public static String getHighestLocalUid(Account account, String folderName) throws MessagingException {
+        Log.d("ahokato", "MessageSync#getUidList start");
+        LocalStore.LocalFolder localFolder = null;
+        LocalStore localStore = null;
+        try {
+            localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folderName);
+            ArrayList<String> list = localFolder.getUidList();
+            if (!list.isEmpty()) {
+              return list.get(list.size() - 1);
+            } else {
+              return null;
+            }
+        } finally {
+            localStore = null;
+            closeFolder(localFolder);
+            localFolder = null;
+        }
+    }
+
+
     public static ArrayList<MessageBean> getMessageBeanList(Account account, String folderName) throws RakuRakuException, MessagingException {
         ArrayList<String> uidList = getUidList(account, folderName);
         ArrayList<MessageBean> result = new ArrayList<MessageBean>();

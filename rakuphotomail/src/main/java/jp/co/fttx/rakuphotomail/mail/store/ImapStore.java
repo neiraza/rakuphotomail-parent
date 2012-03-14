@@ -1065,6 +1065,7 @@ public class ImapStore extends Store {
             for (int i = 0, count = messages.length; i < count; i++) {
                 String uid = messages[i].getUid();
                 uids.add(uid);
+                uids.add(messages[i].getUid());
                 messageMap.put(uid, messages[i]);
             }
 
@@ -1096,6 +1097,8 @@ public class ImapStore extends Store {
                 fetchFields.add("BODY.PEEK[]");
             }
 
+            ImapResponse response;
+
             for (int windowStart = 0; windowStart < messages.length; windowStart += (FETCH_WINDOW_SIZE)) {
                 List<String> uidWindow = uids.subList(windowStart,
                         Math.min((windowStart + FETCH_WINDOW_SIZE), messages.length));
@@ -1113,7 +1116,7 @@ public class ImapStore extends Store {
                                             Utility.combine(
                                                     fetchFields.toArray(new String[fetchFields.size()]), ' ')),
                                     false);
-                    ImapResponse response;
+
                     int messageNumber = 0;
 
                     ImapResponseParser.IImapResponseCallback callback = null;
@@ -1122,6 +1125,7 @@ public class ImapStore extends Store {
                     }
 
                     do {
+                        response = null;
                         response = mConnection.readResponse(callback);
 
                         if (response.mTag == null
@@ -1197,6 +1201,9 @@ public class ImapStore extends Store {
                     throw ioExceptionHandler(mConnection, ioe);
                 }
             }
+            response = null;
+            uids = null;
+            messageMap = null;
             Log.d("ahokato", "ImapStore#fetch end");
         }
 

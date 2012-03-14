@@ -339,7 +339,7 @@ public class MessageSync {
         }
     }
 
-//    public static ArrayList<String> getRemoteAllUid(final Account account, final String folderName) throws MessagingException, RakuRakuException {
+//    public static ArrayList<String> getRemoteUidSince(final Account account, final String folderName, final long date) throws MessagingException, RakuRakuException {
 //        Folder remoteFolder = null;
 //        try {
 //            Store remoteStore = account.getRemoteStore();
@@ -364,6 +364,32 @@ public class MessageSync {
 //            closeFolder(remoteFolder);
 //        }
 //    }
+
+    public static String getUid(final Account account, final String folderName, int messageId) throws MessagingException, RakuRakuException {
+
+        Folder remoteFolder = null;
+        Store remoteStore;
+        try {
+            remoteStore = account.getRemoteStore();
+            remoteFolder = remoteStore.getFolder(folderName);
+            remoteFolder.open(Folder.OpenMode.READ_WRITE);
+            Message[] remoteMessageArray = remoteFolder.getMessages(messageId, messageId, null, null);
+
+            if (0 != remoteMessageArray.length) {
+                Message thisMessage = remoteMessageArray[0];
+                if (null != thisMessage) {
+                    return thisMessage.getUid();
+                }
+            }
+
+            remoteMessageArray = null;
+            return null;
+        } finally {
+            closeFolder(remoteFolder);
+            remoteFolder = null;
+            remoteStore = null;
+        }
+    }
 
     public static String getHighestRemoteUid(final Account account, final String folderName) throws MessagingException, RakuRakuException {
 

@@ -106,10 +106,14 @@ public class Account implements BaseAccount {
     private int checkStartId = 0;
     // 全件チェック時の終了地点
     private int checkEndId = 0;
+    // アプリ起動時の開始地点（１世代前のlocalLatestId）
+    private int localOldId = 0;
     // 全件チェックFlag
     private boolean isAllSync = true;
-    // 最新ID（このIDを境に過去と未来を分ける）
-    private int latestId = 0;
+    // 途中範囲チェックFlag
+    private boolean isSync = true;
+    // Local最新ID（このIDを境に過去と未来を分ける）、アプリ起動時の終了地点
+    private int localLatestId = 0;
     private Date latestReceiveDate = new Date();
     private static final String DATE_PATTERN = "yyyy/MM/dd HH:mm";
 
@@ -277,7 +281,9 @@ public class Account implements BaseAccount {
         checkStartId = prefs.getInt(mUuid + ".checkStartId", 0);
         checkEndId = prefs.getInt(mUuid + ".checkEndId", 0);
         isAllSync = prefs.getBoolean(mUuid + ".isAllSync", false);
-        latestId = prefs.getInt(mUuid + ".latestId", 0);
+        isSync = prefs.getBoolean(mUuid + ".isSync", false);
+        localLatestId = prefs.getInt(mUuid + ".localLatestId", 0);
+        localOldId = prefs.getInt(mUuid + ".localOldId", 0);
         SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
         try {
             latestReceiveDate = sdf.parse(prefs.getString(mUuid + ".latestReceiveDate", "2011/03/11 14:26"));
@@ -488,7 +494,9 @@ public class Account implements BaseAccount {
         editor.putInt(mUuid + ".checkStartId", checkStartId);
         editor.putInt(mUuid + ".checkEndId", checkEndId);
         editor.putBoolean(mUuid + ".isAllSync", isAllSync);
-        editor.putInt(mUuid + ".latestId", latestId);
+        editor.putBoolean(mUuid + ".isSync", isSync);
+        editor.putInt(mUuid + ".localLatestId", localLatestId);
+        editor.putInt(mUuid + ".localOldId", localOldId);
         SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
         editor.putString(sdf.format(latestReceiveDate), "2011/03/11 14:26");
 
@@ -1312,12 +1320,20 @@ public class Account implements BaseAccount {
         this.checkEndId = checkEndId;
     }
 
-    public int getLatestId() {
-        return this.latestId;
+    public int getLocalLatestId() {
+        return this.localLatestId;
     }
 
-    public void setLatestId(int latestId) {
-        this.latestId = latestId;
+    public void setLocalLatestId(int localLatestId) {
+        this.localLatestId = localLatestId;
+    }
+
+    public int getLocalOldId() {
+        return this.localOldId;
+    }
+
+    public void setLocalOldId(int localOldId) {
+        this.localOldId = localOldId;
     }
 
     public Date getLatestReceiveDate() {
@@ -1334,5 +1350,14 @@ public class Account implements BaseAccount {
 
     public void setAllSync(boolean tf) {
         this.isAllSync = tf;
+    }
+
+
+    public boolean isSync() {
+        return this.isSync;
+    }
+
+    public void setSync(boolean tf) {
+        this.isSync = tf;
     }
 }
