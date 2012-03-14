@@ -553,11 +553,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         String senderName = messageBean.getSenderName();
 
         //XXX 2012/03/13 テスト中に発生したが特定できていない
-        if (null != senderName && "".equals(senderName)) {
-            Log.d("ahokato", "GallerySlideShow#dispSlide :" + messageBean.getSenderName().trim());
-            mSenderName.setText(messageBean.getSenderName().trim());
+        if (null != senderName && !"".equals(senderName)) {
+            Log.d("ahokato", "GallerySlideShow#dispSlide :" + senderName.trim());
+            mSenderName.setText(senderName.trim());
         } else {
-            Log.w(RakuPhotoMail.LOG_TAG, "UID:" + messageBean.getUid() + " 送信者不明：" + messageBean.getSenderName());
+            Log.w(RakuPhotoMail.LOG_TAG, "UID:" + messageBean.getUid() + " 送信者不明：" + senderName);
             mSenderName.setText("送信者不明");
         }
 
