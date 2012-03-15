@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -36,8 +37,12 @@ import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideCheck;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideMessage;
 import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
 
+import java.io.FileNotFoundException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * @author tooru.oguri
@@ -300,7 +305,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             Log.d("ahokato", "GallerySlideShow#onCreate mEnd:" + mEnd);
         } else {
             Log.d("ahokato", "GallerySlideShow#onCreate 以前の話だが、syncはもう全部やったのだよ");
-            //TODO 最後にチェックした時点から、メールが届いていないかチェックしたい
             try {
                 String highestLocalUid = MessageSync.getUid(mAccount, mFolder, mAccount.getLocalLatestId());
                 String highestRemoteUid = MessageSync.getHighestRemoteUid(mAccount, mAccount.getInboxFolderName());
@@ -310,6 +314,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 if (RakuPhotoStringUtils.isNotBlank(highestRemoteUid, highestLocalUid)) {
                     if (highestLocalUid.equals(highestRemoteUid)) {
                         Log.d("ahokato", "GallerySlideShow#onCreate Localが最新のようだ");
+                        //TODO ここがスライド用のBeanを生成しているところ
                         getSlideMessageBeanList();
                     } else {
                         Log.d("ahokato", "GallerySlideShow#onCreate Localよりも新しいやつがRemoteにいるぞ");
@@ -543,14 +548,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                         if (SlideCheck.isSlide(attachmentBean)) {
                             try {
                                 mBitmap = SlideAttachment.getBitmap(getApplicationContext(), getWindowManager().getDefaultDisplay(), mAccount, attachmentBean);
-                                if (null == mBitmap) {
-                                    Log.w(RakuPhotoMail.LOG_TAG, "mCurrentMessageBean.getUid():" + mCurrentMessageBean.getUid() + " mBitmap:" + mBitmap);
-                                    return;
-                                }
                                 dispSlide(mCurrentMessageBean);
                                 Log.d("ahokato", "GallerySlideShow#slideShow mSlideShowLoopRunnable image:" + attachmentBean.getName());
+                            } catch (FileNotFoundException e) {
+                                Log.w(RakuPhotoMail.LOG_TAG, "UID:" + mCurrentMessageBean.getUid() + " " + e.getMessage());
                             } catch (RakuRakuException e) {
-                                Log.e(RakuPhotoMail.LOG_TAG, getString(R.string.error_rakuraku_exception) + e.getMessage());
+                                Log.w(RakuPhotoMail.LOG_TAG, "UID:" + mCurrentMessageBean.getUid() + " " + getString(R.string.error_rakuraku_exception) + e.getMessage());
                             }
                             attachmentBean = null;
                         }
@@ -589,7 +592,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         mSubject.setText(messageBean.getSubject());
         String senderName = messageBean.getSenderName();
 
-        //XXX 2012/03/13 テスト中に発生したが特定できていない
         if (null != senderName && !"".equals(senderName)) {
             Log.d("ahokato", "GallerySlideShow#dispSlide :" + senderName.trim());
             mSenderName.setText(senderName.trim());
@@ -607,7 +609,13 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             mAnswered.setVisibility(View.GONE);
             mAnsweredMark.setVisibility(View.GONE);
         }
-        setVisibilityImageView().setImageBitmap(mBitmap);
+
+        if (null != mBitmap) {
+            setVisibilityImageView().setImageBitmap(mBitmap);
+        } else {
+            setVisibilityImageView().setImageBitmap(BitmapFactory.decodeResource(
+                    getResources(), R.drawable.ucom_logo_black));
+        }
     }
 
     private void doSort(List list, Comparator comparator) {
@@ -838,6 +846,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
             Log.d("ahokato", "MessageSyncTask#doInBackground mStart:" + mStart);
             Log.d("ahokato", "MessageSyncTask#doInBackground mEnd:" + mEnd);
+            //TODO ここがスライド用のBeanを生成しているところ
             getSlideMessageBeanList();
             return null;
         }

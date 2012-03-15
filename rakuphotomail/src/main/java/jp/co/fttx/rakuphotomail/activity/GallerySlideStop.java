@@ -30,6 +30,7 @@ import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideMessage;
 import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
 import jp.co.fttx.rakuphotomail.rakuraku.util.ThumbnailImageAdapter;
 
+import java.io.FileNotFoundException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
@@ -312,10 +313,10 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
 
     private void setImageViewPicture(ArrayList<AttachmentBean> attachmentBeanList, int index) {
         Bitmap bitmap = null;
-        try {
+        try{
             bitmap = SlideAttachment.getBitmap(getApplicationContext(), getWindowManager().getDefaultDisplay(), mAccount, attachmentBeanList.get(index));
             mImageViewPicture.setImageBitmap(bitmap);
-        } catch (RakuRakuException e) {
+        } catch (FileNotFoundException e) {
             onAlertNoImage();
         }
     }

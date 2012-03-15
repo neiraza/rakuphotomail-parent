@@ -20,6 +20,7 @@ import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
 import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -34,28 +35,23 @@ public class SlideAttachment {
     private static Bitmap photo;
     private static Bitmap thumbnail;
 
-    public static Bitmap getBitmap(Context context, Display display, Account account, AttachmentBean attachmentBean) throws RakuRakuException {
-        try {
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            Uri uri = AttachmentProvider.getAttachmentUri(account, attachmentBean.getId());
-            options.inJustDecodeBounds = true;
-            photo = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
-            int displayW = display.getWidth();
-            int displayH = display.getHeight();
-            int scaleRatio = account.getScaleRatio();
-            int scaleW = options.outWidth / displayW + scaleRatio;
-            int scaleH = options.outHeight / displayH + scaleRatio;
-            options.inJustDecodeBounds = false;
-            options.inSampleSize = Math.max(scaleW, scaleH);
-            photo = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
-            return photo;
-        } catch (OutOfMemoryError ooe) {
-            Log.e(RakuPhotoMail.LOG_TAG, "Exception:" + ooe.getMessage());
-            throw new RakuRakuException(ooe);
-        } catch (Exception e) {
-            Log.e(RakuPhotoMail.LOG_TAG, "Exception:" + e);
+    public static Bitmap getBitmap(Context context, Display display, Account account, AttachmentBean attachmentBean) throws FileNotFoundException {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        Uri uri = AttachmentProvider.getAttachmentUri(account, attachmentBean.getId());
+        if (null == uri) {
+            return null;
         }
-        return null;
+        options.inJustDecodeBounds = true;
+        photo = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
+        int displayW = display.getWidth();
+        int displayH = display.getHeight();
+        int scaleRatio = account.getScaleRatio();
+        int scaleW = options.outWidth / displayW + scaleRatio;
+        int scaleH = options.outHeight / displayH + scaleRatio;
+        options.inJustDecodeBounds = false;
+        options.inSampleSize = Math.max(scaleW, scaleH);
+        photo = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
+        return photo;
     }
 
     public static Bitmap getThumbnailBitmap(Context context, Account account, AttachmentBean attachmentBean) {
@@ -103,7 +99,7 @@ public class SlideAttachment {
      * @param folderName user mail folder name
      * @param uid        message uid
      * @throws MessagingException me
-     * @throws RakuRakuException rre
+     * @throws RakuRakuException  rre
      */
     public static void clearCacheForAttachmentFile(Account account, String folderName, String uid) throws MessagingException, RakuRakuException {
         Log.d("ahokato", "SlideAttachment#clearCacheForAttachmentFile uid:" + uid);
