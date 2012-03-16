@@ -111,7 +111,7 @@ public class Account implements BaseAccount {
     // 全件チェックFlag
     private boolean isAllSync = true;
     // 途中範囲チェックFlag
-    private boolean isSync = true;
+    private boolean isSync = false;
     // Local最新ID（このIDを境に過去と未来を分ける）、アプリ起動時の終了地点
     private int localLatestId = 0;
     private Date latestReceiveDate = new Date();

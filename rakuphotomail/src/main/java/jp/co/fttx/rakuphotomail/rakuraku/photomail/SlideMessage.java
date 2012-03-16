@@ -513,6 +513,36 @@ public class SlideMessage {
         }
     }
 
+    public static ArrayList<String> getUidList(Account account, String folderName, int length) throws MessagingException {
+        Log.d("ahokato", "MessageSync#getUidList start");
+        LocalStore.LocalFolder localFolder = null;
+        LocalStore localStore = null;
+        try {
+            localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folderName);
+            return localFolder.getUidList(length);
+        } finally {
+            localStore = null;
+            closeFolder(localFolder);
+            localFolder = null;
+        }
+    }
+
+    public static ArrayList<String> getUidList(Account account, String folderName, String uid, int length) throws MessagingException {
+        Log.d("ahokato", "MessageSync#getUidList start");
+        LocalStore.LocalFolder localFolder = null;
+        LocalStore localStore = null;
+        try {
+            localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folderName);
+            return localFolder.getUidList(uid, length);
+        } finally {
+            localStore = null;
+            closeFolder(localFolder);
+            localFolder = null;
+        }
+    }
+
     public static String getHighestLocalUid(Account account, String folderName) throws MessagingException {
         Log.d("ahokato", "MessageSync#getUidList start");
         LocalStore.LocalFolder localFolder = null;
@@ -522,9 +552,9 @@ public class SlideMessage {
             localFolder = localStore.getFolder(folderName);
             ArrayList<String> list = localFolder.getUidList();
             if (!list.isEmpty()) {
-              return list.get(list.size() - 1);
+                return list.get(list.size() - 1);
             } else {
-              return null;
+                return null;
             }
         } finally {
             localStore = null;
@@ -533,13 +563,28 @@ public class SlideMessage {
         }
     }
 
+    public static ArrayList<MessageBean> getMessageBeanList(Account account, String folderName, String startUid, int length) throws RakuRakuException, MessagingException {
+        Log.d("ahokato", "SlideMessage#getMessageBeanList start");
 
-    public static ArrayList<MessageBean> getMessageBeanList(Account account, String folderName) throws RakuRakuException, MessagingException {
-        ArrayList<String> uidList = getUidList(account, folderName);
+        ArrayList<String> uidList = null;
+        if (0 == length) {
+            Log.d("ahokato", "SlideMessage#getMessageBeanList getUidList全件");
+            uidList = getUidList(account, folderName);
+        } else if (!RakuPhotoStringUtils.isNotBlank(startUid)) {
+            Log.d("ahokato", "SlideMessage#getMessageBeanList getUidList指定件数");
+            uidList = getUidList(account, folderName, length);
+        } else {
+            Log.d("ahokato", "SlideMessage#getMessageBeanList getUidList指定位置からの指定件数");
+            uidList = getUidList(account, folderName, startUid, length);
+        }
+        Log.d("ahokato", "SlideMessage#getMessageBeanList uidList:" + uidList.size());
+
         ArrayList<MessageBean> result = new ArrayList<MessageBean>();
         for (String uid : uidList) {
             result.add(getMessage(account, folderName, uid));
         }
+        uidList = null;
+        Log.d("ahokato", "SlideMessage#getMessageBeanList result:" + result.size());
         return result;
     }
 }

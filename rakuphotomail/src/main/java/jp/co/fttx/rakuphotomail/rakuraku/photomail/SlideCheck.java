@@ -68,6 +68,7 @@ public class SlideCheck {
      * @since rakuphoto 0.1-beta1
      */
     public static boolean isDownloadedAttachment(MessageBean messageBean) {
+        Log.d("ahokato", "SlideCheck#isDownloadedAttachment(MessageBean messageBean) start");
         ArrayList<AttachmentBean> attachmentBeanList = messageBean.getAttachmentBeanList();
         for (AttachmentBean attachmentBean : attachmentBeanList) {
             if (null == attachmentBean.getContentUrl()) {
