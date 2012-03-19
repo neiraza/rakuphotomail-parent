@@ -92,15 +92,15 @@ public class Account implements BaseAccount {
     private boolean mSyncRemoteDeletions;
 
     //TODO コンフィグ候補たち
-    private int attachmentCacheLimitCount; //20;
+    private int attachmentCacheLimitCount = 5; //20;
     private long slideSleepTimeDuration; //20000L;
     private long serverSyncTimeDuration; //180000L;
     private int scaleRatio; //1;
 
     /*仕様上、現在は変更不可*/
     private int messageLimitCountFromDb = 5; //(変更不可)
-    //TODO 5件ずつサーバ同期
-    private int messageLimitCountFromRemote = 5; // 0だと全件(変更不可)
+    //TODO 3件ずつサーバ同期
+    private int messageLimitCountFromRemote = 3; // 0だと全件(変更不可)
     private long serverSyncInitStartTimeDuration = 180000L;//(変更不可)
     // 全件チェック時の開始地点
     private int checkStartId = 0;

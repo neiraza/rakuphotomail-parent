@@ -136,18 +136,18 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
             }
         });
 
-        mDownloadCache = (ListPreference) findPreference(PREFERENCE_DOWNLOAD_CACHE);
-        mDownloadCache.setValue(String.valueOf(mAccount.getAttachmentCacheLimitCount()));
-        mDownloadCache.setSummary(mDownloadCache.getEntry());
-        mDownloadCache.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                final String summary = newValue.toString();
-                int index = mDownloadCache.findIndexOfValue(summary);
-                mDownloadCache.setSummary(mDownloadCache.getEntries()[index]);
-                mDownloadCache.setValue(summary);
-                return false;
-            }
-        });
+//        mDownloadCache = (ListPreference) findPreference(PREFERENCE_DOWNLOAD_CACHE);
+//        mDownloadCache.setValue(String.valueOf(mAccount.getAttachmentCacheLimitCount()));
+//        mDownloadCache.setSummary(mDownloadCache.getEntry());
+//        mDownloadCache.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+//            public boolean onPreferenceChange(Preference preference, Object newValue) {
+//                final String summary = newValue.toString();
+//                int index = mDownloadCache.findIndexOfValue(summary);
+//                mDownloadCache.setSummary(mDownloadCache.getEntries()[index]);
+//                mDownloadCache.setValue(summary);
+//                return false;
+//            }
+//        });
 
         mMessageSize = (ListPreference) findPreference(PREFERENCE_MESSAGE_SIZE);
         mMessageSize.setValue(String.valueOf(mAccount.getMaximumAutoDownloadMessageSize()));

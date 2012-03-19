@@ -502,6 +502,31 @@ public class MessageSync {
         }
     }
 
+    public static ArrayList<String> getRemoteUidList(final Account account, final String folderName, final int start, final int end) throws MessagingException, RakuRakuException {
+        Log.d("ahokato", "MessageSync#getRemoteUidList:" + start + "-" + end);
+
+        Folder remoteFolder = null;
+        Message[] remoteMessages = null;
+        ArrayList<String> result = new ArrayList<String>();
+        try {
+            Store remoteStore = account.getRemoteStore();
+            remoteFolder = remoteStore.getFolder(folderName);
+            remoteFolder.open(Folder.OpenMode.READ_WRITE);
+
+            remoteMessages = remoteFolder.getMessages(start, end, null, null);
+            for (Message message : remoteMessages) {
+                Log.d("ahokato", "MessageSync#getRemoteUidList message.getUid():" + message.getUid());
+                result.add(message.getUid());
+            }
+            return result;
+
+        } finally {
+            closeFolder(remoteFolder);
+            remoteFolder = null;
+            remoteMessages = null;
+        }
+    }
+
     /**
      * @param account        User Account Info(Account Class)
      * @param folderName     Folder Name(String)
@@ -639,6 +664,14 @@ public class MessageSync {
                 Log.d("ahokato", "MessageSync#removeCache uid:" + uid);
                 SlideAttachment.clearCacheForAttachmentFile(account, folder, uid);
             }
+        }
+    }
+
+    public static void removeCache(Account account, String folder, ArrayList<String> removeList) throws MessagingException, RakuRakuException {
+        Log.d("ahokato", "MessageSync#removeCache start");
+        for (String uid : removeList) {
+            Log.d("ahokato", "MessageSync#removeCache uid:" + uid);
+            SlideAttachment.clearCacheForAttachmentFile(account, folder, uid);
         }
     }
 

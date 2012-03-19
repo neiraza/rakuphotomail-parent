@@ -984,14 +984,14 @@ public class LocalStore extends Store implements Serializable {
             @Override
             public ArrayList<String> doDbWork(final SQLiteDatabase db) throws WrappedException {
                 Cursor c = null;
+                ArrayList<String> result = new ArrayList<String>();
                 try {
                     String queryString = "SELECT m.uid FROM messages AS m WHERE EXISTS ( SELECT * FROM attachments AS a WHERE a.content_uri IS NOT NULL AND m.id = a.message_id) ORDER BY m.date DESC";
                     c = db.rawQuery(queryString, null);
-                    ArrayList<String> reslut = new ArrayList<String>();
                     while (c.moveToNext()) {
-                        reslut.add(c.getString(0));
+                        result.add(c.getString(0));
                     }
-                    return reslut;
+                    return result;
                 } finally {
                     if (c != null) {
                         c.close();

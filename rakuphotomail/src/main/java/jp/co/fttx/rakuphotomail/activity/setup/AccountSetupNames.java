@@ -93,17 +93,17 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
         }
 
         /* Attachment Cache Limit Count */
-        attachmentCacheLimitCount = getResources().getStringArray(R.array.account_settings_download_cache_values);
-        mAttachmentCacheLimitCount = (Spinner) findViewById(R.id.account_option_download_cache);
-        mAttachmentCacheLimitCount.setSelection(1);
-        mAttachmentCacheLimitCount.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                mAccount.setAttachmentCacheLimitCount(Integer.parseInt(attachmentCacheLimitCount[position]));
-            }
-
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
+//        attachmentCacheLimitCount = getResources().getStringArray(R.array.account_settings_download_cache_values);
+//        mAttachmentCacheLimitCount = (Spinner) findViewById(R.id.account_option_download_cache);
+//        mAttachmentCacheLimitCount.setSelection(1);
+//        mAttachmentCacheLimitCount.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                mAccount.setAttachmentCacheLimitCount(Integer.parseInt(attachmentCacheLimitCount[position]));
+//            }
+//
+//            public void onNothingSelected(AdapterView<?> parent) {
+//            }
+//        });
 
         /* Slide SleepTime Duration */
         slideSleepTimeDuration = getResources().getStringArray(R.array.account_settings_slide_change_duration_values);

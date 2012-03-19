@@ -105,22 +105,34 @@ public class SlideAttachment {
         Log.d("ahokato", "SlideAttachment#clearCacheForAttachmentFile uid:" + uid);
         LocalStore localStore = account.getLocalStore();
         LocalStore.LocalFolder localFolder = localStore.getFolder(folderName);
-        long[] attachmentIdList = localFolder.deleteAttachmentFile(uid);
-        for (long attachmentId : attachmentIdList) {
-            Log.d("ahokato", "SlideAttachment#clearCacheForAttachmentFile attachmentId:" + attachmentId);
-            if (localFolder.clearContentUri(attachmentId)) {
-                MessageBean messageBean = SlideMessage.getMessage(account, folderName, uid);
-                String[] arr = RakuPhotoStringUtils.splitFlags(messageBean.getFlags());
-                if (0 < arr.length) {
-                    ArrayList<String> arrayList = new ArrayList<String>(Arrays.asList(arr));
-                    int index = arrayList.indexOf("X_DOWNLOADED_FULL");
-                    Log.d("ahokato", "SlideAttachment#clearCacheForAttachmentFile index:" + index);
-                    if (0 <= index) {
-                        arrayList.remove(index);
-                        localStore.setFlagAnswered(uid, arrayList.toArray(new String[arrayList.size()]));
+        long[] attachmentIdList = null;
+        String[] arr = null;
+        ArrayList<String> arrayList = null;
+        try {
+            attachmentIdList = localFolder.deleteAttachmentFile(uid);
+            for (long attachmentId : attachmentIdList) {
+                Log.d("ahokato", "SlideAttachment#clearCacheForAttachmentFile attachmentId:" + attachmentId);
+                if (localFolder.clearContentUri(attachmentId)) {
+                    MessageBean messageBean = SlideMessage.getMessage(account, folderName, uid);
+                    arr = RakuPhotoStringUtils.splitFlags(messageBean.getFlags());
+                    if (0 < arr.length) {
+                        arrayList = new ArrayList<String>(Arrays.asList(arr));
+                        int index = arrayList.indexOf("X_DOWNLOADED_FULL");
+                        Log.d("ahokato", "SlideAttachment#clearCacheForAttachmentFile index:" + index);
+                        if (0 <= index) {
+                            arrayList.remove(index);
+                            localStore.setFlagAnswered(uid, arrayList.toArray(new String[arrayList.size()]));
+                        }
+                        arrayList = null;
                     }
                 }
             }
+        } finally {
+            closeFolder(localFolder);
+            localFolder = null;
+            localStore = null;
+            attachmentIdList = null;
+            arr = null;
         }
     }
 
