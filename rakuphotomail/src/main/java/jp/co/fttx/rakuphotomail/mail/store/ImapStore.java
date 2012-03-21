@@ -1628,7 +1628,7 @@ public class ImapStore extends Store {
                         while (response.more()) ;
                     } while (response.mTag == null);
 
-                    Log.d("refs1961", "ImapStore#appendMessages message.getUid():" + message.getUid());
+                    Log.d("refs1961", "ImapStore#appendMessages message.getRemoteUid():" + message.getUid());
                     String newUid = getUidFromMessageId(message);
                     Log.d("refs1961", "ImapStore#appendMessages newUid:" + newUid);
 

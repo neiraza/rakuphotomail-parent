@@ -12,6 +12,7 @@ import jp.co.fttx.rakuphotomail.mail.Store;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
 import jp.co.fttx.rakuphotomail.mail.store.StorageManager;
 import jp.co.fttx.rakuphotomail.mail.store.StorageManager.StorageProvider;
+import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
 import jp.co.fttx.rakuphotomail.view.ColorChip;
 
 import java.text.ParseException;
@@ -106,16 +107,42 @@ public class Account implements BaseAccount {
     private int checkStartId = 0;
     // 全件チェック時の終了地点
     private int checkEndId = 0;
-    // アプリ起動時の開始地点（１世代前のlocalLatestId）
-    private int localOldId = 0;
+//    // アプリ起動時の開始地点（１世代前のlocalLatestId）
+//    private int localOldId = 0;
     // 全件チェックFlag
     private boolean isAllSync = true;
     // 途中範囲チェックFlag
     private boolean isSync = false;
     // Local最新ID（このIDを境に過去と未来を分ける）、アプリ起動時の終了地点
-    private int localLatestId = 0;
-    private Date latestReceiveDate = new Date();
+//    private int localLatestId = 0; //TODO 消したい
+//    private Date latestReceiveDate = null; //TODO 消したい
     private static final String DATE_PATTERN = "yyyy/MM/dd HH:mm";
+
+    //TODO 2012/03/21 add
+    // アプリ起動時の最新UID
+    private String appRunLatestUid;
+    // アプリ起動時の日時
+    private Date appRunLatestDate = new Date();
+    // アプリ起動時の１世代前のUID
+    private String oldAppRunLatestUid;
+    // アプリ起動時の１世代前の日時
+    private Date oldAppRunLatestDate = new Date();
+    // 新着メールチェックの最新UID
+    private String newMailCheckLatestUid;
+    // 新着メールチェックの日時
+    private Date newMailCheckLatestDate = new Date();
+    // 新着メールチェックの１世代前のUID
+    private String oldNewMailCheckLatestUid;
+    // 新着メールチェックの１世代前の日時
+    private Date oldNewMailCheckLatestDate = new Date();
+    // 過去メールチェックの最新UID
+    private String pastMailCheckLatestUid;
+    // 過去メールチェックの日時
+    private Date pastMailCheckLatestDate = new Date();
+    // 過去メールチェックの１世代前のUID
+    private String oldPastMailCheckLatestUid;
+    // 過去メールチェックの１世代前の日時
+    private Date oldPastMailCheckLatestDate = new Date();
 
     private String lastSelectedFolderName = null;
 
@@ -282,11 +309,54 @@ public class Account implements BaseAccount {
         checkEndId = prefs.getInt(mUuid + ".checkEndId", 0);
         isAllSync = prefs.getBoolean(mUuid + ".isAllSync", false);
         isSync = prefs.getBoolean(mUuid + ".isSync", false);
-        localLatestId = prefs.getInt(mUuid + ".localLatestId", 0);
-        localOldId = prefs.getInt(mUuid + ".localOldId", 0);
+        //TODO 消したい
+//        localLatestId = prefs.getInt(mUuid + ".localLatestId", 0);
+//        localOldId = prefs.getInt(mUuid + ".localOldId", 0);
+        appRunLatestUid = prefs.getString(mUuid + ".appRunLatestUid", null);
+        newMailCheckLatestUid = prefs.getString(mUuid + ".newMailCheckLatestUid", null);
+        pastMailCheckLatestUid = prefs.getString(mUuid + ".pastMailCheckLatestUid", null);
+        oldAppRunLatestUid = prefs.getString(mUuid + ".oldAppRunLatestUid", null);
+        oldNewMailCheckLatestUid = prefs.getString(mUuid + ".oldNewMailCheckLatestUid", null);
+        oldPastMailCheckLatestUid = prefs.getString(mUuid + ".oldPastMailCheckLatestUid", null);
+
         SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
         try {
-            latestReceiveDate = sdf.parse(prefs.getString(mUuid + ".latestReceiveDate", "2011/03/11 14:26"));
+            //TODO 消したい
+//            String tmpLatestReceiveDate = prefs.getString(mUuid + ".latestReceiveDate", null);
+//            if (RakuPhotoStringUtils.isNotBlank(tmpLatestReceiveDate)) {
+//                latestReceiveDate = new Date();
+//                latestReceiveDate = sdf.parse(tmpLatestReceiveDate);
+//            }
+            String tmpAppRunLatestDate = prefs.getString(mUuid + ".appRunLatestDate", null);
+            if (RakuPhotoStringUtils.isNotBlank(tmpAppRunLatestDate)) {
+                appRunLatestDate = new Date();
+                appRunLatestDate = sdf.parse(tmpAppRunLatestDate);
+            }
+            String tmpNewMailCheckLatestDate = prefs.getString(mUuid + ".newMailCheckLatestDate", null);
+            if (RakuPhotoStringUtils.isNotBlank(tmpNewMailCheckLatestDate)) {
+                newMailCheckLatestDate = new Date();
+                newMailCheckLatestDate = sdf.parse(tmpNewMailCheckLatestDate);
+            }
+            String tmpPastMailCheckLatestDate = prefs.getString(mUuid + ".pastMailCheckLatestDate", null);
+            if (RakuPhotoStringUtils.isNotBlank(tmpPastMailCheckLatestDate)) {
+                pastMailCheckLatestDate = new Date();
+                pastMailCheckLatestDate = sdf.parse(tmpPastMailCheckLatestDate);
+            }
+            String tmpOldAppRunLatestDate = prefs.getString(mUuid + ".oldAppRunLatestDate", null);
+            if (RakuPhotoStringUtils.isNotBlank(tmpOldAppRunLatestDate)) {
+                oldAppRunLatestDate = new Date();
+                oldAppRunLatestDate = sdf.parse(tmpOldAppRunLatestDate);
+            }
+            String tmpOldNewMailCheckLatestDate = prefs.getString(mUuid + ".oldNewMailCheckLatestDate", null);
+            if (RakuPhotoStringUtils.isNotBlank(tmpOldNewMailCheckLatestDate)) {
+                oldNewMailCheckLatestDate = new Date();
+                oldNewMailCheckLatestDate = sdf.parse(tmpOldNewMailCheckLatestDate);
+            }
+            String tmpOldPastMailCheckLatestDate = prefs.getString(mUuid + ".oldPastMailCheckLatestDate", null);
+            if (RakuPhotoStringUtils.isNotBlank(tmpOldPastMailCheckLatestDate)) {
+                oldPastMailCheckLatestDate = new Date();
+                oldPastMailCheckLatestDate = sdf.parse(tmpOldPastMailCheckLatestDate);
+            }
         } catch (ParseException e) {
             Log.e(RakuPhotoMail.LOG_TAG, e.getMessage());
         }
@@ -495,10 +565,38 @@ public class Account implements BaseAccount {
         editor.putInt(mUuid + ".checkEndId", checkEndId);
         editor.putBoolean(mUuid + ".isAllSync", isAllSync);
         editor.putBoolean(mUuid + ".isSync", isSync);
-        editor.putInt(mUuid + ".localLatestId", localLatestId);
-        editor.putInt(mUuid + ".localOldId", localOldId);
+        //TODO 消したい
+//        editor.putInt(mUuid + ".localLatestId", localLatestId);
+//        editor.putInt(mUuid + ".localOldId", localOldId);
+        editor.putString(mUuid + ".appRunLatestUid", appRunLatestUid);
+        editor.putString(mUuid + ".newMailCheckLatestUid", newMailCheckLatestUid);
+        editor.putString(mUuid + ".pastMailCheckLatestUid", pastMailCheckLatestUid);
+        editor.putString(mUuid + ".oldAppRunLatestUid", oldAppRunLatestUid);
+        editor.putString(mUuid + ".oldNewMailCheckLatestUid", oldNewMailCheckLatestUid);
+        editor.putString(mUuid + ".oldPastMailCheckLatestUid", oldPastMailCheckLatestUid);
         SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
-        editor.putString(sdf.format(latestReceiveDate), "2011/03/11 14:26");
+        //TODO 消したい
+//        if (null != latestReceiveDate) {
+//            editor.putString(sdf.format(latestReceiveDate), null);
+//        }
+        if (null != appRunLatestDate) {
+            editor.putString(sdf.format(appRunLatestDate), null);
+        }
+        if (null != newMailCheckLatestDate) {
+            editor.putString(sdf.format(newMailCheckLatestDate), null);
+        }
+        if (null != pastMailCheckLatestDate) {
+            editor.putString(sdf.format(pastMailCheckLatestDate), null);
+        }
+        if (null != oldAppRunLatestDate) {
+            editor.putString(sdf.format(oldAppRunLatestDate), null);
+        }
+        if (null != oldNewMailCheckLatestDate) {
+            editor.putString(sdf.format(oldNewMailCheckLatestDate), null);
+        }
+        if (null != oldPastMailCheckLatestDate) {
+            editor.putString(sdf.format(oldPastMailCheckLatestDate), null);
+        }
 
         for (String type : networkTypes) {
             Boolean useCompression = compressionMap.get(type);
@@ -1320,29 +1418,31 @@ public class Account implements BaseAccount {
         this.checkEndId = checkEndId;
     }
 
-    public int getLocalLatestId() {
-        return this.localLatestId;
-    }
+    //TODO 消したい
+//    public int getLocalLatestId() {
+//        return this.localLatestId;
+//    }
+//
+//    public void setLocalLatestId(int localLatestId) {
+//        this.localLatestId = localLatestId;
+//    }
 
-    public void setLocalLatestId(int localLatestId) {
-        this.localLatestId = localLatestId;
-    }
+//    public int getLocalOldId() {
+//        return this.localOldId;
+//    }
+//
+//    public void setLocalOldId(int localOldId) {
+//        this.localOldId = localOldId;
+//    }
 
-    public int getLocalOldId() {
-        return this.localOldId;
-    }
-
-    public void setLocalOldId(int localOldId) {
-        this.localOldId = localOldId;
-    }
-
-    public Date getLatestReceiveDate() {
-        return this.latestReceiveDate;
-    }
-
-    public void setLatestReceiveDate(Date latestReceiveDate) {
-        this.latestReceiveDate = latestReceiveDate;
-    }
+    //TODO 消したい
+//    public Date getLatestReceiveDate() {
+//        return this.latestReceiveDate;
+//    }
+//
+//    public void setLatestReceiveDate(Date latestReceiveDate) {
+//        this.latestReceiveDate = latestReceiveDate;
+//    }
 
     public boolean isAllSync() {
         return this.isAllSync;
@@ -1360,4 +1460,106 @@ public class Account implements BaseAccount {
     public void setSync(boolean tf) {
         this.isSync = tf;
     }
+
+    public String getAppRunLatestUid() {
+        return this.appRunLatestUid;
+    }
+
+    public void setAppRunLatestUid(String appRunLatestUid) {
+        this.oldAppRunLatestUid = this.appRunLatestUid;
+        this.appRunLatestUid = appRunLatestUid;
+    }
+
+    public Date getAppRunLatestDate() {
+        return this.appRunLatestDate;
+    }
+
+    public void setAppRunLatestDate(Date appRunLatestDate) {
+        this.oldAppRunLatestDate = this.appRunLatestDate;
+        this.appRunLatestDate = appRunLatestDate;
+    }
+
+    public String getOldAppRunLatestUid() {
+        return this.oldAppRunLatestUid;
+    }
+
+//    public void setOldAppRunLatestUid(int oldAppRunLatestUid) {
+//        this.oldAppRunLatestUid = oldAppRunLatestUid;
+//    }
+
+    public Date getOldAppRunLatestDate() {
+        return this.oldAppRunLatestDate;
+    }
+
+//    public void setOldAppRunLatestDate(Date oldAppRunLatestDate) {
+//        this.oldAppRunLatestDate = oldAppRunLatestDate;
+//    }
+
+    public String getNewMailCheckLatestUid() {
+        return this.newMailCheckLatestUid;
+    }
+
+    public void setNewMailCheckLatestUid(String newMailCheckLatestUid) {
+        this.oldNewMailCheckLatestUid = this.newMailCheckLatestUid;
+        this.newMailCheckLatestUid = newMailCheckLatestUid;
+    }
+
+    public Date getNewMailCheckLatestDate() {
+        return this.newMailCheckLatestDate;
+    }
+
+    public void setNewMailCheckLatestDate(Date newMailCheckLatestDate) {
+        this.oldNewMailCheckLatestDate = this.newMailCheckLatestDate;
+        this.newMailCheckLatestDate = newMailCheckLatestDate;
+    }
+
+    public String getOldNewMailCheckLatestUid() {
+        return this.oldNewMailCheckLatestUid;
+    }
+
+//    public void setOldNewMailCheckLatestUid(int oldNewMailCheckLatestUid) {
+//        this.oldNewMailCheckLatestUid = oldNewMailCheckLatestUid;
+//    }
+
+    public Date getOldNewMailCheckLatestDate() {
+        return this.oldNewMailCheckLatestDate;
+    }
+
+//    public void setOldNewMailCheckLatestDate(Date oldNewMailCheckLatestDate) {
+//        this.oldNewMailCheckLatestDate = oldNewMailCheckLatestDate;
+//    }
+
+    public String getPastMailCheckLatestUid() {
+        return this.pastMailCheckLatestUid;
+    }
+
+    public void setPastMailCheckLatestUid(String pastMailCheckLatestUid) {
+        this.oldPastMailCheckLatestUid = this.pastMailCheckLatestUid;
+        this.pastMailCheckLatestUid = pastMailCheckLatestUid;
+    }
+
+    public Date getPastMailCheckLatestDate() {
+        return this.pastMailCheckLatestDate;
+    }
+
+    public void setPastMailCheckLatestDate(Date pastMailCheckLatestDate) {
+        this.oldPastMailCheckLatestDate = this.pastMailCheckLatestDate;
+        this.pastMailCheckLatestDate = pastMailCheckLatestDate;
+    }
+
+    public String getOldPastMailCheckLatestUid() {
+        return this.oldPastMailCheckLatestUid;
+    }
+
+//    public void setOldPastMailCheckLatestUid(int oldPastMailCheckLatestUid) {
+//        this.oldPastMailCheckLatestUid = oldPastMailCheckLatestUid;
+//    }
+
+    public Date getOldPastMailCheckLatestDate() {
+        return this.oldPastMailCheckLatestDate;
+    }
+
+//    public void setOldPastMailCheckLatestDate(Date oldPastMailCheckLatestDate) {
+//        this.oldPastMailCheckLatestDate = oldPastMailCheckLatestDate;
+//    }
 }

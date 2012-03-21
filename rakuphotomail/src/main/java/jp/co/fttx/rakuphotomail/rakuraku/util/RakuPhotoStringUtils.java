@@ -54,11 +54,11 @@ public class RakuPhotoStringUtils {
     public static boolean isNotBlank(String... params) {
         for (String param : params) {
             if (null == param) {
-                Log.w(RakuPhotoMail.LOG_TAG,"paramsの中にnullがいたお");
+                Log.w(RakuPhotoMail.LOG_TAG, "RakuPhotoStringUtils#isNotBlank paramsの中にnullがいたお");
                 return false;
             }
             if ("".equals(param)) {
-                Log.w(RakuPhotoMail.LOG_TAG,"paramsの中にblankがいたお");
+                Log.w(RakuPhotoMail.LOG_TAG, "RakuPhotoStringUtils#isNotBlank paramsの中にnullがいたお");
                 return false;
             }
         }

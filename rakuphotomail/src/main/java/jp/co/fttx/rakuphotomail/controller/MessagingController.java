@@ -3288,7 +3288,7 @@ public class MessagingController implements Runnable {
 
             Transport transport = Transport.getInstance(account);
             for (Message message : localMessages) {
-                Log.d("refs1961", "MessagingController#sendMessagesSynchronous message.getUid:" + message.getUid());
+                Log.d("refs1961", "MessagingController#sendMessagesSynchronous message.getRemoteUid:" + message.getUid());
                 Log.d("refs1961", "MessagingController#sendMessagesSynchronous message.getSubject:" + message.getSubject());
 
                 if (message.isSet(Flag.DELETED)) {
@@ -3341,10 +3341,10 @@ public class MessagingController implements Runnable {
                         LocalFolder localSentFolder = (LocalFolder) localStore
                                 .getFolder(account.getSentFolderName());
 
-                        Log.d("refs1961", "MessagingController#sendMessagesSynchronous moveMessages前 message.getUid:" + message.getUid());
+                        Log.d("refs1961", "MessagingController#sendMessagesSynchronous moveMessages前 message.getRemoteUid:" + message.getUid());
                         localFolder.moveMessages(new Message[]{message},
                                 localSentFolder);
-                        Log.d("refs1961", "MessagingController#sendMessagesSynchronous moveMessages後 message.getUid:" + message.getUid());
+                        Log.d("refs1961", "MessagingController#sendMessagesSynchronous moveMessages後 message.getRemoteUid:" + message.getUid());
 
 //  }
                         return message.getUid();
@@ -3636,12 +3636,12 @@ public class MessagingController implements Runnable {
             Transport transport = Transport.getInstance(account);
             Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous localMessages.length:" + localMessages.length);
             for (Message message : localMessages) {
-                Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous MessagingListener message.getUid:" + message.getUid());
+                Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous MessagingListener message.getRemoteUid:" + message.getUid());
                 Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous MessagingListener message.getMessageId:" + message.getMessageId());
                 Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous MessagingListener message.getSubject:" + message.getSubject());
 
                 if (message.isSet(Flag.DELETED)) {
-                    Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous MessagingListener message.getUid:" + message.getUid());
+                    Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous MessagingListener message.getRemoteUid:" + message.getUid());
                     message.destroy();
                     continue;
                 }

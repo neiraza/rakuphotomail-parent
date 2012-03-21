@@ -62,7 +62,7 @@ public class MessageSync {
             Message[] localMessages = localFolder.getMessages(null);
             HashMap<String, Message> localUidMap = new HashMap<String, Message>();
             for (Message message : localMessages) {
-                Log.d("pgr", "syncMailboxForCheckNewMail message.getUid():" + message.getUid());
+                Log.d("pgr", "syncMailboxForCheckNewMail message.getRemoteUid():" + message.getUid());
                 localUidMap.put(message.getUid(), message);
             }
 
@@ -229,7 +229,7 @@ public class MessageSync {
             Message[] localMessages = localFolder.getMessages(null);
             HashMap<String, Message> localUidMap = new HashMap<String, Message>();
             for (Message message : localMessages) {
-                Log.d("pgr", "syncMailbox message.getUid():" + message.getUid());
+                Log.d("pgr", "syncMailbox message.getRemoteUid():" + message.getUid());
 
                 //TODO これ使ってなくね？
                 localUidMap.put(message.getUid(), message);
@@ -353,7 +353,7 @@ public class MessageSync {
 //                int remoteEnd = remoteMessageCount;
 //                remoteMessageArray = remoteFolder.getMessages(remoteStart, remoteEnd, null, null);
 //                for (Message thisMessage : remoteMessageArray) {
-//                    result.add(thisMessage.getUid());
+//                    result.add(thisMessage.getRemoteUid());
 //                }
 //                remoteMessageArray = null;
 //            } else if (remoteMessageCount < 0) {
@@ -365,7 +365,7 @@ public class MessageSync {
 //        }
 //    }
 
-    public static String getUid(final Account account, final String folderName, int messageId) throws MessagingException, RakuRakuException {
+    public static String getRemoteUid(final Account account, final String folderName, int messageId) throws MessagingException, RakuRakuException {
 
         Folder remoteFolder = null;
         Store remoteStore;
@@ -430,7 +430,7 @@ public class MessageSync {
 //    public static void syncMailUseDelegate(final Account account, final String folder, final Message remoteMessage) throws MessagingException {
 //        Log.d("ahokato", "MessageSync#syncMailUseDelegate start");
 //
-//        if (!isMessage(account, folder, remoteMessage.getUid())) {
+//        if (!isMessage(account, folder, remoteMessage.getRemoteUid())) {
 //            SlideAttachment.downloadAttachment(account, folder, remoteMessage);
 //            Log.d("ahokato", "MessageSync#syncMailUseDelegate SlideAttachment#downloadAttachment end");
 //
@@ -502,6 +502,11 @@ public class MessageSync {
         }
     }
 
+    public static int getRemoteMessageId(final Account account, final String folderName, final String uid) throws MessagingException, RakuRakuException {
+        ArrayList<String> list = getRemoteUidList(account, folderName, 1, getRemoteMessageCount(account, folderName));
+        return (list.indexOf(uid) + 1);
+    }
+
     public static ArrayList<String> getRemoteUidList(final Account account, final String folderName, final int start, final int end) throws MessagingException, RakuRakuException {
         Log.d("ahokato", "MessageSync#getRemoteUidList:" + start + "-" + end);
 
@@ -515,7 +520,7 @@ public class MessageSync {
 
             remoteMessages = remoteFolder.getMessages(start, end, null, null);
             for (Message message : remoteMessages) {
-                Log.d("ahokato", "MessageSync#getRemoteUidList message.getUid():" + message.getUid());
+                Log.d("ahokato", "MessageSync#getRemoteUidList message.getRemoteUid():" + message.getUid());
                 result.add(message.getUid());
             }
             return result;
