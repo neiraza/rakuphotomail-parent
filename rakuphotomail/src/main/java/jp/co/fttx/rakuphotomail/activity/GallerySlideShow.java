@@ -216,6 +216,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      *
      */
     private NewMailCheckTask mNewMailCheckTask;
+    /**
+     *
+     */
+    private DeleteMailCheckTask mDeleteMailCheckTask;
 
     private static final String DATE_PATTERN = "yyyy/MM/dd HH:mm";
     private boolean isClick = true;
@@ -635,7 +639,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                     if (isNewMailCheck()) {
                         Log.d("ahokato", "GallerySlideShow#slideShow 新着メールを確認するお時間です");
                         mAccount.setNewMailCheckLatestDate(new Date());
-                        startNewMailCheckTask();
+                        startDeleteMailCheckTask();
                     } else {
                         Log.d("ahokato", "GallerySlideShow#slideShow スライドショーのスケジューリングを行います");
                         //次回起動
@@ -764,6 +768,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         }
         if (null != mNewMailCheckTask) {
             mNewMailCheckTask.cancel(false);
+        }
+        if (null != mDeleteMailCheckTask) {
+            mDeleteMailCheckTask.cancel(false);
         }
     }
 
@@ -1072,11 +1079,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             //チェック処理開始前に他の処理を止めたり
             mSlideShowLoopHandler.removeCallbacks(mSlideShowLoopRunnable);
             if (mAccount.isAllSync()) {
-//                isTmpAllSync = true;
                 mAccount.setAllSync(false);
             }
             if (mAccount.isSync()) {
-//                isTmpSync = true;
                 mAccount.setSync(false);
             }
             isClick = false;
@@ -1127,6 +1132,110 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             } catch (MessagingException e) {
                 Log.e(RakuPhotoMail.LOG_TAG, getString(R.string.error_messaging_exception) + e.getMessage());
             }
+        }
+
+        @Override
+        public void onCancel(DialogInterface dialog) {
+            this.cancel(true);
+        }
+
+    }
+
+    //TODO 2012/03/23 add
+    private void startDeleteMailCheckTask() {
+        Log.d("ahokato", "GallerySlideShow#startDeleteMailCheckTask start");
+        mDeleteMailCheckTask = new DeleteMailCheckTask(mContext);
+        if (AsyncTask.Status.RUNNING != mDeleteMailCheckTask.getStatus()) {
+            mDeleteMailCheckTask.execute();
+        }
+    }
+
+    //TODO 2012/03/23 add
+
+    /**
+     * @author tooru.oguri
+     * @since 0.1-beta1
+     */
+    private class DeleteMailCheckTask extends AsyncTask<Void, Void, ArrayList<String>> implements DialogInterface.OnCancelListener {
+        Context context;
+        ProgressDialog progressDialog;
+
+        public DeleteMailCheckTask(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            progressDialog = new ProgressDialog(context);
+            progressDialog.setTitle(getString(R.string.progress_please_wait));
+            progressDialog.setMessage("削除済みメールについてサーバーをチェックしています");
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progressDialog.setCancelable(true);
+            progressDialog.setOnCancelListener(this);
+            progressDialog.show();
+        }
+
+        /**
+         * @return null
+         */
+        @Override
+        protected ArrayList<String> doInBackground(Void... params) {
+            Log.d("ahokato", "DeleteMailCheckTask#doInBackground");
+            if (!progressDialog.isIndeterminate()) {
+                progressDialog.show();
+            }
+            ArrayList<String> remoteUidList;
+            ArrayList<String> localUidList;
+            ArrayList<String> deleteList = new ArrayList<String>();
+
+            try {
+                int localLatestId = MessageSync.getRemoteMessageId(mAccount, mFolder, mAccount.getAppRunLatestUid());
+                remoteUidList = MessageSync.getRemoteUidList(mAccount, mFolder, 1, localLatestId);
+                localUidList = SlideMessage.getUidList(mAccount, mFolder);
+
+                for (String localUid : localUidList) {
+                    if (!remoteUidList.contains(localUid)) {
+                        Log.d("ahokato", "DeleteMailCheckTask#doInBackground 削除予定UID：" + localUid);
+                        deleteList.add(localUid);
+                    }
+                }
+            } catch (MessagingException e) {
+                Log.e(RakuPhotoMail.LOG_TAG, getString(R.string.error_messaging_exception) + e.getMessage());
+            } catch (RakuRakuException e) {
+                Log.e(RakuPhotoMail.LOG_TAG, getString(R.string.error_rakuraku_exception) + getString(R.string.error_rakuraku_exception_message) + e.getMessage());
+            } finally {
+                remoteUidList = null;
+                localUidList = null;
+            }
+            return deleteList;
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... params) {
+        }
+
+        @Override
+        protected void onCancelled() {
+            if (null != progressDialog && progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<String> deleteList) {
+            Log.d("ahokato", "DeleteMailCheckTask#onPostExecute");
+            onCancelled();
+            //TODO ここがぬるぽがっ（doInBackgroundでnullいれてたのをやめてみた）
+            if (0 < deleteList.size()) {
+                Log.d("ahokato", "DeleteMailCheckTask#onPostExecute 削除しますかね");
+                try {
+                    SlideMessage.deleteMessages(mAccount, mFolder, deleteList);
+                } catch (MessagingException e) {
+                    Log.e(RakuPhotoMail.LOG_TAG, getString(R.string.error_messaging_exception) + e.getMessage());
+                }
+            }
+            Log.d("ahokato", "DeleteMailCheckTask#onPostExecute 終わったよ何もかも");
+            startNewMailCheckTask();
         }
 
         @Override

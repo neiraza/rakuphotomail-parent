@@ -587,4 +587,20 @@ public class SlideMessage {
         Log.d("ahokato", "SlideMessage#getMessageBeanList result:" + result.size());
         return result;
     }
+
+    //TODO 2012/03/23 add
+    public static void deleteMessages(Account account, String folderName, ArrayList<String> deleteList) throws MessagingException {
+        Log.d("ahokato", "SlideMessage#deleteMessages start");
+        LocalStore.LocalFolder localFolder = null;
+        LocalStore localStore;
+        try {
+            localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folderName);
+            localFolder.deleteMessages(deleteList);
+        } finally {
+            closeFolder(localFolder);
+            localStore = null;
+            localFolder = null;
+        }
+    }
 }

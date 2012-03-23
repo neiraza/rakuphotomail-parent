@@ -3090,6 +3090,34 @@ public class LocalStore extends Store implements Serializable {
             }
         }
 
+        //TODO 2012/03/23 add
+        public void deleteMessages(final ArrayList<String> uidList)
+                throws MessagingException {
+            Log.d("ahokato", "LocalFolder#deleteMessages start");
+            open(OpenMode.READ_WRITE);
+            try {
+                database.execute(true, new DbCallback<Void>() {
+                    @Override
+                    public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
+                            UnavailableStorageException {
+                        try {
+                            for (String uid : uidList) {
+                                Log.d("ahokato", "LocalStore#deleteMessages delete UID:" + uid);
+                                deleteAttachments(uid);
+                                db.execSQL("DELETE FROM messages WHERE folder_id = ? AND uid = ?",
+                                        new Object[]{mFolderId, uid});
+                            }
+                        } catch (MessagingException e) {
+                            throw new WrappedException(e);
+                        }
+                        return null;
+                    }
+                });
+            } catch (WrappedException e) {
+                throw (MessagingException) e.getCause();
+            }
+        }
+
         /**
          * Update the given message in the LocalStore without first deleting the
          * existing message (contrast with appendMessages). This method is used
