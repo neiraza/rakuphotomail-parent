@@ -544,7 +544,7 @@ public class SlideMessage {
     }
 
     public static String getHighestLocalUid(Account account, String folderName) throws MessagingException {
-        Log.d("ahokato", "MessageSync#getUidList start");
+        Log.d("ahokato", "SlideMessage#getHighestLocalUid start");
         LocalStore.LocalFolder localFolder = null;
         LocalStore localStore = null;
         try {

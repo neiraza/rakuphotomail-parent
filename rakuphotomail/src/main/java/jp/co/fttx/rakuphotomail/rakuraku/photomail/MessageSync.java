@@ -394,15 +394,15 @@ public class MessageSync {
     public static String getHighestRemoteUid(final Account account, final String folderName) throws MessagingException, RakuRakuException {
 
         Folder remoteFolder = null;
+        Store remoteStore;
+        Message[] remoteMessageArray;
+        ArrayList<String> allUidList = new ArrayList<String>();
         try {
-            Store remoteStore = account.getRemoteStore();
+            remoteStore = account.getRemoteStore();
             remoteFolder = remoteStore.getFolder(folderName);
             remoteFolder.open(Folder.OpenMode.READ_WRITE);
             int remoteMessageCount = remoteFolder.getMessageCount();
-            Message[] remoteMessageArray;
-            ArrayList<String> allUidList = new ArrayList<String>();
             if (remoteMessageCount > 0) {
-                int remoteStart = 1;
                 int remoteEnd = remoteMessageCount;
                 remoteMessageArray = remoteFolder.getMessages(remoteEnd, remoteEnd, null, null);
                 for (Message thisMessage : remoteMessageArray) {
@@ -419,6 +419,10 @@ public class MessageSync {
             }
         } finally {
             closeFolder(remoteFolder);
+            remoteStore = null;
+            remoteFolder = null;
+            remoteMessageArray = null;
+            allUidList = null;
         }
     }
 
@@ -503,6 +507,7 @@ public class MessageSync {
     }
 
     public static int getRemoteMessageId(final Account account, final String folderName, final String uid) throws MessagingException, RakuRakuException {
+        Log.d("ahokato", "MessageSync#getRemoteMessageId uid:" + uid);
         ArrayList<String> list = getRemoteUidList(account, folderName, 1, getRemoteMessageCount(account, folderName));
         return (list.indexOf(uid) + 1);
     }
@@ -511,7 +516,7 @@ public class MessageSync {
         Log.d("ahokato", "MessageSync#getRemoteUidList:" + start + "-" + end);
 
         Folder remoteFolder = null;
-        Message[] remoteMessages = null;
+        Message[] remoteMessages;
         ArrayList<String> result = new ArrayList<String>();
         try {
             Store remoteStore = account.getRemoteStore();
@@ -529,6 +534,7 @@ public class MessageSync {
             closeFolder(remoteFolder);
             remoteFolder = null;
             remoteMessages = null;
+            result = null;
         }
     }
 
