@@ -37,7 +37,6 @@ import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideCheck;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideMessage;
 import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
 
-import java.io.FileNotFoundException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -235,6 +234,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     public static void actionSlideShow(Context context, Account account, String folder, String uid) {
+        Log.d("ahokato", "GallerySlideShow#actionSlideShow(index) start uid:" + uid);
 
         Intent intent = new Intent(context, GallerySlideShow.class);
         if (account != null) {
@@ -328,9 +328,21 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 if (RakuPhotoStringUtils.isNotBlank(localUid, remoteUid)) {
                     if (localUid.equals(remoteUid)) {
                         Log.d("ahokato", "GallerySlideShow#onCreate ローカル情報が最新のため、同期は行いません");
-                        int result = getSlideMessageBeanList(null, mServerSyncCount);
-                        if (0 == result) {
-                            doAlertForMessageIsNothing();
+                        // 開始条件（UID）の有無によりスライド対象の取得位置を変更する
+                        if (null == mSlideStartUid) {
+                            int result = getSlideMessageBeanList(null, mServerSyncCount);
+                            if (0 == result) {
+                                doAlertForMessageIsNothing();
+                            }
+                        } else {
+                            int result1a = getSlideMessageBeanList(mSlideStartUid, mServerSyncCount);
+                            mSlideStartUid = null;
+                            if (0 == result1a) {
+                                int result1b = getSlideMessageBeanList(null, mServerSyncCount);
+                                if (0 == result1b) {
+                                    doAlertForMessageIsNothing();
+                                }
+                            }
                         }
                     } else {
                         Log.d("ahokato", "GallerySlideShow#onCreate ローカル情報が最新ではない恐れが有るため、同期を行います");
@@ -338,7 +350,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                         mPastMailCheckEndId = remoteMessageCount;
                         mPastMailCheckStartId = mPastMailCheckEndId - mServerSyncCount;
                         if (0 >= mPastMailCheckStartId) {
-                            mPastMailCheckStartId = MessageSync.getRemoteMessageId(mAccount, mFolder, mAccount.getPastMailCheckLatestUid());
+                            mPastMailCheckStartId = setPastMailCheckStartId(localUid, remoteUid);
                             if (0 >= mPastMailCheckStartId) {
                                 mPastMailCheckStartId = 1;
                             }
@@ -356,6 +368,24 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             } catch (RakuRakuException rp) {
                 Log.e(RakuPhotoMail.LOG_TAG, getString(R.string.error_rakuraku_exception) + rp.getMessage());
             }
+        }
+    }
+
+    private int setPastMailCheckStartId(String localUid, String remoteUid) throws RakuRakuException, MessagingException {
+        //TODO 2012/03/26 add
+        String latestNewMailCheckUid = mAccount.getNewMailCheckLatestUid();
+        int tmpNewMailCheckUid;
+        if (RakuPhotoStringUtils.isNotBlank(latestNewMailCheckUid)) {
+            tmpNewMailCheckUid = Integer.parseInt(latestNewMailCheckUid);
+        } else {
+            tmpNewMailCheckUid = 0;
+        }
+        int tmpLocalUid = Integer.parseInt(localUid);
+        int tmpRemoteUid = Integer.parseInt(remoteUid);
+        if (tmpRemoteUid > tmpNewMailCheckUid && tmpNewMailCheckUid > tmpLocalUid) {
+            return MessageSync.getRemoteMessageId(mAccount, mFolder, latestNewMailCheckUid);
+        } else {
+            return MessageSync.getRemoteMessageId(mAccount, mFolder, localUid);
         }
     }
 
@@ -522,7 +552,16 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             } else {
                 try {
                     mCurrentMessageBean = null;
-                    int result1 = getSlideMessageBeanList(mDispUid, mAccount.getMessageLimitCountFromDb());
+                    int result1;
+                    if (null == mSlideStartUid) {
+                        result1 = getSlideMessageBeanList(mSlideStartUid, mAccount.getMessageLimitCountFromDb());
+                        mSlideStartUid = null;
+                        if (0 == result1) {
+                            result1 = getSlideMessageBeanList(mDispUid, mAccount.getMessageLimitCountFromDb());
+                        }
+                    } else {
+                        result1 = getSlideMessageBeanList(mDispUid, mAccount.getMessageLimitCountFromDb());
+                    }
                     if (0 == result1) {
                         mDispUid = null;
                         int result2 = getSlideMessageBeanList(null, mAccount.getMessageLimitCountFromDb());
@@ -621,8 +660,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                                 mBitmap = SlideAttachment.getBitmap(getApplicationContext(), getWindowManager().getDefaultDisplay(), mAccount, attachmentBean);
                                 dispSlide(mCurrentMessageBean);
                                 Log.d("ahokato", "GallerySlideShow#slideShow mSlideShowLoopRunnable image:" + attachmentBean.getName());
-                            } catch (FileNotFoundException e) {
-                                Log.w(RakuPhotoMail.LOG_TAG, "UID:" + mCurrentMessageBean.getUid() + " " + e.getMessage());
                             } catch (RakuRakuException e) {
                                 Log.w(RakuPhotoMail.LOG_TAG, "UID:" + mCurrentMessageBean.getUid() + " " + getString(R.string.error_rakuraku_exception) + e.getMessage());
                             }
@@ -863,8 +900,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since 0.1-beta1
      */
     private class MessageSyncTask extends AsyncTask<Void, Void, Boolean> implements DialogInterface.OnCancelListener {
-        Context context;
-        ProgressDialog progressDialog;
+        private Context context;
+        private ProgressDialog progressDialog;
 
         public MessageSyncTask(Context context) {
             this.context = context;
@@ -937,7 +974,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         }
 
         private void preparationSomeSync() throws RakuRakuException, MessagingException {
-            int messageId = MessageSync.getRemoteMessageId(mAccount, mFolder, mAccount.getPastMailCheckLatestUid());
+
+            String localUid = mAccount.getPastMailCheckLatestUid();
+            String remoteUid = mAccount.getAppRunLatestUid();
+            int messageId = setPastMailCheckStartId(localUid, remoteUid);
+
             if (0 >= messageId) {
                 messageId = 1;
             }
@@ -957,7 +998,16 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         }
 
         private boolean result() {
-            int result1 = getSlideMessageBeanList(mDispUid, mAccount.getMessageLimitCountFromDb());
+            int result1;
+            if (null == mSlideStartUid) {
+                result1 = getSlideMessageBeanList(mSlideStartUid, mAccount.getMessageLimitCountFromDb());
+                mSlideStartUid = null;
+                if (0 == result1) {
+                    result1 = getSlideMessageBeanList(mDispUid, mAccount.getMessageLimitCountFromDb());
+                }
+            } else {
+                result1 = getSlideMessageBeanList(mDispUid, mAccount.getMessageLimitCountFromDb());
+            }
             Log.d("ahokato", "MessageSyncTask#result result1:" + result1);
             if (0 == result1) {
                 mDispUid = null;
@@ -993,11 +1043,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         protected void onPostExecute(Boolean isSlideMessage) {
             try {
                 Log.d("ahokato", "MessageSyncTask#onPostExecute isSlideMessage:" + isSlideMessage);
+                onCancelled();
                 if (isSlideMessage) {
-                    onCancelled();
                     slideShow();
                 } else {
-                    doAlertForMessageIsNothing();
+                    onResume();
                 }
             } catch (MessagingException e) {
                 Log.e(RakuPhotoMail.LOG_TAG, getString(R.string.error_messaging_exception) + e.getMessage());
@@ -1020,6 +1070,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     private int getSlideMessageBeanList(String startUid, int length) {
         Log.d("ahokato", "GallerySlideShow#getSlideMessageBeanList startUid:" + startUid + " length:" + length);
+        Log.d("ahokato", "GallerySlideShow#getSlideMessageBeanList mSlideStartUid:" + mSlideStartUid);
+        Log.d("ahokato", "GallerySlideShow#getSlideMessageBeanList mDispUid:" + mDispUid);
         mSlideMessageBeanList = null;
         try {
             mSlideMessageBeanList = SlideMessage.getMessageBeanList(mAccount, mFolder, startUid, length);
@@ -1048,8 +1100,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since 0.1-beta1
      */
     private class NewMailCheckTask extends AsyncTask<Void, Void, Boolean> implements DialogInterface.OnCancelListener {
-        Context context;
-        ProgressDialog progressDialog;
+        private Context context;
+        private ProgressDialog progressDialog;
+        private boolean isAllSync = false;
+        private boolean isSync = false;
 
         public NewMailCheckTask(Context context) {
             this.context = context;
@@ -1079,9 +1133,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             //チェック処理開始前に他の処理を止めたり
             mSlideShowLoopHandler.removeCallbacks(mSlideShowLoopRunnable);
             if (mAccount.isAllSync()) {
+                isAllSync = true;
                 mAccount.setAllSync(false);
             }
             if (mAccount.isSync()) {
+                isSync = true;
                 mAccount.setSync(false);
             }
             isClick = false;
@@ -1089,6 +1145,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             try {
                 int remoteLatestId = MessageSync.getRemoteMessageId(mAccount, mFolder, MessageSync.getHighestRemoteUid(mAccount, mFolder));
                 int localLatestId = MessageSync.getRemoteMessageId(mAccount, mFolder, mAccount.getAppRunLatestUid());
+                Log.d("ahokato", "NewMailCheckTask#doInBackground remoteLatestId:" + remoteLatestId);
+                Log.d("ahokato", "NewMailCheckTask#doInBackground localLatestId:" + localLatestId);
                 if (localLatestId == remoteLatestId) {
                     Log.d("ahokato", "NewMailCheckTask#doInBackground 新着メールは存在しません");
                     return false;
@@ -1126,6 +1184,13 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                     GallerySlideStop.actionHandle(mContext, mAccount, mFolder, localLatestUid);
                 } else {
                     Log.d("ahokato", "NewMailCheckTask#onPostExecute 新着メール無し or スライドショー対象の新着メール無し スライドショーに戻るよ");
+                    if (isAllSync) {
+                        mAccount.setAllSync(true);
+                    }
+                    if (isSync) {
+                        mAccount.setSync(true);
+                    }
+                    isClick = true;
                     actionSlideShow(mContext, mAccount, mFolder, mDispUid);
                 }
                 finish();
@@ -1225,7 +1290,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         protected void onPostExecute(ArrayList<String> deleteList) {
             Log.d("ahokato", "DeleteMailCheckTask#onPostExecute");
             onCancelled();
-            //TODO ここがぬるぽがっ（doInBackgroundでnullいれてたのをやめてみた）
             if (0 < deleteList.size()) {
                 Log.d("ahokato", "DeleteMailCheckTask#onPostExecute 削除しますかね");
                 try {

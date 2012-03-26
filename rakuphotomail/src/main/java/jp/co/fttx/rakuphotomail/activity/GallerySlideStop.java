@@ -30,7 +30,6 @@ import jp.co.fttx.rakuphotomail.rakuraku.photomail.SlideMessage;
 import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
 import jp.co.fttx.rakuphotomail.rakuraku.util.ThumbnailImageAdapter;
 
-import java.io.FileNotFoundException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
@@ -312,13 +311,8 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void setImageViewPicture(ArrayList<AttachmentBean> attachmentBeanList, int index) {
-        Bitmap bitmap = null;
-        try{
-            bitmap = SlideAttachment.getBitmap(getApplicationContext(), getWindowManager().getDefaultDisplay(), mAccount, attachmentBeanList.get(index));
-            mImageViewPicture.setImageBitmap(bitmap);
-        } catch (FileNotFoundException e) {
-            onAlertNoImage();
-        }
+        Bitmap bitmap = SlideAttachment.getBitmap(getApplicationContext(), getWindowManager().getDefaultDisplay(), mAccount, attachmentBeanList.get(index));
+        mImageViewPicture.setImageBitmap(bitmap);
     }
 
     private void setDate(long date) {
@@ -400,7 +394,14 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         //TODO 140文字に制限します(config)
         mSubject = RakuPhotoStringUtils.limitMessage(mMessageBean.getSubject(), 140);
         mMailSubject.setText(mSubject);
-        mSenderName.setText(mMessageBean.getSenderName().trim());
+        String senderName = mMessageBean.getSenderName();
+        if (null != senderName && !"".equals(senderName)) {
+            Log.d("ahokato", "GallerySlideStop#setViewSlide :" + senderName.trim());
+            mSenderName.setText(senderName.trim());
+        } else {
+            Log.w(RakuPhotoMail.LOG_TAG, "UID:" + mMessageBean.getUid() + " 送信者不明：" + senderName);
+            mSenderName.setText("送信者不明");
+        }
         setDate(mMessageBean.getDate());
         setAnswered(mMessageBean.isFlagAnswered());
     }
@@ -411,6 +412,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
+
     private void onDisp(MessageBean messageBean) {
         mMessageBean = messageBean;
         setViewSlide();
@@ -695,6 +697,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         @Override
         protected void onPostExecute(Void tmp) {
             publishProgress(70);
+            Log.d("ahokato", "DispSlideStartTask#onPostExecute :" + mMessageBean.getUid());
             GallerySlideShow.actionSlideShow(context, mAccount, mFolder, mMessageBean.getUid());
             publishProgress(100);
             onCancelled();

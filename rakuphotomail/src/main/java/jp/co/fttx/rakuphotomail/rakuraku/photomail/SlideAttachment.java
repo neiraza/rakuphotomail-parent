@@ -35,23 +35,28 @@ public class SlideAttachment {
     private static Bitmap photo;
     private static Bitmap thumbnail;
 
-    public static Bitmap getBitmap(Context context, Display display, Account account, AttachmentBean attachmentBean) throws FileNotFoundException {
+    public static Bitmap getBitmap(Context context, Display display, Account account, AttachmentBean attachmentBean) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         Uri uri = AttachmentProvider.getAttachmentUri(account, attachmentBean.getId());
         if (null == uri) {
             return null;
         }
-        options.inJustDecodeBounds = true;
-        photo = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
-        int displayW = display.getWidth();
-        int displayH = display.getHeight();
-        int scaleRatio = account.getScaleRatio();
-        int scaleW = options.outWidth / displayW + scaleRatio;
-        int scaleH = options.outHeight / displayH + scaleRatio;
-        options.inJustDecodeBounds = false;
-        options.inSampleSize = Math.max(scaleW, scaleH);
-        photo = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
-        return photo;
+        try {
+            options.inJustDecodeBounds = true;
+            photo = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
+            int displayW = display.getWidth();
+            int displayH = display.getHeight();
+            int scaleRatio = account.getScaleRatio();
+            int scaleW = options.outWidth / displayW + scaleRatio;
+            int scaleH = options.outHeight / displayH + scaleRatio;
+            options.inJustDecodeBounds = false;
+            options.inSampleSize = Math.max(scaleW, scaleH);
+            photo = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
+            return photo;
+        } catch (FileNotFoundException e) {
+            Log.w(RakuPhotoMail.LOG_TAG, uri.toString() + ":該当ファイルが存在しません:" + e.getMessage());
+            return null;
+        }
     }
 
     public static Bitmap getThumbnailBitmap(Context context, Account account, AttachmentBean attachmentBean) {

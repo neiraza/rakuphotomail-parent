@@ -525,7 +525,6 @@ public class MessageSync {
 
             remoteMessages = remoteFolder.getMessages(start, end, null, null);
             for (Message message : remoteMessages) {
-                Log.d("ahokato", "MessageSync#getRemoteUidList message.getRemoteUid():" + message.getUid());
                 result.add(message.getUid());
             }
             return result;

@@ -301,7 +301,7 @@ public class Account implements BaseAccount {
 
 
         //TODO 新規についkしたお
-        attachmentCacheLimitCount = prefs.getInt(mUuid + ".attachmentCacheLimitCount", 20);
+        attachmentCacheLimitCount = prefs.getInt(mUuid + ".attachmentCacheLimitCount", 5);
         slideSleepTimeDuration = prefs.getLong(mUuid + ".slideSleepTimeDuration", 20000L);
         serverSyncTimeDuration = prefs.getLong(mUuid + ".serverSyncTimeDuration", 180000L);
         scaleRatio = prefs.getInt(mUuid + ".scaleRatio", 1);

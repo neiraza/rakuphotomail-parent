@@ -33,13 +33,13 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
 
     private Button mDoneButton;
 
-    private Spinner mAttachmentCacheLimitCount;
+//    private Spinner mAttachmentCacheLimitCount;
     private Spinner mSlideSleepTimeDuration;
     private Spinner mServerSyncTimeDuration;
     private Spinner mScaleRatio;
     private Spinner mDownloadSize;
 
-    private String[] attachmentCacheLimitCount;
+//    private String[] attachmentCacheLimitCount;
     private String[] slideSleepTimeDuration;
     private String[] serverSyncTimeDuration;
     private String[] ratioValues;
