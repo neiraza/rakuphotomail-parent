@@ -1226,7 +1226,7 @@
     <string name="account_settings_scale_ratio_4">"もっと小さく"</string>
 
     <!-- 日本語以外も -->
-    <string name="account_setup_incoming_username_label_hint">アカウント名</string>
+    <string name="account_setup_username_label_hint">アカウント名</string>
     <string name="account_password_hint">アカウントパスワード</string>
     <string name="account_incoming_server_hint">受信サーバ名</string>
     <string name="account_incoming_port_hint">受信サーバポート</string>

@@ -65,10 +65,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * folder name
      */
     private static String mFolder;
-//    /**
-//     * start UID
-//     */
-//    private String mStartUid;
     /**
      * option menu
      */
@@ -221,11 +217,14 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      *
      */
     private DeleteMailCheckTask mDeleteMailCheckTask;
-
+    /**
+     *
+     */
     private static final String DATE_PATTERN = "yyyy/MM/dd HH:mm";
+    /**
+     *
+     */
     private boolean isClick = true;
-//    private boolean isTmpAllSync = false;
-//    private boolean isTmpSync = false;
 
     /**
      * @param context context
