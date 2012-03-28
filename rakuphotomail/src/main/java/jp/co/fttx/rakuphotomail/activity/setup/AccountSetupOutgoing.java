@@ -1,4 +1,3 @@
-
 package jp.co.fttx.rakuphotomail.activity.setup;
 
 import android.content.Context;
@@ -25,25 +24,25 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 
 public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickListener,
-    OnCheckedChangeListener {
+        OnCheckedChangeListener {
     private static final String EXTRA_ACCOUNT = "account";
 
     private static final String EXTRA_MAKE_DEFAULT = "makeDefault";
 
     private static final int smtpPorts[] = {
-        587, 465, 465, 587, 587
+            587, 465, 465, 587, 587
     };
 
     private static final String smtpSchemes[] = {
-        "smtp", "smtp+ssl", "smtp+ssl+", "smtp+tls", "smtp+tls+"
+            "smtp", "smtp+ssl", "smtp+ssl+", "smtp+tls", "smtp+tls+"
     };
     private static final String authTypes[] = {
-        SmtpTransport.AUTH_AUTOMATIC,
-        SmtpTransport.AUTH_LOGIN,
-        SmtpTransport.AUTH_PLAIN,
-        SmtpTransport.AUTH_CRAM_MD5,
+            SmtpTransport.AUTH_AUTOMATIC,
+            SmtpTransport.AUTH_LOGIN,
+            SmtpTransport.AUTH_PLAIN,
+            SmtpTransport.AUTH_CRAM_MD5,
     };
-    
+
     private EditText mUsernameView;
     private EditText mPasswordView;
     private EditText mServerView;
@@ -55,6 +54,8 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
     private Button mNextButton;
     private Account mAccount;
     private boolean mMakeDefault;
+
+    private String mUserName;
 
     public static void actionOutgoingSettings(Context context, Account account, boolean makeDefault) {
         Intent i = new Intent(context, AccountSetupOutgoing.class);
@@ -90,28 +91,27 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
             e.printStackTrace();
         }
 
-
-        mUsernameView = (EditText)findViewById(R.id.account_username);
-        mPasswordView = (EditText)findViewById(R.id.account_password);
-        mServerView = (EditText)findViewById(R.id.account_server);
-        mPortView = (EditText)findViewById(R.id.account_port);
-        mRequireLoginView = (CheckBox)findViewById(R.id.account_require_login);
-        mRequireLoginSettingsView = (ViewGroup)findViewById(R.id.account_require_login_settings);
-        mSecurityTypeView = (Spinner)findViewById(R.id.account_security_type);
-        mAuthTypeView = (Spinner)findViewById(R.id.account_auth_type);
-        mNextButton = (Button)findViewById(R.id.next);
+        mUsernameView = (EditText) findViewById(R.id.account_username);
+        mPasswordView = (EditText) findViewById(R.id.account_password);
+        mServerView = (EditText) findViewById(R.id.account_server);
+        mPortView = (EditText) findViewById(R.id.account_port);
+        mRequireLoginView = (CheckBox) findViewById(R.id.account_require_login);
+        mRequireLoginSettingsView = (ViewGroup) findViewById(R.id.account_require_login_settings);
+        mSecurityTypeView = (Spinner) findViewById(R.id.account_security_type);
+        mAuthTypeView = (Spinner) findViewById(R.id.account_auth_type);
+        mNextButton = (Button) findViewById(R.id.next);
 
         mNextButton.setOnClickListener(this);
         mRequireLoginView.setOnCheckedChangeListener(this);
 
         SpinnerOption securityTypes[] = {
-            new SpinnerOption(0, getString(R.string.account_setup_incoming_security_none_label)),
-            new SpinnerOption(1,
-            getString(R.string.account_setup_incoming_security_ssl_optional_label)),
-            new SpinnerOption(2, getString(R.string.account_setup_incoming_security_ssl_label)),
-            new SpinnerOption(3,
-            getString(R.string.account_setup_incoming_security_tls_optional_label)),
-            new SpinnerOption(4, getString(R.string.account_setup_incoming_security_tls_label)),
+                new SpinnerOption(0, getString(R.string.account_setup_incoming_security_none_label)),
+                new SpinnerOption(1,
+                        getString(R.string.account_setup_incoming_security_ssl_optional_label)),
+                new SpinnerOption(2, getString(R.string.account_setup_incoming_security_ssl_label)),
+                new SpinnerOption(3,
+                        getString(R.string.account_setup_incoming_security_tls_optional_label)),
+                new SpinnerOption(4, getString(R.string.account_setup_incoming_security_tls_label)),
         };
 
         SpinnerOption authTypeSpinnerOptions[] = new SpinnerOption[authTypes.length];
@@ -199,6 +199,7 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
             }
 
             if (username != null) {
+                mUserName = username;
                 mUsernameView.setText(username);
                 mRequireLoginView.setChecked(true);
             }
@@ -250,17 +251,17 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
 
     private void validateFields() {
         mNextButton
-        .setEnabled(
-            Utility.domainFieldValid(mServerView) &&
-            Utility.requiredFieldValid(mPortView) &&
-            (!mRequireLoginView.isChecked() ||
-             (Utility.requiredFieldValid(mUsernameView) &&
-              Utility.requiredFieldValid(mPasswordView))));
+                .setEnabled(
+                        Utility.domainFieldValid(mServerView) &&
+                                Utility.requiredFieldValid(mPortView) &&
+                                (!mRequireLoginView.isChecked() ||
+                                        (Utility.requiredFieldValid(mUsernameView) &&
+                                                Utility.requiredFieldValid(mPasswordView))));
         Utility.setCompoundDrawablesAlpha(mNextButton, mNextButton.isEnabled() ? 255 : 128);
     }
 
     private void updatePortFromSecurityType() {
-        int securityType = (Integer)((SpinnerOption)mSecurityTypeView.getSelectedItem()).value;
+        int securityType = (Integer) ((SpinnerOption) mSecurityTypeView.getSelectedItem()).value;
         mPortView.setText(Integer.toString(smtpPorts[securityType]));
     }
 
@@ -283,19 +284,24 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
     protected void onNext() {
         Log.d("ahokato", "AccountSetupOutgoing#onNext");
 
-        int securityType = (Integer)((SpinnerOption)mSecurityTypeView.getSelectedItem()).value;
+        int securityType = (Integer) ((SpinnerOption) mSecurityTypeView.getSelectedItem()).value;
         URI uri;
         try {
             String usernameEnc = URLEncoder.encode(mUsernameView.getText().toString(), "UTF-8");
+            Log.d("abokado", "AccountSetupOutgoing#onNext mUserName:" + mUserName);
+            Log.d("abokado", "AccountSetupOutgoing#onNext usernameEnc:" + usernameEnc);
+            if (!mUserName.equals(usernameEnc)) {
+                mAccount.init();
+            }
             String passwordEnc = URLEncoder.encode(mPasswordView.getText().toString(), "UTF-8");
 
             String userInfo = null;
-            String authType = ((SpinnerOption)mAuthTypeView.getSelectedItem()).label;
+            String authType = ((SpinnerOption) mAuthTypeView.getSelectedItem()).label;
             if (mRequireLoginView.isChecked()) {
                 userInfo = usernameEnc + ":" + passwordEnc + ":" + authType;
             }
             uri = new URI(smtpSchemes[securityType], userInfo, mServerView.getText().toString(),
-                          Integer.parseInt(mPortView.getText().toString()), null, null, null);
+                    Integer.parseInt(mPortView.getText().toString()), null, null, null);
             mAccount.setTransportUri(uri.toString());
             AccountSetupCheckSettings.actionCheckSettings(this, mAccount, false, true);
         } catch (UnsupportedEncodingException enc) {
@@ -313,9 +319,9 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
 
     public void onClick(View v) {
         switch (v.getId()) {
-        case R.id.next:
-            onNext();
-            break;
+            case R.id.next:
+                onNext();
+                break;
         }
     }
 
@@ -323,6 +329,7 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
         mRequireLoginSettingsView.setVisibility(isChecked ? View.VISIBLE : View.GONE);
         validateFields();
     }
+
     private void failure(Exception use) {
         Log.e(RakuPhotoMail.LOG_TAG, "Failure", use);
         String toastText = getString(R.string.account_setup_bad_uri, use.getMessage());

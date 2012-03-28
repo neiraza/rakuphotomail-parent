@@ -1245,6 +1245,7 @@
     <string name="error_messaging_exception">ERROR:MessagingException:</string>
     <string name="warning_server_no_message">現在、サーバー上に受信メールが存在しません</string>
     <string name="warning_server_no_message_alert">サーバー上にメールが存在しません。\n終了しますか？</string>
+    <string name="error_network_communication_disturbance_alert">ネットワークが切れている恐れがあります。\n電波状況を確認してみてください。\nアプリは可能な限りスライドショーを継続します。</string>
     <string name="warning_server_no_message_alert_yes">はい、終了します</string>
     <string name="warning_server_no_message_alert_no">いいえ、再度メールチェックを実施します</string>
     <string name="progress_slideshow_disp_preparation">スライドショーを表示しようとしています。

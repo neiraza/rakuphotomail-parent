@@ -21,7 +21,6 @@ import java.util.ArrayList;
  */
 public class SlideCheck {
     private SlideCheck() {
-        Log.d("maguro", "SlideCheck Construct");
     }
 
     /**

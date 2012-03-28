@@ -42,17 +42,24 @@ public class MessageSync {
      *                   <li>account.getArchiveFolderName()</li>
      *                   <li>account.getAutoExpandFolderName()</li>
      *                   </ul>
+     *                   件数が多い場合、こいつを使うともれなくOOMEします
      * @return String NewMail Uid
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
     public static String syncMailboxForCheckNewMail(Account account, String folderName, int messageLimitCountFromRemote) {
-        Log.d("pgr", "syncMailboxForCheckNewMail start");
-
         String newMailUid = null;
 
         Folder remoteFolder = null;
         LocalStore.LocalFolder localFolder = null;
+        FetchProfile fp = null;
+        Message[] message1 = null;
+        Message[] message2 = null;
+        Message[] message3 = null;
+        Store remoteStore = null;
+        Message[] remoteMessageArray = null;
+        HashMap<String, Message> remoteUidMap = new HashMap<String, Message>();
+
         try {
             //ローカル側の更新前データ保持
             localFolder = account.getLocalStore().getFolder(folderName);
@@ -62,53 +69,43 @@ public class MessageSync {
             Message[] localMessages = localFolder.getMessages(null);
             HashMap<String, Message> localUidMap = new HashMap<String, Message>();
             for (Message message : localMessages) {
-                Log.d("pgr", "syncMailboxForCheckNewMail message.getRemoteUid():" + message.getUid());
                 localUidMap.put(message.getUid(), message);
             }
 
-            Store remoteStore = account.getRemoteStore();
+            remoteStore = account.getRemoteStore();
             remoteFolder = remoteStore.getFolder(folderName);
             remoteFolder.open(Folder.OpenMode.READ_WRITE);
             int remoteMessageCount = remoteFolder.getMessageCount();
-            Log.d("pgr", "syncMailboxForCheckNewMail remoteMessageCount:" + remoteMessageCount);
 
-            Message[] remoteMessageArray = new Message[0];
-            HashMap<String, Message> remoteUidMap = new HashMap<String, Message>();
-
-            //TODO ここに創意工夫をこらすか
             if (remoteMessageCount > 0) {
                 int remoteStart = getRemoteStart(remoteMessageCount, messageLimitCountFromRemote);
                 int remoteEnd = remoteMessageCount;
-                Log.d("pgr", "syncMailboxForCheckNewMail remoteStart:" + remoteStart);
-                Log.d("pgr", "syncMailboxForCheckNewMail remoteEnd:" + remoteEnd);
-
                 remoteMessageArray = remoteFolder.getMessages(remoteStart, remoteEnd, null, null);
-                Log.d("pgr", "syncMailboxForCheckNewMail remoteMessageArray:" + remoteMessageArray.length);
-
-                //TODO ここでスライド対象外も全部DBに突っ込むと自滅するわな
                 for (Message thisMessage : remoteMessageArray) {
-                    Log.d("pgr", "syncMailboxForCheckNewMail チェック前 thisMessage:" + thisMessage.getUid());
-
                     Message localMessage = localUidMap.get(thisMessage.getUid()); // このUIDは更新前もあるかなー？
                     remoteUidMap.put(thisMessage.getUid(), thisMessage); // 新規に増えたやつかな
+                    fp = null;
+                    message1 = null;
+                    message2 = null;
+                    message3 = null;
                     if (localMessage == null) {
-                        Log.d("pgr", "syncMailboxForCheckNewMail 新規ぽい thisMessage:" + thisMessage.getUid());
-                        FetchProfile fp = new FetchProfile();
+                        fp = new FetchProfile();
                         fp.add(FetchProfile.Item.BODY);
-                        remoteFolder.fetch(new Message[]{thisMessage}, fp, null);
-                        localFolder.appendMessages(new Message[]{thisMessage});
+                        message1 = new Message[]{thisMessage};
+                        remoteFolder.fetch(message1, fp, null);
+                        message2 = new Message[]{thisMessage};
+                        localFolder.appendMessages(message2);
                         fp.add(FetchProfile.Item.ENVELOPE);
                         Message lMessage = localFolder.getMessage(thisMessage.getUid());
-                        localFolder.fetch(new Message[]{lMessage}, fp, null);
+                        message3 = new Message[]{lMessage};
+                        localFolder.fetch(message3, fp, null);
                         lMessage.setFlag(Flag.X_DOWNLOADED_FULL, true);
                         newMailUid = thisMessage.getUid();
                     }
                 }
-                remoteMessageArray = null;
             } else if (remoteMessageCount < 0) {
-                throw new Exception("Message count " + remoteMessageCount + " for folder " + folderName);
+                return null;
             }
-            Log.d("pgr", "syncMailboxForCheckNewMail あとはdestroyMessagesとかしておわりなので割愛");
             ArrayList<Message> destroyMessages = new ArrayList<Message>();
             for (Message localMessage : localMessages) {
                 if (remoteUidMap.get(localMessage.getUid()) == null) {
@@ -123,18 +120,21 @@ public class MessageSync {
             localFolder.setLastChecked(System.currentTimeMillis());
             localFolder.setStatus(null);
 
-        } catch (RakuRakuException re) {
-            Log.e(RakuPhotoMail.LOG_TAG, "ERROR:RakuRakuException:" + re.getMessage());
-            //タイムアウトも返してやろう作戦
-            return null;
         } catch (MessagingException me) {
             Log.e(RakuPhotoMail.LOG_TAG, "ERROR:MessagingException:" + me.getMessage());
             return null;
-        } catch (Exception e) {
-            Log.e(RakuPhotoMail.LOG_TAG, "ERROR:Exception:" + e.getMessage());
         } finally {
+            fp = null;
+            message1 = null;
+            message2 = null;
+            message3 = null;
+            remoteMessageArray = null;
+            remoteUidMap = null;
             closeFolder(remoteFolder);
             closeFolder(localFolder);
+            localFolder = null;
+            remoteFolder = null;
+            remoteStore = null;
         }
         return newMailUid;
     }
@@ -742,7 +742,7 @@ public class MessageSync {
      * @param start
      * @param end
      */
-    public static void syncMailbox(Account account, String folderName, int start, int end) {
+    public static void syncMailbox(Account account, String folderName, int start, int end) throws MessagingException {
         Log.d("ahokato", "MessageSync#syncMailbox start");
 
         Folder remoteFolder = null;
@@ -806,8 +806,6 @@ public class MessageSync {
                 localFolder.setStatus(null);
                 Log.d("ahokato", "MessageSync#syncMailbox end");
             }
-        } catch (MessagingException me) {
-            Log.e(RakuPhotoMail.LOG_TAG, "ERROR:MessagingException:" + me.getMessage());
         } finally {
             closeFolder(remoteFolder);
             closeFolder(localFolder);

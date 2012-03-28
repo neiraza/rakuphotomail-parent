@@ -1603,11 +1603,7 @@ public class ImapStore extends Store {
          */
         @Override
         public void appendMessages(Message[] messages) throws RakuRakuException, MessagingException {
-            Log.d("refs1961", "ImapStore#appendMessages");
-
             checkOpen();
-            Log.d("refs1961", "ImapStore#appendMessages Open OK");
-
             try {
                 for (Message message : messages) {
                     mConnection.sendCommand(String.format("APPEND %s (%s) {%d}",
@@ -1627,11 +1623,7 @@ public class ImapStore extends Store {
                         }
                         while (response.more()) ;
                     } while (response.mTag == null);
-
-                    Log.d("refs1961", "ImapStore#appendMessages message.getRemoteUid():" + message.getUid());
                     String newUid = getUidFromMessageId(message);
-                    Log.d("refs1961", "ImapStore#appendMessages newUid:" + newUid);
-
                     if (RakuPhotoMail.DEBUG)
                         Log.d(RakuPhotoMail.LOG_TAG, "Got UID " + newUid + " for message for " + getLogId());
 
@@ -1648,7 +1640,6 @@ public class ImapStore extends Store {
 
         @Override
         public String getUidFromMessageId(Message message) throws MessagingException {
-            Log.d("refs1961", "ImapStore#getUidFromMessageId");
             try {
                 /*
                      * Try to find the UID of the message we just appended using the
@@ -1663,8 +1654,6 @@ public class ImapStore extends Store {
                     return null;
                 }
                 String messageId = messageIdHeader[0];
-                Log.d("refs1961", "ImapStore#getUidFromMessageId messageId:" + messageId);
-
                 if (RakuPhotoMail.DEBUG)
                     Log.d(RakuPhotoMail.LOG_TAG, "Looking for UID for message with message-id " + messageId
                             + " for " + getLogId());
@@ -1675,7 +1664,6 @@ public class ImapStore extends Store {
                     if (response1.mTag == null
                             && ImapResponseParser.equalsIgnoreCase(response1.get(0), "SEARCH")
                             && response1.size() > 1) {
-                        Log.d("refs1961", "ImapStore#getUidFromMessageId response1.getString(1):" + response1.getString(1));
                         return response1.getString(1);
                     }
                 }
@@ -1773,7 +1761,6 @@ public class ImapStore extends Store {
 
         private void checkOpen() throws MessagingException {
             if (!isOpen()) {
-                Log.d("refs1961", "ImapStore#checkOpen isOpen is false");
                 throw new MessagingException("Folder " + getPrefixedName() + " is not open.");
             }
         }

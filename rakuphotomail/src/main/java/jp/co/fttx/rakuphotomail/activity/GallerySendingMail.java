@@ -32,6 +32,7 @@ import jp.co.fttx.rakuphotomail.mail.internet.TextBody;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
 import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.MessageSync;
+import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoConnectivityCheck;
 
 import java.util.Date;
 
@@ -248,10 +249,15 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
     @Override
     public void onClick(View v) {
         if (onCheck()) {
-            final String replyTargetUid = mMessageReference.uid;
-            onSend(replyTargetUid);
-            GallerySlideStop.actionHandle(this, mAccount, mAccount.getInboxFolderName(), replyTargetUid);
-            finish();
+            if (RakuPhotoConnectivityCheck.isConnectivity(getApplicationContext())) {
+                final String replyTargetUid = mMessageReference.uid;
+                onSend(replyTargetUid);
+                GallerySlideStop.actionHandle(this, mAccount, mAccount.getInboxFolderName(), replyTargetUid);
+                finish();
+            } else {
+                Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#startMessageSyncTask ネットワーク接続が切れています");
+                Toast.makeText(getApplicationContext(), "ネットワーク接続が切れています", Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -314,8 +320,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
     private void onSync(Account account) {
         //INBOX
         MessageSync.syncMailbox(account, account.getInboxFolderName(), account.getMessageLimitCountFromRemote());
-        //OUTBOX
-//        MessageSync.syncMailboxForCheckNewMail(account, account.getOutboxFolderName(), 0);
         //Sent
         MessageSync.syncMailboxForCheckNewMail(account, account.getSentFolderName(), 0);
     }

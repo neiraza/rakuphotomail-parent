@@ -51,7 +51,7 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
     private ListPreference mSlideChangeDuration;
     private ListPreference mScaleRatio;
     private ListPreference mServerSync;
-    private ListPreference mDownloadCache;
+//    private ListPreference mDownloadCache;
     private ListPreference mMessageSize;
     private ListPreference mAutoExpandFolder;
 
@@ -222,7 +222,7 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
         mAccount.setSlideSleepTime(Long.parseLong(mSlideChangeDuration.getValue()));
         mAccount.setScaleRatio(Integer.parseInt(mScaleRatio.getValue()));
         mAccount.setServerSyncTimeDuration(Long.parseLong(mServerSync.getValue()));
-        mAccount.setAttachmentCacheLimitCount(Integer.parseInt(mDownloadCache.getValue()));
+//        mAccount.setAttachmentCacheLimitCount(Integer.parseInt(mDownloadCache.getValue()));
         mAccount.getNotificationSetting().setVibrate(false);
         mAccount.getNotificationSetting().setVibratePattern(0);
         mAccount.getNotificationSetting().setVibrateTimes(0);

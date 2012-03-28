@@ -93,7 +93,7 @@ public class Account implements BaseAccount {
     private boolean mSyncRemoteDeletions;
 
     //TODO コンフィグ候補たち
-    private int attachmentCacheLimitCount = 5; //20;
+    private int attachmentCacheLimitCount = 5; //5;
     private long slideSleepTimeDuration; //20000L;
     private long serverSyncTimeDuration; //180000L;
     private int scaleRatio; //1;
@@ -107,18 +107,12 @@ public class Account implements BaseAccount {
     private int checkStartId = 0;
     // 全件チェック時の終了地点
     private int checkEndId = 0;
-//    // アプリ起動時の開始地点（１世代前のlocalLatestId）
-//    private int localOldId = 0;
     // 全件チェックFlag
     private boolean isAllSync = true;
     // 途中範囲チェックFlag
     private boolean isSync = false;
-    // Local最新ID（このIDを境に過去と未来を分ける）、アプリ起動時の終了地点
-//    private int localLatestId = 0; //TODO 消したい
-//    private Date latestReceiveDate = null; //TODO 消したい
     private static final String DATE_PATTERN = "yyyy/MM/dd HH:mm";
 
-    //TODO 2012/03/21 add
     // アプリ起動時の最新UID
     private String appRunLatestUid;
     // アプリ起動時の日時
@@ -174,6 +168,41 @@ public class Account implements BaseAccount {
         TEXT, HTML
     }
 
+    public void init(){
+        // 全件チェック時の開始地点
+        checkStartId = 0;
+        // 全件チェック時の終了地点
+        checkEndId = 0;
+        // 全件チェックFlag
+        isAllSync = true;
+        // 途中範囲チェックFlag
+        isSync = false;
+        // アプリ起動時の最新UID
+        appRunLatestUid = null;
+        // アプリ起動時の日時
+        appRunLatestDate = new Date();
+        // アプリ起動時の１世代前のUID
+        oldAppRunLatestUid = null;
+        // アプリ起動時の１世代前の日時
+        oldAppRunLatestDate = new Date();
+        // 新着メールチェックの最新UID
+        newMailCheckLatestUid = null;
+        // 新着メールチェックの日時
+        newMailCheckLatestDate = new Date();
+        // 新着メールチェックの１世代前のUID
+        oldNewMailCheckLatestUid = null;
+        // 新着メールチェックの１世代前の日時
+        oldNewMailCheckLatestDate = new Date();
+        // 過去メールチェックの最新UID
+        pastMailCheckLatestUid = null;
+        // 過去メールチェックの日時
+        pastMailCheckLatestDate = new Date();
+        // 過去メールチェックの１世代前のUID
+        oldPastMailCheckLatestUid = null;
+        // 過去メールチェックの１世代前の日時
+        oldPastMailCheckLatestDate = new Date();
+    }
+    
     protected Account(Context context) {
         mUuid = UUID.randomUUID().toString();
         mLocalStorageProviderId =

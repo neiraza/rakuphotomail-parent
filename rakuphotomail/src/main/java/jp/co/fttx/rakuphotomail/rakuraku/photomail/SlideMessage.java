@@ -528,6 +528,21 @@ public class SlideMessage {
         }
     }
 
+    public static ArrayList<String> getUidListIncludingUid(Account account, String folderName, String uid, int length) throws MessagingException {
+        Log.d("ahokato", "MessageSync#getUidListIncludingUid start");
+        LocalStore.LocalFolder localFolder = null;
+        LocalStore localStore = null;
+        try {
+            localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folderName);
+            return localFolder.getUidListIncludingUid(uid, length);
+        } finally {
+            localStore = null;
+            closeFolder(localFolder);
+            localFolder = null;
+        }
+    }
+
     public static ArrayList<String> getUidList(Account account, String folderName, String uid, int length) throws MessagingException {
         Log.d("ahokato", "MessageSync#getUidList start");
         LocalStore.LocalFolder localFolder = null;
@@ -563,7 +578,7 @@ public class SlideMessage {
         }
     }
 
-    public static ArrayList<MessageBean> getMessageBeanList(Account account, String folderName, String startUid, int length) throws RakuRakuException, MessagingException {
+    public static ArrayList<MessageBean> getMessageBeanList(Account account, String folderName, String startUid, int length, boolean isIncludingUid) throws RakuRakuException, MessagingException {
         Log.d("ahokato", "SlideMessage#getMessageBeanList start");
 
         ArrayList<String> uidList = null;
@@ -575,7 +590,13 @@ public class SlideMessage {
             uidList = getUidList(account, folderName, length);
         } else {
             Log.d("ahokato", "SlideMessage#getMessageBeanList getUidList指定位置からの指定件数");
-            uidList = getUidList(account, folderName, startUid, length);
+            if (isIncludingUid) {
+                Log.d("ahokato", "SlideMessage#getMessageBeanList uid:" + uidList + "を含む");
+                uidList = getUidListIncludingUid(account, folderName, startUid, length);
+            } else {
+                Log.d("ahokato", "SlideMessage#getMessageBeanList uid:" + uidList + "を含まない");
+                uidList = getUidList(account, folderName, startUid, length);
+            }
         }
         Log.d("ahokato", "SlideMessage#getMessageBeanList uidList:" + uidList.size());
 
@@ -588,7 +609,6 @@ public class SlideMessage {
         return result;
     }
 
-    //TODO 2012/03/23 add
     public static void deleteMessages(Account account, String folderName, ArrayList<String> deleteList) throws MessagingException {
         Log.d("ahokato", "SlideMessage#deleteMessages start");
         LocalStore.LocalFolder localFolder = null;
