@@ -149,18 +149,18 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
 //            }
 //        });
 
-        mMessageSize = (ListPreference) findPreference(PREFERENCE_MESSAGE_SIZE);
-        mMessageSize.setValue(String.valueOf(mAccount.getMaximumAutoDownloadMessageSize()));
-        mMessageSize.setSummary(mMessageSize.getEntry());
-        mMessageSize.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                final String summary = newValue.toString();
-                int index = mMessageSize.findIndexOfValue(summary);
-                mMessageSize.setSummary(mMessageSize.getEntries()[index]);
-                mMessageSize.setValue(summary);
-                return false;
-            }
-        });
+//        mMessageSize = (ListPreference) findPreference(PREFERENCE_MESSAGE_SIZE);
+//        mMessageSize.setValue(String.valueOf(mAccount.getMaximumAutoDownloadMessageSize()));
+//        mMessageSize.setSummary(mMessageSize.getEntry());
+//        mMessageSize.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+//            public boolean onPreferenceChange(Preference preference, Object newValue) {
+//                final String summary = newValue.toString();
+//                int index = mMessageSize.findIndexOfValue(summary);
+//                mMessageSize.setSummary(mMessageSize.getEntries()[index]);
+//                mMessageSize.setValue(summary);
+//                return false;
+//            }
+//        });
 
         mLocalStorageProvider = (ListPreference) findPreference(PREFERENCE_LOCAL_STORAGE_PROVIDER);
         {
@@ -218,7 +218,8 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
         mAccount.setNotifySelfNewMail(false);
         mAccount.setShowOngoing(false);
         mAccount.setDisplayCount(0);
-        mAccount.setMaximumAutoDownloadMessageSize(Integer.parseInt(mMessageSize.getValue()));
+        mAccount.setMaximumAutoDownloadMessageSize(10);
+//        mAccount.setMaximumAutoDownloadMessageSize(Integer.parseInt(mMessageSize.getValue()));
         mAccount.setSlideSleepTime(Long.parseLong(mSlideChangeDuration.getValue()));
         mAccount.setScaleRatio(Integer.parseInt(mScaleRatio.getValue()));
         mAccount.setServerSyncTimeDuration(Long.parseLong(mServerSync.getValue()));

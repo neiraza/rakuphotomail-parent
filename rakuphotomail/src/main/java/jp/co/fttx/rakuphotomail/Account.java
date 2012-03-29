@@ -83,7 +83,7 @@ public class Account implements BaseAccount {
     private final Map<String, Boolean> compressionMap = new ConcurrentHashMap<String, Boolean>();
     private Searchable searchableFolders;
     private boolean subscribedFoldersOnly;
-    private int maximumAutoDownloadMessageSize;
+    private int maximumAutoDownloadMessageSize = 10;
     private boolean mRingNotified;
     private MessageFormat mMessageFormat;
     private QuoteStyle mQuoteStyle;
@@ -338,9 +338,6 @@ public class Account implements BaseAccount {
         checkEndId = prefs.getInt(mUuid + ".checkEndId", 0);
         isAllSync = prefs.getBoolean(mUuid + ".isAllSync", false);
         isSync = prefs.getBoolean(mUuid + ".isSync", false);
-        //TODO 消したい
-//        localLatestId = prefs.getInt(mUuid + ".localLatestId", 0);
-//        localOldId = prefs.getInt(mUuid + ".localOldId", 0);
         appRunLatestUid = prefs.getString(mUuid + ".appRunLatestUid", null);
         newMailCheckLatestUid = prefs.getString(mUuid + ".newMailCheckLatestUid", null);
         pastMailCheckLatestUid = prefs.getString(mUuid + ".pastMailCheckLatestUid", null);
@@ -350,12 +347,6 @@ public class Account implements BaseAccount {
 
         SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
         try {
-            //TODO 消したい
-//            String tmpLatestReceiveDate = prefs.getString(mUuid + ".latestReceiveDate", null);
-//            if (RakuPhotoStringUtils.isNotBlank(tmpLatestReceiveDate)) {
-//                latestReceiveDate = new Date();
-//                latestReceiveDate = sdf.parse(tmpLatestReceiveDate);
-//            }
             String tmpAppRunLatestDate = prefs.getString(mUuid + ".appRunLatestDate", null);
             if (RakuPhotoStringUtils.isNotBlank(tmpAppRunLatestDate)) {
                 appRunLatestDate = new Date();

@@ -97,7 +97,7 @@
                     android:entries="@array/account_settings_scale_ratio_entries"
                     android:prompt="@string/account_settings_scale_ratio_label"/>
 
-            <TextView
+            <!--<TextView
                     android:text="@string/account_settings_download_message_size_description"
                     android:layout_height="wrap_content"
                     android:layout_width="fill_parent"
@@ -110,6 +110,7 @@
                     android:contentDescription="@string/account_settings_download_message_size_label"
                     android:entries="@array/account_settings_download_message_size_entries"
                     android:prompt="@string/account_settings_download_message_size_label"/>
+                    -->
 
             <View
                     android:layout_height="0dip"

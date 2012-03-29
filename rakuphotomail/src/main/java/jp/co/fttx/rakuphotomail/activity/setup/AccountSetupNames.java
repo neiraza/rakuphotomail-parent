@@ -39,7 +39,6 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
     private Spinner mScaleRatio;
     private Spinner mDownloadSize;
 
-//    private String[] attachmentCacheLimitCount;
     private String[] slideSleepTimeDuration;
     private String[] serverSyncTimeDuration;
     private String[] ratioValues;
@@ -144,18 +143,18 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
             }
         });
 
-        /* Download Size / mail  */
-        downloadSize = getResources().getStringArray(R.array.account_settings_download_message_size_values);
-        mDownloadSize = (Spinner) findViewById(R.id.account_option_download_message_size);
-        mDownloadSize.setSelection(3);
-        mDownloadSize.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                mAccount.setMaximumAutoDownloadMessageSize(Integer.parseInt(downloadSize[position]));
-            }
-
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
+//        /* Download Size / mail  */
+//        downloadSize = getResources().getStringArray(R.array.account_settings_download_message_size_values);
+//        mDownloadSize = (Spinner) findViewById(R.id.account_option_download_message_size);
+//        mDownloadSize.setSelection(3);
+//        mDownloadSize.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                mAccount.setMaximumAutoDownloadMessageSize(Integer.parseInt(downloadSize[position]));
+//            }
+//
+//            public void onNothingSelected(AdapterView<?> parent) {
+//            }
+//        });
     }
 
     private void validateFields() {
