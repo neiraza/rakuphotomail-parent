@@ -3,7 +3,7 @@
           android:installLocation="auto"
           package="jp.co.fttx.rakuphotomail"
           android:versionCode="1"
-          android:versionName="0.1-BETA3">
+          android:versionName="0.1.1-BETA3">
 
     <uses-sdk
             android:minSdkVersion="9"
@@ -76,7 +76,7 @@
                 android:configChanges="locale"
                 android:label="@string/create_sending_mail"
                 android:launchMode="standard"
-                android:screenOrientation="unspecified"
+                android:screenOrientation="landscape"
                 android:name="jp.co.fttx.rakuphotomail.activity.GallerySendingMail">
             <intent-filter>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -96,9 +96,15 @@
         </activity>
         <activity
                 android:configChanges="locale"
+                android:launchMode="standard"
+                android:screenOrientation="landscape"
+                android:name="jp.co.fttx.rakuphotomail.activity.GalleryDummy">
+        </activity>
+        <activity
+                android:configChanges="locale"
                 android:label="@string/app_name"
                 android:launchMode="singleTask"
-                android:screenOrientation="landscape"
+                android:screenOrientation="unspecified"
                 android:name="jp.co.fttx.rakuphotomail.activity.Accounts">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

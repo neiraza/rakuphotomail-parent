@@ -984,14 +984,14 @@ public class LocalStore extends Store implements Serializable {
             @Override
             public ArrayList<String> doDbWork(final SQLiteDatabase db) throws WrappedException {
                 Cursor c = null;
+                ArrayList<String> result = new ArrayList<String>();
                 try {
                     String queryString = "SELECT m.uid FROM messages AS m WHERE EXISTS ( SELECT * FROM attachments AS a WHERE a.content_uri IS NOT NULL AND m.id = a.message_id) ORDER BY m.date DESC";
                     c = db.rawQuery(queryString, null);
-                    ArrayList<String> reslut = new ArrayList<String>();
-                    while(c.moveToNext()){
-                        reslut.add(c.getString(0));
+                    while (c.moveToNext()) {
+                        result.add(c.getString(0));
                     }
-                    return reslut;
+                    return result;
                 } finally {
                     if (c != null) {
                         c.close();
@@ -2546,6 +2546,171 @@ public class LocalStore extends Store implements Serializable {
             }
         }
 
+        public ArrayList<String> getUidList() throws MessagingException {
+            try {
+                return database.execute(false, new DbCallback<ArrayList<String>>() {
+                    @Override
+                    public ArrayList<String> doDbWork(final SQLiteDatabase db) throws WrappedException,
+                            UnavailableStorageException {
+                        ArrayList<String> list = new ArrayList<String>();
+                        try {
+                            open(OpenMode.READ_WRITE);
+                            Cursor cursor = null;
+
+                            try {
+                                cursor = db.rawQuery("SELECT uid FROM messages WHERE folder_id = ?", new String[]{
+                                        Long.toString(mFolderId)});
+                                while (cursor.moveToNext()) {
+                                    list.add(cursor.getString(0));
+                                }
+                            } finally {
+                                if (cursor != null) {
+                                    cursor.close();
+                                }
+                            }
+                        } catch (MessagingException e) {
+                            throw new WrappedException(e);
+                        }
+                        return list;
+                    }
+                });
+            } catch (WrappedException e) {
+                throw (MessagingException) e.getCause();
+            }
+        }
+
+        public ArrayList<String> getUidList(final int length) throws MessagingException {
+            try {
+                return database.execute(false, new DbCallback<ArrayList<String>>() {
+                    @Override
+                    public ArrayList<String> doDbWork(final SQLiteDatabase db) throws WrappedException,
+                            UnavailableStorageException {
+                        ArrayList<String> list = new ArrayList<String>();
+                        try {
+                            open(OpenMode.READ_WRITE);
+                            Cursor cursor = null;
+
+                            try {
+                                cursor = db.rawQuery("SELECT uid FROM messages WHERE folder_id = ? ORDER BY uid DESC LIMIT ?", new String[]{
+                                        Long.toString(mFolderId), Integer.toString(length)});
+                                while (cursor.moveToNext()) {
+                                    list.add(cursor.getString(0));
+                                }
+                            } finally {
+                                if (cursor != null) {
+                                    cursor.close();
+                                }
+                            }
+                        } catch (MessagingException e) {
+                            throw new WrappedException(e);
+                        }
+                        return list;
+                    }
+                });
+            } catch (WrappedException e) {
+                throw (MessagingException) e.getCause();
+            }
+        }
+
+        public ArrayList<String> getUidListIncludingUid(final String uid, final int length) throws MessagingException {
+            try {
+                return database.execute(false, new DbCallback<ArrayList<String>>() {
+                    @Override
+                    public ArrayList<String> doDbWork(final SQLiteDatabase db) throws WrappedException,
+                            UnavailableStorageException {
+                        ArrayList<String> list = new ArrayList<String>();
+                        try {
+                            open(OpenMode.READ_WRITE);
+                            Cursor cursor = null;
+
+                            try {
+                                cursor = db.rawQuery("SELECT uid FROM messages WHERE folder_id = ? AND uid <= ? ORDER BY uid DESC LIMIT ?", new String[]{
+                                        Long.toString(mFolderId), uid, Integer.toString(length)});
+                                while (cursor.moveToNext()) {
+                                    list.add(cursor.getString(0));
+                                }
+                            } finally {
+                                if (cursor != null) {
+                                    cursor.close();
+                                }
+                            }
+                        } catch (MessagingException e) {
+                            throw new WrappedException(e);
+                        }
+                        return list;
+                    }
+                });
+            } catch (WrappedException e) {
+                throw (MessagingException) e.getCause();
+            }
+        }
+
+        public ArrayList<String> getUidList(final String uid, final int length) throws MessagingException {
+            try {
+                return database.execute(false, new DbCallback<ArrayList<String>>() {
+                    @Override
+                    public ArrayList<String> doDbWork(final SQLiteDatabase db) throws WrappedException,
+                            UnavailableStorageException {
+                        ArrayList<String> list = new ArrayList<String>();
+                        try {
+                            open(OpenMode.READ_WRITE);
+                            Cursor cursor = null;
+
+                            try {
+                                cursor = db.rawQuery("SELECT uid FROM messages WHERE folder_id = ? AND uid < ? ORDER BY uid DESC LIMIT ?", new String[]{
+                                        Long.toString(mFolderId), uid, Integer.toString(length)});
+                                while (cursor.moveToNext()) {
+                                    list.add(cursor.getString(0));
+                                }
+                            } finally {
+                                if (cursor != null) {
+                                    cursor.close();
+                                }
+                            }
+                        } catch (MessagingException e) {
+                            throw new WrappedException(e);
+                        }
+                        return list;
+                    }
+                });
+            } catch (WrappedException e) {
+                throw (MessagingException) e.getCause();
+            }
+        }
+
+        public boolean isMessage(final String uid) throws MessagingException {
+            try {
+                return database.execute(false, new DbCallback<Boolean>() {
+                    @Override
+                    public Boolean doDbWork(final SQLiteDatabase db) throws WrappedException,
+                            UnavailableStorageException {
+                        try {
+                            open(OpenMode.READ_WRITE);
+                            LocalMessage message = new LocalMessage(uid, LocalFolder.this);
+                            Cursor cursor = null;
+                            int count = 0;
+                            try {
+                                cursor = db.rawQuery("SELECT COUNT(id) FROM messages WHERE uid = ? AND folder_id = ?", new String[]{
+                                        message.getUid(), Long.toString(mFolderId)});
+                                if (cursor.moveToNext()) {
+                                    count = cursor.getInt(0);
+                                }
+                                return count == 0 ? false : true;
+                            } finally {
+                                if (cursor != null) {
+                                    cursor.close();
+                                }
+                            }
+                        } catch (MessagingException e) {
+                            throw new WrappedException(e);
+                        }
+                    }
+                });
+            } catch (WrappedException e) {
+                throw (MessagingException) e.getCause();
+            }
+        }
+
         @Override
         public Message[] getMessages(MessageRetrievalListener listener) throws MessagingException {
             return getMessages(listener, true);
@@ -2946,6 +3111,34 @@ public class LocalStore extends Store implements Serializable {
                                 } catch (Exception e) {
                                     throw new MessagingException("Error appending message", e);
                                 }
+                            }
+                        } catch (MessagingException e) {
+                            throw new WrappedException(e);
+                        }
+                        return null;
+                    }
+                });
+            } catch (WrappedException e) {
+                throw (MessagingException) e.getCause();
+            }
+        }
+
+        //TODO 2012/03/23 add
+        public void deleteMessages(final ArrayList<String> uidList)
+                throws MessagingException {
+            Log.d("ahokato", "LocalFolder#deleteMessages start");
+            open(OpenMode.READ_WRITE);
+            try {
+                database.execute(true, new DbCallback<Void>() {
+                    @Override
+                    public Void doDbWork(final SQLiteDatabase db) throws WrappedException,
+                            UnavailableStorageException {
+                        try {
+                            for (String uid : uidList) {
+                                Log.d("ahokato", "LocalStore#deleteMessages delete UID:" + uid);
+                                deleteAttachments(uid);
+                                db.execSQL("DELETE FROM messages WHERE folder_id = ? AND uid = ?",
+                                        new Object[]{mFolderId, uid});
                             }
                         } catch (MessagingException e) {
                             throw new WrappedException(e);
@@ -3441,7 +3634,7 @@ public class LocalStore extends Store implements Serializable {
             return PERMANENT_FLAGS;
         }
 
-            public Boolean clearContentUri(final long attachmentId) throws MessagingException {
+        public Boolean clearContentUri(final long attachmentId) throws MessagingException {
             open(OpenMode.READ_WRITE);
             return database.execute(false, new DbCallback<Boolean>() {
                 @Override
@@ -3562,7 +3755,7 @@ public class LocalStore extends Store implements Serializable {
          * calculateContentPreview Takes a plain text message body as a string.
          * Returns a message summary as a string suitable for showing in a
          * message list
-         * 
+         *
          * A message summary should be about the first 160 characters of unique
          * text written by the message sender Quoted text, "On $date" and so on
          * will be stripped out. All newlines and whitespace will be compressed.

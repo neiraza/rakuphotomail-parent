@@ -7,7 +7,6 @@ import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.SocketTimeoutException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -71,7 +70,7 @@ public class ImapResponseParser {
         return null;
     }
 
-    private void readTokens(ImapResponse response) throws IOException, RakuRakuException {
+    private void readTokens(ImapResponse response) throws IOException {
         response.clear();
         Object token;
         while ((token = readToken(response)) != null) {
@@ -100,7 +99,7 @@ public class ImapResponseParser {
      * @return The next token in the response or null if there are no more
      *         tokens.
      */
-    private Object readToken(ImapResponse response) throws IOException, RakuRakuException {
+    private Object readToken(ImapResponse response) throws IOException {
         while (true) {
             Object token = parseToken(response);
             if (token == null || !(token.equals(")") || token.equals("]"))) {
@@ -109,7 +108,7 @@ public class ImapResponseParser {
         }
     }
 
-    private Object parseToken(ImapList parent) throws IOException, RakuRakuException {
+    private Object parseToken(ImapList parent) throws IOException {
         while (true) {
             int ch = mIn.peek();
             if (ch == '(') {
@@ -160,7 +159,7 @@ public class ImapResponseParser {
         return tag;
     }
 
-    private ImapList parseList(ImapList parent) throws IOException, RakuRakuException {
+    private ImapList parseList(ImapList parent) throws IOException {
         expect('(');
         ImapList list = new ImapList();
         parent.add(list);
@@ -180,7 +179,7 @@ public class ImapResponseParser {
         return list;
     }
 
-    private ImapList parseSequence(ImapList parent) throws IOException, RakuRakuException {
+    private ImapList parseSequence(ImapList parent) throws IOException {
         expect('[');
         ImapList list = new ImapList();
         parent.add(list);
@@ -232,7 +231,7 @@ public class ImapResponseParser {
      * A "{" has been read. Read the rest of the size string, the space and then
      * notify the callback with an InputStream.
      */
-    private Object parseLiteral() throws IOException, RakuRakuException {
+    private Object parseLiteral() throws IOException {
         expect('{');
         int size = Integer.parseInt(readStringUntil('}'));
         expect('\r');
@@ -304,19 +303,15 @@ public class ImapResponseParser {
         throw new IOException("parseQuoted(): end of stream reached");
     }
 
-    private String readStringUntil(char end) throws RakuRakuException, IOException {
+    private String readStringUntil(char end) throws IOException {
         StringBuffer sb = new StringBuffer();
         int ch;
-        try {
-            while ((ch = mIn.read()) != -1) {
-                if (ch == end) {
-                    return sb.toString();
-                } else {
-                    sb.append((char) ch);
-                }
+        while ((ch = mIn.read()) != -1) {
+            if (ch == end) {
+                return sb.toString();
+            } else {
+                sb.append((char) ch);
             }
-        } catch (SocketTimeoutException ste) {
-            throw new RakuRakuException("サーバー接続時にタイムアウトが発生しました:" + ste.getMessage());
         }
         throw new IOException("readStringUntil(): end of stream reached");
     }
@@ -471,7 +466,7 @@ public class ImapResponseParser {
         boolean mCommandContinuationRequested;
         String mTag;
 
-        public boolean more() throws IOException, RakuRakuException {
+        public boolean more() throws IOException {
             if (mCompleted) {
                 return false;
             }

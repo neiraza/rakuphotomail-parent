@@ -59,6 +59,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_basics);
         mPrefs = Preferences.getPreferences(this);

@@ -1226,7 +1226,7 @@
     <string name="account_settings_scale_ratio_4">"もっと小さく"</string>
 
     <!-- 日本語以外も -->
-    <string name="account_setup_incoming_username_label_hint">アカウント名</string>
+    <string name="account_setup_username_label_hint">アカウント名</string>
     <string name="account_password_hint">アカウントパスワード</string>
     <string name="account_incoming_server_hint">受信サーバ名</string>
     <string name="account_incoming_port_hint">受信サーバポート</string>
@@ -1234,6 +1234,44 @@
     <string name="account_outgoing_port_hint">送信サーバポート</string>
     <string name="account_setup_names_user_name_hint">送信メールの表示名</string>
     <string name="account_settings_description_hint">アカウント名</string>
-
-
+    <string name="progress_please_wait">Please wait</string>
+    <string name="progress_slideshow_server_sync">スライドショー情報をサーバーと同期中です。
+        \n完了次第、スライドショーを開始します。
+        \nしばらくお待ちください。</string>
+    <string name="error_rakuraku_exception">ERROR:RakuRakuException:</string>
+    <string name="error_rakuraku_exception_pre_message">ERROR:RakuRakuException:前のメールが取得できません UID:</string>
+    <string name="error_rakuraku_exception_next_message">ERROR:RakuRakuException:次のメールが取得できません UID:</string>
+    <string name="error_rakuraku_exception_message">メールサーバーのメール件数取得時に不正な値が返却されました:</string>
+    <string name="error_messaging_exception">ERROR:MessagingException:</string>
+    <string name="warning_server_no_message">現在、サーバー上に受信メールが存在しません</string>
+    <string name="warning_server_no_message_alert">サーバー上にメールが存在しません。\n終了しますか？</string>
+    <string name="error_network_communication_disturbance_alert">ネットワークが切れている恐れがあります。\n電波状況を確認してみてください。\nアプリは可能な限りスライドショーを継続します。</string>
+    <string name="warning_server_no_message_alert_yes">はい、終了します</string>
+    <string name="warning_server_no_message_alert_no">いいえ、再度メールチェックを実施します</string>
+    <string name="progress_slideshow_disp_preparation">スライドショーを表示しようとしています。
+        \nしばらくお待ちください。</string>
+    <string name="progress_slideshow_start">スライドショーを開始しようとしています。
+        \nしばらくお待ちください。</string>
+    <string name="progress_slideshow_stop">スライドショーを停止しようとしています。
+        \nしばらくお待ちください。</string>
+    <string name="disp_pre_mail_task_message">表示中のメールより１件古いメールを表示中です。
+        \nしばらくお待ちください。</string>
+    <string name="disp_next_mail_task_message">表示中のメールより１件新しいメールを表示中です。
+        \nしばらくお待ちください。</string>
+    <string name="disp_slide_start_task_message">スライドショーを開始中です。
+        \nしばらくお待ちください。</string>
+    <string name="new_mail_check_task_message">新着メッセージをサーバに確認しています。
+        \nしばらくお待ちください。</string>
+    <string name="download_attachment_task_message">スライドショー情報をサーバーと同期中です。
+        \nしばらくお待ちください。</string>
+    <string name="download_attachment_remove_cache">最適化を行う為にキャッシュ情報を収集中です。
+        \n続行してよろしいでしょうか。
+        \nなお同じ症状が頻発する場合は、設定により画像表示サイズを小さくすることをお勧めします。</string>
+    <string name="gallery_slide_stop_alert_memory_error_alert_yes">はい、続行します</string>
+    <string name="gallery_slide_stop_alert_memory_error_alert_no">いいえ、終了します</string>
+    <string name="warning_popup_no_click_event">PopupClickEvent#onClick is no Action !!!!</string>
+    <string name="warning_no_click_event">onClick is no Action !!!!</string>
+    <string name="warning_null_account_folder_uid">account or folder or uid is null:</string>
+    <string name="warning_popup_reply_no_mail">メールが存在しません UID:</string>
+    <string name="no_mail_message">メールが存在しません。</string>
 </resources>

@@ -84,6 +84,8 @@ public abstract class Folder {
     public abstract Message[] getMessages(int start, int end, Date earliestDate, MessageRetrievalListener listener)
     throws MessagingException;
 
+//    public abstract Message[] getMessages(int start, int end, Date earliestDate, MessageRetrievalListener listener)
+//            throws MessagingException;
     /**
      * Fetches the given list of messages. The specified listener is notified as
      * each fetch completes. Messages are downloaded as (as) lightweight (as
@@ -126,7 +128,7 @@ public abstract class Folder {
         {}
 
     public abstract void fetch(Message[] messages, FetchProfile fp,
-                               MessageRetrievalListener listener) throws RakuRakuException,MessagingException;
+                               MessageRetrievalListener listener) throws MessagingException;
 
     public void fetchPart(Message message, Part part,
                           MessageRetrievalListener listener) throws RakuRakuException,MessagingException {
@@ -216,4 +218,5 @@ public abstract class Folder {
     public Account getAccount() {
         return mAccount;
     }
+
 }

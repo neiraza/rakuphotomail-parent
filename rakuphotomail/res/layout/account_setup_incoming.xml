@@ -28,7 +28,7 @@
             android:inputType="textEmailAddress"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
-            android:hint="@string/account_setup_incoming_username_label_hint"
+            android:hint="@string/account_setup_username_label_hint"
             android:contentDescription="@string/account_setup_incoming_username_label" />
         <TextView
             android:text="@string/account_setup_incoming_password_label"

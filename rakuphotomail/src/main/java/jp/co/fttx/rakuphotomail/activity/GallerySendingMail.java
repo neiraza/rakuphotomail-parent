@@ -32,6 +32,8 @@ import jp.co.fttx.rakuphotomail.mail.internet.TextBody;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
 import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 import jp.co.fttx.rakuphotomail.rakuraku.photomail.MessageSync;
+import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoConnectivityCheck;
+import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
 
 import java.util.Date;
 
@@ -80,12 +82,16 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
         setupViews();
 
         final Intent intent = getIntent();
-        initInfo(intent);
-
-        setMToAddressVisibility();
-        setMSentFlagVisibility();
-
-        MessagingController.getInstance(getApplication()).addListener(mListener);
+        try {
+            initInfo(intent);
+            setMToAddressVisibility();
+            setMSentFlagVisibility();
+            MessagingController.getInstance(getApplication()).addListener(mListener);
+        } catch (RakuRakuException e) {
+            Log.w(RakuPhotoMail.LOG_TAG, e.getMessage());
+            Toast.makeText(getApplicationContext(), "ネットワーク接続が切れています", Toast.LENGTH_LONG).show();
+            mSend.setEnabled(false);
+        }
     }
 
     /**
@@ -143,7 +149,7 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
-    private void initInfo(Intent intent) {
+    private void initInfo(Intent intent) throws RakuRakuException {
         mMessageReference = intent.getParcelableExtra(EXTRA_MESSAGE_REFERENCE);
 
         final String accountUuid = (mMessageReference != null) ? mMessageReference.accountUuid : intent
@@ -154,7 +160,11 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
         }
 
         setMToAddress(intent.getStringExtra(EXTRA_ADDRESS_TO));
-        setMToAddressName(intent.getStringExtra(EXTRA_ADDRESS_TO_NAME));
+        String addressName = intent.getStringExtra(EXTRA_ADDRESS_TO_NAME);
+        if (!RakuPhotoStringUtils.isNotBlank(addressName)) {
+            throw new RakuRakuException("送信先アドレスが存在しないため、メールを送信できません address name:" + addressName);
+        }
+        setMToAddressName(addressName);
         mToAddress = new Address(mTo.getText().toString(), mToName.getText().toString());
 
         setMFromAddress(intent.getStringExtra(EXTRA_ADDRESS_FROM),
@@ -248,10 +258,15 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
     @Override
     public void onClick(View v) {
         if (onCheck()) {
-            final String replyTargetUid = mMessageReference.uid;
-            onSend(replyTargetUid);
-            GallerySlideStop.actionHandle(this, mAccount, mAccount.getInboxFolderName(), replyTargetUid);
-            finish();
+            if (RakuPhotoConnectivityCheck.isConnectivity(getApplicationContext())) {
+                final String replyTargetUid = mMessageReference.uid;
+                onSend(replyTargetUid);
+                GallerySlideStop.actionHandle(this, mAccount, mAccount.getInboxFolderName(), replyTargetUid);
+                finish();
+            } else {
+                Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#startMessageSyncTask ネットワーク接続が切れています");
+                Toast.makeText(getApplicationContext(), "ネットワーク接続が切れています", Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -314,8 +329,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
     private void onSync(Account account) {
         //INBOX
         MessageSync.syncMailbox(account, account.getInboxFolderName(), account.getMessageLimitCountFromRemote());
-        //OUTBOX
-//        MessageSync.syncMailboxForCheckNewMail(account, account.getOutboxFolderName(), 0);
         //Sent
         MessageSync.syncMailboxForCheckNewMail(account, account.getSentFolderName(), 0);
     }

@@ -44,6 +44,7 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
     private Account mAccount;
     private boolean mMakeDefault;
     private CheckBox mSubscribedFoldersOnly;
+    private String mUserName;
 
     public static void actionIncomingSettings(Activity context,
                                               Account account, boolean makeDefault) {
@@ -189,11 +190,12 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
             }
 
             if (username != null) {
-            mUsernameView.setText(username);
+                mUserName = username;
+                mUsernameView.setText(username);
             }
 
             if (password != null) {
-            mPasswordView.setText(password);
+                mPasswordView.setText(password);
             }
 
             if (authType != null) {
@@ -203,11 +205,11 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
                     }
                 }
             }
-                serverLabelView
-                        .setText(R.string.account_setup_incoming_imap_server_label);
-                mAccountPorts = imapPorts;
-                mAccountSchemes = imapSchemes;
-                mAccount.setDeletePolicy(Account.DELETE_POLICY_ON_DELETE);
+            serverLabelView
+                    .setText(R.string.account_setup_incoming_imap_server_label);
+            mAccountPorts = imapPorts;
+            mAccountSchemes = imapSchemes;
+            mAccount.setDeletePolicy(Account.DELETE_POLICY_ON_DELETE);
 
             for (int i = 0; i < mAccountSchemes.length; i++) {
                 if (mAccountSchemes[i].equals(uri.getScheme())) {
@@ -215,9 +217,9 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
                 }
             }
 
-			if (uri.getHost() != null) {
-				mServerView.setText(uri.getHost());
-			}
+            if (uri.getHost() != null) {
+                mServerView.setText(uri.getHost());
+            }
 
             if (uri.getPort() != -1) {
                 mPortView.setText(Integer.toString(uri.getPort()));
@@ -257,6 +259,7 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
         if (resultCode == RESULT_OK) {
             if (Intent.ACTION_EDIT.equals(getIntent().getAction())) {
                 mAccount.save(Preferences.getPreferences(this));
@@ -291,17 +294,22 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
             int securityType = (Integer) ((SpinnerOption) mSecurityTypeView
                     .getSelectedItem()).value;
             String path = null;
-                path = "/";
+            path = "/";
 
             final String userInfo;
             String user = mUsernameView.getText().toString();
+            Log.d("abokado", "AccountSetupOutgoing#onNext mUserName:" + mUserName);
+            Log.d("abokado", "AccountSetupOutgoing#onNext usernameEnc:" + user);
+            if (!mUserName.equals(user)) {
+                mAccount.init();
+            }
             String password = mPasswordView.getText().toString();
             String userEnc = URLEncoder.encode(user, "UTF-8");
             String passwordEnc = URLEncoder.encode(password, "UTF-8");
 
-                String authType = ((SpinnerOption) mAuthTypeView
-                        .getSelectedItem()).label;
-                userInfo = authType + ":" + userEnc + ":" + passwordEnc;
+            String authType = ((SpinnerOption) mAuthTypeView
+                    .getSelectedItem()).label;
+            userInfo = authType + ":" + userEnc + ":" + passwordEnc;
             URI uri = new URI(mAccountSchemes[securityType], userInfo,
                     mServerView.getText().toString(),
                     Integer.parseInt(mPortView.getText().toString()), path, // path

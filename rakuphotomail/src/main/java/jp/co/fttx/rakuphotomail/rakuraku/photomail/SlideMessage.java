@@ -37,11 +37,14 @@ public class SlideMessage {
      * @since rakuphoto 0.1-beta1
      */
     public static LocalStore.LocalMessage getLocalMessage(final Account account, final String folder, final String uid) {
+
         LocalStore.LocalFolder localFolder = null;
         try {
             localFolder = getLocalFolder(null, account, folder);
             LocalStore.LocalMessage message = (LocalStore.LocalMessage) localFolder.getMessage(uid);
-
+            if (null == message) {
+                return null;
+            }
             FetchProfile fp = new FetchProfile();
             fp.add(FetchProfile.Item.ENVELOPE);
             fp.add(FetchProfile.Item.BODY);
@@ -228,7 +231,6 @@ public class SlideMessage {
             localStore = account.getLocalStore();
             localFolder = getLocalFolder(localStore, account, folder);
 
-            //TODO refs#2611(#2612)
             LocalStore.MessageInfo message = localStore.getPreMessage(uid, localFolder.getId());
             Log.d("refs#2611", "SlideMessage#isPreMessage message.getId():" + message.getId());
             return isSlide(localStore, message.getId());
@@ -269,6 +271,7 @@ public class SlideMessage {
     }
 
     public static MessageBean getMessage(final Account account, final String folder, final String uid) throws RakuRakuException {
+        Log.d("ahokato", "SlideMessage#getMessage start uid:" + uid);
         LocalStore.LocalMessage localMessage = getLocalMessage(account, folder, uid);
         if (null == localMessage) {
             throw new RakuRakuException("SlideMessage#getMesasge localMessage is null...");
@@ -341,12 +344,12 @@ public class SlideMessage {
         return messageBean;
     }
 
-    public static String getNextUid(final Account account, final String folder, final String uid) throws RakuRakuException {
+    public static String getNextUid(final Account account, final String folder, final String uid) {
         LocalStore.LocalMessage localMessage = getNextLocalMessage(account, folder, uid);
         return localMessage.getUid();
     }
 
-    public static String getPreUid(final Account account, final String folder, final String uid) throws RakuRakuException {
+    public static String getPreUid(final Account account, final String folder, final String uid) {
         LocalStore.LocalMessage localMessage = getPreLocalMessage(account, folder, uid);
         return localMessage.getUid();
     }
@@ -493,5 +496,131 @@ public class SlideMessage {
         LocalStore localStore = account.getLocalStore();
         ArrayList<String> list = localStore.getHeadersReferences();
         return list.contains(messageBean.getMessageId());
+    }
+
+    public static ArrayList<String> getUidList(Account account, String folderName) throws MessagingException {
+        Log.d("ahokato", "MessageSync#getUidList start");
+        LocalStore.LocalFolder localFolder = null;
+        LocalStore localStore = null;
+        try {
+            localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folderName);
+            return localFolder.getUidList();
+        } finally {
+            localStore = null;
+            closeFolder(localFolder);
+            localFolder = null;
+        }
+    }
+
+    public static ArrayList<String> getUidList(Account account, String folderName, int length) throws MessagingException {
+        Log.d("ahokato", "MessageSync#getUidList start");
+        LocalStore.LocalFolder localFolder = null;
+        LocalStore localStore = null;
+        try {
+            localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folderName);
+            return localFolder.getUidList(length);
+        } finally {
+            localStore = null;
+            closeFolder(localFolder);
+            localFolder = null;
+        }
+    }
+
+    public static ArrayList<String> getUidListIncludingUid(Account account, String folderName, String uid, int length) throws MessagingException {
+        Log.d("ahokato", "MessageSync#getUidListIncludingUid start");
+        LocalStore.LocalFolder localFolder = null;
+        LocalStore localStore = null;
+        try {
+            localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folderName);
+            return localFolder.getUidListIncludingUid(uid, length);
+        } finally {
+            localStore = null;
+            closeFolder(localFolder);
+            localFolder = null;
+        }
+    }
+
+    public static ArrayList<String> getUidList(Account account, String folderName, String uid, int length) throws MessagingException {
+        Log.d("ahokato", "MessageSync#getUidList start");
+        LocalStore.LocalFolder localFolder = null;
+        LocalStore localStore = null;
+        try {
+            localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folderName);
+            return localFolder.getUidList(uid, length);
+        } finally {
+            localStore = null;
+            closeFolder(localFolder);
+            localFolder = null;
+        }
+    }
+
+    public static String getHighestLocalUid(Account account, String folderName) throws MessagingException {
+        Log.d("ahokato", "SlideMessage#getHighestLocalUid start");
+        LocalStore.LocalFolder localFolder = null;
+        LocalStore localStore = null;
+        try {
+            localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folderName);
+            ArrayList<String> list = localFolder.getUidList();
+            if (!list.isEmpty()) {
+                return list.get(list.size() - 1);
+            } else {
+                return null;
+            }
+        } finally {
+            localStore = null;
+            closeFolder(localFolder);
+            localFolder = null;
+        }
+    }
+
+    public static ArrayList<MessageBean> getMessageBeanList(Account account, String folderName, String startUid, int length, boolean isIncludingUid) throws RakuRakuException, MessagingException {
+        Log.d("ahokato", "SlideMessage#getMessageBeanList start");
+
+        ArrayList<String> uidList = null;
+        if (0 == length) {
+            Log.d("ahokato", "SlideMessage#getMessageBeanList getUidList全件");
+            uidList = getUidList(account, folderName);
+        } else if (!RakuPhotoStringUtils.isNotBlank(startUid)) {
+            Log.d("ahokato", "SlideMessage#getMessageBeanList getUidList指定件数");
+            uidList = getUidList(account, folderName, length);
+        } else {
+            Log.d("ahokato", "SlideMessage#getMessageBeanList getUidList指定位置からの指定件数");
+            if (isIncludingUid) {
+                Log.d("ahokato", "SlideMessage#getMessageBeanList uid:" + uidList + "を含む");
+                uidList = getUidListIncludingUid(account, folderName, startUid, length);
+            } else {
+                Log.d("ahokato", "SlideMessage#getMessageBeanList uid:" + uidList + "を含まない");
+                uidList = getUidList(account, folderName, startUid, length);
+            }
+        }
+        Log.d("ahokato", "SlideMessage#getMessageBeanList uidList:" + uidList.size());
+
+        ArrayList<MessageBean> result = new ArrayList<MessageBean>();
+        for (String uid : uidList) {
+            result.add(getMessage(account, folderName, uid));
+        }
+        uidList = null;
+        Log.d("ahokato", "SlideMessage#getMessageBeanList result:" + result.size());
+        return result;
+    }
+
+    public static void deleteMessages(Account account, String folderName, ArrayList<String> deleteList) throws MessagingException {
+        Log.d("ahokato", "SlideMessage#deleteMessages start");
+        LocalStore.LocalFolder localFolder = null;
+        LocalStore localStore;
+        try {
+            localStore = account.getLocalStore();
+            localFolder = localStore.getFolder(folderName);
+            localFolder.deleteMessages(deleteList);
+        } finally {
+            closeFolder(localFolder);
+            localStore = null;
+            localFolder = null;
+        }
     }
 }

@@ -20,6 +20,7 @@ import jp.co.fttx.rakuphotomail.rakuraku.bean.MessageBean;
 import jp.co.fttx.rakuphotomail.rakuraku.exception.RakuRakuException;
 import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -34,10 +35,13 @@ public class SlideAttachment {
     private static Bitmap photo;
     private static Bitmap thumbnail;
 
-    public static Bitmap getBitmap(Context context, Display display, Account account, AttachmentBean attachmentBean) throws RakuRakuException {
+    public static Bitmap getBitmap(Context context, Display display, Account account, AttachmentBean attachmentBean) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        Uri uri = AttachmentProvider.getAttachmentUri(account, attachmentBean.getId());
+        if (null == uri) {
+            return null;
+        }
         try {
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            Uri uri = AttachmentProvider.getAttachmentUri(account, attachmentBean.getId());
             options.inJustDecodeBounds = true;
             photo = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
             int displayW = display.getWidth();
@@ -49,13 +53,10 @@ public class SlideAttachment {
             options.inSampleSize = Math.max(scaleW, scaleH);
             photo = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
             return photo;
-        } catch (OutOfMemoryError ooe) {
-            Log.e(RakuPhotoMail.LOG_TAG, "Exception:" + ooe.getMessage());
-            throw new RakuRakuException(ooe);
-        } catch (Exception e) {
-            Log.e(RakuPhotoMail.LOG_TAG, "Exception:" + e);
+        } catch (FileNotFoundException e) {
+            Log.w(RakuPhotoMail.LOG_TAG, uri.toString() + ":該当ファイルが存在しません:" + e.getMessage());
+            return null;
         }
-        return null;
     }
 
     public static Bitmap getThumbnailBitmap(Context context, Account account, AttachmentBean attachmentBean) {
@@ -103,29 +104,40 @@ public class SlideAttachment {
      * @param folderName user mail folder name
      * @param uid        message uid
      * @throws MessagingException me
+     * @throws RakuRakuException  rre
      */
-    public static void clearCacheForAttachmentFile(Account account, String folderName, String uid) throws MessagingException {
+    public static void clearCacheForAttachmentFile(Account account, String folderName, String uid) throws MessagingException, RakuRakuException {
+        Log.d("ahokato", "SlideAttachment#clearCacheForAttachmentFile uid:" + uid);
         LocalStore localStore = account.getLocalStore();
         LocalStore.LocalFolder localFolder = localStore.getFolder(folderName);
-        long[] attachmentIdList = localFolder.deleteAttachmentFile(uid);
-        for (long attachmentId : attachmentIdList) {
-            if (localFolder.clearContentUri(attachmentId)) {
-                MessageBean messageBean = new MessageBean();
-                try {
-                    messageBean = SlideMessage.getMessage(account, account.getInboxFolderName(), uid);
-                } catch (RakuRakuException e) {
-                    e.printStackTrace();
-                }
-                String[] arr = RakuPhotoStringUtils.splitFlags(messageBean.getFlags());
-                if (0 < arr.length) {
-                    ArrayList<String> arrayList = new ArrayList<String>(Arrays.asList(arr));
-                    int index = arrayList.indexOf("X_DOWNLOADED_FULL");
-                    if (0 <= index) {
-                        arrayList.remove(index);
-                        localStore.setFlagAnswered(uid, arrayList.toArray(new String[arrayList.size()]));
+        long[] attachmentIdList = null;
+        String[] arr = null;
+        ArrayList<String> arrayList = null;
+        try {
+            attachmentIdList = localFolder.deleteAttachmentFile(uid);
+            for (long attachmentId : attachmentIdList) {
+                Log.d("ahokato", "SlideAttachment#clearCacheForAttachmentFile attachmentId:" + attachmentId);
+                if (localFolder.clearContentUri(attachmentId)) {
+                    MessageBean messageBean = SlideMessage.getMessage(account, folderName, uid);
+                    arr = RakuPhotoStringUtils.splitFlags(messageBean.getFlags());
+                    if (0 < arr.length) {
+                        arrayList = new ArrayList<String>(Arrays.asList(arr));
+                        int index = arrayList.indexOf("X_DOWNLOADED_FULL");
+                        Log.d("ahokato", "SlideAttachment#clearCacheForAttachmentFile index:" + index);
+                        if (0 <= index) {
+                            arrayList.remove(index);
+                            localStore.setFlagAnswered(uid, arrayList.toArray(new String[arrayList.size()]));
+                        }
+                        arrayList = null;
                     }
                 }
             }
+        } finally {
+            closeFolder(localFolder);
+            localFolder = null;
+            localStore = null;
+            attachmentIdList = null;
+            arr = null;
         }
     }
 
@@ -138,7 +150,7 @@ public class SlideAttachment {
             localFolder.open(Folder.OpenMode.READ_WRITE);
 
             Message message = localFolder.getMessage(uid);
-            if (!message.isSet(Flag.X_DOWNLOADED_FULL)) {
+            if (null == message || !message.isSet(Flag.X_DOWNLOADED_FULL)) {
                 Store remoteStore = account.getRemoteStore();
                 remoteFolder = remoteStore.getFolder(folder);
                 remoteFolder.open(Folder.OpenMode.READ_WRITE);
@@ -155,12 +167,24 @@ public class SlideAttachment {
 
                 message.setFlag(Flag.X_DOWNLOADED_FULL, true);
             }
-        } catch (Exception e) {
+        } catch (MessagingException e) {
             Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage() + " UID:" + uid);
         } finally {
             closeFolder(remoteFolder);
             closeFolder(localFolder);
         }
+    }
+
+    /**
+     * 添付ファイルをダウンロードする際に、メッセージ毎同期してしまうので注意.
+     *
+     * @param account       user account
+     * @param folder        user IMAP folder
+     * @param remoteMessage user IMAP Server Message
+     */
+    public static void downloadAttachment(final Account account, final String folder, final Message remoteMessage) {
+        final String uid = remoteMessage.getUid();
+        downloadAttachment(account, folder, uid);
     }
 
     private static void closeFolder(Folder f) {

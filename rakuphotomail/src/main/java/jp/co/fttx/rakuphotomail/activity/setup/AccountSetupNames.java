@@ -1,5 +1,6 @@
 package jp.co.fttx.rakuphotomail.activity.setup;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -7,6 +8,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.method.TextKeyListener;
 import android.text.method.TextKeyListener.Capitalize;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -16,8 +18,11 @@ import android.widget.Spinner;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
+import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.activity.RakuPhotoActivity;
 import jp.co.fttx.rakuphotomail.helper.Utility;
+import jp.co.fttx.rakuphotomail.mail.MessagingException;
+import jp.co.fttx.rakuphotomail.rakuraku.photomail.MessageSync;
 
 public class AccountSetupNames extends RakuPhotoActivity implements OnClickListener {
     private static final String EXTRA_ACCOUNT = "account";
@@ -28,17 +33,18 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
 
     private Button mDoneButton;
 
-    private Spinner mAttachmentCacheLimitCount;
+//    private Spinner mAttachmentCacheLimitCount;
     private Spinner mSlideSleepTimeDuration;
     private Spinner mServerSyncTimeDuration;
     private Spinner mScaleRatio;
     private Spinner mDownloadSize;
 
-    private String[] attachmentCacheLimitCount;
     private String[] slideSleepTimeDuration;
     private String[] serverSyncTimeDuration;
     private String[] ratioValues;
     private String[] downloadSize;
+
+    private ProgressDialog mProgressDialog;
 
     public static void actionSetNames(Context context, Account account) {
         Intent i = new Intent(context, AccountSetupNames.class);
@@ -53,6 +59,7 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
         mName = (EditText) findViewById(R.id.account_name);
         mDoneButton = (Button) findViewById(R.id.done);
         mDoneButton.setOnClickListener(this);
+        mProgressDialog = new ProgressDialog(this);
 
         TextWatcher validationTextWatcher = new TextWatcher() {
             public void afterTextChanged(Editable s) {
@@ -85,17 +92,17 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
         }
 
         /* Attachment Cache Limit Count */
-        attachmentCacheLimitCount = getResources().getStringArray(R.array.account_settings_download_cache_values);
-        mAttachmentCacheLimitCount = (Spinner) findViewById(R.id.account_option_download_cache);
-        mAttachmentCacheLimitCount.setSelection(1);
-        mAttachmentCacheLimitCount.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                mAccount.setAttachmentCacheLimitCount(Integer.parseInt(attachmentCacheLimitCount[position]));
-            }
-
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
+//        attachmentCacheLimitCount = getResources().getStringArray(R.array.account_settings_download_cache_values);
+//        mAttachmentCacheLimitCount = (Spinner) findViewById(R.id.account_option_download_cache);
+//        mAttachmentCacheLimitCount.setSelection(1);
+//        mAttachmentCacheLimitCount.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                mAccount.setAttachmentCacheLimitCount(Integer.parseInt(attachmentCacheLimitCount[position]));
+//            }
+//
+//            public void onNothingSelected(AdapterView<?> parent) {
+//            }
+//        });
 
         /* Slide SleepTime Duration */
         slideSleepTimeDuration = getResources().getStringArray(R.array.account_settings_slide_change_duration_values);
@@ -103,7 +110,7 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
         mSlideSleepTimeDuration.setSelection(2);
         mSlideSleepTimeDuration.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                  mAccount.setSlideSleepTime(Long.parseLong(slideSleepTimeDuration[position]));
+                mAccount.setSlideSleepTime(Long.parseLong(slideSleepTimeDuration[position]));
             }
 
             public void onNothingSelected(AdapterView<?> parent) {
@@ -136,19 +143,18 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
             }
         });
 
-
-        /* Donwload Size / mail  */
-        downloadSize = getResources().getStringArray(R.array.account_settings_download_message_size_values);
-        mDownloadSize = (Spinner) findViewById(R.id.account_option_download_message_size);
-        mDownloadSize.setSelection(3);
-        mDownloadSize.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                mAccount.setMaximumAutoDownloadMessageSize(Integer.parseInt(downloadSize[position]));
-            }
-
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
+//        /* Download Size / mail  */
+//        downloadSize = getResources().getStringArray(R.array.account_settings_download_message_size_values);
+//        mDownloadSize = (Spinner) findViewById(R.id.account_option_download_message_size);
+//        mDownloadSize.setSelection(3);
+//        mDownloadSize.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                mAccount.setMaximumAutoDownloadMessageSize(Integer.parseInt(downloadSize[position]));
+//            }
+//
+//            public void onNothingSelected(AdapterView<?> parent) {
+//            }
+//        });
     }
 
     private void validateFields() {
@@ -158,9 +164,16 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
 
     @Override
     protected void onNext() {
+        setUpProgressDialog(mProgressDialog,"TEST","TEST");
         mAccount.setDescription(mAccount.getDescription());
         mAccount.setName(mName.getText().toString());
         mAccount.save(Preferences.getPreferences(this));
+        try {
+            MessageSync.synchronizeMailboxFinished(mAccount, mAccount.getInboxFolderName());
+        } catch (MessagingException e) {
+            Log.e(RakuPhotoMail.LOG_TAG, getString(R.string.error_messaging_exception) + e.getMessage());
+        }
+        dismissProgressDialog(mProgressDialog);
         finish();
     }
 
@@ -169,6 +182,34 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
             case R.id.done:
                 onNext();
                 break;
+        }
+    }
+
+    /**
+     * @param progressDialog progressDialog
+     * @param title          title
+     * @param message        message
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private void setUpProgressDialog(ProgressDialog progressDialog, String title, String message) {
+        if (!progressDialog.isShowing()) {
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progressDialog.setTitle(title);
+            progressDialog.setMessage(message);
+            progressDialog.setCancelable(true);
+            progressDialog.show();
+        }
+    }
+
+    /**
+     * @param progressDialog progressDialog
+     * @author tooru.oguri
+     * @since rakuphoto 0.1-beta1
+     */
+    private void dismissProgressDialog(ProgressDialog progressDialog) {
+        if (null != progressDialog && progressDialog.isShowing()) {
+            progressDialog.dismiss();
         }
     }
 }

@@ -930,6 +930,7 @@ public class ImapStore extends Store {
         protected Message[] getMessages(final int start, final int end, Date earliestDate,
                                         final boolean includeDeleted, final MessageRetrievalListener listener)
                 throws MessagingException {
+
             if (start < 1 || end < 1 || end < start) {
                 throw new MessagingException(String.format("Invalid message set %d %d", start, end));
             }
@@ -1052,7 +1053,9 @@ public class ImapStore extends Store {
 
         @Override
         public void fetch(Message[] messages, FetchProfile fp, MessageRetrievalListener listener)
-                throws MessagingException, RakuRakuException {
+                throws MessagingException {
+            Log.d("ahokato", "ImapStore#fetch start");
+
             if (messages == null || messages.length == 0) {
                 return;
             }
@@ -1060,9 +1063,9 @@ public class ImapStore extends Store {
             List<String> uids = new ArrayList<String>(messages.length);
             HashMap<String, Message> messageMap = new HashMap<String, Message>();
             for (int i = 0, count = messages.length; i < count; i++) {
-
                 String uid = messages[i].getUid();
                 uids.add(uid);
+                uids.add(messages[i].getUid());
                 messageMap.put(uid, messages[i]);
             }
 
@@ -1094,9 +1097,16 @@ public class ImapStore extends Store {
                 fetchFields.add("BODY.PEEK[]");
             }
 
+            ImapResponse response;
+
             for (int windowStart = 0; windowStart < messages.length; windowStart += (FETCH_WINDOW_SIZE)) {
                 List<String> uidWindow = uids.subList(windowStart,
                         Math.min((windowStart + FETCH_WINDOW_SIZE), messages.length));
+
+                Log.d("ahokato", "ImapStore#fetch command:" + String.format("UID FETCH %s (%s)", Utility.combine(
+                        uidWindow.toArray(new String[uidWindow.size()]), ','),
+                        Utility.combine(
+                                fetchFields.toArray(new String[fetchFields.size()]), ' ')));
 
                 try {
                     mConnection
@@ -1106,7 +1116,7 @@ public class ImapStore extends Store {
                                             Utility.combine(
                                                     fetchFields.toArray(new String[fetchFields.size()]), ' ')),
                                     false);
-                    ImapResponse response;
+
                     int messageNumber = 0;
 
                     ImapResponseParser.IImapResponseCallback callback = null;
@@ -1115,6 +1125,7 @@ public class ImapStore extends Store {
                     }
 
                     do {
+                        response = null;
                         response = mConnection.readResponse(callback);
 
                         if (response.mTag == null
@@ -1141,6 +1152,8 @@ public class ImapStore extends Store {
                                 }
                             }
 
+                            Log.d("ahokato", "ImapStore#fetch response:" + response.toString());
+
                             Message message = messageMap.get(uid);
                             if (message == null) {
                                 if (RakuPhotoMail.DEBUG)
@@ -1161,6 +1174,8 @@ public class ImapStore extends Store {
                             if (literal != null) {
                                 if (literal instanceof String) {
                                     String bodyString = (String) literal;
+                                    Log.d("ahokato", "ImapStore#fetch bodyString:" + bodyString);
+
                                     InputStream bodyStream = new ByteArrayInputStream(bodyString.getBytes());
                                     imapMessage.parse(bodyStream);
                                 } else if (literal instanceof Integer) {
@@ -1186,6 +1201,10 @@ public class ImapStore extends Store {
                     throw ioExceptionHandler(mConnection, ioe);
                 }
             }
+            response = null;
+            uids = null;
+            messageMap = null;
+            Log.d("ahokato", "ImapStore#fetch end");
         }
 
         @Override
@@ -1583,27 +1602,14 @@ public class ImapStore extends Store {
          * the IMAP server and sets the Message's UID to the new server UID.
          */
         @Override
-        public void appendMessages(Message[] messages) throws RakuRakuException,MessagingException {
-            Log.d("refs1961", "ImapStore#appendMessages");
-
+        public void appendMessages(Message[] messages) throws RakuRakuException, MessagingException {
             checkOpen();
-            Log.d("refs1961", "ImapStore#appendMessages Open OK");
-
             try {
                 for (Message message : messages) {
                     mConnection.sendCommand(String.format("APPEND %s (%s) {%d}",
                             encodeString(encodeFolderName(getPrefixedName())),
                             combineFlags(message.getFlags()), message.calculateSize()), false);
                     ImapResponse response;
-
-//                    //TODO 追加してみたけど、これじゃない気がする
-//                    synchronized (this) {
-//                        Log.d("refs1961", "ImapStore#appendMessages synchronized mConnection");
-//                        if (mConnection == null) {
-//                            Log.d("refs1961", "ImapStore#appendMessages mConnection:" + mConnection);
-//                            mConnection = getConnection();
-//                        }
-//                    }
 
                     do {
                         response = mConnection.readResponse();
@@ -1617,11 +1623,7 @@ public class ImapStore extends Store {
                         }
                         while (response.more()) ;
                     } while (response.mTag == null);
-
-                    Log.d("refs1961", "ImapStore#appendMessages message.getUid():" + message.getUid());
                     String newUid = getUidFromMessageId(message);
-                    Log.d("refs1961", "ImapStore#appendMessages newUid:" + newUid);
-
                     if (RakuPhotoMail.DEBUG)
                         Log.d(RakuPhotoMail.LOG_TAG, "Got UID " + newUid + " for message for " + getLogId());
 
@@ -1635,9 +1637,9 @@ public class ImapStore extends Store {
             }
         }
 
+
         @Override
         public String getUidFromMessageId(Message message) throws MessagingException {
-            Log.d("refs1961", "ImapStore#getUidFromMessageId");
             try {
                 /*
                      * Try to find the UID of the message we just appended using the
@@ -1652,8 +1654,6 @@ public class ImapStore extends Store {
                     return null;
                 }
                 String messageId = messageIdHeader[0];
-                Log.d("refs1961", "ImapStore#getUidFromMessageId messageId:" + messageId);
-
                 if (RakuPhotoMail.DEBUG)
                     Log.d(RakuPhotoMail.LOG_TAG, "Looking for UID for message with message-id " + messageId
                             + " for " + getLogId());
@@ -1664,7 +1664,6 @@ public class ImapStore extends Store {
                     if (response1.mTag == null
                             && ImapResponseParser.equalsIgnoreCase(response1.get(0), "SEARCH")
                             && response1.size() > 1) {
-                        Log.d("refs1961", "ImapStore#getUidFromMessageId response1.getString(1):" + response1.getString(1));
                         return response1.getString(1);
                     }
                 }
@@ -1762,7 +1761,6 @@ public class ImapStore extends Store {
 
         private void checkOpen() throws MessagingException {
             if (!isOpen()) {
-                Log.d("refs1961", "ImapStore#checkOpen isOpen is false");
                 throw new MessagingException("Folder " + getPrefixedName() + " is not open.");
             }
         }
