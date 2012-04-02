@@ -579,7 +579,9 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        onResume();
+                        mAccount.setAllSync(true);
+                        actionSlideShow(mContext, mAccount, mFolder, null);
+                        finish();
                     }
                 });
         alertDialogBuilder.setCancelable(false);
