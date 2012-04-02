@@ -257,15 +257,17 @@ public class SlideMessage {
     public static ArrayList<LocalStore.Attachments> getAttachmentList(final Account account, final String folder, final String uid) {
         LocalStore.LocalMessage message = getLocalMessage(account, folder, uid);
         LocalStore localStore;
-        try {
-            localStore = account.getLocalStore();
-            return localStore.getAttachmentList(message.getId());
-        } catch (CursorIndexOutOfBoundsException e) {
-            Log.e(RakuPhotoMail.LOG_TAG, "CursorIndexOutOfBoundsException:" + e);
-        } catch (UnavailableStorageException e) {
-            Log.e(RakuPhotoMail.LOG_TAG, "UnavailableStorageException:" + e);
-        } catch (MessagingException e) {
-            Log.e(RakuPhotoMail.LOG_TAG, "MessagingException:" + e);
+        if (null != message) {
+            try {
+                localStore = account.getLocalStore();
+                return localStore.getAttachmentList(message.getId());
+            } catch (CursorIndexOutOfBoundsException e) {
+                Log.e(RakuPhotoMail.LOG_TAG, "CursorIndexOutOfBoundsException:" + e);
+            } catch (UnavailableStorageException e) {
+                Log.e(RakuPhotoMail.LOG_TAG, "UnavailableStorageException:" + e);
+            } catch (MessagingException e) {
+                Log.e(RakuPhotoMail.LOG_TAG, "MessagingException:" + e);
+            }
         }
         return null;
     }
