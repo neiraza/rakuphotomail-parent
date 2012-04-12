@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+            android:id="@+id/settings_option_save_back"
+            android:title="@string/preferences_action"
+            android:icon="@android:drawable/ic_menu_revert">
+    </item>
+</menu>

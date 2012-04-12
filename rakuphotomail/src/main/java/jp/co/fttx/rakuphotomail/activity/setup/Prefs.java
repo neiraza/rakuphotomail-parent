@@ -391,12 +391,22 @@ public class Prefs extends RakuphotoPreferenceActivity {
     }
 
     @Override
+    public boolean dispatchKeyEvent(KeyEvent e) {
+        if (e.getAction() == KeyEvent.ACTION_DOWN) {
+            saveSettings();
+            if (RakuPhotoMail.manageBack()) {
+                finish();
+                return true;
+            }
+        }
+        return super.dispatchKeyEvent(e);
+    }
+
+    @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             saveSettings();
             if (RakuPhotoMail.manageBack()) {
-                //TODO kari
-//                Accounts.listAccounts(this);
                 finish();
                 return true;
             }

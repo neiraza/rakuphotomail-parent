@@ -845,16 +845,19 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         int itemId = item.getItemId();
         switch (itemId) {
             case R.id.account_settings: {
+                Log.d("ahokato", "onOptionsItemSelected アカウント設定！");
                 onEditAccount();
                 return true;
             }
             default: {
+                Log.d("ahokato", "onOptionsItemSelected default");
                 return super.onOptionsItemSelected(item);
             }
         }
     }
 
     private void onEditAccount() {
+        Log.d("ahokato", "onEditAccount start");
         AccountSettings.actionSettings(mContext, mAccount);
     }
 

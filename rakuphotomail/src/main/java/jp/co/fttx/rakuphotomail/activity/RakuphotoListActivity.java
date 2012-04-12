@@ -41,50 +41,47 @@ public class RakuphotoListActivity extends ListActivity {
     }
 
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // Shortcuts that work no matter what is selected
-        switch (keyCode) {
-        case KeyEvent.KEYCODE_VOLUME_UP: {
-            final ListView listView = getListView();
-            if (RakuPhotoMail.useVolumeKeysForListNavigationEnabled()) {
-                int currentPosition = listView.getSelectedItemPosition();
-                if (currentPosition == AdapterView.INVALID_POSITION || listView.isInTouchMode()) {
-                    currentPosition = listView.getFirstVisiblePosition();
+    public boolean dispatchKeyEvent(KeyEvent e) {
+        int keyCode = e.getKeyCode();
+        if (e.getAction() == KeyEvent.ACTION_DOWN) {
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_VOLUME_UP: {
+                    final ListView listView = getListView();
+                    if (RakuPhotoMail.useVolumeKeysForListNavigationEnabled()) {
+                        int currentPosition = listView.getSelectedItemPosition();
+                        if (currentPosition == AdapterView.INVALID_POSITION || listView.isInTouchMode()) {
+                            currentPosition = listView.getFirstVisiblePosition();
+                        }
+                        if (currentPosition > 0) {
+                            listView.setSelection(currentPosition - 1);
+                        }
+                        return true;
+                    }
                 }
-                if (currentPosition > 0) {
-                    listView.setSelection(currentPosition - 1);
-                }
-                return true;
-            }
-        }
-        case KeyEvent.KEYCODE_VOLUME_DOWN: {
-            final ListView listView = getListView();
-            if (RakuPhotoMail.useVolumeKeysForListNavigationEnabled()) {
-                int currentPosition = listView.getSelectedItemPosition();
-                if (currentPosition == AdapterView.INVALID_POSITION || listView.isInTouchMode()) {
-                    currentPosition = listView.getFirstVisiblePosition();
-                }
+                case KeyEvent.KEYCODE_VOLUME_DOWN: {
+                    final ListView listView = getListView();
+                    if (RakuPhotoMail.useVolumeKeysForListNavigationEnabled()) {
+                        int currentPosition = listView.getSelectedItemPosition();
+                        if (currentPosition == AdapterView.INVALID_POSITION || listView.isInTouchMode()) {
+                            currentPosition = listView.getFirstVisiblePosition();
+                        }
 
-                if (currentPosition < listView.getCount()) {
-                    listView.setSelection(currentPosition + 1);
+                        if (currentPosition < listView.getCount()) {
+                            listView.setSelection(currentPosition + 1);
+                        }
+                        return true;
+                    }
                 }
-                return true;
+            }
+        } else if (e.getAction() == KeyEvent.ACTION_UP) {
+            if (RakuPhotoMail.useVolumeKeysForListNavigationEnabled()) {
+                if ((keyCode == KeyEvent.KEYCODE_VOLUME_UP) || (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN)) {
+                    if (RakuPhotoMail.DEBUG)
+                        Log.v(RakuPhotoMail.LOG_TAG, "Swallowed key up.");
+                    return true;
+                }
             }
         }
-        }
-        return super.onKeyDown(keyCode, event);
-    }
-
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-        // Swallow these events too to avoid the audible notification of a volume change
-        if (RakuPhotoMail.useVolumeKeysForListNavigationEnabled()) {
-            if ((keyCode == KeyEvent.KEYCODE_VOLUME_UP) || (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN)) {
-                if (RakuPhotoMail.DEBUG)
-                    Log.v(RakuPhotoMail.LOG_TAG, "Swallowed key up.");
-                return true;
-            }
-        }
-        return super.onKeyUp(keyCode, event);
+        return super.dispatchKeyEvent(e);
     }
 }

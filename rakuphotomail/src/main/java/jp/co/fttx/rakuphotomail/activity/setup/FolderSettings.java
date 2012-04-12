@@ -151,16 +151,16 @@ public class FolderSettings extends RakuphotoPreferenceActivity {
     }
 
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            try {
-                saveSettings();
-            } catch (MessagingException e) {
-                Log.e(RakuPhotoMail.LOG_TAG, "Saving folder settings failed " + e);
+    public boolean dispatchKeyEvent(KeyEvent e) {
+        if (e.getAction() == KeyEvent.ACTION_DOWN) {
+            if (e.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+                try {
+                    saveSettings();
+                } catch (MessagingException me) {
+                    Log.e(RakuPhotoMail.LOG_TAG, "Saving folder settings failed " + me);
+                }
             }
         }
-        return super.onKeyDown(keyCode, event);
+        return super.dispatchKeyEvent(e);
     }
-
-
 }

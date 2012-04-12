@@ -1,12 +1,12 @@
 package jp.co.fttx.rakuphotomail.test;
 
+import android.test.AndroidTestCase;
 import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
-import junit.framework.TestCase;
 
 /**
  * @author tooru.oguri
  */
-public class RakuPhotoStringUtilsTest extends TestCase {
+public class RakuPhotoStringUtilsTest extends AndroidTestCase {
 
     public RakuPhotoStringUtilsTest() {
         super();

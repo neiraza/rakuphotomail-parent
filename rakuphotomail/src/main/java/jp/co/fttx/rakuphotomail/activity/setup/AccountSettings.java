@@ -1,18 +1,23 @@
 package jp.co.fttx.rakuphotomail.activity.setup;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.*;
+import android.preference.EditTextPreference;
+import android.preference.ListPreference;
+import android.preference.Preference;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Account.QuoteStyle;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
-import jp.co.fttx.rakuphotomail.activity.*;
+import jp.co.fttx.rakuphotomail.activity.RakuphotoPreferenceActivity;
 import jp.co.fttx.rakuphotomail.mail.Folder;
 import jp.co.fttx.rakuphotomail.mail.Store;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore.LocalFolder;
@@ -31,12 +36,9 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
     private static final String PREFERENCE_INCOMING = "incoming";
     private static final String PREFERENCE_OUTGOING = "outgoing";
     private static final String PREFERENCE_AUTO_EXPAND_FOLDER = "account_setup_auto_expand_folder";
-    private static final String PREFERENCE_MESSAGE_SIZE = "account_download_size";
     private static final String PREFERENCE_SLIDE_CHANGE_DURATION = "account_slide_change_duration";
     private static final String PREFERENCE_SCALE_RATIO = "account_scale_ratio";
     private static final String PREFERENCE_SERVER_SYNC = "account_server_sync";
-    private static final String PREFERENCE_DOWNLOAD_CACHE = "account_download_cache";
-
     private static final String PREFERENCE_LOCAL_STORAGE_PROVIDER = "local_storage_provider";
     private static final String PREFERENCE_DRAFTS_FOLDER = "drafts_folder";
     private static final String PREFERENCE_SENT_FOLDER = "sent_folder";
@@ -51,7 +53,6 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
     private ListPreference mSlideChangeDuration;
     private ListPreference mScaleRatio;
     private ListPreference mServerSync;
-//    private ListPreference mDownloadCache;
     private ListPreference mMessageSize;
     private ListPreference mAutoExpandFolder;
 
@@ -136,32 +137,6 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
             }
         });
 
-//        mDownloadCache = (ListPreference) findPreference(PREFERENCE_DOWNLOAD_CACHE);
-//        mDownloadCache.setValue(String.valueOf(mAccount.getAttachmentCacheLimitCount()));
-//        mDownloadCache.setSummary(mDownloadCache.getEntry());
-//        mDownloadCache.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-//            public boolean onPreferenceChange(Preference preference, Object newValue) {
-//                final String summary = newValue.toString();
-//                int index = mDownloadCache.findIndexOfValue(summary);
-//                mDownloadCache.setSummary(mDownloadCache.getEntries()[index]);
-//                mDownloadCache.setValue(summary);
-//                return false;
-//            }
-//        });
-
-//        mMessageSize = (ListPreference) findPreference(PREFERENCE_MESSAGE_SIZE);
-//        mMessageSize.setValue(String.valueOf(mAccount.getMaximumAutoDownloadMessageSize()));
-//        mMessageSize.setSummary(mMessageSize.getEntry());
-//        mMessageSize.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-//            public boolean onPreferenceChange(Preference preference, Object newValue) {
-//                final String summary = newValue.toString();
-//                int index = mMessageSize.findIndexOfValue(summary);
-//                mMessageSize.setSummary(mMessageSize.getEntries()[index]);
-//                mMessageSize.setValue(summary);
-//                return false;
-//            }
-//        });
-
         mLocalStorageProvider = (ListPreference) findPreference(PREFERENCE_LOCAL_STORAGE_PROVIDER);
         {
             final Map<String, String> providers;
@@ -219,11 +194,9 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
         mAccount.setShowOngoing(false);
         mAccount.setDisplayCount(0);
         mAccount.setMaximumAutoDownloadMessageSize(10);
-//        mAccount.setMaximumAutoDownloadMessageSize(Integer.parseInt(mMessageSize.getValue()));
         mAccount.setSlideSleepTime(Long.parseLong(mSlideChangeDuration.getValue()));
         mAccount.setScaleRatio(Integer.parseInt(mScaleRatio.getValue()));
         mAccount.setServerSyncTimeDuration(Long.parseLong(mServerSync.getValue()));
-//        mAccount.setAttachmentCacheLimitCount(Integer.parseInt(mDownloadCache.getValue()));
         mAccount.getNotificationSetting().setVibrate(false);
         mAccount.getNotificationSetting().setVibratePattern(0);
         mAccount.getNotificationSetting().setVibrateTimes(0);
@@ -264,11 +237,13 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
     }
 
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            saveSettings();
+    public boolean dispatchKeyEvent(KeyEvent e) {
+        if (e.getAction() == KeyEvent.ACTION_DOWN) {
+            if (e.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+                new SettingsSaveSyncTask(this).execute();
+            }
         }
-        return super.onKeyDown(keyCode, event);
+        return super.dispatchKeyEvent(e);
     }
 
     private void onIncomingSettings() {
@@ -357,6 +332,78 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
             mSentFolder.setEnabled(true);
             mSpamFolder.setEnabled(true);
             mTrashFolder.setEnabled(true);
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        Log.d("ahokato", "AccountSettings onCreateOptionsMenu");
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.settings_option, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        Log.d("ahokato", "AccountSettings onPrepareOptionsMenu");
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Log.d("ahokato", "AccountSettings onOptionsItemSelected あけぼーの");
+        int itemId = item.getItemId();
+        switch (itemId) {
+            //TODO AsyncTaskで実装する＆saveSettingsを使って、現状を保存しちまおうぜ！
+            case R.id.settings_option_save_back:
+                Log.d("ahokato", "AccountSettings onOptionsItemSelected settings_save_back");
+                new SettingsSaveSyncTask(this).execute();
+                return true;
+            default:
+                Log.d("ahokato", "AccountSettings onOptionsItemSelected default");
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onStop() {
+        Log.d("ahokato", "AccountSettings#onStop");
+        super.onStop();
+        this.finish();
+    }
+
+    private class SettingsSaveSyncTask extends AsyncTask<Void, Void, Void> {
+        private Context context;
+        private ProgressDialog progressDialog;
+
+        public SettingsSaveSyncTask(Context context) {
+            Log.d("ahokato", "AccountSettings SettingsSaveSyncTask start");
+            this.context = context;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            Log.d("ahokato", "AccountSettings SettingsSaveSyncTask#onPreExecute");
+            progressDialog = new ProgressDialog(context);
+            progressDialog.setTitle(getString(R.string.progress_please_wait));
+            progressDialog.setMessage(getString(R.string.setting_save_message));
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progressDialog.setCancelable(true);
+//            progressDialog.setOnCancelListener(this);
+            progressDialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            Log.d("ahokato", "AccountSettings SettingsSaveSyncTask#doInBackground");
+            saveSettings();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void tmp) {
+            Log.d("ahokato", "AccountSettings SettingsSaveSyncTask#onPostExecute");
+            onStop();
         }
     }
 }

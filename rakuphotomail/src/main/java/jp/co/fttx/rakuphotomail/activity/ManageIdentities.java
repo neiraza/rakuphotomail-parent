@@ -117,13 +117,14 @@ public class ManageIdentities extends ChooseIdentity {
         refreshView();
     }
 
-
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            saveIdentities();
+    public boolean dispatchKeyEvent(KeyEvent e) {
+        if (e.getAction() == KeyEvent.ACTION_DOWN) {
+            if (e.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+                saveIdentities();
+            }
         }
-        return super.onKeyDown(keyCode, event);
+        return super.dispatchKeyEvent(e);
     }
 
     private void saveIdentities() {

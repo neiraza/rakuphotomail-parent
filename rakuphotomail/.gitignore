@@ -1,4 +1,6 @@
 /gen
+/.project
+proguard.conf
 /.settings
 /default.properties
 /target

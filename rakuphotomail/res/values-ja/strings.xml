@@ -1274,4 +1274,6 @@
     <string name="warning_null_account_folder_uid">account or folder or uid is null:</string>
     <string name="warning_popup_reply_no_mail">メールが存在しません UID:</string>
     <string name="no_mail_message">メールが存在しません。</string>
+    <string name="setting_save_message">設定を保存しています。終了後、遷移元の画面に自動で戻ります。
+        \nしばらくお待ちください。</string>
 </resources>
