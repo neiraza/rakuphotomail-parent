@@ -116,6 +116,7 @@
     <string name="search_action">検索</string>
     <string name="search_results">検索結果</string>
     <string name="preferences_action">設定</string>
+    <string name="preferences_save_back">戻る</string>
     <string name="open_action">開く</string>
     <string name="account_settings_action">アカウント設定</string>
     <string name="folder_settings_action">フォルダ設定</string>

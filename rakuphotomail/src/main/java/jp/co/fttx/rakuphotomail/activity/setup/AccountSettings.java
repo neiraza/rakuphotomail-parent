@@ -354,7 +354,6 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
         Log.d("ahokato", "AccountSettings onOptionsItemSelected あけぼーの");
         int itemId = item.getItemId();
         switch (itemId) {
-            //TODO AsyncTaskで実装する＆saveSettingsを使って、現状を保存しちまおうぜ！
             case R.id.settings_option_save_back:
                 Log.d("ahokato", "AccountSettings onOptionsItemSelected settings_save_back");
                 new SettingsSaveSyncTask(this).execute();
