@@ -63,8 +63,10 @@ public class ImapResponseParser {
         } catch (RakuRakuException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         } finally {
-            mResponse.mCallback = null;
-            mResponse = null;
+            if (null != mResponse) {
+                mResponse.mCallback = null;
+                mResponse = null;
+            }
             mException = null;
         }
         return null;

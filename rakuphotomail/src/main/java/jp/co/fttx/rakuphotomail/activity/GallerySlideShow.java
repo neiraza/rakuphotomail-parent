@@ -349,6 +349,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
     private void doSentFolderSync() {
         if (RakuPhotoConnectivityCheck.isConnectivity(getApplicationContext())) {
+            Log.d("baka", "doSentFolderSync():" + mAccount.getSentFolderName());
             MessageSync.syncMailboxForCheckNewMail(mAccount, mAccount.getSentFolderName(), 0);
         } else {
             Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#doSentFolderSync ネットワーク接続が切れています");
