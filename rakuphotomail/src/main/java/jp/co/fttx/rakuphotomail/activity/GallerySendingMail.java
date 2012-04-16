@@ -323,19 +323,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
     }
 
     /**
-     * @param account user account info.
-     * @author tooru.oguri
-     * @since 0.1-beta1
-     */
-    private void onSync(Account account) {
-        //TODO ここの処理を見直すべき、本当に必要か?
-        //INBOX
-        MessageSync.syncMailbox(account, account.getInboxFolderName(), account.getMessageLimitCountFromRemote());
-        //Sent
-        MessageSync.syncMailboxForCheckNewMail(account, account.getSentFolderName(), 0);
-    }
-
-    /**
      * @author tooru.oguri
      * @since 0.1-beta1
      */
@@ -401,7 +388,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
 
         @Override
         protected void onPostExecute(Void tmp) {
-            onSync(mAccount);
         }
 
         @Override
