@@ -501,7 +501,7 @@ public class SlideMessage {
     }
 
     public static ArrayList<String> getUidList(Account account, String folderName) throws MessagingException {
-        Log.d("ahokato", "MessageSync#getUidList start");
+        Log.d("majikoi", "MessageSync#getUidList(Account,  String)");
         LocalStore.LocalFolder localFolder = null;
         LocalStore localStore = null;
         try {
@@ -516,7 +516,7 @@ public class SlideMessage {
     }
 
     public static ArrayList<String> getUidList(Account account, String folderName, int length) throws MessagingException {
-        Log.d("ahokato", "MessageSync#getUidList start");
+        Log.d("majikoi", "MessageSync#getUidList(Account, String, int) length:" + length);
         LocalStore.LocalFolder localFolder = null;
         LocalStore localStore = null;
         try {
@@ -531,7 +531,7 @@ public class SlideMessage {
     }
 
     public static ArrayList<String> getUidListIncludingUid(Account account, String folderName, String uid, int length) throws MessagingException {
-        Log.d("ahokato", "MessageSync#getUidListIncludingUid start");
+        Log.d("majikoi", "MessageSync#getUidListIncludingUid");
         LocalStore.LocalFolder localFolder = null;
         LocalStore localStore = null;
         try {
@@ -581,33 +581,33 @@ public class SlideMessage {
     }
 
     public static ArrayList<MessageBean> getMessageBeanList(Account account, String folderName, String startUid, int length, boolean isIncludingUid) throws RakuRakuException, MessagingException {
-        Log.d("ahokato", "SlideMessage#getMessageBeanList start");
+        Log.d("majikoi", "SlideMessage#getMessageBeanList");
 
         ArrayList<String> uidList = null;
         if (0 == length) {
-            Log.d("ahokato", "SlideMessage#getMessageBeanList getUidList全件");
+            Log.d("majikoi", "SlideMessage#getMessageBeanList getUidList全件");
             uidList = getUidList(account, folderName);
         } else if (!RakuPhotoStringUtils.isNotBlank(startUid)) {
-            Log.d("ahokato", "SlideMessage#getMessageBeanList getUidList指定件数");
+            Log.d("majikoi", "SlideMessage#getMessageBeanList getUidList指定件数");
             uidList = getUidList(account, folderName, length);
         } else {
-            Log.d("ahokato", "SlideMessage#getMessageBeanList getUidList指定位置からの指定件数");
+            Log.d("majikoi", "SlideMessage#getMessageBeanList getUidList指定位置からの指定件数");
             if (isIncludingUid) {
-                Log.d("ahokato", "SlideMessage#getMessageBeanList uid:" + uidList + "を含む");
+                Log.d("majikoi", "SlideMessage#getMessageBeanList uid:" + uidList + "を含む");
                 uidList = getUidListIncludingUid(account, folderName, startUid, length);
             } else {
-                Log.d("ahokato", "SlideMessage#getMessageBeanList uid:" + uidList + "を含まない");
+                Log.d("majikoi", "SlideMessage#getMessageBeanList uid:" + uidList + "を含まない");
                 uidList = getUidList(account, folderName, startUid, length);
             }
         }
-        Log.d("ahokato", "SlideMessage#getMessageBeanList uidList:" + uidList.size());
+        Log.d("majikoi", "SlideMessage#getMessageBeanList uidList:" + uidList.size());
 
         ArrayList<MessageBean> result = new ArrayList<MessageBean>();
         for (String uid : uidList) {
             result.add(getMessage(account, folderName, uid));
         }
         uidList = null;
-        Log.d("ahokato", "SlideMessage#getMessageBeanList result:" + result.size());
+        Log.d("majikoi", "SlideMessage#getMessageBeanList result:" + result.size());
         return result;
     }
 

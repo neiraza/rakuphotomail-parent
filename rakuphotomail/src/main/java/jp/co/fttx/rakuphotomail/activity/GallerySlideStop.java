@@ -186,8 +186,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     public static void actionHandle(Context context, Account account, String folder, String uid) {
-        Log.d("ahokato", "GallerySlideStop#actionHandle start uid:" + uid);
-
+        Log.d("majikoi", "GallerySlideStop#actionHandle uid:" + uid);
         Intent intent = new Intent(context, GallerySlideStop.class);
         if (null == account || null == folder || null == uid) {
             Log.w(RakuPhotoMail.LOG_TAG, WARNING_NULL + account + ":" + folder + ":" + uid);
@@ -235,7 +234,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.d("ahokato", "GallerySlideStop#onCreate start");
-
         super.onCreate(savedInstanceState);
         mContext = this;
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -243,7 +241,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         setupViews();
         onNewIntent(getIntent());
         setMailMoveVisibility(mUid);
-        //TODO DB登録を視野にいれんと
         onDispMail();
     }
 
@@ -366,6 +363,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void onReply() {
+        Log.d("majikoi", "GallerySlideStop#onReply");
         if (null != mMessageBean) {
             GallerySendingMail.actionReply(this, mMessageBean);
         } else {
@@ -697,7 +695,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         @Override
         protected void onPostExecute(Void tmp) {
             publishProgress(70);
-            Log.d("ahokato", "DispSlideStartTask#onPostExecute :" + mMessageBean.getUid());
+            Log.d("majikoi", "GallerySendingMail DispSlideStartTask#onPostExecute :" + mMessageBean.getUid());
             GallerySlideShow.actionSlideShow(context, mAccount, mFolder, mMessageBean.getUid());
             publishProgress(100);
             onCancelled();

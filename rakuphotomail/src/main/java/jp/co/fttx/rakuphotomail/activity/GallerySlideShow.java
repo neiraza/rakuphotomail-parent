@@ -349,7 +349,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
     private void doSentFolderSync() {
         if (RakuPhotoConnectivityCheck.isConnectivity(getApplicationContext())) {
-            Log.d("baka", "doSentFolderSync():" + mAccount.getSentFolderName());
             MessageSync.syncMailboxForCheckNewMail(mAccount, mAccount.getSentFolderName(), 0);
         } else {
             Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#doSentFolderSync ネットワーク接続が切れています");
@@ -526,22 +525,28 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             Log.d("ahokato", "GallerySlideShow#onResume mAccount.isAllSync():" + mAccount.isAllSync());
             Log.d("ahokato", "GallerySlideShow#onResume mAccount.isSync():" + mAccount.isSync());
             if (mAccount.isAllSync() || mAccount.isSync()) {
-                Log.d("ahokato", "GallerySlideShow#onResume Syncしまっせ");
+                Log.d("majikoi", "GallerySlideShow#onResume Syncしまっせ");
                 startMessageSyncTask();
             } else {
-                Log.d("ahokato", "GallerySlideShow#onResume ローカルが最新でっせ");
+                Log.d("majikoi", "GallerySlideShow#onResume ローカルが最新でっせ");
                 try {
                     mCurrentMessageBean = null;
                     int result = 0;
+                    Log.d("majikoi", "GallerySlideShow#onResume mSlideStartUid:" + mSlideStartUid);
+                    Log.d("majikoi", "GallerySlideShow#onResume mDispUid:" + mDispUid);
+                    Log.d("majikoi", "GallerySlideShow#onResume mSlideStartUid:" + mSlideStartUid);
                     if (null != mSlideStartUid) {
+                        Log.d("majikoi", "GallerySlideShow#onResume mSlideStartUid use");
                         result = getSlideMessageBeanList(mSlideStartUid, mAccount.getMessageLimitCountFromDb(), true);
                         mSlideStartUid = null;
                     }
                     if (0 == result) {
+                        Log.d("majikoi", "GallerySlideShow#onResume mDislpUid use");
                         result = getSlideMessageBeanList(mDispUid, mAccount.getMessageLimitCountFromDb(), false);
                     }
                     if (0 == result) {
                         mDispUid = null;
+                        Log.d("majikoi", "GallerySlideShow#onResume no use");
                         result = getSlideMessageBeanList(null, mAccount.getMessageLimitCountFromDb(), false);
                     }
                     if (0 == result) {
@@ -629,7 +634,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                         Log.e(RakuPhotoMail.LOG_TAG, getString(R.string.error_rakuraku_exception) + e.getMessage());
                     }
 
-                    Log.d("ahokato", "GallerySlideShow#slideShow mCurrentMessageBean:" + mCurrentMessageBean.getUid());
                     // がんばれ表示君
                     mAttachmentBeanList = null;
                     mAttachmentBeanList = mCurrentMessageBean.getAttachmentBeanList();
@@ -822,6 +826,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     private void onSlideStop(String uid) throws InterruptedException {
+        Log.d("majikoi", "GallerySlideShow#onSlideStop uid:" + uid);
         mSlideShowLoopHandler.removeCallbacks(mSlideShowLoopRunnable);
         GallerySlideStop.actionHandle(mContext, mAccount, mFolder, uid);
         finish();
@@ -1039,9 +1044,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @param length   件数
      */
     private int getSlideMessageBeanList(String startUid, int length, boolean isIncludingUid) {
-        Log.d("ahokato", "GallerySlideShow#getSlideMessageBeanList startUid:" + startUid + " length:" + length);
-        Log.d("ahokato", "GallerySlideShow#getSlideMessageBeanList mSlideStartUid:" + mSlideStartUid);
-        Log.d("ahokato", "GallerySlideShow#getSlideMessageBeanList mDispUid:" + mDispUid);
+        Log.d("majikoi", "GallerySlideShow#getSlideMessageBeanList startUid:" + startUid + " length:" + length);
+        Log.d("majikoi", "GallerySlideShow#getSlideMessageBeanList mSlideStartUid:" + mSlideStartUid);
+        Log.d("majikoi", "GallerySlideShow#getSlideMessageBeanList mDispUid:" + mDispUid);
+        Log.d("majikoi", "GallerySlideShow#getSlideMessageBeanList mFolder:" + mFolder);
+        Log.d("majikoi", "GallerySlideShow#getSlideMessageBeanList isIncludingUid:" + isIncludingUid);
         mSlideMessageBeanList = null;
         try {
             mSlideMessageBeanList = SlideMessage.getMessageBeanList(mAccount, mFolder, startUid, length, isIncludingUid);

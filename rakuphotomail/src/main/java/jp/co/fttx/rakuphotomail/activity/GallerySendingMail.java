@@ -261,6 +261,7 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
             if (RakuPhotoConnectivityCheck.isConnectivity(getApplicationContext())) {
                 final String replyTargetUid = mMessageReference.uid;
                 onSend(replyTargetUid);
+                Log.d("majikoi", "GallerySendingMail#onClick replyTargetUid:" + replyTargetUid);
                 GallerySlideStop.actionHandle(this, mAccount, mAccount.getInboxFolderName(), replyTargetUid);
                 finish();
             } else {
@@ -319,18 +320,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
             Log.e(RakuPhotoMail.LOG_TAG, "Error:" + e);
             return;
         }
-    }
-
-    /**
-     * @param account user account info.
-     * @author tooru.oguri
-     * @since 0.1-beta1
-     */
-    private void onSync(Account account) {
-        //INBOX
-        MessageSync.syncMailbox(account, account.getInboxFolderName(), account.getMessageLimitCountFromRemote());
-        //Sent
-        MessageSync.syncMailboxForCheckNewMail(account, account.getSentFolderName(), 0);
     }
 
     /**
@@ -399,7 +388,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
 
         @Override
         protected void onPostExecute(Void tmp) {
-            onSync(mAccount);
         }
 
         @Override
@@ -445,11 +433,11 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
      * @since 0.1-beta1
      */
     public static void actionReply(Context context, MessageBean messageBean) {
+        Log.d("majikoi", "GallerySendingMail#actionReply");
         Intent i = new Intent(context, GallerySendingMail.class);
         i.putExtra(EXTRA_ADDRESS_TO, messageBean.getSenderAddress());
         i.putExtra(EXTRA_ADDRESS_TO_NAME, messageBean.getSenderName());
         i.putExtra(EXTRA_ADDRESS_FROM, messageBean.getToList());
-        // XXX 送信者名は表示予定が無いため用意していない
         i.putExtra(EXTRA_ADDRESS_FROM_NAME, "");
         i.putExtra(EXTRA_MESSAGE_ID, messageBean.getMessageId());
         i.putExtra(EXTRA_MESSAGE_ANSWERED, messageBean.isFlagAnswered());
