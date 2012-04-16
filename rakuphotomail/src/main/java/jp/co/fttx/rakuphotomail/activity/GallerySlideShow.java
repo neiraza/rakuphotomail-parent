@@ -15,10 +15,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.Window;
+import android.view.*;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -89,6 +86,14 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * Intent get/put folder name
      */
     private static final String EXTRA_STOP_INDEX = "stopindex";
+    /**
+     * InstanceState startUid
+     */
+    private static final String INSTANCE_STATE_START_UID = "startUid";
+    /**
+     * InstanceState dispUid
+     */
+    private static final String INSTANCE_STATE_DISP_UID = "dispUid";
     /**
      *
      */
@@ -283,7 +288,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.d("ahokato", "GallerySlideShow#onCreate start");
+        Log.d("barusu", "GallerySlideShow#onCreate");
         super.onCreate(savedInstanceState);
         mContext = this;
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -291,6 +296,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         onNewIntent(getIntent());
         setupViews();
         mServerSyncCount = mAccount.getMessageLimitCountFromRemote();
+
+        if (mAccount.canSleep()) {
+            setSleep();
+        } else {
+            cancelSleep();
+        }
 
         int remoteMessageCount = setAppRunLatestInfo();
         // 初回時のみ新着メール最新情報を作成
@@ -345,6 +356,14 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 Log.e(RakuPhotoMail.LOG_TAG, getString(R.string.error_rakuraku_exception) + rp.getMessage());
             }
         }
+    }
+
+    private void setSleep() {
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    private void cancelSleep() {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     private void doSentFolderSync() {
@@ -515,7 +534,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     @Override
     public void onResume() {
-        Log.d("ahokato", "GallerySlideShow#onResume start isOptionMenu:" + isOptionMenu);
+        Log.d("barusu", "GallerySlideShow#onResume");
         super.onResume();
         if (isOptionMenu) {
             actionSlideShow(mContext, mAccount, mFolder, mDispUid);
@@ -534,7 +553,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                     int result = 0;
                     Log.d("majikoi", "GallerySlideShow#onResume mSlideStartUid:" + mSlideStartUid);
                     Log.d("majikoi", "GallerySlideShow#onResume mDispUid:" + mDispUid);
-                    Log.d("majikoi", "GallerySlideShow#onResume mSlideStartUid:" + mSlideStartUid);
                     if (null != mSlideStartUid) {
                         Log.d("majikoi", "GallerySlideShow#onResume mSlideStartUid use");
                         result = getSlideMessageBeanList(mSlideStartUid, mAccount.getMessageLimitCountFromDb(), true);
@@ -606,27 +624,22 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         mSlideShowLoopRunnable = new Runnable() {
             @Override
             public void run() {
-                Log.d("ahokato", "GallerySlideShow#slideShow mSlideMessageListIndex:" + mSlideMessageListIndex);
-                Log.d("ahokato", "GallerySlideShow#slideShow mSlideMessageBeanList.size():" + (mSlideMessageBeanList.size()));
                 // 予定分（mSlideMessageList）が終わったので再入荷希望
+                if (null == mSlideMessageBeanList) {
+                    mSlideShowLoopHandler.removeCallbacks(mSlideShowLoopRunnable);
+                    onResume();
+                }
                 if (mSlideMessageBeanList.size() < mSlideMessageListIndex + 1) {
-                    Log.d("ahokato", "GallerySlideShow#slideShow 予定分（mSlideMessageList）が終わったので再入荷希望");
                     mSlideShowLoopHandler.removeCallbacks(mSlideShowLoopRunnable);
                     onResume();
                 } else {
-                    Log.d("ahokato", "GallerySlideShow#slideShow mAttachmentBeanListIndex:" + mAttachmentBeanListIndex);
-                    Log.d("ahokato", "GallerySlideShow#slideShow mAttachmentBeanList.size():" + (mAttachmentBeanList.size()));
                     try {
                         // 予定分（mAttachmentBeanList）が終わったので、mSlideMessageListIndexで次メール希望
                         if (mAttachmentBeanList.size() < mAttachmentBeanListIndex + 1) {
-                            Log.d("ahokato", "GallerySlideShow#slideShow 予定分（mAttachmentBeanList）が終わったので、mSlideMessageListIndexで次メール希望");
                             mCurrentMessageBean = null;
                             mCurrentMessageBean = getSyncMessage(mSlideMessageBeanList.get(mSlideMessageListIndex));
                             mSlideMessageListIndex += 1;
                             mAttachmentBeanListIndex = 0;
-                        } else {
-                            // 再ダウンロード確認＆希望
-                            Log.d("ahokato", "GallerySlideShow#slideShow 再ダウンロード確認&希望");
                         }
                     } catch (MessagingException e) {
                         Log.e(RakuPhotoMail.LOG_TAG, getString(R.string.error_messaging_exception) + e.getMessage());
@@ -642,11 +655,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                         mAttachmentBeanListIndex += 1;
                         if (SlideCheck.isSlide(attachmentBean)) {
                             try {
-                                Log.d("ahokato", "GallerySlideShow#slideShow mSlideShowLoopRunnable attachmentBean.getId():" + attachmentBean.getId());
-                                Log.d("ahokato", "GallerySlideShow#slideShow mSlideShowLoopRunnable attachmentBean.getContentUrl():" + attachmentBean.getContentUrl());
                                 mBitmap = SlideAttachment.getBitmap(getApplicationContext(), getWindowManager().getDefaultDisplay(), mAccount, attachmentBean);
                                 dispSlide(mCurrentMessageBean);
-                                Log.d("ahokato", "GallerySlideShow#slideShow mSlideShowLoopRunnable image:" + attachmentBean.getName());
                             } catch (RakuRakuException e) {
                                 Log.w(RakuPhotoMail.LOG_TAG, "UID:" + mCurrentMessageBean.getUid() + " " + getString(R.string.error_rakuraku_exception) + e.getMessage());
                             }
@@ -661,23 +671,19 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                     }
                     //新着メールチェック起動判定
                     if (isNewMailCheck()) {
-                        Log.d("ahokato", "GallerySlideShow#slideShow 新着メールを確認するお時間です");
                         mAccount.setNewMailCheckLatestDate(new Date());
                         startDeleteMailCheckTask();
                     } else {
-                        Log.d("ahokato", "GallerySlideShow#slideShow スライドショーのスケジューリングを行います");
                         //次回起動
                         mSlideShowLoopHandler.postDelayed(this, mAccount.getSlideSleepTime());
                     }
                 }
             }
         };
-        if (0 < mSlideMessageBeanList.size()) {
+        if (null != mSlideMessageBeanList && 0 < mSlideMessageBeanList.size()) {
             //初回起動
-            Log.d("ahokato", "GallerySlideShow#slideShow 初回起動");
             mSlideShowLoopHandler.postDelayed(mSlideShowLoopRunnable, 0);
         } else {
-            Log.d("ahokato", "GallerySlideShow#slideShow 初回起動しませんでした");
             onResume();
         }
     }
@@ -772,8 +778,36 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        Log.d("barusu", "GallerySlideShow#onStart");
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Log.d("barusu", "GallerySlideShow#onSaveInstanceState");
+        outState.putString(INSTANCE_STATE_START_UID, mSlideStartUid);
+        outState.putString(INSTANCE_STATE_DISP_UID, mDispUid);
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceStage) {
+        super.onRestoreInstanceState(savedInstanceStage);
+        Log.d("barusu", "GallerySlideShow#onRestoreInstanceState");
+        mSlideStartUid = savedInstanceStage.getString(INSTANCE_STATE_START_UID);
+        mDispUid = savedInstanceStage.getString(INSTANCE_STATE_DISP_UID);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.d("barusu", "GallerySlideShow#onPause");
+    }
+
+    @Override
     public void onStop() {
-        Log.d("ahokato", "GallerySlideShow#onStop start");
+        Log.d("barusu", "GallerySlideShow#onStop");
         super.onStop();
         mSlideShowLoopHandler.removeCallbacks(mSlideShowLoopRunnable);
         if (null != mMessageSyncTask) {
@@ -789,6 +823,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
     @Override
     public void onDestroy() {
+        Log.d("barusu", "GallerySlideShow#onDestroy");
         super.onDestroy();
     }
 
@@ -894,13 +929,17 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
         @Override
         protected void onPreExecute() {
-            progressDialog = new ProgressDialog(context);
-            progressDialog.setTitle(getString(R.string.progress_please_wait));
-            progressDialog.setMessage("メールサーバーをチェックしています(" + mPastMailCheckStartId + "~" + mPastMailCheckEndId + ")");
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progressDialog.setCancelable(true);
-            progressDialog.setOnCancelListener(this);
-            progressDialog.show();
+            Log.d("barusu", "MessageSyncTask#onPreExecute");
+            cancelSleep();
+            if (!isFinishing()) {
+                progressDialog = new ProgressDialog(context);
+                progressDialog.setTitle(getString(R.string.progress_please_wait));
+                progressDialog.setMessage("メールサーバーをチェックしています(" + mPastMailCheckStartId + "~" + mPastMailCheckEndId + ")");
+                progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                progressDialog.setCancelable(true);
+                progressDialog.setOnCancelListener(this);
+                progressDialog.show();
+            }
         }
 
         /**
@@ -908,9 +947,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
          */
         @Override
         protected Boolean doInBackground(Void... params) {
-            Log.d("ahokato", "MessageSyncTask#doInBackground start");
-            if (!progressDialog.isIndeterminate()) {
+            Log.d("barusu", "MessageSyncTask#doInBackground");
+            if (null != progressDialog && !progressDialog.isIndeterminate() && !isFinishing()) {
                 progressDialog.show();
+            } else if (isFinishing()) {
+                return false;
             }
             onRemove();
             try {
@@ -1009,9 +1050,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
         @Override
         protected void onCancelled() {
+            Log.d("barusu", "MessageSyncTask#onCancelled");
             if (null != progressDialog && progressDialog.isShowing()) {
                 progressDialog.dismiss();
             }
+            setSleepMode();
         }
 
         @Override
@@ -1027,10 +1070,21 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             } catch (MessagingException e) {
                 Log.e(RakuPhotoMail.LOG_TAG, getString(R.string.error_messaging_exception) + e.getMessage());
             }
+            setSleepMode();
+        }
+
+        private void setSleepMode() {
+            Log.d("barusu", "MessageSyncTask#setSleepMode");
+            if (mAccount.canSleep()) {
+                setSleep();
+            } else {
+                cancelSleep();
+            }
         }
 
         @Override
         public void onCancel(DialogInterface dialog) {
+            Log.d("barusu", "MessageSyncTask#onCancel");
             this.cancel(true);
         }
 

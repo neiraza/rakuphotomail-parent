@@ -3060,7 +3060,11 @@ public class ImapStore extends Store {
                 String uid = fetchList.getKeyedString("UID");
 
                 ImapMessage message = (ImapMessage) mMessageMap.get(uid);
-                message.parse(literal);
+                if (null != message) {
+                    message.parse(literal);
+                } else {
+                    return null;
+                }
 
                 // Return placeholder object
                 return new Integer(1);

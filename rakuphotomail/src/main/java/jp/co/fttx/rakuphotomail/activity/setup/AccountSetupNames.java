@@ -11,10 +11,7 @@ import android.text.method.TextKeyListener.Capitalize;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Spinner;
+import android.widget.*;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
@@ -33,16 +30,15 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
 
     private Button mDoneButton;
 
-//    private Spinner mAttachmentCacheLimitCount;
     private Spinner mSlideSleepTimeDuration;
     private Spinner mServerSyncTimeDuration;
     private Spinner mScaleRatio;
-    private Spinner mDownloadSize;
 
     private String[] slideSleepTimeDuration;
     private String[] serverSyncTimeDuration;
     private String[] ratioValues;
-    private String[] downloadSize;
+
+    private CheckBox mSleepMode;
 
     private ProgressDialog mProgressDialog;
 
@@ -91,19 +87,6 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
             mDoneButton.setEnabled(false);
         }
 
-        /* Attachment Cache Limit Count */
-//        attachmentCacheLimitCount = getResources().getStringArray(R.array.account_settings_download_cache_values);
-//        mAttachmentCacheLimitCount = (Spinner) findViewById(R.id.account_option_download_cache);
-//        mAttachmentCacheLimitCount.setSelection(1);
-//        mAttachmentCacheLimitCount.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-//                mAccount.setAttachmentCacheLimitCount(Integer.parseInt(attachmentCacheLimitCount[position]));
-//            }
-//
-//            public void onNothingSelected(AdapterView<?> parent) {
-//            }
-//        });
-
         /* Slide SleepTime Duration */
         slideSleepTimeDuration = getResources().getStringArray(R.array.account_settings_slide_change_duration_values);
         mSlideSleepTimeDuration = (Spinner) findViewById(R.id.slideSleepTimeDuration);
@@ -143,18 +126,11 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
             }
         });
 
-//        /* Download Size / mail  */
-//        downloadSize = getResources().getStringArray(R.array.account_settings_download_message_size_values);
-//        mDownloadSize = (Spinner) findViewById(R.id.account_option_download_message_size);
-//        mDownloadSize.setSelection(3);
-//        mDownloadSize.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-//                mAccount.setMaximumAutoDownloadMessageSize(Integer.parseInt(downloadSize[position]));
-//            }
-//
-//            public void onNothingSelected(AdapterView<?> parent) {
-//            }
-//        });
+        /* Sleep Mode */
+        Log.d("flying", "AccountSetupNames#onCreate");
+        mSleepMode = (CheckBox) findViewById(R.id.account_option_sleep_mode);
+        mSleepMode.setText(getString(R.string.account_settings_slide_show_sleep_mode_summary_off));
+        mSleepMode.setOnClickListener(this);
     }
 
     private void validateFields() {
@@ -164,7 +140,7 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
 
     @Override
     protected void onNext() {
-        setUpProgressDialog(mProgressDialog,"TEST","TEST");
+        setUpProgressDialog(mProgressDialog, "TEST", "TEST");
         mAccount.setDescription(mAccount.getDescription());
         mAccount.setName(mName.getText().toString());
         mAccount.save(Preferences.getPreferences(this));
@@ -177,10 +153,27 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
         finish();
     }
 
+    private void setSleep() {
+        Log.d("flying", "AccountSetupNames#setSleep");
+        if (mSleepMode.isChecked()) {
+            mSleepMode.setText(getString(R.string.account_settings_slide_show_sleep_mode_summary_on));
+            mAccount.setCanSleep(false);
+        } else {
+            mSleepMode.setText(getString(R.string.account_settings_slide_show_sleep_mode_summary_off));
+            mAccount.setCanSleep(true);
+        }
+    }
+
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.done:
                 onNext();
+                break;
+            case R.id.account_option_sleep_mode:
+                Log.d("flying", "AccountSetupNames#onClick");
+                setSleep();
+                break;
+            default:
                 break;
         }
     }

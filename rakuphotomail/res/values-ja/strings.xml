@@ -1221,10 +1221,15 @@
     <string name="account_settings_download_cache_100">"100件"</string>
 
     <string name="account_settings_scale_ratio_label">"画像表示サイズ"</string>
-    <string name="account_settings_scale_ratio_description">"画像表示サイズを設定します:"</string>
+    <string name="account_settings_scale_ratio_description">"画像表示サイズを設定します"</string>
     <string name="account_settings_scale_ratio_1">"そのまま"</string>
     <string name="account_settings_scale_ratio_2">"少し小さく"</string>
     <string name="account_settings_scale_ratio_4">"もっと小さく"</string>
+
+    <string name="account_settings_slide_show_sleep_mode_label">"スリープモード解除設定(スライドショー限定)"</string>
+    <string name="account_settings_slide_show_sleep_mode_description">"スリープモード解除(スライドショー限定)を設定します"</string>
+    <string name="account_settings_slide_show_sleep_mode_summary_on">"スライドショー実行時のスリープモードを解除します"</string>
+    <string name="account_settings_slide_show_sleep_mode_summary_off">"スライドショー実行時のスリープモードをセットします"</string>
 
     <!-- 日本語以外も -->
     <string name="account_setup_username_label_hint">アカウント名</string>

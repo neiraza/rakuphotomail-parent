@@ -31,6 +31,13 @@
                 android:entryValues="@array/account_settings_scale_ratio_duration_values"
                 android:dialogTitle="@string/account_settings_scale_ratio_label"/>
 
+        <CheckBoxPreference
+            android:persistent="false"
+            android:key="account_sleep_mode"
+            android:title="@string/account_settings_slide_show_sleep_mode_label"
+            android:summaryOn="@string/account_settings_slide_show_sleep_mode_summary_on"
+            android:summaryOff="@string/account_settings_slide_show_sleep_mode_summary_off" />
+
     </PreferenceScreen>
 
     <PreferenceScreen
@@ -44,22 +51,6 @@
                 android:entries="@array/account_settings_server_sync_entries"
                 android:entryValues="@array/account_settings_server_sync_values"
                 android:dialogTitle="@string/account_settings_server_sync_label"/>
-        <!--<ListPreference-->
-        <!--android:persistent="false"-->
-        <!--android:key="account_download_cache"-->
-        <!--android:title="@string/account_settings_download_cache_label"-->
-        <!--android:entries="@array/account_settings_download_cache_entries"-->
-        <!--android:entryValues="@array/account_settings_download_cache_values"-->
-        <!--android:dialogTitle="@string/account_settings_download_cache_label"/>-->
-        <!--android:dialogTitle="@string/account_settings_download_cache_label"/>-->
-        <!-- <ListPreference
-             android:persistent="false"
-             android:key="account_download_size"
-             android:title="@string/account_settings_download_message_size_label"
-             android:entries="@array/account_settings_download_message_size_entries"
-             android:entryValues="@array/account_settings_download_message_size_values"
-             android:dialogTitle="@string/account_settings_download_message_size_label"/>
-        -->
         <PreferenceScreen
                 android:key="incoming"
                 android:title="@string/account_settings_incoming_label"

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -44,6 +45,7 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
     private static final String PREFERENCE_SENT_FOLDER = "sent_folder";
     private static final String PREFERENCE_SPAM_FOLDER = "spam_folder";
     private static final String PREFERENCE_TRASH_FOLDER = "trash_folder";
+    private static final String PREFERENCE_SLEEP_MODE = "account_sleep_mode";
 
 
     private Account mAccount;
@@ -62,6 +64,9 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
     private ListPreference mSentFolder;
     private ListPreference mSpamFolder;
     private ListPreference mTrashFolder;
+
+    private CheckBoxPreference mSleepMode;
+    private boolean canSleep = true;
 
 
     public static void actionSettings(Context context, Account account) {
@@ -136,6 +141,24 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
                 return false;
             }
         });
+
+        Log.d("flying", "AccountSettings#onCreate");
+        mSleepMode = (CheckBoxPreference) findPreference(PREFERENCE_SLEEP_MODE);
+        mSleepMode.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                if (mSleepMode.isChecked()) {
+                    canSleep = true;
+                } else {
+                    canSleep = false;
+                }
+                return true;
+            }
+        });
+        if(mAccount.canSleep()){
+            mSleepMode.setChecked(false);
+        }else{
+            mSleepMode.setChecked(true);
+        }
 
         mLocalStorageProvider = (ListPreference) findPreference(PREFERENCE_LOCAL_STORAGE_PROVIDER);
         {
@@ -221,6 +244,8 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
         mAccount.setSpamFolderName(mSpamFolder.getValue());
         mAccount.setTrashFolderName(mTrashFolder.getValue());
 
+        Log.d("flying", "AccountSettings#saveSettings");
+        mAccount.setCanSleep(canSleep);
 
         if (mIsPushCapable) {
             mAccount.setPushPollOnConnect(false);

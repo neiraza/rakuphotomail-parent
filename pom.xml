@@ -5,7 +5,7 @@
 
   <groupId>jp.co.fttx</groupId>
   <artifactId>rakuphotomail-parent</artifactId>
-  <version>0.1.1-BETA3</version>
+  <version>0.1.2-BETA3</version>
   <packaging>pom</packaging>
   <name>rakuphotomail - Parent</name>
 

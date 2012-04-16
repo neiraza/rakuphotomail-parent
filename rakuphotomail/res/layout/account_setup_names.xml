@@ -37,23 +37,6 @@
                     android:hint="@string/account_setup_names_user_name_hint"
                     android:contentDescription="@string/account_setup_names_user_name_label"/>
 
-            <!-- attachmentCacheLimitCount -->
-            <!-- <TextView
-            android:text="@string/account_settings_download_cache_description"
-            android:layout_height="wrap_content"
-            android:layout_width="fill_parent"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="?android:attr/textColorPrimary"/>
-    <Spinner
-            android:id="@+id/account_option_download_cache"
-            android:layout_height="wrap_content"
-            android:layout_width="fill_parent"
-            android:contentDescription="@string/account_settings_download_cache_label"
-            android:entries="@array/account_settings_download_cache_entries"
-            android:prompt="@string/account_settings_download_cache_label"/>
-            -->
-
-            <!-- slideSleepTimeDuration -->
             <TextView
                     android:text="@string/account_settings_slide_change_duration_description"
                     android:layout_height="wrap_content"
@@ -97,21 +80,18 @@
                     android:entries="@array/account_settings_scale_ratio_entries"
                     android:prompt="@string/account_settings_scale_ratio_label"/>
 
-            <!--<TextView
-                    android:text="@string/account_settings_download_message_size_description"
+            <TextView
+                    android:text="@string/account_settings_slide_show_sleep_mode_description"
                     android:layout_height="wrap_content"
                     android:layout_width="fill_parent"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     android:textColor="?android:attr/textColorPrimary"/>
-            <Spinner
-                    android:id="@+id/account_option_download_message_size"
+            <CheckBox
+                    android:id="@+id/account_option_sleep_mode"
                     android:layout_height="wrap_content"
                     android:layout_width="fill_parent"
-                    android:contentDescription="@string/account_settings_download_message_size_label"
-                    android:entries="@array/account_settings_download_message_size_entries"
-                    android:prompt="@string/account_settings_download_message_size_label"/>
-                    -->
-
+                    android:contentDescription="@string/account_settings_slide_show_sleep_mode_label"
+                    android:checked="false"/>
             <View
                     android:layout_height="0dip"
                     android:layout_width="fill_parent"

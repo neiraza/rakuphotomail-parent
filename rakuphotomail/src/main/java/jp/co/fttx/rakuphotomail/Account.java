@@ -11,7 +11,6 @@ import jp.co.fttx.rakuphotomail.mail.MessagingException;
 import jp.co.fttx.rakuphotomail.mail.Store;
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore;
 import jp.co.fttx.rakuphotomail.mail.store.StorageManager;
-import jp.co.fttx.rakuphotomail.mail.store.StorageManager.StorageProvider;
 import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
 import jp.co.fttx.rakuphotomail.view.ColorChip;
 
@@ -100,7 +99,6 @@ public class Account implements BaseAccount {
 
     /*仕様上、現在は変更不可*/
     private int messageLimitCountFromDb = 5; //(変更不可)
-    //TODO 3件ずつサーバ同期
     private int messageLimitCountFromRemote = 3; // 0だと全件(変更不可)
     private long serverSyncInitStartTimeDuration = 180000L;//(変更不可)
     // 全件チェック時の開始地点
@@ -112,6 +110,8 @@ public class Account implements BaseAccount {
     // 途中範囲チェックFlag
     private boolean isSync = false;
     private static final String DATE_PATTERN = "yyyy/MM/dd HH:mm";
+    // スリープモードオン／オフ
+    private boolean canSleep = true;
 
     // アプリ起動時の最新UID
     private String appRunLatestUid;
@@ -168,7 +168,7 @@ public class Account implements BaseAccount {
         TEXT, HTML
     }
 
-    public void init(){
+    public void init() {
         // 全件チェック時の開始地点
         checkStartId = 0;
         // 全件チェック時の終了地点
@@ -202,7 +202,7 @@ public class Account implements BaseAccount {
         // 過去メールチェックの１世代前の日時
         oldPastMailCheckLatestDate = new Date();
     }
-    
+
     protected Account(Context context) {
         mUuid = UUID.randomUUID().toString();
         mLocalStorageProviderId =
@@ -344,6 +344,7 @@ public class Account implements BaseAccount {
         oldAppRunLatestUid = prefs.getString(mUuid + ".oldAppRunLatestUid", null);
         oldNewMailCheckLatestUid = prefs.getString(mUuid + ".oldNewMailCheckLatestUid", null);
         oldPastMailCheckLatestUid = prefs.getString(mUuid + ".oldPastMailCheckLatestUid", null);
+        canSleep = prefs.getBoolean(mUuid + ".canSleep", true);
 
         SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
         try {
@@ -585,20 +586,15 @@ public class Account implements BaseAccount {
         editor.putInt(mUuid + ".checkEndId", checkEndId);
         editor.putBoolean(mUuid + ".isAllSync", isAllSync);
         editor.putBoolean(mUuid + ".isSync", isSync);
-        //TODO 消したい
-//        editor.putInt(mUuid + ".localLatestId", localLatestId);
-//        editor.putInt(mUuid + ".localOldId", localOldId);
         editor.putString(mUuid + ".appRunLatestUid", appRunLatestUid);
         editor.putString(mUuid + ".newMailCheckLatestUid", newMailCheckLatestUid);
         editor.putString(mUuid + ".pastMailCheckLatestUid", pastMailCheckLatestUid);
         editor.putString(mUuid + ".oldAppRunLatestUid", oldAppRunLatestUid);
         editor.putString(mUuid + ".oldNewMailCheckLatestUid", oldNewMailCheckLatestUid);
         editor.putString(mUuid + ".oldPastMailCheckLatestUid", oldPastMailCheckLatestUid);
+        editor.putBoolean(mUuid + ".canSleep", canSleep);
+
         SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
-        //TODO 消したい
-//        if (null != latestReceiveDate) {
-//            editor.putString(sdf.format(latestReceiveDate), null);
-//        }
         if (null != appRunLatestDate) {
             editor.putString(sdf.format(appRunLatestDate), null);
         }
@@ -914,7 +910,6 @@ public class Account implements BaseAccount {
         return OUTBOX;
     }
 
-    //TODO こいつを使えばINBOX以外をスライドショー対象以外にもいけるかも
     public synchronized String getAutoExpandFolderName() {
         return mAutoExpandFolderName;
     }
@@ -1294,40 +1289,20 @@ public class Account implements BaseAccount {
         }
     }
 
-    public MessageFormat getMessageFormat() {
-        return mMessageFormat;
-    }
-
     public void setMessageFormat(MessageFormat messageFormat) {
         this.mMessageFormat = messageFormat;
-    }
-
-    public QuoteStyle getQuoteStyle() {
-        return mQuoteStyle;
     }
 
     public void setQuoteStyle(QuoteStyle quoteStyle) {
         this.mQuoteStyle = quoteStyle;
     }
 
-    public synchronized String getQuotePrefix() {
-        return mQuotePrefix;
-    }
-
     public synchronized void setQuotePrefix(String quotePrefix) {
         mQuotePrefix = quotePrefix;
     }
 
-    public synchronized boolean isDefaultQuotedTextShown() {
-        return mDefaultQuotedTextShown;
-    }
-
     public synchronized void setDefaultQuotedTextShown(boolean shown) {
         mDefaultQuotedTextShown = shown;
-    }
-
-    public synchronized boolean isReplyAfterQuote() {
-        return mReplyAfterQuote;
     }
 
     public synchronized void setReplyAfterQuote(boolean replyAfterQuote) {
@@ -1350,27 +1325,12 @@ public class Account implements BaseAccount {
         mSyncRemoteDeletions = syncRemoteDeletions;
     }
 
-    public synchronized String getLastSelectedFolderName() {
-        return lastSelectedFolderName;
-    }
-
-    public synchronized void setLastSelectedFolderName(String folderName) {
-        lastSelectedFolderName = folderName;
-    }
-
     public synchronized NotificationSetting getNotificationSetting() {
         return mNotificationSetting;
     }
 
-    /**
-     * @return <code>true</code> if our {@link StorageProvider} is ready. (e.g.
-     *         card inserted)
-     */
     public boolean isAvailable(Context context) {
-        Log.v(RakuPhotoMail.LOG_TAG, "Account#isAvailable");
         String localStorageProviderId = getLocalStorageProviderId();
-        Log.v(RakuPhotoMail.LOG_TAG,
-                "Account#isAvailable localStorageProviderId:" + localStorageProviderId);
         if (localStorageProviderId == null) {
             return true; // defaults to internal memory
         }
@@ -1389,12 +1349,7 @@ public class Account implements BaseAccount {
         return attachmentCacheLimitCount;
     }
 
-    public void setAttachmentCacheLimitCount(int attachmentCacheLimitCount) {
-        this.attachmentCacheLimitCount = attachmentCacheLimitCount;
-    }
-
     public long getSlideSleepTime() {
-        Log.d("sleep", "slideSleepTimeDuration:" + slideSleepTimeDuration);
         return slideSleepTimeDuration;
     }
 
@@ -1408,10 +1363,6 @@ public class Account implements BaseAccount {
 
     public void setServerSyncTimeDuration(long serverSyncTimeDuration) {
         this.serverSyncTimeDuration = serverSyncTimeDuration;
-    }
-
-    public long getServerSyncInitStartTimeDuration() {
-        return serverSyncInitStartTimeDuration;
     }
 
     public int getScaleRatio() {
@@ -1437,32 +1388,6 @@ public class Account implements BaseAccount {
     public void setCheckEndId(int checkEndId) {
         this.checkEndId = checkEndId;
     }
-
-    //TODO 消したい
-//    public int getLocalLatestId() {
-//        return this.localLatestId;
-//    }
-//
-//    public void setLocalLatestId(int localLatestId) {
-//        this.localLatestId = localLatestId;
-//    }
-
-//    public int getLocalOldId() {
-//        return this.localOldId;
-//    }
-//
-//    public void setLocalOldId(int localOldId) {
-//        this.localOldId = localOldId;
-//    }
-
-    //TODO 消したい
-//    public Date getLatestReceiveDate() {
-//        return this.latestReceiveDate;
-//    }
-//
-//    public void setLatestReceiveDate(Date latestReceiveDate) {
-//        this.latestReceiveDate = latestReceiveDate;
-//    }
 
     public boolean isAllSync() {
         return this.isAllSync;
@@ -1490,30 +1415,10 @@ public class Account implements BaseAccount {
         this.appRunLatestUid = appRunLatestUid;
     }
 
-    public Date getAppRunLatestDate() {
-        return this.appRunLatestDate;
-    }
-
     public void setAppRunLatestDate(Date appRunLatestDate) {
         this.oldAppRunLatestDate = this.appRunLatestDate;
         this.appRunLatestDate = appRunLatestDate;
     }
-
-    public String getOldAppRunLatestUid() {
-        return this.oldAppRunLatestUid;
-    }
-
-//    public void setOldAppRunLatestUid(int oldAppRunLatestUid) {
-//        this.oldAppRunLatestUid = oldAppRunLatestUid;
-//    }
-
-    public Date getOldAppRunLatestDate() {
-        return this.oldAppRunLatestDate;
-    }
-
-//    public void setOldAppRunLatestDate(Date oldAppRunLatestDate) {
-//        this.oldAppRunLatestDate = oldAppRunLatestDate;
-//    }
 
     public String getNewMailCheckLatestUid() {
         return this.newMailCheckLatestUid;
@@ -1533,22 +1438,6 @@ public class Account implements BaseAccount {
         this.newMailCheckLatestDate = newMailCheckLatestDate;
     }
 
-    public String getOldNewMailCheckLatestUid() {
-        return this.oldNewMailCheckLatestUid;
-    }
-
-//    public void setOldNewMailCheckLatestUid(int oldNewMailCheckLatestUid) {
-//        this.oldNewMailCheckLatestUid = oldNewMailCheckLatestUid;
-//    }
-
-    public Date getOldNewMailCheckLatestDate() {
-        return this.oldNewMailCheckLatestDate;
-    }
-
-//    public void setOldNewMailCheckLatestDate(Date oldNewMailCheckLatestDate) {
-//        this.oldNewMailCheckLatestDate = oldNewMailCheckLatestDate;
-//    }
-
     public String getPastMailCheckLatestUid() {
         return this.pastMailCheckLatestUid;
     }
@@ -1558,28 +1447,19 @@ public class Account implements BaseAccount {
         this.pastMailCheckLatestUid = pastMailCheckLatestUid;
     }
 
-    public Date getPastMailCheckLatestDate() {
-        return this.pastMailCheckLatestDate;
-    }
-
     public void setPastMailCheckLatestDate(Date pastMailCheckLatestDate) {
         this.oldPastMailCheckLatestDate = this.pastMailCheckLatestDate;
         this.pastMailCheckLatestDate = pastMailCheckLatestDate;
     }
 
-    public String getOldPastMailCheckLatestUid() {
-        return this.oldPastMailCheckLatestUid;
+    public boolean canSleep() {
+        Log.d("flying", "Account#canSleep");
+        return this.canSleep;
     }
 
-//    public void setOldPastMailCheckLatestUid(int oldPastMailCheckLatestUid) {
-//        this.oldPastMailCheckLatestUid = oldPastMailCheckLatestUid;
-//    }
-
-    public Date getOldPastMailCheckLatestDate() {
-        return this.oldPastMailCheckLatestDate;
+    public void setCanSleep(boolean canSleep) {
+        Log.d("flying", "Account#setCanSleep");
+        this.canSleep = canSleep;
     }
 
-//    public void setOldPastMailCheckLatestDate(Date oldPastMailCheckLatestDate) {
-//        this.oldPastMailCheckLatestDate = oldPastMailCheckLatestDate;
-//    }
 }
