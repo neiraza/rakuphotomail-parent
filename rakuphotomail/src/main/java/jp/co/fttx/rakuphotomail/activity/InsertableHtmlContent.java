@@ -10,7 +10,6 @@ import java.io.Serializable;
  * <p>Changes to the user-generated inserted content should be done with {@link
  * #setUserContent(String)}.</p>
  *
- * TODO: This container should also have a text part, along with its insertion point.  Or maybe a generic InsertableContent and maintain one each for Html and Text?
  */
 class InsertableHtmlContent implements Serializable {
     private static final long serialVersionUID = 2397327034L;

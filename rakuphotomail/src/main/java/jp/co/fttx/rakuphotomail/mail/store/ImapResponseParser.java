@@ -48,7 +48,6 @@ public class ImapResponseParser {
             } else if (ch == '+') {
                 response.mCommandContinuationRequested =
                         parseCommandContinuationRequest();
-                //TODO: Add special "resp-text" parsing
                 readTokens(response);
             } else {
                 response.mTag = parseTaggedResponse();
@@ -81,7 +80,6 @@ public class ImapResponseParser {
             }
 
             /*
-             * TODO: Check for responses ("OK", "PREAUTH", "BYE", "NO", "BAD")
              * that can contain resp-text tokens. If found, hand over to a special
              * method that parses a resp-text token. There's no need to use
              * readToken()/parseToken() on that data.
@@ -210,14 +208,6 @@ public class ImapResponseParser {
                 throw new IOException("parseAtom(): end of stream reached");
             } else if (ch == '(' || ch == ')' || ch == '{' || ch == ' ' ||
                     ch == '[' || ch == ']' ||
-                    // docs claim that flags are \ atom but atom isn't supposed to
-                    // contain
-                    // * and some falgs contain *
-                    // ch == '%' || ch == '*' ||
-//                    ch == '%' ||
-                    // TODO probably should not allow \ and should recognize
-                    // it as a flag instead
-                    // ch == '"' || ch == '\' ||
                     ch == '"' || (ch >= 0x00 && ch <= 0x1f) || ch == 0x7f) {
                 if (sb.length() == 0) {
                     throw new IOException(String.format("parseAtom(): (%04x %c)", ch, ch));
@@ -423,7 +413,6 @@ public class ImapResponseParser {
         }
 
         private Date parseDate(String value) throws ParseException {
-            //TODO: clean this up a bit
             try {
                 synchronized (mDateTimeFormat) {
                     return mDateTimeFormat.parse(value);

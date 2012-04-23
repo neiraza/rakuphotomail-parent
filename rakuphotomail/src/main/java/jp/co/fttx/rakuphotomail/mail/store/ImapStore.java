@@ -47,12 +47,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
-/**
- * <pre>
- * TODO Need to start keeping track of UIDVALIDITY
- * TODO Need a default response handler for things like folder updates
- * </pre>
- */
 public class ImapStore extends Store {
     public static final int CONNECTION_SECURITY_NONE = 0;
     public static final int CONNECTION_SECURITY_TLS_OPTIONAL = 1;
@@ -346,12 +340,6 @@ public class ImapStore extends Store {
                     Log.w(RakuPhotoMail.LOG_TAG, "Folder name not correctly encoded with the UTF-7 variant "
                             + "as defined by RFC 3501: " + response.getString(3), e);
 
-                    // TODO: Use the raw name returned by the server for all
-                    // commands that require
-                    // a folder name. Use the decoded name only for showing it
-                    // to the user.
-
-                    // We currently just skip folders with malformed names.
                     continue;
                 }
 
@@ -3084,8 +3072,6 @@ public class ImapStore extends Store {
         public Object foundLiteral(ImapResponse response, FixedLengthInputStream literal) throws IOException,
                 Exception {
             if (response.mTag == null && ImapResponseParser.equalsIgnoreCase(response.get(1), "FETCH")) {
-                // TODO: check for correct UID
-
                 String contentTransferEncoding = mPart.getHeader(MimeHeader.HEADER_CONTENT_TRANSFER_ENCODING)[0];
 
                 return MimeUtility.decodeBody(literal, contentTransferEncoding);

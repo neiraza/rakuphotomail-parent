@@ -2,7 +2,9 @@ package jp.co.fttx.rakuphotomail.activity.setup;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -27,6 +29,7 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
     private EditText mName;
 
     private Account mAccount;
+    private Context mContext;
 
     private Button mDoneButton;
 
@@ -39,8 +42,7 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
     private String[] ratioValues;
 
     private CheckBox mSleepMode;
-
-    private ProgressDialog mProgressDialog;
+    private CheckBox mSlideInfo;
 
     public static void actionSetNames(Context context, Account account) {
         Intent i = new Intent(context, AccountSetupNames.class);
@@ -52,10 +54,10 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_names);
+        mContext = this;
         mName = (EditText) findViewById(R.id.account_name);
         mDoneButton = (Button) findViewById(R.id.done);
         mDoneButton.setOnClickListener(this);
-        mProgressDialog = new ProgressDialog(this);
 
         TextWatcher validationTextWatcher = new TextWatcher() {
             public void afterTextChanged(Editable s) {
@@ -73,7 +75,7 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
         mName.setKeyListener(TextKeyListener.getInstance(false, Capitalize.WORDS));
 
         String accountUuid = getIntent().getStringExtra(EXTRA_ACCOUNT);
-        mAccount = Preferences.getPreferences(this).getAccount(accountUuid);
+        mAccount = Preferences.getPreferences(mContext).getAccount(accountUuid);
 
         /*
          * Since this field is considered optional, we don't set this here. If
@@ -130,6 +132,11 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
         mSleepMode = (CheckBox) findViewById(R.id.account_option_sleep_mode);
         mSleepMode.setText(getString(R.string.account_settings_slide_show_sleep_mode_summary_on));
         mSleepMode.setOnClickListener(this);
+
+        /* slideshow info */
+        mSlideInfo = (CheckBox) findViewById(R.id.account_option_slideshow_info_disp);
+        mSlideInfo.setText(getString(R.string.account_settings_slide_show_info_disp_summary_on));
+        mSlideInfo.setOnClickListener(this);
     }
 
     private void validateFields() {
@@ -139,17 +146,7 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
 
     @Override
     protected void onNext() {
-        setUpProgressDialog(mProgressDialog, "TEST", "TEST");
-        mAccount.setDescription(mAccount.getDescription());
-        mAccount.setName(mName.getText().toString());
-        mAccount.save(Preferences.getPreferences(this));
-        try {
-            MessageSync.synchronizeMailboxFinished(mAccount, mAccount.getInboxFolderName());
-        } catch (MessagingException e) {
-            Log.e(RakuPhotoMail.LOG_TAG, getString(R.string.error_messaging_exception) + e.getMessage());
-        }
-        dismissProgressDialog(mProgressDialog);
-        finish();
+        new FinishedSetup(mContext).execute();
     }
 
     private void setSleep() {
@@ -162,6 +159,16 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
         }
     }
 
+    private void setSlideshowInfo() {
+        if (mSlideInfo.isChecked()) {
+            mSlideInfo.setText(getString(R.string.account_settings_slide_show_info_disp_summary_on));
+            mAccount.setCanDispSlideShowInfo(true);
+        } else {
+            mSlideInfo.setText(getString(R.string.account_settings_slide_show_info_disp_summary_off));
+            mAccount.setCanDispSlideShowInfo(false);
+        }
+    }
+
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.done:
@@ -170,36 +177,74 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
             case R.id.account_option_sleep_mode:
                 setSleep();
                 break;
+            case R.id.account_option_slideshow_info_disp:
+                setSlideshowInfo();
+                break;
             default:
                 break;
         }
     }
 
     /**
-     * @param progressDialog progressDialog
-     * @param title          title
-     * @param message        message
      * @author tooru.oguri
-     * @since rakuphoto 0.1-beta1
+     * @since 0.1-beta1
      */
-    private void setUpProgressDialog(ProgressDialog progressDialog, String title, String message) {
-        if (!progressDialog.isShowing()) {
+    private class FinishedSetup extends AsyncTask<Void, Void, Void> implements DialogInterface.OnCancelListener {
+        Context context;
+        ProgressDialog progressDialog;
+
+        public FinishedSetup(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            progressDialog = new ProgressDialog(context);
+            progressDialog.setTitle(getString(R.string.progress_please_wait));
+            progressDialog.setMessage("設定を保存中です\nしばらくお待ちください");
             progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progressDialog.setTitle(title);
-            progressDialog.setMessage(message);
             progressDialog.setCancelable(true);
+            progressDialog.setOnCancelListener(this);
             progressDialog.show();
+        }
+
+        /**
+         * @return null
+         */
+        @Override
+        protected Void doInBackground(Void... params) {
+            mAccount.setDescription(mAccount.getDescription());
+            mAccount.setName(mName.getText().toString());
+            mAccount.save(Preferences.getPreferences(context));
+            try {
+                MessageSync.synchronizeMailboxFinished(mAccount, mAccount.getInboxFolderName());
+            } catch (MessagingException e) {
+                Log.e(RakuPhotoMail.LOG_TAG, getString(R.string.error_messaging_exception) + e.getMessage());
+            }
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... params) {
+        }
+
+        @Override
+        protected void onCancelled() {
+            if (null != progressDialog && progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Void tmp) {
+            onCancelled();
+            finish();
+        }
+
+        @Override
+        public void onCancel(DialogInterface dialog) {
+            this.cancel(true);
         }
     }
 
-    /**
-     * @param progressDialog progressDialog
-     * @author tooru.oguri
-     * @since rakuphoto 0.1-beta1
-     */
-    private void dismissProgressDialog(ProgressDialog progressDialog) {
-        if (null != progressDialog && progressDialog.isShowing()) {
-            progressDialog.dismiss();
-        }
-    }
 }

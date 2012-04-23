@@ -186,7 +186,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     public static void actionHandle(Context context, Account account, String folder, String uid) {
-        Log.d("majikoi", "GallerySlideStop#actionHandle uid:" + uid);
         Intent intent = new Intent(context, GallerySlideStop.class);
         if (null == account || null == folder || null == uid) {
             Log.w(RakuPhotoMail.LOG_TAG, WARNING_NULL + account + ":" + folder + ":" + uid);
@@ -233,7 +232,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.d("ahokato", "GallerySlideStop#onCreate start");
         super.onCreate(savedInstanceState);
         mContext = this;
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -363,7 +361,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void onReply() {
-        Log.d("majikoi", "GallerySlideStop#onReply");
         if (null != mMessageBean) {
             GallerySendingMail.actionReply(this, mMessageBean);
         } else {
@@ -389,12 +386,10 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         }
 
         setImageViewPicture(mSlideTargetAttachmentList, 0);
-        //TODO 140文字に制限します(config)
         mSubject = RakuPhotoStringUtils.limitMessage(mMessageBean.getSubject(), 140);
         mMailSubject.setText(mSubject);
         String senderName = mMessageBean.getSenderName();
         if (null != senderName && !"".equals(senderName)) {
-            Log.d("ahokato", "GallerySlideStop#setViewSlide :" + senderName.trim());
             mSenderName.setText(senderName.trim());
         } else {
             Log.w(RakuPhotoMail.LOG_TAG, "UID:" + mMessageBean.getUid() + " 送信者不明：" + senderName);
@@ -695,7 +690,6 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         @Override
         protected void onPostExecute(Void tmp) {
             publishProgress(70);
-            Log.d("majikoi", "GallerySendingMail DispSlideStartTask#onPostExecute :" + mMessageBean.getUid());
             GallerySlideShow.actionSlideShow(context, mAccount, mFolder, mMessageBean.getUid());
             publishProgress(100);
             onCancelled();

@@ -210,9 +210,8 @@ public class HtmlConverter {
         text = buff.toString();
 
         // Replace lines of -,= or _ with horizontal rules
-        text = text.replaceAll("\\s*([-=_]{30,}+)\\s*", "<hr />");
+//        text = text.replaceAll("\\s*([-=_]{30,}+)\\s*", "<hr />");
 
-        // TODO: reverse engineer (or troll history) and document
         text = text.replaceAll("(?m)^([^\r\n]{4,}[\\s\\w,:;+/])(?:\r\n|\n|\r)(?=[a-z]\\S{0,10}[\\s\\n\\r])", "$1 ");
 
         // Compress four or more newlines down to two newlines

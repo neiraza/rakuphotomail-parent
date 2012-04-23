@@ -913,7 +913,6 @@ public class MimeUtility {
         return decode(unfold(s), message);
     }
 
-    // TODO implement proper foldAndEncode
     public static String foldAndEncode(String s) {
         return s;
     }

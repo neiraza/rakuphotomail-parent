@@ -407,7 +407,6 @@ public class Apg extends CryptoProvider {
             }
         } catch (MessagingException e) {
             // guess not...
-            // TODO: maybe log this?
         }
 
         if (data == null) {
@@ -431,7 +430,6 @@ public class Apg extends CryptoProvider {
             }
         } catch (MessagingException e) {
             // guess not...
-            // TODO: maybe log this?
         }
 
         if (data == null) {

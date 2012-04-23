@@ -218,35 +218,6 @@
         <outgoing uri="smtp://smtp.web.de" username="$user" />
     </provider>
 
-    <!-- Netherlands -->
-    <!-- TODO:  For all of these, please confirm POP3, and switch to IMAP if supported -->
-    <!-- TODO:  username="" in incoming element is broken - will not work -->
-    <!-- Disabled until username="" is resolved
-    <provider id="hetnet" label="Het Net" domain="hetnet.nl">
-        <incoming uri="pop3://pop.hetnet.nl" username="" />
-        <outgoing uri="smtp://mailhost.hetnet.nl" username="" />
-    </provider>
-    -->
-    <!-- Disabled until test accounts provided
-    <provider id="planet inet" label="Planet Internet" domain="planet.nl">
-        <incoming uri="pop3://pop.planet.nl" username="$user" />
-        <outgoing uri="smtp://mail.planet.nl" username="" />
-    </provider>
-    -->
-    <!-- TODO:  username="" in incoming element is broken - will not work -->
-    <!-- Disabled until username="" is resolved
-    <provider id="tiscali" label="Tiscali" domain="tiscali.nl">
-        <incoming uri="pop3://pop3.tiscali.nl" username="" />
-        <outgoing uri="smtp://smtp.tiscali.nl" username="" />
-    </provider>
-    -->
-    <!-- Disabled until test accounts provided
-    <provider id="wanadoo" label="Wanadoo" domain="wanadoo.nl">
-        <incoming uri="pop3://pop.wanadoo.nl" username="$user" />
-        <outgoing uri="smtp://smtp.wanadoo.nl" username="$user" />
-    </provider>
-     -->
-
     <!-- Poland -->
     <provider id="onet" label="Onet.pl" domain="poczta.onet.pl">
         <incoming uri="pop3://pop3.poczta.onet.pl" username="$email" />

@@ -3,7 +3,6 @@ package jp.co.fttx.rakuphotomail.activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -17,7 +16,6 @@ public class Accounts extends RakuPhotoActivity implements OnClickListener {
 
     private Context mContext;
     private Button mNext;
-    private ProgressDialog mDialog;
     private ProgressDialog mProgressDialog;
 
     private Account mAccount;
@@ -45,8 +43,8 @@ public class Accounts extends RakuPhotoActivity implements OnClickListener {
         @Override
         public void synchronizeMailboxFinished(Account account, String folder,
                                                int totalMessagesInMailbox, int numNewMessages) {
+
             Account[] accounts = Preferences.getPreferences(mContext).getAccounts();
-            Log.d("ahokato", "Accounts#synchronizeMailboxFinished");
             GallerySlideShow.actionSlideShow(mContext, accounts[0], accounts[0].getInboxFolderName(), null);
             finish();
         }
@@ -67,7 +65,6 @@ public class Accounts extends RakuPhotoActivity implements OnClickListener {
 
     @Override
     public void onCreate(Bundle icicle) {
-        Log.d("ahokato", "Accounts#onCreate");
 
         super.onCreate(icicle);
         mContext = this;
@@ -75,7 +72,6 @@ public class Accounts extends RakuPhotoActivity implements OnClickListener {
         mProgressDialog = new ProgressDialog(mContext);
         Account[] accounts = Preferences.getPreferences(this).getAccounts();
         if (accounts.length == 1 && accounts[0].isAvailable(this)) {
-            Log.d("ahokato", "Accounts#onCreate GallerySlideShow start!");
             GallerySlideShow.actionSlideShow(this, accounts[0], accounts[0].getInboxFolderName(), null);
             finish();
         }
@@ -90,7 +86,6 @@ public class Accounts extends RakuPhotoActivity implements OnClickListener {
 
     @Override
     public void onResume() {
-        Log.d("ahokato", "Accounts#onResume");
 
         super.onResume();
         MessagingController.getInstance(getApplication())
@@ -100,7 +95,6 @@ public class Accounts extends RakuPhotoActivity implements OnClickListener {
 
     @Override
     public void onPause() {
-        Log.d("ahokato", "Accounts#onPause");
         super.onPause();
         MessagingController.getInstance(getApplication()).removeListener(
                 mListener);
@@ -110,6 +104,9 @@ public class Accounts extends RakuPhotoActivity implements OnClickListener {
         setUpProgressDialog(mProgressDialog, getString(R.string.progress_please_wait), getString(R.string.progress_slideshow_start));
         AccountSetupBasics.actionNewAccount(this);
         mNext.setEnabled(false);
+        if (mProgressDialog.isShowing()) {
+            mProgressDialog.dismiss();
+        }
     }
 
     public void onClick(View view) {
@@ -130,17 +127,6 @@ public class Accounts extends RakuPhotoActivity implements OnClickListener {
             progressDialog.setMessage(message);
             progressDialog.setCancelable(true);
             progressDialog.show();
-        }
-    }
-
-    /**
-     * @param progressDialog progressDialog
-     * @author tooru.oguri
-     * @since rakuphoto 0.1-beta1
-     */
-    private void dismissProgressDialog(ProgressDialog progressDialog) {
-        if (progressDialog.isShowing()) {
-            progressDialog.dismiss();
         }
     }
 }

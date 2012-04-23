@@ -28,7 +28,6 @@ public class Address {
      * resolved to the names of Android contacts.
      *
      * <p>
-     * TODO: This number was chosen arbitrarily and should be determined by
      * performance tests.
      * </p>
      *
@@ -238,8 +237,6 @@ public class Address {
 
         } else if (contacts != null) {
             final String name = contacts.getNameForAddress(mAddress);
-
-            // TODO: The results should probably be cached for performance reasons.
 
             if (name != null) {
                 if (RakuPhotoMail.changeContactNameColor()) {

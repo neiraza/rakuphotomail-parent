@@ -1,25 +1,18 @@
 package jp.co.fttx.rakuphotomail.mail.store;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import android.app.Application;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
-
-import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.R;
+import jp.co.fttx.rakuphotomail.RakuPhotoMail;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Manager for different {@link StorageProvider} -classes that abstract access
@@ -79,7 +72,6 @@ public class StorageManager {
 		 * invoke this provider ever again.
 		 * 
 		 * @param context
-		 *            TODO
 		 * @return Whether this provider supports the current device.
 		 * @see StorageManager#getAvailableProviders()
 		 */
@@ -498,7 +490,6 @@ public class StorageManager {
 	 */
 	private final Map<StorageProvider, SynchronizationAid> mProviderLocks = new IdentityHashMap<StorageProvider, SynchronizationAid>();
 
-	//TODO FROM Application TO Context
 	protected final Context mApplication;
 
 	/**
@@ -508,7 +499,6 @@ public class StorageManager {
 
 	private static transient StorageManager instance;
 
-	//TODO FROM Application TO Context 
 	public static synchronized StorageManager getInstance(
 			final Context application) {
 		if (instance == null) {
@@ -538,7 +528,6 @@ public class StorageManager {
 	 * @throws NullPointerException
 	 *             If <tt>application</tt> is <code>null</code>.
 	 */
-	//TODO FROM Application TO Context
 	protected StorageManager(final Context application)
 			throws NullPointerException {
 		if (application == null) {
@@ -601,7 +590,6 @@ public class StorageManager {
 	 */
 	public File getDatabase(final String dbName, final String providerId) {
 		StorageProvider provider = getProvider(providerId);
-		// TODO fallback to internal storage if no provider
 		return provider.getDatabase(mApplication, dbName);
 	}
 
@@ -615,7 +603,6 @@ public class StorageManager {
 	public File getAttachmentDirectory(final String dbName,
 			final String providerId) {
 		StorageProvider provider = getProvider(providerId);
-		// TODO fallback to internal storage if no provider
 		return provider.getAttachmentDirectory(mApplication, dbName);
 	}
 

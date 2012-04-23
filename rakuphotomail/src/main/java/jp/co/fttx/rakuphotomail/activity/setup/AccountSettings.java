@@ -46,7 +46,7 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
     private static final String PREFERENCE_SPAM_FOLDER = "spam_folder";
     private static final String PREFERENCE_TRASH_FOLDER = "trash_folder";
     private static final String PREFERENCE_SLEEP_MODE = "account_sleep_mode";
-
+    private static final String PREFERENCE_SLIDE_INFO = "account_slide_info";
 
     private Account mAccount;
     private boolean mIsPushCapable = false;
@@ -66,8 +66,10 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
     private ListPreference mTrashFolder;
 
     private CheckBoxPreference mSleepMode;
-    private boolean canSleep = true;
+    private boolean canSleep;
 
+    private CheckBoxPreference mSlideInfo;
+    private boolean canSlideInfo;
 
     public static void actionSettings(Context context, Account account) {
         Intent i = new Intent(context, AccountSettings.class);
@@ -78,7 +80,6 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         String accountUuid = getIntent().getStringExtra(EXTRA_ACCOUNT);
         mAccount = Preferences.getPreferences(this).getAccount(accountUuid);
 
@@ -146,17 +147,36 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
         mSleepMode.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 if (mSleepMode.isChecked()) {
-                    canSleep = true;
-                } else {
                     canSleep = false;
+                } else {
+                    canSleep = true;
                 }
                 return true;
             }
         });
-        if(mAccount.canSleep()){
+        canSleep = mAccount.canSleep();
+        if (canSleep) {
             mSleepMode.setChecked(true);
-        }else{
+        } else {
             mSleepMode.setChecked(false);
+        }
+
+        mSlideInfo = (CheckBoxPreference) findPreference(PREFERENCE_SLIDE_INFO);
+        mSlideInfo.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                if (mSlideInfo.isChecked()) {
+                    canSlideInfo = false;
+                } else {
+                    canSlideInfo = true;
+                }
+                return true;
+            }
+        });
+        canSlideInfo = mAccount.canDispSlideShowInfo();
+        if (canSlideInfo) {
+            mSlideInfo.setChecked(true);
+        } else {
+            mSlideInfo.setChecked(false);
         }
 
         mLocalStorageProvider = (ListPreference) findPreference(PREFERENCE_LOCAL_STORAGE_PROVIDER);
@@ -242,9 +262,8 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
         mAccount.setSentFolderName(mSentFolder.getValue());
         mAccount.setSpamFolderName(mSpamFolder.getValue());
         mAccount.setTrashFolderName(mTrashFolder.getValue());
-
-        Log.d("flying", "AccountSettings#saveSettings");
         mAccount.setCanSleep(canSleep);
+        mAccount.setCanDispSlideShowInfo(canSlideInfo);
 
         if (mIsPushCapable) {
             mAccount.setPushPollOnConnect(false);
@@ -361,7 +380,6 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        Log.d("ahokato", "AccountSettings onCreateOptionsMenu");
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.settings_option, menu);
         return true;
@@ -369,28 +387,23 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        Log.d("ahokato", "AccountSettings onPrepareOptionsMenu");
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        Log.d("ahokato", "AccountSettings onOptionsItemSelected あけぼーの");
         int itemId = item.getItemId();
         switch (itemId) {
             case R.id.settings_option_save_back:
-                Log.d("ahokato", "AccountSettings onOptionsItemSelected settings_save_back");
                 new SettingsSaveSyncTask(this).execute();
                 return true;
             default:
-                Log.d("ahokato", "AccountSettings onOptionsItemSelected default");
                 return super.onOptionsItemSelected(item);
         }
     }
 
     @Override
     public void onStop() {
-        Log.d("ahokato", "AccountSettings#onStop");
         super.onStop();
         this.finish();
     }
@@ -400,32 +413,27 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
         private ProgressDialog progressDialog;
 
         public SettingsSaveSyncTask(Context context) {
-            Log.d("ahokato", "AccountSettings SettingsSaveSyncTask start");
             this.context = context;
         }
 
         @Override
         protected void onPreExecute() {
-            Log.d("ahokato", "AccountSettings SettingsSaveSyncTask#onPreExecute");
             progressDialog = new ProgressDialog(context);
             progressDialog.setTitle(getString(R.string.progress_please_wait));
             progressDialog.setMessage(getString(R.string.setting_save_message));
             progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             progressDialog.setCancelable(true);
-//            progressDialog.setOnCancelListener(this);
             progressDialog.show();
         }
 
         @Override
         protected Void doInBackground(Void... params) {
-            Log.d("ahokato", "AccountSettings SettingsSaveSyncTask#doInBackground");
             saveSettings();
             return null;
         }
 
         @Override
         protected void onPostExecute(Void tmp) {
-            Log.d("ahokato", "AccountSettings SettingsSaveSyncTask#onPostExecute");
             onStop();
         }
     }

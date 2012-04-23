@@ -3,7 +3,6 @@ package jp.co.fttx.rakuphotomail.activity.setup;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
@@ -30,7 +29,6 @@ public class AccountSetupOptions extends RakuPhotoActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.d("ahokato", "AccountSetupOptions#onCreate");
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_options);
@@ -43,7 +41,6 @@ public class AccountSetupOptions extends RakuPhotoActivity {
 
 
     private void onDone() {
-        Log.d("ahokato", "AccountSetupOptions#onDone");
 
         mAccount.setDescription(mAccount.getEmail());
         mAccount.setNotifyNewMail(false);

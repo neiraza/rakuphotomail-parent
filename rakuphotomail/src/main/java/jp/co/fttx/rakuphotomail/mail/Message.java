@@ -1,19 +1,17 @@
 
 package jp.co.fttx.rakuphotomail.mail;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-import java.io.IOException;
-
 import android.util.Log;
-
+import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.activity.MessageReference;
 import jp.co.fttx.rakuphotomail.mail.filter.CountingOutputStream;
 import jp.co.fttx.rakuphotomail.mail.filter.EOLConvertingOutputStream;
-
 import jp.co.fttx.rakuphotomail.mail.store.UnavailableStorageException;
-import jp.co.fttx.rakuphotomail.RakuPhotoMail;
+
+import java.io.IOException;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 
 public abstract class Message implements Part, Body {
@@ -146,9 +144,6 @@ public abstract class Message implements Part, Body {
 
     public void delete(String trashFolderName) throws MessagingException {}
 
-    /*
-     * TODO Refactor Flags at some point to be able to store user defined flags.
-     */
     public Flag[] getFlags() {
         return mFlags.toArray(EMPTY_FLAG_ARRAY);
     }

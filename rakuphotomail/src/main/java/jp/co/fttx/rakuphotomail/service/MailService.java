@@ -1,9 +1,6 @@
 
 package jp.co.fttx.rakuphotomail.service;
 
-import java.util.Collection;
-import java.util.Date;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -12,14 +9,16 @@ import android.net.NetworkInfo;
 import android.net.NetworkInfo.State;
 import android.os.IBinder;
 import android.util.Log;
-
 import jp.co.fttx.rakuphotomail.Account;
-import jp.co.fttx.rakuphotomail.RakuPhotoMail;
-import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.Account.FolderMode;
+import jp.co.fttx.rakuphotomail.Preferences;
+import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.controller.MessagingController;
 import jp.co.fttx.rakuphotomail.helper.AutoSyncHelper;
 import jp.co.fttx.rakuphotomail.mail.Pusher;
+
+import java.util.Collection;
+import java.util.Date;
 
 /**
  */
@@ -349,7 +348,6 @@ public class MailService extends CoreService {
                     if (account.isAvailable(getApplicationContext())) {
                         pushing |= MessagingController.getInstance(getApplication()).setupPushing(account);
                     } else {
-                        //TODO: setupPushing of unavailable accounts when they become available (sd-card inserted)
                     }
                 }
                 if (pushing) {

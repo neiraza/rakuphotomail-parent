@@ -26,7 +26,6 @@ import jp.co.fttx.rakuphotomail.mail.Transport;
 import jp.co.fttx.rakuphotomail.mail.filter.Hex;
 import jp.co.fttx.rakuphotomail.mail.store.TrustManagerFactory;
 import jp.co.fttx.rakuphotomail.mail.store.WebDavStore;
-import jp.co.fttx.rakuphotomail.rakuraku.photomail.MessageSync;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -80,7 +79,6 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.d("ahokato", "AccountSetupCheckSettings#onCreate");
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_check_settings);
@@ -108,38 +106,6 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                     if (mCanceled) {
                         finish();
                         return;
-                    }
-                    if (mCheckIncoming) {
-//                        store = mAccount.getRemoteStore();
-//
-//                        if (store instanceof WebDavStore) {
-//                            setMessage(R.string.account_setup_check_settings_authenticate);
-//                        } else {
-//                            setMessage(R.string.account_setup_check_settings_check_incoming_msg);
-//                        }
-//                        store.checkSettings();
-
-//                        if (store instanceof WebDavStore) {
-//                            setMessage(R.string.account_setup_check_settings_fetch);
-//                        }
-
-//                        MessagingController.getInstance(getApplication()).listFoldersSynchronous(mAccount, true, null);
-
-//                        Folder remoteFolder = null;
-//                        Store remoteStore = mAccount.getRemoteStore();
-//                        String folder = mAccount.getInboxFolderName();
-//                        remoteFolder = remoteStore.getFolder(folder);
-//                        remoteFolder.open(Folder.OpenMode.READ_WRITE);
-                        String uid = MessageSync.getHighestRemoteUid(mAccount, mAccount.getInboxFolderName());
-                        Log.d("ahokato", "AccountSetupCheckSetting#onCreate highest uid:" + uid);
-//                        Message remoteMessage = null;
-//                        if (null == uid) {
-//                            remoteMessage = null;
-//                        } else {
-//                            remoteMessage = remoteFolder.getMessage(uid);
-//                        }
-//                        MessageSync.syncMailUseDelegate(mAccount, folder, remoteMessage);
-//                        MessagingController.getInstance(getApplication()).synchronizeMailbox(mAccount, mAccount.getInboxFolderName(), null, null);
                     }
                     if (mDestroyed) {
                         return;
@@ -274,7 +240,6 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                 }
                 for (int i = 0; i < chain.length; i++) {
                     // display certificate chain information
-                    //TODO: localize this strings
                     chainInfo.append("Certificate chain[" + i + "]:\n");
                     chainInfo.append("Subject: " + chain[i].getSubjectDN().toString() + "\n");
 
@@ -286,7 +251,6 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                         final Collection<List<?>> subjectAlternativeNames = chain[i].getSubjectAlternativeNames();
                         if (subjectAlternativeNames != null) {
                             // The list of SubjectAltNames may be very long
-                            //TODO: localize this string
                             StringBuffer altNamesText = new StringBuffer("Subject has " + subjectAlternativeNames.size() + " alternative names\n");
 
                             // we need these for matching
@@ -330,11 +294,9 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                                 // if some of the SubjectAltNames match the store or transport -host,
                                 // display them
                                 if (name.equalsIgnoreCase(storeURIHost) || name.equalsIgnoreCase(transportURIHost)) {
-                                    //TODO: localize this string
                                     altNamesText.append("Subject(alt): " + name + ",...\n");
                                 } else if (name.startsWith("*.")) {
                                     if (storeURIHost.endsWith(name.substring(2)) || transportURIHost.endsWith(name.substring(2))) {
-                                        //TODO: localize this string
                                         altNamesText.append("Subject(alt): " + name + ",...\n");
                                     }
                                 }

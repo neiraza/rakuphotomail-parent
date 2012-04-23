@@ -11,7 +11,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
 /**
- * TODO this is a close approximation of Message, need to update along with
  * Message.
  */
 public class MimeBodyPart extends BodyPart {

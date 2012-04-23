@@ -261,7 +261,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
             if (RakuPhotoConnectivityCheck.isConnectivity(getApplicationContext())) {
                 final String replyTargetUid = mMessageReference.uid;
                 onSend(replyTargetUid);
-                Log.d("majikoi", "GallerySendingMail#onClick replyTargetUid:" + replyTargetUid);
                 GallerySlideStop.actionHandle(this, mAccount, mAccount.getInboxFolderName(), replyTargetUid);
                 finish();
             } else {
@@ -433,7 +432,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
      * @since 0.1-beta1
      */
     public static void actionReply(Context context, MessageBean messageBean) {
-        Log.d("majikoi", "GallerySendingMail#actionReply");
         Intent i = new Intent(context, GallerySendingMail.class);
         i.putExtra(EXTRA_ADDRESS_TO, messageBean.getSenderAddress());
         i.putExtra(EXTRA_ADDRESS_TO_NAME, messageBean.getSenderName());

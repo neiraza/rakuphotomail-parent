@@ -9,7 +9,6 @@ import jp.co.fttx.rakuphotomail.mail.Message;
 /**
  * A CryptoProvider provides functionalities such as encryption, decryption, digital signatures.
  * It currently also stores the results of such encryption or decryption.
- * TODO: separate the storage from the provider
  */
 abstract public class CryptoProvider {
     static final long serialVersionUID = 0x21071234;

@@ -38,6 +38,13 @@
             android:summaryOn="@string/account_settings_slide_show_sleep_mode_summary_on"
             android:summaryOff="@string/account_settings_slide_show_sleep_mode_summary_off" />
 
+        <CheckBoxPreference
+                android:persistent="false"
+                android:key="account_slide_info"
+                android:title="@string/account_settings_slide_show_info_disp_label"
+                android:summaryOn="@string/account_settings_slide_show_info_disp_summary_on"
+                android:summaryOff="@string/account_settings_slide_show_info_disp_summary_off" />
+
     </PreferenceScreen>
 
     <PreferenceScreen

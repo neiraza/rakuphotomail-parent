@@ -92,6 +92,20 @@
                     android:layout_width="fill_parent"
                     android:contentDescription="@string/account_settings_slide_show_sleep_mode_label"
                     android:checked="true"/>
+
+            <TextView
+                    android:text="@string/account_settings_slide_show_info_disp_description"
+                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="?android:attr/textColorPrimary"/>
+            <CheckBox
+                    android:id="@+id/account_option_slideshow_info_disp"
+                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent"
+                    android:contentDescription="@string/account_settings_slide_show_info_disp_label"
+                    android:checked="true"/>
+
             <View
                     android:layout_height="0dip"
                     android:layout_width="fill_parent"

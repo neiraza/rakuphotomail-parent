@@ -1,15 +1,13 @@
 package jp.co.fttx.rakuphotomail.activity;
 
-import java.text.DateFormat;
-
 import android.content.Context;
-import android.util.Log;
-
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.AccountStats;
 import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.controller.MessagingListener;
 import jp.co.fttx.rakuphotomail.service.MailService;
+
+import java.text.DateFormat;
 
 public class ActivityListener extends MessagingListener {
     private Account mAccount = null;
@@ -83,7 +81,6 @@ public class ActivityListener extends MessagingListener {
         String folder,
         int totalMessagesInMailbox,
         int numNewMessages) {
-    	Log.d("NAKI", "そして、ここが動く(parent)");
         mLoadingAccountDescription = null;
         mLoadingFolderName = null;
         mAccount = null;
@@ -92,7 +89,6 @@ public class ActivityListener extends MessagingListener {
 
     @Override
     public void synchronizeMailboxStarted(Account account, String folder) {
-    	Log.d("NAKI", "次にここが動き(parent)");
         mLoadingAccountDescription = account.getDescription();
         mLoadingFolderName = folder;
         mAccount = account;

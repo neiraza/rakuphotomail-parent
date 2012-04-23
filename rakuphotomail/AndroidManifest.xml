@@ -3,7 +3,7 @@
           android:installLocation="auto"
           package="jp.co.fttx.rakuphotomail"
           android:versionCode="1"
-          android:versionName="0.1.2-BETA3">
+          android:versionName="0.1.3-BETA3">
 
     <uses-sdk
             android:minSdkVersion="9"
@@ -93,12 +93,6 @@
                 android:launchMode="standard"
                 android:screenOrientation="landscape"
                 android:name="jp.co.fttx.rakuphotomail.activity.GallerySlideShow">
-        </activity>
-        <activity
-                android:configChanges="locale"
-                android:launchMode="standard"
-                android:screenOrientation="landscape"
-                android:name="jp.co.fttx.rakuphotomail.activity.GalleryDummy">
         </activity>
         <activity
                 android:configChanges="locale"

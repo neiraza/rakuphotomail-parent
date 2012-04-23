@@ -16,17 +16,14 @@ public class RakuRakuException extends Exception {
 
     public RakuRakuException(String message, Throwable cause) {
         super(message, cause);
-        // TODO Auto-generated constructor stub
     }
 
     public RakuRakuException(String message) {
         super(message);
-        // TODO Auto-generated constructor stub
     }
 
     public RakuRakuException(Throwable cause) {
         super(cause);
-        // TODO Auto-generated constructor stub
     }
 
 }

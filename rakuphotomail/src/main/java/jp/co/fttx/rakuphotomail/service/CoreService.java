@@ -1,11 +1,5 @@
 package jp.co.fttx.rakuphotomail.service;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -16,6 +10,12 @@ import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.controller.MessagingController;
 import jp.co.fttx.rakuphotomail.helper.power.TracingPowerManager;
 import jp.co.fttx.rakuphotomail.helper.power.TracingPowerManager.TracingWakeLock;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class CoreService extends Service {
 
@@ -139,7 +139,6 @@ public abstract class CoreService extends Service {
 
     @Override
     public IBinder onBind(Intent arg0) {
-        // TODO Auto-generated method stub
         return null;
     }
 

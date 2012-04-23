@@ -298,8 +298,6 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
 
             final String userInfo;
             String user = mUsernameView.getText().toString();
-            Log.d("abokado", "AccountSetupOutgoing#onNext mUserName:" + mUserName);
-            Log.d("abokado", "AccountSetupOutgoing#onNext usernameEnc:" + user);
             if (!mUserName.equals(user)) {
                 mAccount.init();
             }

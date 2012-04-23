@@ -73,7 +73,6 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.d("ahokato", "AccountSetupOutgoing#onCreate");
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_outgoing);
@@ -87,7 +86,6 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
                 AccountSetupCheckSettings.actionCheckSettings(this, mAccount, false, true);
             }
         } catch (URISyntaxException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
@@ -267,7 +265,6 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d("ahokato", "AccountSetupOutgoing#onActivityResult");
 
         if (resultCode == RESULT_OK) {
             if (Intent.ACTION_EDIT.equals(getIntent().getAction())) {
@@ -282,14 +279,11 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
 
     @Override
     protected void onNext() {
-        Log.d("ahokato", "AccountSetupOutgoing#onNext");
 
         int securityType = (Integer) ((SpinnerOption) mSecurityTypeView.getSelectedItem()).value;
         URI uri;
         try {
             String usernameEnc = URLEncoder.encode(mUsernameView.getText().toString(), "UTF-8");
-            Log.d("abokado", "AccountSetupOutgoing#onNext mUserName:" + mUserName);
-            Log.d("abokado", "AccountSetupOutgoing#onNext usernameEnc:" + usernameEnc);
             if (!mUserName.equals(usernameEnc)) {
                 mAccount.init();
             }

@@ -1231,6 +1231,11 @@
     <string name="account_settings_slide_show_sleep_mode_summary_on">"端末の設定を変更しない"</string>
     <string name="account_settings_slide_show_sleep_mode_summary_off">"スリープモードを利用しない(スライドショー時のみ)"</string>
 
+    <string name="account_settings_slide_show_info_disp_label">"スライドショー実行中の日時等の表示有無"</string>
+    <string name="account_settings_slide_show_info_disp_description">"日時・差出人・件名・返信済み有無等の情報について、表示有無の変更設定を行います"</string>
+    <string name="account_settings_slide_show_info_disp_summary_on">"表示する"</string>
+    <string name="account_settings_slide_show_info_disp_summary_off">"表示しない"</string>
+
     <!-- 日本語以外も -->
     <string name="account_setup_username_label_hint">アカウント名</string>
     <string name="account_password_hint">アカウントパスワード</string>

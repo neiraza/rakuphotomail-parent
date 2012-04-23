@@ -3,7 +3,6 @@ package jp.co.fttx.rakuphotomail.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,12 +11,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-
-import jp.co.fttx.rakuphotomail.Account;
-import jp.co.fttx.rakuphotomail.FontSizes;
-import jp.co.fttx.rakuphotomail.RakuPhotoMail;
-import jp.co.fttx.rakuphotomail.Preferences;
-import jp.co.fttx.rakuphotomail.R;
+import jp.co.fttx.rakuphotomail.*;
 
 public class LauncherShortcuts extends RakuphotoListActivity implements OnItemClickListener {
     private AccountsAdapter mAdapter;
@@ -49,7 +43,6 @@ public class LauncherShortcuts extends RakuphotoListActivity implements OnItemCl
     }
 
     private void setupShortcut(Account account) {
-        Log.d("campus", "setupShortcut");
 //        final Intent shortcutIntent = FolderList.actionHandleAccountIntent(this, account, null, true);
 
         Intent intent = new Intent();

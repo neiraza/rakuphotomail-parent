@@ -221,7 +221,6 @@ public class Utility {
 	}
 
 	/*
-	 * TODO disabled this method globally. It is used in all the settings
 	 * screens but I just noticed that an unrelated icon was dimmed. Android
 	 * must share drawables internally.
 	 */
@@ -620,7 +619,7 @@ public class Utility {
 	private static final Pattern IMG_PATTERN = Pattern.compile(IMG_SRC_REGEX);
 
 	/**
-	 * Figure out if this part has images. TODO: should only return true if
+	 * Figure out if this part has images.
 	 * we're an html part
 	 * 
 	 * @param message

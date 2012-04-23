@@ -91,7 +91,6 @@ public class Account implements BaseAccount {
     private boolean mReplyAfterQuote;
     private boolean mSyncRemoteDeletions;
 
-    //TODO コンフィグ候補たち
     private int attachmentCacheLimitCount = 5; //5;
     private long slideSleepTimeDuration; //20000L;
     private long serverSyncTimeDuration; //180000L;
@@ -112,6 +111,8 @@ public class Account implements BaseAccount {
     private static final String DATE_PATTERN = "yyyy/MM/dd HH:mm";
     // スリープモードオン／オフ
     private boolean canSleep = true;
+    // スライドショー時の日付・差出人・件名表示 オン／オフ
+    private boolean canDispSlideShowInfo = true;
 
     // アプリ起動時の最新UID
     private String appRunLatestUid;
@@ -328,8 +329,6 @@ public class Account implements BaseAccount {
                         (random.nextInt(0x70) * 0xffff) +
                         0xff000000);
 
-
-        //TODO 新規についkしたお
         attachmentCacheLimitCount = prefs.getInt(mUuid + ".attachmentCacheLimitCount", 5);
         slideSleepTimeDuration = prefs.getLong(mUuid + ".slideSleepTimeDuration", 20000L);
         serverSyncTimeDuration = prefs.getLong(mUuid + ".serverSyncTimeDuration", 180000L);
@@ -345,6 +344,7 @@ public class Account implements BaseAccount {
         oldNewMailCheckLatestUid = prefs.getString(mUuid + ".oldNewMailCheckLatestUid", null);
         oldPastMailCheckLatestUid = prefs.getString(mUuid + ".oldPastMailCheckLatestUid", null);
         canSleep = prefs.getBoolean(mUuid + ".canSleep", true);
+        canDispSlideShowInfo = prefs.getBoolean(mUuid + ".canDispSlideShowInfo", true);
 
         SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
         try {
@@ -577,7 +577,6 @@ public class Account implements BaseAccount {
         editor.putBoolean(mUuid + ".led", mNotificationSetting.isLed());
         editor.putInt(mUuid + ".ledColor", mNotificationSetting.getLedColor());
 
-        //TODO 新規についkしたお
         editor.putInt(mUuid + ".attachmentCacheLimitCount", attachmentCacheLimitCount);
         editor.putLong(mUuid + ".slideSleepTimeDuration", slideSleepTimeDuration);
         editor.putLong(mUuid + ".serverSyncTimeDuration", serverSyncTimeDuration);
@@ -593,6 +592,7 @@ public class Account implements BaseAccount {
         editor.putString(mUuid + ".oldNewMailCheckLatestUid", oldNewMailCheckLatestUid);
         editor.putString(mUuid + ".oldPastMailCheckLatestUid", oldPastMailCheckLatestUid);
         editor.putBoolean(mUuid + ".canSleep", canSleep);
+        editor.putBoolean(mUuid + ".canDispSlideShowInfo", canDispSlideShowInfo);
 
         SimpleDateFormat sdf = new SimpleDateFormat(DATE_PATTERN);
         if (null != appRunLatestDate) {
@@ -1453,13 +1453,21 @@ public class Account implements BaseAccount {
     }
 
     public boolean canSleep() {
-        Log.d("flying", "Account#canSleep");
         return this.canSleep;
     }
 
     public void setCanSleep(boolean canSleep) {
-        Log.d("flying", "Account#setCanSleep");
         this.canSleep = canSleep;
     }
+
+    public boolean canDispSlideShowInfo() {
+        return this.canDispSlideShowInfo;
+    }
+
+    public void setCanDispSlideShowInfo(boolean canDispSlideShowInfo) {
+        this.canDispSlideShowInfo = canDispSlideShowInfo;
+    }
+
+
 
 }

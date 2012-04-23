@@ -600,7 +600,6 @@ public class LocalStore extends Store implements Serializable {
         return new LocalFolder(name);
     }
 
-    // TODO this takes about 260-300ms, seems slow.
     @Override
     public List<? extends Folder> getPersonalNamespaces(boolean forceListAll) throws MessagingException {
         final List<LocalFolder> folders = new LinkedList<LocalFolder>();
@@ -2385,7 +2384,6 @@ public class LocalStore extends Store implements Serializable {
                                                 bp.setHeader(MimeHeader.HEADER_CONTENT_DISPOSITION, String
                                                         .format("%s;\n filename=\"%s\";\n size=%d",
                                                                 contentDisposition, encoded_name,
-                                                                // TODO: Should
                                                                 // use encoded
                                                                 // word defined
                                                                 // in RFC 2231.
@@ -3123,7 +3121,6 @@ public class LocalStore extends Store implements Serializable {
             }
         }
 
-        //TODO 2012/03/23 add
         public void deleteMessages(final ArrayList<String> uidList)
                 throws MessagingException {
             Log.d("ahokato", "LocalFolder#deleteMessages start");
@@ -3155,7 +3152,7 @@ public class LocalStore extends Store implements Serializable {
          * Update the given message in the LocalStore without first deleting the
          * existing message (contrast with appendMessages). This method is used
          * to store changes to the given message while updating attachments and
-         * not removing existing attachment data. TODO In the future this method
+         * not removing existing attachment data.
          * should be combined with appendMessages since the Message contains
          * enough data to decide what to do.
          *

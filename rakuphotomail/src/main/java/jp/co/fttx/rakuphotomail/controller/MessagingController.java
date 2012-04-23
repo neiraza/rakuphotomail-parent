@@ -48,7 +48,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * it removes itself. Thus, any commands that that activity submitted are
  * removed from the queue once the activity is no longer active.
  */
-// TODO このクラスは良く読み込んで、モノにしたい
 public class MessagingController implements Runnable {
 
     /**
@@ -369,7 +368,7 @@ public class MessagingController implements Runnable {
      * listFoldersCallback for local folders before it returns, and then for
      * remote folders at some later point. If there are no local folders
      * includeRemote is forced by this method. This method should be called from
-     * a Thread as it may take several seconds to list the local folders. TODO
+     * a Thread as it may take several seconds to list the local folders.
      * this needs to cache the remote folder list
      *
      * @param account
@@ -391,7 +390,7 @@ public class MessagingController implements Runnable {
      * listFoldersCallback for local folders before it returns, and then for
      * remote folders at some later point. If there are no local folders
      * includeRemote is forced by this method. This method is called in the
-     * foreground. TODO this needs to cache the remote folder list
+     * foreground.
      *
      * @param account
      * @param listener
@@ -876,7 +875,7 @@ public class MessagingController implements Runnable {
      * @param account
      * @param folder
      * @param listener
-     * @param providedRemoteFolder TODO
+     * @param providedRemoteFolder
      */
     public void synchronizeMailbox(final Account account, final String folder,
                                    final MessagingListener listener, final Folder providedRemoteFolder) {
@@ -889,28 +888,13 @@ public class MessagingController implements Runnable {
         });
     }
 
-//    /**
-//     * Start foreground synchronization of the specified folder.
-//     *
-//     * @param account
-//     * @param folder
-//     * @param listener
-//     * @param providedRemoteFolder TODO
-//     */
-//    public void synchronizeMailboxForegound(final Account account,
-//                                            final String folder, final MessagingListener listener,
-//                                            final Folder providedRemoteFolder) {
-//        synchronizeMailboxSynchronous(account, folder, listener,
-//                providedRemoteFolder);
-//    }
-
     /**
      * Start foreground synchronization of the specified folder. This is
      * generally only called by synchronizeMailbox.
      *
      * @param account
-     * @param folder               TODO Break this method up into smaller chunks.
-     * @param providedRemoteFolder TODO
+     * @param folder
+     * @param providedRemoteFolder
      */
     private void synchronizeMailboxSynchronous(final Account account,
                                                final String folder, final MessagingListener listener,
@@ -1878,7 +1862,6 @@ public class MessagingController implements Runnable {
                 fp.clear();
                 fp.add(FetchProfile.Item.BODY_SANE);
                 /*
-				 * TODO a good optimization here would be to make sure that all
 				 * Stores set the proper size after this fetch and compare the
 				 * before and after size. If they equal we can mark this
 				 * SYNCHRONIZED instead of PARTIALLY_SYNCHRONIZED
@@ -2214,7 +2197,7 @@ public class MessagingController implements Runnable {
      * message to the server, first checking to be sure that the server message
      * is not newer than the local message. Once the local message is
      * successfully processed it is deleted so that the server message will be
-     * synchronized down without an additional copy being created. TODO update
+     * synchronized down without an additional copy being created.
      * the local message UID instead of deleteing it
      *
      * @param command arguments = (String folder, String uid)
@@ -2920,7 +2903,6 @@ public class MessagingController implements Runnable {
         }
     }
 
-    //TODO sent
     public void loadMessageForViewRemote(final Account account,
                                          final String folder, final String uid,
                                          final MessagingListener listener) {
@@ -3228,7 +3210,6 @@ public class MessagingController implements Runnable {
      * @param message //     * @param listener
      */
     public String sendMessage(final Account account, final Message message) {
-        Log.d("refs1961", "MessagingController#sendMessage(Account, Message)");
 
         LocalStore localStore = null;
         try {
@@ -3248,32 +3229,25 @@ public class MessagingController implements Runnable {
         return null;
     }
 
-    //TODO 新規作成
-
     /**
      * @param account
      */
     private String sendMessage(final Account account) {
-        Log.d("refs1961", "MessagingController#sendMessage(Account)");
         if (!account.isAvailable(mApplication)) {
             throw new UnavailableAccountException();
         }
         return sendMessagesSynchronous(account);
     }
 
-    //TODO 新規作成
-
     /**
      * @param account
      */
     private String sendMessagesSynchronous(final Account account) {
-        Log.d("refs1961", "MessagingController#sendMessagesSynchronous start");
         Folder localFolder = null;
         try {
             Store localStore = account.getLocalStore();
             localFolder = localStore.getFolder(account.getOutboxFolderName());
             if (!localFolder.exists()) {
-                Log.d("refs1961", "MessagingController#sendMessagesSynchronous localFolder is exists...");
                 return null;
             }
             localFolder.open(OpenMode.READ_WRITE);
@@ -3288,9 +3262,6 @@ public class MessagingController implements Runnable {
 
             Transport transport = Transport.getInstance(account);
             for (Message message : localMessages) {
-                Log.d("refs1961", "MessagingController#sendMessagesSynchronous message.getRemoteUid:" + message.getUid());
-                Log.d("refs1961", "MessagingController#sendMessagesSynchronous message.getSubject:" + message.getSubject());
-
                 if (message.isSet(Flag.DELETED)) {
                     message.destroy();
                     continue;
@@ -3322,41 +3293,20 @@ public class MessagingController implements Runnable {
 
                         message.setFlag(Flag.X_SEND_IN_PROGRESS, true);
 
-                        // SmtpTransport#sendMessage !!
                         transport.sendMessage(message);
 
                         message.setFlag(Flag.X_SEND_IN_PROGRESS, false);
                         message.setFlag(Flag.SEEN, true);
-//                        progress++;
-//                        for (MessagingListener l : getListeners()) {
-//                            l.synchronizeMailboxProgress(account,
-//                                    account.getSentFolderName(), progress, todo);
-//                        }
-//                        if (RakuPhotoMail.FOLDER_NONE.equals(account
-//                                .getSentFolderName())) {
-//
-//                            message.setFlag(Flag.DELETED, true);
-//                        } else {
 
                         LocalFolder localSentFolder = (LocalFolder) localStore
                                 .getFolder(account.getSentFolderName());
 
-                        Log.d("refs1961", "MessagingController#sendMessagesSynchronous moveMessages前 message.getRemoteUid:" + message.getUid());
                         localFolder.moveMessages(new Message[]{message},
                                 localSentFolder);
-                        Log.d("refs1961", "MessagingController#sendMessagesSynchronous moveMessages後 message.getRemoteUid:" + message.getUid());
-
 //  }
                         return message.getUid();
 
-                        //TODO クソみたいな実装だな、死ねよ
                     } catch (Exception e) {
-                        // 5.x.x errors from the SMTP server are "PERMFAIL"
-                        // move the message over to drafts rather than leaving
-                        // it in the outbox
-                        // This is a complete hack, but is worlds better than
-                        // the previous
-                        // "don't even bother" functionality
                         if (getRootCauseMessage(e).startsWith("5")) {
                             localFolder.moveMessages(new Message[]{message},
                                     (LocalFolder) localStore.getFolder(account
@@ -3365,11 +3315,6 @@ public class MessagingController implements Runnable {
 
                         message.setFlag(Flag.X_SEND_FAILED, true);
                         Log.e(RakuPhotoMail.LOG_TAG, "Failed to send message", e);
-//                        for (MessagingListener l : getListeners()) {
-//                            l.synchronizeMailboxFailed(account,
-//                                    localFolder.getName(),
-//                                    getRootCauseMessage(e));
-//                        }
                     }
                 } catch (Exception e) {
                     Log.e(RakuPhotoMail.LOG_TAG,
@@ -3443,7 +3388,6 @@ public class MessagingController implements Runnable {
     }
 
     private void notifyWhileSending(Account account) {
-        Log.d("refs1961", "使ってんのかよ notifyWhileSending");
         if (!account.isShowOngoing()) {
             return;
         }
@@ -3452,13 +3396,6 @@ public class MessagingController implements Runnable {
         Notification notif = new Notification(R.drawable.ic_menu_refresh,
                 mApplication.getString(R.string.notification_bg_send_ticker,
                         account.getDescription()), System.currentTimeMillis());
-//		Intent intent = MessageList.actionHandleFolderIntent(mApplication,
-//				account, account.getInboxFolderName());
-//		PendingIntent pi = PendingIntent
-//				.getActivity(mApplication, 0, intent, 0);
-//		notif.setLatestEventInfo(mApplication,
-//				mApplication.getString(R.string.adb),
-//				account.getDescription(), pi);
         notif.setLatestEventInfo(mApplication,
                 mApplication.getString(R.string.notification_bg_send_title),
                 account.getDescription(), null);
@@ -3485,22 +3422,12 @@ public class MessagingController implements Runnable {
 
     private void notifySendFailed(Account account, Exception lastFailure,
                                   String openFolder) {
-        Log.d("refs1961", "notifySendFailed");
         NotificationManager notifMgr = (NotificationManager) mApplication
                 .getSystemService(Context.NOTIFICATION_SERVICE);
         Notification notif = new Notification(
                 R.drawable.stat_notify_email_generic,
                 mApplication.getString(R.string.send_failure_subject),
                 System.currentTimeMillis());
-
-//        Intent i = FolderList.actionHandleNotification(mApplication, account,
-//                openFolder);
-
-//        PendingIntent pi = PendingIntent.getActivity(mApplication, 0, i, 0);
-
-//        notif.setLatestEventInfo(mApplication,
-//                mApplication.getString(R.string.send_failure_subject),
-//                getRootCauseMessage(lastFailure), pi);
         notif.setLatestEventInfo(mApplication,
                 mApplication.getString(R.string.send_failure_subject),
                 getRootCauseMessage(lastFailure), null);
@@ -3514,7 +3441,6 @@ public class MessagingController implements Runnable {
     }
 
     private void notifyFetchingMail(final Account account, final Folder folder) {
-        Log.d("refs1961", "使ってんのかよ notifyFetchingMail");
         if (account.isShowOngoing()) {
             final NotificationManager notifMgr = (NotificationManager) mApplication
                     .getSystemService(Context.NOTIFICATION_SERVICE);
@@ -3523,17 +3449,6 @@ public class MessagingController implements Runnable {
                             R.string.notification_bg_sync_ticker,
                             account.getDescription(), folder.getName()),
                     System.currentTimeMillis());
-//			Intent intent = MessageList.actionHandleFolderIntent(mApplication,
-//					account, account.getInboxFolderName());
-//			PendingIntent pi = PendingIntent.getActivity(mApplication, 0,
-//					intent, 0);
-//			notif.setLatestEventInfo(
-//					mApplication,
-//					mApplication.getString(R.string.notification_bg_sync_title),
-//					account.getDescription()
-//							+ mApplication
-//									.getString(R.string.notification_bg_title_separator)
-//							+ folder.getName(), pi);
             notif.setLatestEventInfo(
                     mApplication,
                     mApplication.getString(R.string.notification_bg_sync_title),
@@ -3591,20 +3506,15 @@ public class MessagingController implements Runnable {
      * @param account
      */
     public void sendPendingMessagesSynchronous(final Account account) {
-        Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous start");
         Folder localFolder = null;
         Exception lastFailure = null;
         try {
             Store localStore = account.getLocalStore();
             localFolder = localStore.getFolder(account.getOutboxFolderName());
-            Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous localFolder:" + localFolder.getName());
             if (!localFolder.exists()) {
-                Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous localFolder is exists...");
                 return;
             }
-            //TODO MessagingListener
             for (MessagingListener l : getListeners()) {
-                Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous MessagingListener?");
                 l.sendPendingMessagesStarted(account);
             }
             localFolder.open(OpenMode.READ_WRITE);
@@ -3613,9 +3523,7 @@ public class MessagingController implements Runnable {
             int progress = 0;
             int todo = localMessages.length;
 
-            //TODO MessagingListener
             for (MessagingListener l : getListeners()) {
-                Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous MessagingListener? 2");
                 l.synchronizeMailboxProgress(account,
                         account.getSentFolderName(), progress, todo);
             }
@@ -3634,14 +3542,8 @@ public class MessagingController implements Runnable {
                                 + ") for messages to send");
 
             Transport transport = Transport.getInstance(account);
-            Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous localMessages.length:" + localMessages.length);
             for (Message message : localMessages) {
-                Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous MessagingListener message.getRemoteUid:" + message.getUid());
-                Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous MessagingListener message.getMessageId:" + message.getMessageId());
-                Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous MessagingListener message.getSubject:" + message.getSubject());
-
                 if (message.isSet(Flag.DELETED)) {
-                    Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous MessagingListener message.getRemoteUid:" + message.getUid());
                     message.destroy();
                     continue;
                 }
@@ -3671,9 +3573,7 @@ public class MessagingController implements Runnable {
 
                     localFolder.fetch(new Message[]{message}, fp, null);
                     try {
-                        Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous MessagingListener localFolder.fetch");
                         if (message.getHeader(RakuPhotoMail.IDENTITY_HEADER) != null) {
-                            Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous MessagingListener X-rakuphotomail-Identity is not null");
                             Log.v(RakuPhotoMail.LOG_TAG,
                                     "The user has set the Outbox and Drafts folder to the same thing. "
                                             + "This message appears to be a draft, so UCOM will not send it");
@@ -3686,16 +3586,12 @@ public class MessagingController implements Runnable {
                             Log.i(RakuPhotoMail.LOG_TAG,
                                     "Sending message with UID "
                                             + message.getUid());
-
-                        // SmtpTransport#sendMessage !!
                         transport.sendMessage(message);
 
-                        Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous MessagingListener transport.sendMessage");
                         message.setFlag(Flag.X_SEND_IN_PROGRESS, false);
                         message.setFlag(Flag.SEEN, true);
                         progress++;
 
-                        //TODO MessagingListener
                         for (MessagingListener l : getListeners()) {
                             l.synchronizeMailboxProgress(account,
                                     account.getSentFolderName(), progress, todo);
@@ -3736,16 +3632,9 @@ public class MessagingController implements Runnable {
                                     localSentFolder.getName(), message.getUid()};
                             queuePendingCommand(account, command);
                             processPendingCommands(account);
-                            Log.d("refs1961", "MessagingController#sendPendingMessagesSynchronous end");
                         }
 
                     } catch (Exception e) {
-                        // 5.x.x errors from the SMTP server are "PERMFAIL"
-                        // move the message over to drafts rather than leaving
-                        // it in the outbox
-                        // This is a complete hack, but is worlds better than
-                        // the previous
-                        // "don't even bother" functionality
                         if (getRootCauseMessage(e).startsWith("5")) {
                             localFolder.moveMessages(new Message[]{message},
                                     (LocalFolder) localStore.getFolder(account
@@ -3757,7 +3646,6 @@ public class MessagingController implements Runnable {
                         Log.e(RakuPhotoMail.LOG_TAG, "Failed to send message",
                                 e);
 
-                        //TODO MessagingListener
                         for (MessagingListener l : getListeners()) {
                             l.synchronizeMailboxFailed(account,
                                     localFolder.getName(),
@@ -3769,7 +3657,6 @@ public class MessagingController implements Runnable {
                     Log.e(RakuPhotoMail.LOG_TAG,
                             "Failed to fetch message for sending", e);
 
-                    //TODO MessagingListener
                     for (MessagingListener l : getListeners()) {
                         l.synchronizeMailboxFailed(account,
                                 localFolder.getName(), getRootCauseMessage(e));
@@ -3778,7 +3665,6 @@ public class MessagingController implements Runnable {
                 }
             }
 
-            //TODO MessagingListener
             for (MessagingListener l : getListeners()) {
                 l.sendPendingMessagesCompleted(account);
             }
@@ -3795,7 +3681,6 @@ public class MessagingController implements Runnable {
             throw new UnavailableAccountException(e);
         } catch (Exception e) {
 
-            //TODO MessagingListener
             for (MessagingListener l : getListeners()) {
                 l.sendPendingMessagesFailed(account);
             }
@@ -4127,9 +4012,6 @@ public class MessagingController implements Runnable {
 
             if (folder.equals(account.getOutboxFolderName())) {
                 for (Message message : messages) {
-                    // If the message was in the Outbox, then it has been copied
-                    // to local Trash, and has
-                    // to be copied to remote trash
                     PendingCommand command = new PendingCommand();
                     command.command = PENDING_COMMAND_APPEND;
                     command.arguments = new String[]{
@@ -4197,9 +4079,6 @@ public class MessagingController implements Runnable {
                     remoteFolder.expunge();
                 }
 
-                // When we empty trash, we need to actually synchronize the
-                // folder
-                // or local deletes will never get cleaned up
                 synchronizeFolder(account, remoteFolder, true, 0, null);
                 compact(account, null);
 
@@ -4736,8 +4615,6 @@ public class MessagingController implements Runnable {
                                Message message, int previousUnreadMessageCount,
                                AtomicInteger newMessageCount) {
 
-        Log.d("campus", "notifyAccount");
-
         // If we have a message, set the notification to "<From>: <Subject>"
         StringBuilder messageNotice = new StringBuilder();
         final KeyguardManager keyguardService = (KeyguardManager) context
@@ -4804,9 +4681,6 @@ public class MessagingController implements Runnable {
             notif.number = unreadCount;
         }
 
-        //TODO いじくりたおした
-//        Intent i = FolderList.actionHandleNotification(context, account,
-//                message.getFolder().getName());
         Intent i = new Intent();
         PendingIntent pi = PendingIntent.getActivity(context, 0, i, 0);
 

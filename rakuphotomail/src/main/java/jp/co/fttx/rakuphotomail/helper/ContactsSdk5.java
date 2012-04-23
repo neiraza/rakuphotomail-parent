@@ -159,7 +159,6 @@ public class ContactsSdk5 extends jp.co.fttx.rakuphotomail.helper.Contacts {
 
     @Override
     public void markAsContacted(final Address[] addresses) {
-        //TODO: Optimize! Potentially a lot of database queries
         for (final Address address : addresses) {
             final Cursor c = getContactByAddress(address.getAddress());
 

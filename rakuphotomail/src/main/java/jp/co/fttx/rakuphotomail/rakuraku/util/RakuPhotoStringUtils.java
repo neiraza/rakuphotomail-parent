@@ -39,7 +39,6 @@ public class RakuPhotoStringUtils {
         return null;
     }
 
-    //TODO 140 limit
     public static String limitMessage(String str, int limit) {
         if (str.length() <= limit) {
             return str;

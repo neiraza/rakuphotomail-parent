@@ -182,7 +182,6 @@ public class MessageProvider extends ContentProvider {
 	 *             implemented for compatibility only
 	 */
 	@Deprecated
-	// TODO remove
 	public static class IncrementExtractor implements FieldExtractor<MessageInfoHolder, Integer> {
 		private int count = 0;
 
@@ -227,10 +226,6 @@ public class MessageProvider extends ContentProvider {
 					new MesssageInfoHolderRetrieverListener(queue));
 
 			final List<MessageInfoHolder> holders = queue.take();
-
-			// TODO add sort order parameter
-//			Collections.sort(holders, new MessageList.ReverseComparator<MessageInfoHolder>(
-//					new MessageList.DateComparator()));
 
 			final String[] projectionToUse;
 			if (projection == null) {

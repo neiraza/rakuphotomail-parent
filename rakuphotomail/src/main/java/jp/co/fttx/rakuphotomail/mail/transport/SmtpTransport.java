@@ -196,7 +196,6 @@ public class SmtpTransport extends Transport {
 
 
             /*
-             * TODO may need to add code to fall back to HELO I switched it from
              * using HELO on non STARTTLS connections because of AOL's mail
              * server. It won't let you use AUTH without EHLO.
              * We should really be paying more attention to the capabilities
@@ -362,7 +361,6 @@ public class SmtpTransport extends Transport {
 
         Address[] from = message.getFrom();
         try {
-            //TODO: Add BODY=8BITMIME parameter if appropriate?
             executeSimpleCommand("MAIL FROM:" + "<" + from[0].getAddress() + ">");
             for (String address : addresses) {
                 executeSimpleCommand("RCPT TO:" + "<" + address + ">");

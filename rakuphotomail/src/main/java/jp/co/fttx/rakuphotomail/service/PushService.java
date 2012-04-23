@@ -41,7 +41,6 @@ public class PushService extends CoreService {
 
     @Override
     public IBinder onBind(Intent arg0) {
-        // TODO Auto-generated method stub
         return null;
     }
 }

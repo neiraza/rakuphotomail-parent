@@ -713,7 +713,6 @@ public class Pop3Store extends Store {
             try {
                 message.parse(new Pop3ResponseInputStream(mIn));
 
-                // TODO: if we've received fewer lines than requested we also have the complete message.
                 if (lines == -1 || !mCapabilities.top) {
                     message.setFlag(Flag.X_DOWNLOADED_FULL, true);
                 }
