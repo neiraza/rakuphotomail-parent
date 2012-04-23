@@ -142,7 +142,6 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
             }
         });
 
-        Log.d("flying", "AccountSettings#onCreate");
         mSleepMode = (CheckBoxPreference) findPreference(PREFERENCE_SLEEP_MODE);
         mSleepMode.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -155,9 +154,9 @@ public class AccountSettings extends RakuphotoPreferenceActivity {
             }
         });
         if(mAccount.canSleep()){
-            mSleepMode.setChecked(false);
-        }else{
             mSleepMode.setChecked(true);
+        }else{
+            mSleepMode.setChecked(false);
         }
 
         mLocalStorageProvider = (ListPreference) findPreference(PREFERENCE_LOCAL_STORAGE_PROVIDER);

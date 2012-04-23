@@ -1226,10 +1226,10 @@
     <string name="account_settings_scale_ratio_2">"少し小さく"</string>
     <string name="account_settings_scale_ratio_4">"もっと小さく"</string>
 
-    <string name="account_settings_slide_show_sleep_mode_label">"スリープモード解除設定(スライドショー限定)"</string>
-    <string name="account_settings_slide_show_sleep_mode_description">"スリープモード解除(スライドショー限定)を設定します"</string>
-    <string name="account_settings_slide_show_sleep_mode_summary_on">"スライドショー実行時のスリープモードを解除します"</string>
-    <string name="account_settings_slide_show_sleep_mode_summary_off">"スライドショー実行時のスリープモードをセットします"</string>
+    <string name="account_settings_slide_show_sleep_mode_label">"スリープモードの有効/無効(スライドショー限定)"</string>
+    <string name="account_settings_slide_show_sleep_mode_description">"下記チェックを外した場合、スライドショー時のみスリープモードを利用しなくなります"</string>
+    <string name="account_settings_slide_show_sleep_mode_summary_on">"端末の設定を変更しない"</string>
+    <string name="account_settings_slide_show_sleep_mode_summary_off">"スリープモードを利用しない(スライドショー時のみ)"</string>
 
     <!-- 日本語以外も -->
     <string name="account_setup_username_label_hint">アカウント名</string>

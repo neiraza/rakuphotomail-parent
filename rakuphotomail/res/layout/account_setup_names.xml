@@ -91,7 +91,7 @@
                     android:layout_height="wrap_content"
                     android:layout_width="fill_parent"
                     android:contentDescription="@string/account_settings_slide_show_sleep_mode_label"
-                    android:checked="false"/>
+                    android:checked="true"/>
             <View
                     android:layout_height="0dip"
                     android:layout_width="fill_parent"

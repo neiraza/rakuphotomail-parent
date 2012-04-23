@@ -127,9 +127,8 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
         });
 
         /* Sleep Mode */
-        Log.d("flying", "AccountSetupNames#onCreate");
         mSleepMode = (CheckBox) findViewById(R.id.account_option_sleep_mode);
-        mSleepMode.setText(getString(R.string.account_settings_slide_show_sleep_mode_summary_off));
+        mSleepMode.setText(getString(R.string.account_settings_slide_show_sleep_mode_summary_on));
         mSleepMode.setOnClickListener(this);
     }
 
@@ -154,13 +153,12 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
     }
 
     private void setSleep() {
-        Log.d("flying", "AccountSetupNames#setSleep");
         if (mSleepMode.isChecked()) {
             mSleepMode.setText(getString(R.string.account_settings_slide_show_sleep_mode_summary_on));
-            mAccount.setCanSleep(false);
+            mAccount.setCanSleep(true);
         } else {
             mSleepMode.setText(getString(R.string.account_settings_slide_show_sleep_mode_summary_off));
-            mAccount.setCanSleep(true);
+            mAccount.setCanSleep(false);
         }
     }
 
@@ -170,7 +168,6 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
                 onNext();
                 break;
             case R.id.account_option_sleep_mode:
-                Log.d("flying", "AccountSetupNames#onClick");
                 setSleep();
                 break;
             default:
