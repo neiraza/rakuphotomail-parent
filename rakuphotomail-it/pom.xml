@@ -1,116 +1,116 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>jp.co.fttx</groupId>
-		<artifactId>rakuphotomail-parent</artifactId>
-		<version>0.1.3-BETA3</version>
-	</parent>
+  <parent>
+    <groupId>jp.co.fttx</groupId>
+    <artifactId>rakuphotomail-parent</artifactId>
+    <version>0.1.3-BETA3</version>
+  </parent>
 
-	<groupId>jp.co.fttx</groupId>
-	<artifactId>rakuphotomail-it</artifactId>
-	<version>0.1.3-BETA3</version>
-	<packaging>apk</packaging>
-	<name>rakuphotomail-it - Integration tests</name>
+  <groupId>jp.co.fttx</groupId>
+  <artifactId>rakuphotomail-it</artifactId>
+  <version>0.1.3-BETA3</version>
+  <packaging>apk</packaging>
+  <name>rakuphotomail-it - Integration tests</name>
 
-	<properties>
-		<!-- When not running a release, we are deploying the plain artifact (so 
-			no classifier) This is overridden during the release. -->
-	</properties>
+  <properties>
+    <!-- When not running a release, we are deploying the plain artifact (so
+      no classifier) This is overridden during the release. -->
+  </properties>
 
-	<dependencies>
-		<dependency>
-			<groupId>com.google.android</groupId>
-			<artifactId>android</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.google.android</groupId>
-			<artifactId>android-test</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>jp.co.fttx</groupId>
-			<artifactId>rakuphotomail</artifactId>
-			<type>apk</type>
-			<version>0.1-BETA1</version>
-			<!-- <classifier>${zipaligned-classifier}</classifier> --> <!-- classifier set according to the ran profile -->
-		</dependency>
-		<dependency>
-			<groupId>jp.co.fttx</groupId>
-			<artifactId>rakuphotomail</artifactId>
-			<type>jar</type>
-			<version>0.1-BETA1</version>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-		</dependency>
-	</dependencies>
+  <dependencies>
+    <dependency>
+      <groupId>com.google.android</groupId>
+      <artifactId>android</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.android</groupId>
+      <artifactId>android-test</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jp.co.fttx</groupId>
+      <artifactId>rakuphotomail</artifactId>
+      <type>apk</type>
+      <version>0.1.3-BETA3</version>
+      <!-- <classifier>${zipaligned-classifier}</classifier> --> <!-- classifier set according to the ran profile -->
+    </dependency>
+    <dependency>
+      <groupId>jp.co.fttx</groupId>
+      <artifactId>rakuphotomail</artifactId>
+      <type>jar</type>
+      <version>0.1.3-BETA3</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+  </dependencies>
 
-	<build>
+  <build>
         <!--<sourceDirectory>src</sourceDirectory>-->
-		<plugins>
-			<plugin>
-				<groupId>com.jayway.maven.plugins.android.generation2</groupId>
-				<artifactId>android-maven-plugin</artifactId>
-				<extensions>true</extensions>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>cobertura-maven-plugin</artifactId>
-				<version>2.5.1</version>
-				<configuration>
+    <plugins>
+      <plugin>
+        <groupId>com.jayway.maven.plugins.android.generation2</groupId>
+        <artifactId>android-maven-plugin</artifactId>
+        <extensions>true</extensions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>cobertura-maven-plugin</artifactId>
+        <version>2.5.1</version>
+        <configuration>
                     <formats>
                         <format>html</format>
                         <format>xml</format>
                     </formats>
-					<!--<excludes>-->
-						<!--<exclude>**/*Test.class</exclude>-->
-					<!--</excludes>-->
-				</configuration>
-				<!--<executions>-->
-					<!--<execution>-->
-						<!--<goals>-->
-							<!--<goal>clean</goal>-->
-						<!--</goals>-->
-					<!--</execution>-->
-				<!--</executions>-->
-			</plugin>
-		</plugins>
-	</build>
+          <!--<excludes>-->
+            <!--<exclude>**/*Test.class</exclude>-->
+          <!--</excludes>-->
+        </configuration>
+        <!--<executions>-->
+          <!--<execution>-->
+            <!--<goals>-->
+              <!--<goal>clean</goal>-->
+            <!--</goals>-->
+          <!--</execution>-->
+        <!--</executions>-->
+      </plugin>
+    </plugins>
+  </build>
 
-	<profiles>
-		<profile>
-			<id>release</id>
-			<properties>
-				<!-- When running a release, we must deployed the final artifact (signed 
-					and zipaligned). -->
-				<zipaligned-classifier>aligned</zipaligned-classifier>
-			</properties>
-			<build>
-				<plugins>
-					<plugin>
-						<artifactId>maven-jarsigner-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>sign-application-it-apk</id>
-								<phase>package</phase>
-								<goals>
-									<goal>sign</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>com.jayway.maven.plugins.android.generation2</groupId>
-						<artifactId>android-maven-plugin</artifactId>
-						<configuration>
-							<sign>
-								<debug>false</debug>
-							</sign>
-						</configuration>
-					</plugin>
+  <profiles>
+    <profile>
+      <id>release</id>
+      <properties>
+        <!-- When running a release, we must deployed the final artifact (signed
+          and zipaligned). -->
+        <zipaligned-classifier>aligned</zipaligned-classifier>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-jarsigner-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>sign-application-it-apk</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>com.jayway.maven.plugins.android.generation2</groupId>
+            <artifactId>android-maven-plugin</artifactId>
+            <configuration>
+              <sign>
+                <debug>false</debug>
+              </sign>
+            </configuration>
+          </plugin>
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>cobertura-maven-plugin</artifactId>
@@ -122,42 +122,42 @@
                             </formats>
                         </configuration>
                     </plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
-	<reporting>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-				<version>2.8</version>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>cobertura-maven-plugin</artifactId>
-				<version>2.5.1</version>
-				<configuration>
-					<formats>
-						<format>html</format>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>2.8</version>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>cobertura-maven-plugin</artifactId>
+        <version>2.5.1</version>
+        <configuration>
+          <formats>
+            <format>html</format>
                         <format>xml</format>
-					</formats>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>findbugs-maven-plugin</artifactId>
-				<version>2.3.3</version>
-				<configuration>
-					<inputEncoding>${project.build.sourceEncoding}</inputEncoding>
-					<outputEncoding>${project.reporting.outputEncoding}</outputEncoding>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>javancss-maven-plugin</artifactId>
-				<version>2.0</version>
-			</plugin>
-		</plugins>
-	</reporting>
+          </formats>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
+        <version>2.3.3</version>
+        <configuration>
+          <inputEncoding>${project.build.sourceEncoding}</inputEncoding>
+          <outputEncoding>${project.reporting.outputEncoding}</outputEncoding>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>javancss-maven-plugin</artifactId>
+        <version>2.0</version>
+      </plugin>
+    </plugins>
+  </reporting>
 </project>
