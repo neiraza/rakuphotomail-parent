@@ -45,8 +45,7 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
 
     private Account mAccount;
     private EditText mMessage;
-    private TextView mTo;
-    private TextView mToName;
+    private TextView mToAddressAndName;
     private TextView mSentFlag;
     private Address mToAddress;
     private Address mFromAddress;
@@ -80,18 +79,10 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
         super.onCreate(icicle);
         setContentView(R.layout.gallery_sending_mail);
         setupViews();
-
         final Intent intent = getIntent();
-        try {
-            initInfo(intent);
-            setMToAddressVisibility();
-            setMSentFlagVisibility();
-            MessagingController.getInstance(getApplication()).addListener(mListener);
-        } catch (RakuRakuException e) {
-            Log.w(RakuPhotoMail.LOG_TAG, e.getMessage());
-            Toast.makeText(getApplicationContext(), "ネットワーク接続が切れています", Toast.LENGTH_LONG).show();
-            mSend.setEnabled(false);
-        }
+        initInfo(intent);
+        setMSentFlagVisibility();
+        MessagingController.getInstance(getApplication()).addListener(mListener);
     }
 
     /**
@@ -135,8 +126,7 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
      */
     private void setupViews() {
         mMessage = (EditText) findViewById(R.id.gallery_sending_mail_content);
-        mTo = (TextView) findViewById(R.id.gallery_sending_mail_to_address);
-        mToName = (TextView) findViewById(R.id.gallery_sending_mail_to_name);
+        mToAddressAndName = (TextView) findViewById(R.id.gallery_sending_mail_to_address_and_name);
         mSend = (Button) findViewById(R.id.gallery_sending_mail_send);
         mSend.setOnClickListener(this);
         mSentFlag = (TextView) findViewById(R.id.gallery_sending_mail_sent_flag);
@@ -149,7 +139,7 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
-    private void initInfo(Intent intent) throws RakuRakuException {
+    private void initInfo(Intent intent) {
         mMessageReference = intent.getParcelableExtra(EXTRA_MESSAGE_REFERENCE);
 
         final String accountUuid = (mMessageReference != null) ? mMessageReference.accountUuid : intent
@@ -159,13 +149,22 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
             mAccount = Preferences.getPreferences(this).getDefaultAccount();
         }
 
-        setMToAddress(intent.getStringExtra(EXTRA_ADDRESS_TO));
-        String addressName = intent.getStringExtra(EXTRA_ADDRESS_TO_NAME);
-        if (!RakuPhotoStringUtils.isNotBlank(addressName)) {
-            throw new RakuRakuException("送信先アドレスが存在しないため、メールを送信できません address name:" + addressName);
+        StringBuilder recipientTypeTo = new StringBuilder();
+        String address = intent.getStringExtra(EXTRA_ADDRESS_TO);
+        recipientTypeTo.append(address == null ? "" : address);
+        if (!RakuPhotoStringUtils.isNotBlank(address)) {
+            address = getString(R.string.common_message_unknown);
+            Log.w(RakuPhotoMail.LOG_TAG, getString(R.string.sending_message_address_unknown));
+            Toast.makeText(getApplicationContext(), getString(R.string.sending_message_address_unknown), Toast.LENGTH_LONG).show();
+            mSend.setEnabled(false);
         }
-        setMToAddressName(addressName);
-        mToAddress = new Address(mTo.getText().toString(), mToName.getText().toString());
+        String addressName = intent.getStringExtra(EXTRA_ADDRESS_TO_NAME);
+        recipientTypeTo.append(addressName == null ? "" : addressName);
+        if (!RakuPhotoStringUtils.isNotBlank(addressName)) {
+            addressName = getString(R.string.common_message_unknown);
+        }
+        setMToAddressName(address, addressName);
+        mToAddress = new Address(recipientTypeTo.toString());
 
         setMFromAddress(intent.getStringExtra(EXTRA_ADDRESS_FROM),
                 intent.getStringExtra(EXTRA_ADDRESS_FROM_NAME));
@@ -176,42 +175,19 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
     }
 
     /**
-     * 宛先の表示名をメールアドレスか宛先名のいづれかを選択し表示する.<br>
-     * 表示優先順位は「宛先名」、「メールアドレス」の順。
+     * 宛先アドレスと名前をTextViewに設定する.
      *
-     * @author tooru.oguri
-     * @since rakuphoto 0.1-beta1
-     */
-    private void setMToAddressVisibility() {
-        if ("".equals(mToName.getText().toString())) {
-            mToName.setVisibility(View.GONE);
-            mTo.setVisibility(View.VISIBLE);
-        } else {
-            mToName.setVisibility(View.VISIBLE);
-            mTo.setVisibility(View.GONE);
-        }
-    }
-
-    /**
-     * 宛先メールアドレスをTextViewに設定する.
-     *
-     * @param addressTo 宛先メールアドレス
-     * @author tooru.oguri
-     * @since rakuphoto 0.1-beta1
-     */
-    private void setMToAddress(String addressTo) {
-        mTo.setText(addressTo);
-    }
-
-    /**
-     * 宛先名をTextViewに設定する.
-     *
-     * @param addressToName address name
+     * @param address address
+     * @param name    name
      * @author tooru.oguri
      * @since 0.1-beta1
      */
-    private void setMToAddressName(String addressToName) {
-        mToName.setText(addressToName.trim());
+    private void setMToAddressName(String address, String name) {
+        StringBuilder tmpName = new StringBuilder(name.trim());
+        tmpName.append("(");
+        tmpName.append(address);
+        tmpName.append(")");
+        mToAddressAndName.setText(tmpName);
     }
 
     /**

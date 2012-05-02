@@ -9,7 +9,7 @@ import android.content.Intent;
 import android.test.ActivityInstrumentationTestCase2;
 
 /**
- * GallerySlideShowTest.
+ * jp.co.fttx.rakuphotomail.GallerySlideShowTest.
  * 
  * @author tooru.oguri
  * @since 0.1-beta1

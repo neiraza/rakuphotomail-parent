@@ -22,7 +22,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 /**
- * GallerySendingMailTest.
+ * jp.co.fttx.rakuphotomail.GallerySendingMailTest.
  *
  * @author tooru.oguri
  * @since 0.1-beta1
