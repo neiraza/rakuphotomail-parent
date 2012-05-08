@@ -1,26 +1,23 @@
 package jp.co.fttx.rakuphotomail.test;
 
+import android.test.ActivityInstrumentationTestCase2;
 import jp.co.fttx.rakuphotomail.activity.Accounts;
-import android.test.ActivityUnitTestCase;
 
 public class AccountsTest extends
-		ActivityUnitTestCase<Accounts> {
+        ActivityInstrumentationTestCase2<Accounts> {
 
-	public AccountsTest() {
-		super(Accounts.class);
-	}
+    public AccountsTest() {
+        super("jp.co.fttx.rakuphotomail.activity", Accounts.class);
+    }
 
-//	private static final String EXTRA_ACCOUNT = "account";
-//	private static final String EXTRA_FOLDER = "folder";
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+    }
 
-	@Override
-	protected void setUp() throws Exception {
-		super.setUp();
-	}
-
-	public void testHoge() {
-		Accounts account = getActivity();
-		assertNull(account);
-	}
+    public void testObjectNotNull() {
+        Accounts account = getActivity();
+        assertNotNull(account);
+    }
 
 }

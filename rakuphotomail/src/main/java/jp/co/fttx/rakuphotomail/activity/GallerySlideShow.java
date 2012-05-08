@@ -255,28 +255,28 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         context.startActivity(intent);
     }
 
-    /**
-     * @param context    context
-     * @param account    account info
-     * @param folder     receive folder name
-     * @param startIndex message index
-     * @param stopIndex  message index
-     * @author tooru.oguri
-     * @since rakuphoto 0.1-beta1
-     */
-    public static void actionSlideShow(Context context, Account account, String folder, int startIndex, int stopIndex) {
-
-        Intent intent = new Intent(context, GallerySlideShow.class);
-        if (account != null) {
-            intent.putExtra(EXTRA_ACCOUNT, account.getUuid());
-        }
-        if (folder != null) {
-            intent.putExtra(EXTRA_FOLDER, folder);
-        }
-        intent.putExtra(EXTRA_START_INDEX, startIndex);
-        intent.putExtra(EXTRA_STOP_INDEX, stopIndex);
-        context.startActivity(intent);
-    }
+//    /**
+//     * @param context    context
+//     * @param account    account info
+//     * @param folder     receive folder name
+//     * @param startIndex message index
+//     * @param stopIndex  message index
+//     * @author tooru.oguri
+//     * @since rakuphoto 0.1-beta1
+//     */
+//    public static void actionSlideShow(Context context, Account account, String folder, int startIndex, int stopIndex) {
+//
+//        Intent intent = new Intent(context, GallerySlideShow.class);
+//        if (account != null) {
+//            intent.putExtra(EXTRA_ACCOUNT, account.getUuid());
+//        }
+//        if (folder != null) {
+//            intent.putExtra(EXTRA_FOLDER, folder);
+//        }
+//        intent.putExtra(EXTRA_START_INDEX, startIndex);
+//        intent.putExtra(EXTRA_STOP_INDEX, stopIndex);
+//        context.startActivity(intent);
+//    }
 
     /**
      * @param savedInstanceState saved

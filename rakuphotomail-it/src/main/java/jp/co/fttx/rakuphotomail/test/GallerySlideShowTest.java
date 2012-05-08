@@ -4,9 +4,9 @@
  */
 package jp.co.fttx.rakuphotomail.test;
 
-import jp.co.fttx.rakuphotomail.activity.GallerySlideShow;
 import android.content.Intent;
 import android.test.ActivityInstrumentationTestCase2;
+import jp.co.fttx.rakuphotomail.test.dummy.DummyAccounts;
 
 /**
  * jp.co.fttx.rakuphotomail.GallerySlideShowTest.
@@ -16,14 +16,15 @@ import android.test.ActivityInstrumentationTestCase2;
  * 
  */
 public class GallerySlideShowTest extends
-		ActivityInstrumentationTestCase2<GallerySlideShow> {
+		ActivityInstrumentationTestCase2<DummyAccounts> {
 
-	private GallerySlideShow mActivity;
+	private DummyAccounts mActivity;
 	private static final String EXTRA_ACCOUNT = "account";
 	private static final String EXTRA_FOLDER = "folder";
 
+
 	public GallerySlideShowTest() {
-		super("jp.co.fttx.rakuphotomail.activity", GallerySlideShow.class);
+		super("jp.co.fttx.rakuphotomail.test.dummy", DummyAccounts.class);
 	}
 
 	/**
@@ -48,14 +49,12 @@ public class GallerySlideShowTest extends
 	}
 
 	/**
-	 * null check(mMailContent).
-	 * 
 	 * @author tooru.oguri
 	 * @since 0.1-beta1
 	 */
-	public void testHoge() {
-//		startActivity();
-//		assertNotNull(mActivity);
+	public void testActivityObjectNotNull() {
+		startActivity();
+		assertNotNull(mActivity);
 	}
 
 	/**
@@ -64,8 +63,6 @@ public class GallerySlideShowTest extends
 	 */
 	private void startActivity() {
 		Intent i = new Intent(Intent.ACTION_MAIN);
-		i.putExtra(EXTRA_ACCOUNT, "a848514f-b6a4-447f-9f8a-8632cd9c8316");
-		i.putExtra(EXTRA_FOLDER, "INBOX");
 		setActivityIntent(i);
 		mActivity = getActivity();
 	}

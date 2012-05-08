@@ -67,12 +67,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
         mPasswordView = (EditText) findViewById(R.id.account_password);
         mDefaultView = (CheckBox) findViewById(R.id.account_default);
         mNextButton = (Button) findViewById(R.id.next);
-//        mManualSetupButton = (Button) findViewById(R.id.manual_setup);
-
-//        mManualSetupButton.setVisibility(View.GONE);
-
         mNextButton.setOnClickListener(this);
-//        mManualSetupButton.setOnClickListener(this);
 
         mEmailView.addTextChangedListener(this);
         mPasswordView.addTextChangedListener(this);
@@ -322,9 +317,6 @@ public class AccountSetupBasics extends RakuPhotoActivity
             case R.id.next:
                 onNext();
                 break;
-//            case R.id.manual_setup:
-//                onManualSetup();
-//                break;
         }
     }
 
