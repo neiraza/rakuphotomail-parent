@@ -38,6 +38,7 @@ public class AccountSetupAccountType extends RakuPhotoActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("refs#2853", "AccountSetupAccountType#onCreate");
 
         String accountUuid = getIntent().getStringExtra(EXTRA_ACCOUNT);
         mAccount = Preferences.getPreferences(this).getAccount(accountUuid);
@@ -46,6 +47,7 @@ public class AccountSetupAccountType extends RakuPhotoActivity {
     }
 
     private void onImap() {
+        Log.d("refs#2853", "AccountSetupAccountType#onImap");
         try {
             URI uri = new URI(mAccount.getStoreUri());
             uri = new URI("imap", uri.getUserInfo(), uri.getHost(), uri.getPort(), null, null, null);

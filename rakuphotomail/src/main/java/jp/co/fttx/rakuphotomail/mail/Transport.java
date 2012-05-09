@@ -1,6 +1,6 @@
-
 package jp.co.fttx.rakuphotomail.mail;
 
+import android.util.Log;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.mail.transport.SmtpTransport;
 import jp.co.fttx.rakuphotomail.mail.transport.WebDavTransport;
@@ -12,7 +12,10 @@ public abstract class Transport {
     protected static final int SOCKET_READ_TIMEOUT = 300000;
 
     public synchronized static Transport getInstance(Account account) throws MessagingException {
+        Log.d("refs#2853", "Transport#getInstance");
         String uri = account.getTransportUri();
+        Log.d("refs#2853", "Transport#getInstance uri:" + uri);
+
         if (uri.startsWith("smtp")) {
             return new SmtpTransport(uri);
         } else if (uri.startsWith("webdav")) {

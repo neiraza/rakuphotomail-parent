@@ -245,8 +245,6 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
                 && Utility.requiredFieldValid(mPasswordView)
                 && Utility.domainFieldValid(mServerView)
                 && Utility.requiredFieldValid(mPortView));
-        Utility.setCompoundDrawablesAlpha(mNextButton,
-                mNextButton.isEnabled() ? 255 : 128);
     }
 
     private void updatePortFromSecurityType() {

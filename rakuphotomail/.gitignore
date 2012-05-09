@@ -6,3 +6,5 @@ proguard.conf
 /target
 /bin
 /rakuphotomail.iml
+/proguard.cfg
+/local.properties

@@ -255,7 +255,6 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
                                 (!mRequireLoginView.isChecked() ||
                                         (Utility.requiredFieldValid(mUsernameView) &&
                                                 Utility.requiredFieldValid(mPasswordView))));
-        Utility.setCompoundDrawablesAlpha(mNextButton, mNextButton.isEnabled() ? 255 : 128);
     }
 
     private void updatePortFromSecurityType() {

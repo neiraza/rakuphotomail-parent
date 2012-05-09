@@ -13,7 +13,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import jp.co.fttx.rakuphotomail.*;
 import jp.co.fttx.rakuphotomail.activity.RakuPhotoActivity;
@@ -24,6 +23,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
+import java.util.Arrays;
 
 /**
  * Prompts the user for the email address and password. Also prompts for
@@ -33,7 +33,6 @@ import java.net.URLEncoder;
  * activity. If no settings are found the settings are handed off to the
  * AccountSetupAccountType activity.
  */
-// XXX アカウント設定君
 public class AccountSetupBasics extends RakuPhotoActivity
         implements OnClickListener, TextWatcher {
     private final static String EXTRA_ACCOUNT = "jp.co.fttx.rakuphotomail.AccountSetupBasics.account";
@@ -44,9 +43,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
     private Preferences mPrefs;
     private EditText mEmailView;
     private EditText mPasswordView;
-    private CheckBox mDefaultView;
     private Button mNextButton;
-//    private Button mManualSetupButton;
     private Account mAccount;
     private Provider mProvider;
 
@@ -59,22 +56,17 @@ public class AccountSetupBasics extends RakuPhotoActivity
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
+        Log.d("refs#2853", "AccountSetupBasics#onCrate");
         setContentView(R.layout.account_setup_basics);
         mPrefs = Preferences.getPreferences(this);
         mEmailView = (EditText) findViewById(R.id.account_email);
         mPasswordView = (EditText) findViewById(R.id.account_password);
-        mDefaultView = (CheckBox) findViewById(R.id.account_default);
         mNextButton = (Button) findViewById(R.id.next);
         mNextButton.setOnClickListener(this);
 
         mEmailView.addTextChangedListener(this);
         mPasswordView.addTextChangedListener(this);
-
-        if (mPrefs.getAccounts().length > 0) {
-            mDefaultView.setVisibility(View.VISIBLE);
-        }
 
         if (savedInstanceState != null && savedInstanceState.containsKey(EXTRA_ACCOUNT)) {
             String accountUuid = savedInstanceState.getString(EXTRA_ACCOUNT);
@@ -89,6 +81,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
     @Override
     public void onResume() {
         super.onResume();
+        Log.d("refs#2853", "AccountSetupBasics#onResume");
         validateFields();
     }
 
@@ -114,17 +107,13 @@ public class AccountSetupBasics extends RakuPhotoActivity
     }
 
     private void validateFields() {
+        Log.d("refs#2853", "AccountSetupBasics#validateFields");
         String email = mEmailView.getText().toString();
+        Log.d("refs#2853", "AccountSetupBasics#validateFields email:" + email);
         boolean valid = Utility.requiredFieldValid(mEmailView)
                 && Utility.requiredFieldValid(mPasswordView)
                 && mEmailValidator.isValidAddressOnly(email);
-
         mNextButton.setEnabled(valid);
-        /*
-         * Dim the next button's icon to 50% if the button is disabled.
-         * android:state_enabled
-         */
-        Utility.setCompoundDrawablesAlpha(mNextButton, mNextButton.isEnabled() ? 255 : 128);
     }
 
     private String getOwnerName() {
@@ -173,6 +162,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
     }
 
     private void finishAutoSetup() {
+        Log.d("refs#2853", "AccountSetupBasics#finishAutoSetup");
         String email = mEmailView.getText().toString();
         String password = mPasswordView.getText().toString();
         String[] emailParts = splitEmail(email);
@@ -193,6 +183,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
             incomingUri = new URI(incomingUriTemplate.getScheme(), incomingUsername + ":"
                     + passwordEnc, incomingUriTemplate.getHost(), incomingUriTemplate.getPort(), null,
                     null, null);
+            Log.d("refs#2853", "AccountSetupBasics#finishAutoSetup incomingUri:" + incomingUri.toString());
 
             String outgoingUsername = mProvider.outgoingUsernameTemplate;
 
@@ -214,6 +205,8 @@ public class AccountSetupBasics extends RakuPhotoActivity
 
 
             }
+            Log.d("refs#2853", "AccountSetupBasics#finishAutoSetup outgoingUri:" + outgoingUri.toString());
+
             mAccount = Preferences.getPreferences(this).newAccount();
             mAccount.setName(getOwnerName());
             mAccount.setEmail(email);
@@ -239,11 +232,17 @@ public class AccountSetupBasics extends RakuPhotoActivity
 
     @Override
     protected void onNext() {
+        Log.d("refs#2853", "AccountSetupBasics#onNext");
         String email = mEmailView.getText().toString();
         String[] emailParts = splitEmail(email);
         String domain = emailParts[1];
+        Log.d("refs#2853", "AccountSetupBasics#onNext email:" + email);
+        Log.d("refs#2853", "AccountSetupBasics#onNext emailParts:" + Arrays.toString(emailParts));
+        Log.d("refs#2853", "AccountSetupBasics#onNext domain:" + domain);
+
         mProvider = findProviderForDomain(domain);
         if (mProvider == null) {
+            Log.d("refs#2853", "AccountSetupBasics#onNext プロバイダーが不明");
             /*
              * We don't have default settings for this account, start the manual
              * setup process.
@@ -265,9 +264,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
         if (resultCode == RESULT_OK) {
             mAccount.setDescription(mAccount.getEmail());
             mAccount.save(Preferences.getPreferences(this));
-            if (mDefaultView.isChecked()) {
-                Preferences.getPreferences(this).setDefaultAccount(mAccount);
-            }
+            Preferences.getPreferences(this).setDefaultAccount(mAccount);
             RakuPhotoMail.setServicesEnabled(this);
             AccountSetupNames.actionSetNames(this, mAccount);
             finish();
@@ -276,7 +273,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
     }
 
     private void onManualSetup() {
-
+        Log.d("refs#2853", "AccountSetupBasics#onManualSetup");
         String email = mEmailView.getText().toString();
         String password = mPasswordView.getText().toString();
         String[] emailParts = splitEmail(email);
@@ -307,7 +304,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
         mAccount.setTrashFolderName(getString(R.string.special_mailbox_name_trash));
         mAccount.setSentFolderName(getString(R.string.special_mailbox_name_sent));
 
-        AccountSetupAccountType.actionSelectAccountType(this, mAccount, mDefaultView.isChecked());
+        AccountSetupAccountType.actionSelectAccountType(this, mAccount, true);
         finish();
 
     }
@@ -339,7 +336,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
     }
 
     private Provider findProviderForDomain(String domain) {
-
+        Log.d("refs#2853", "AccountSetupBasics#findProviderForDomain domain:" + domain);
         try {
             XmlResourceParser xml = getResources().getXml(R.xml.providers);
             int xmlEventType;
@@ -348,6 +345,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
                 if (xmlEventType == XmlResourceParser.START_TAG
                         && "provider".equals(xml.getName())
                         && domain.equalsIgnoreCase(getXmlAttribute(xml, "domain"))) {
+                    Log.d("refs#2853", "AccountSetupBasics#findProviderForDomain 1");
                     provider = new Provider();
                     provider.id = getXmlAttribute(xml, "id");
                     provider.label = getXmlAttribute(xml, "label");
@@ -356,16 +354,19 @@ public class AccountSetupBasics extends RakuPhotoActivity
                 } else if (xmlEventType == XmlResourceParser.START_TAG
                         && "incoming".equals(xml.getName())
                         && provider != null) {
+                    Log.d("refs#2853", "AccountSetupBasics#findProviderForDomain 2");
                     provider.incomingUriTemplate = new URI(getXmlAttribute(xml, "uri"));
                     provider.incomingUsernameTemplate = getXmlAttribute(xml, "username");
                 } else if (xmlEventType == XmlResourceParser.START_TAG
                         && "outgoing".equals(xml.getName())
                         && provider != null) {
+                    Log.d("refs#2853", "AccountSetupBasics#findProviderForDomain 3");
                     provider.outgoingUriTemplate = new URI(getXmlAttribute(xml, "uri"));
                     provider.outgoingUsernameTemplate = getXmlAttribute(xml, "username");
                 } else if (xmlEventType == XmlResourceParser.END_TAG
                         && "provider".equals(xml.getName())
                         && provider != null) {
+                    Log.d("refs#2853", "AccountSetupBasics#findProviderForDomain 4");
                     return provider;
                 }
             }

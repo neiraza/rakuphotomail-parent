@@ -637,16 +637,13 @@
     <string name="move_copy_cannot_copy_unsynced_message">サーバーと同期されていないメールをコピーまたは移動できません</string>
 
     <string name="account_setup_failed_dlg_title">設定エラー</string>
-    <string name="account_setup_failed_dlg_auth_message_fmt">アカウント名またはパスワード設定にエラーがあります\n(<xliff:g id="error">
-        %s</xliff:g>)
-    </string>
+    <string name="account_setup_failed_dlg_auth_message_fmt">アカウント名またはパスワード設定にエラーがあります</string>
     <!-- Username or password incorrect\n(ERR01 Account does not exist) -->
-    <string name="account_setup_failed_dlg_certificate_message_fmt">サーバに安全な接続ができません\n(<xliff:g id="error">%s</xliff:g>)
-    </string>
+    <string name="account_setup_failed_dlg_certificate_message_fmt">サーバに安全な接続ができません</string>
     <!-- Cannot safely connect to server\n(Invalid certificate) -->
-    <string name="account_setup_failed_dlg_server_message_fmt">サーバに接続できません\n(<xliff:g id="error">%s</xliff:g>)
-    </string>
+    <string name="account_setup_failed_dlg_server_message_fmt">サーバに接続できません</string>
     <!-- Cannot connect to server\n(Connection timed out) -->
+    <string name="account_setup_failed_dlg_edit_action">再入力</string>
     <string name="account_setup_failed_dlg_edit_details_action">詳細再編集</string>
     <string name="account_setup_failed_dlg_continue_action">続行</string>
 
