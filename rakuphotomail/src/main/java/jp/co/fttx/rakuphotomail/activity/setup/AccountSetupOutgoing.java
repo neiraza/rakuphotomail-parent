@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.text.method.DigitsKeyListener;
 import android.util.Log;
@@ -54,6 +55,8 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
     private Button mNextButton;
     private Account mAccount;
     private boolean mMakeDefault;
+    private int mPasswordVisibleCheckDefaultIType;
+    private CheckBox mPasswordVisibleCheck;
 
     private String mUserName;
 
@@ -91,6 +94,10 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
 
         mUsernameView = (EditText) findViewById(R.id.account_username);
         mPasswordView = (EditText) findViewById(R.id.account_password);
+        mPasswordVisibleCheckDefaultIType = mPasswordView.getInputType();
+        mPasswordView.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD | mPasswordVisibleCheckDefaultIType);
+        mPasswordVisibleCheck = (CheckBox) findViewById(R.id.account_outgoing_password_visible_checkbox);
+        mPasswordVisibleCheck.setOnCheckedChangeListener(this);
         mServerView = (EditText) findViewById(R.id.account_server);
         mPortView = (EditText) findViewById(R.id.account_port);
         mRequireLoginView = (CheckBox) findViewById(R.id.account_require_login);
@@ -319,8 +326,23 @@ public class AccountSetupOutgoing extends RakuPhotoActivity implements OnClickLi
     }
 
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        mRequireLoginSettingsView.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-        validateFields();
+        switch (buttonView.getId()) {
+            case R.id.account_require_login:
+                mRequireLoginSettingsView.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+                validateFields();
+                break;
+            case R.id.account_outgoing_password_visible_checkbox:
+                if (mPasswordVisibleCheck.isChecked()) {
+                    mPasswordView.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD | mPasswordVisibleCheckDefaultIType);
+                    mPasswordVisibleCheck.setText(getString(R.string.account_password_visible_checkbox_off));
+                } else {
+                    mPasswordView.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD | mPasswordVisibleCheckDefaultIType);
+                    mPasswordVisibleCheck.setText(getString(R.string.account_password_visible_checkbox_on));
+                }
+                mPasswordView.setSelection(mPasswordView.getText().length());
+                break;
+            default:
+        }
     }
 
     private void failure(Exception use) {

@@ -418,6 +418,8 @@ public class AccountSetupBasics extends RakuPhotoActivity
                     mPasswordVisibleCheck.setText(getString(R.string.account_password_visible_checkbox_on));
                 }
                 mPasswordView.setSelection(mPasswordView.getText().length());
+                break;
+            default:
         }
     }
 

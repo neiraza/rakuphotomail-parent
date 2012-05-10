@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.text.method.DigitsKeyListener;
 import android.util.Log;
@@ -22,7 +23,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 
 public class AccountSetupIncoming extends RakuPhotoActivity implements
-        OnClickListener {
+        OnClickListener, CompoundButton.OnCheckedChangeListener {
     private static final String EXTRA_ACCOUNT = "account";
     private static final String EXTRA_MAKE_DEFAULT = "makeDefault";
 
@@ -45,6 +46,8 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
     private boolean mMakeDefault;
     private CheckBox mSubscribedFoldersOnly;
     private String mUserName;
+    private int mPasswordVisibleCheckDefaultIType;
+    private CheckBox mPasswordVisibleCheck;
 
     public static void actionIncomingSettings(Activity context,
                                               Account account, boolean makeDefault) {
@@ -69,6 +72,11 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
 
         mUsernameView = (EditText) findViewById(R.id.account_username);
         mPasswordView = (EditText) findViewById(R.id.account_password);
+        mPasswordVisibleCheckDefaultIType = mPasswordView.getInputType();
+        mPasswordView.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD | mPasswordVisibleCheckDefaultIType);
+        mPasswordVisibleCheck = (CheckBox) findViewById(R.id.account_incoming_password_visible_checkbox);
+        mPasswordVisibleCheck.setOnCheckedChangeListener(this);
+
         TextView serverLabelView = (TextView) findViewById(R.id.account_server_label);
         mServerView = (EditText) findViewById(R.id.account_server);
         mPortView = (EditText) findViewById(R.id.account_port);
@@ -350,5 +358,22 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
         Toast toast = Toast.makeText(getApplication(), toastText,
                 Toast.LENGTH_LONG);
         toast.show();
+    }
+
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        switch (mPasswordVisibleCheck.getId()) {
+            case R.id.account_incoming_password_visible_checkbox:
+                if (mPasswordVisibleCheck.isChecked()) {
+                    mPasswordView.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD | mPasswordVisibleCheckDefaultIType);
+                    mPasswordVisibleCheck.setText(getString(R.string.account_password_visible_checkbox_off));
+                } else {
+                    mPasswordView.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD | mPasswordVisibleCheckDefaultIType);
+                    mPasswordVisibleCheck.setText(getString(R.string.account_password_visible_checkbox_on));
+                }
+                mPasswordView.setSelection(mPasswordView.getText().length());
+                break;
+            default:
+        }
     }
 }
