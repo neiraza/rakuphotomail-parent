@@ -8,11 +8,14 @@ import android.content.Intent;
 import android.content.res.XmlResourceParser;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import jp.co.fttx.rakuphotomail.*;
 import jp.co.fttx.rakuphotomail.activity.RakuPhotoActivity;
@@ -34,7 +37,7 @@ import java.util.Arrays;
  * AccountSetupAccountType activity.
  */
 public class AccountSetupBasics extends RakuPhotoActivity
-        implements OnClickListener, TextWatcher {
+        implements OnClickListener, TextWatcher, CompoundButton.OnCheckedChangeListener {
     private final static String EXTRA_ACCOUNT = "jp.co.fttx.rakuphotomail.AccountSetupBasics.account";
     private final static int DIALOG_NOTE = 1;
     private final static String STATE_KEY_PROVIDER =
@@ -46,6 +49,8 @@ public class AccountSetupBasics extends RakuPhotoActivity
     private Button mNextButton;
     private Account mAccount;
     private Provider mProvider;
+    private CheckBox mPasswordVisibleCheck;
+    private int mPasswordVisibleCheckDefaultIType;
 
     private EmailAddressValidator mEmailValidator = new EmailAddressValidator();
 
@@ -62,11 +67,15 @@ public class AccountSetupBasics extends RakuPhotoActivity
         mPrefs = Preferences.getPreferences(this);
         mEmailView = (EditText) findViewById(R.id.account_email);
         mPasswordView = (EditText) findViewById(R.id.account_password);
+        mPasswordVisibleCheck = (CheckBox) findViewById(R.id.account_password_visible_checkbox);
         mNextButton = (Button) findViewById(R.id.next);
         mNextButton.setOnClickListener(this);
 
         mEmailView.addTextChangedListener(this);
         mPasswordView.addTextChangedListener(this);
+        mPasswordVisibleCheck.setOnCheckedChangeListener(this);
+        mPasswordVisibleCheckDefaultIType = mPasswordView.getInputType();
+        mPasswordView.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD | mPasswordVisibleCheckDefaultIType);
 
         if (savedInstanceState != null && savedInstanceState.containsKey(EXTRA_ACCOUNT)) {
             String accountUuid = savedInstanceState.getString(EXTRA_ACCOUNT);
@@ -247,7 +256,19 @@ public class AccountSetupBasics extends RakuPhotoActivity
              * We don't have default settings for this account, start the manual
              * setup process.
              */
-            onManualSetup();
+            new AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.account_setup_basics_alert_confirmation_title))
+                    .setMessage(getString(R.string.account_setup_basics_alert_confirmation_message))
+                    .setPositiveButton(
+                            getString(R.string.okay_action),
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    onManualSetup();
+                                }
+                            })
+                    .setNegativeButton(
+                            getString(R.string.cancel_action),null)
+                    .show();
             return;
         }
 
@@ -383,6 +404,21 @@ public class AccountSetupBasics extends RakuPhotoActivity
         retParts[0] = (emailParts.length > 0) ? emailParts[0] : "";
         retParts[1] = (emailParts.length > 1) ? emailParts[1] : "";
         return retParts;
+    }
+
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        switch (mPasswordVisibleCheck.getId()) {
+            case R.id.account_password_visible_checkbox:
+                if (mPasswordVisibleCheck.isChecked()) {
+                    mPasswordView.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD | mPasswordVisibleCheckDefaultIType);
+                    mPasswordVisibleCheck.setText(getString(R.string.account_password_visible_checkbox_off));
+                } else {
+                    mPasswordView.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD | mPasswordVisibleCheckDefaultIType);
+                    mPasswordVisibleCheck.setText(getString(R.string.account_password_visible_checkbox_on));
+                }
+                mPasswordView.setSelection(mPasswordView.getText().length());
+        }
     }
 
     static class Provider implements Serializable {
