@@ -6,12 +6,12 @@
   <parent>
     <groupId>jp.co.fttx</groupId>
     <artifactId>rakuphotomail-parent</artifactId>
-    <version>0.1.4-BETA3</version>
+    <version>0.1.5-BETA3</version>
   </parent>
 
   <groupId>jp.co.fttx</groupId>
   <artifactId>rakuphotomail-it</artifactId>
-  <version>0.1.4-BETA3</version>
+  <version>0.1.5-BETA3</version>
   <packaging>apk</packaging>
   <name>rakuphotomail-it - Integration tests</name>
 

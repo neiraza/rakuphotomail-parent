@@ -1,17 +1,22 @@
 package jp.co.fttx.rakuphotomail.activity.setup;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.text.method.DigitsKeyListener;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.*;
-
-import jp.co.fttx.rakuphotomail.*;
+import jp.co.fttx.rakuphotomail.Account;
+import jp.co.fttx.rakuphotomail.Preferences;
+import jp.co.fttx.rakuphotomail.R;
+import jp.co.fttx.rakuphotomail.RakuPhotoMail;
 import jp.co.fttx.rakuphotomail.activity.RakuPhotoActivity;
 import jp.co.fttx.rakuphotomail.helper.Utility;
 
@@ -22,7 +27,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 
 public class AccountSetupIncoming extends RakuPhotoActivity implements
-        OnClickListener {
+        OnClickListener, CompoundButton.OnCheckedChangeListener {
     private static final String EXTRA_ACCOUNT = "account";
     private static final String EXTRA_MAKE_DEFAULT = "makeDefault";
 
@@ -41,10 +46,14 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
     private Spinner mSecurityTypeView;
     private Spinner mAuthTypeView;
     private Button mNextButton;
+    private Button mPreviousButton;
     private Account mAccount;
     private boolean mMakeDefault;
     private CheckBox mSubscribedFoldersOnly;
     private String mUserName;
+    private int mPasswordVisibleCheckDefaultIType;
+    private CheckBox mPasswordVisibleCheck;
+    private Activity mContext;
 
     public static void actionIncomingSettings(Activity context,
                                               Account account, boolean makeDefault) {
@@ -67,16 +76,25 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_incoming);
 
+        mContext = this;
+
         mUsernameView = (EditText) findViewById(R.id.account_username);
         mPasswordView = (EditText) findViewById(R.id.account_password);
+        mPasswordVisibleCheckDefaultIType = mPasswordView.getInputType();
+        mPasswordView.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD | mPasswordVisibleCheckDefaultIType);
+        mPasswordVisibleCheck = (CheckBox) findViewById(R.id.account_incoming_password_visible_checkbox);
+        mPasswordVisibleCheck.setOnCheckedChangeListener(this);
+
         TextView serverLabelView = (TextView) findViewById(R.id.account_server_label);
         mServerView = (EditText) findViewById(R.id.account_server);
         mPortView = (EditText) findViewById(R.id.account_port);
         mSecurityTypeView = (Spinner) findViewById(R.id.account_security_type);
         mAuthTypeView = (Spinner) findViewById(R.id.account_auth_type);
         mNextButton = (Button) findViewById(R.id.next);
+        mPreviousButton = (Button) findViewById(R.id.previous);
 
         mNextButton.setOnClickListener(this);
+        mPreviousButton.setOnClickListener(this);
 
         SpinnerOption securityTypes[] = {
                 new SpinnerOption(
@@ -245,8 +263,6 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
                 && Utility.requiredFieldValid(mPasswordView)
                 && Utility.domainFieldValid(mServerView)
                 && Utility.requiredFieldValid(mPortView));
-        Utility.setCompoundDrawablesAlpha(mNextButton,
-                mNextButton.isEnabled() ? 255 : 128);
     }
 
     private void updatePortFromSecurityType() {
@@ -290,46 +306,75 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
 
     @Override
     protected void onNext() {
-        try {
-            int securityType = (Integer) ((SpinnerOption) mSecurityTypeView
-                    .getSelectedItem()).value;
-            String path = null;
-            path = "/";
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.account_setup_common_alert_update_title))
+                .setMessage(getString(R.string.account_setup_common_alert_update_message))
+                .setPositiveButton(
+                        getString(R.string.okay_action),
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                try {
+                                    int securityType = (Integer) ((SpinnerOption) mSecurityTypeView
+                                            .getSelectedItem()).value;
+                                    String path = null;
+                                    path = "/";
 
-            final String userInfo;
-            String user = mUsernameView.getText().toString();
-            if (!mUserName.equals(user)) {
-                mAccount.init();
-            }
-            String password = mPasswordView.getText().toString();
-            String userEnc = URLEncoder.encode(user, "UTF-8");
-            String passwordEnc = URLEncoder.encode(password, "UTF-8");
+                                    final String userInfo;
+                                    String user = mUsernameView.getText().toString();
+                                    if (!mUserName.equals(user)) {
+                                        mAccount.init();
+                                    }
+                                    String password = mPasswordView.getText().toString();
+                                    String userEnc = URLEncoder.encode(user, "UTF-8");
+                                    String passwordEnc = URLEncoder.encode(password, "UTF-8");
 
-            String authType = ((SpinnerOption) mAuthTypeView
-                    .getSelectedItem()).label;
-            userInfo = authType + ":" + userEnc + ":" + passwordEnc;
-            URI uri = new URI(mAccountSchemes[securityType], userInfo,
-                    mServerView.getText().toString(),
-                    Integer.parseInt(mPortView.getText().toString()), path, // path
-                    null, // query
-                    null);
-            mAccount.setStoreUri(uri.toString());
+                                    String authType = ((SpinnerOption) mAuthTypeView
+                                            .getSelectedItem()).label;
+                                    userInfo = authType + ":" + userEnc + ":" + passwordEnc;
+                                    URI uri = new URI(mAccountSchemes[securityType], userInfo,
+                                            mServerView.getText().toString(),
+                                            Integer.parseInt(mPortView.getText().toString()), path, // path
+                                            null, // query
+                                            null);
+                                    mAccount.setStoreUri(uri.toString());
 
-            mAccount.setCompression(Account.TYPE_MOBILE,
-                    true);
-            mAccount.setCompression(Account.TYPE_WIFI,
-                    true);
-            mAccount.setCompression(Account.TYPE_OTHER,
-                    true);
+                                    mAccount.setCompression(Account.TYPE_MOBILE,
+                                            true);
+                                    mAccount.setCompression(Account.TYPE_WIFI,
+                                            true);
+                                    mAccount.setCompression(Account.TYPE_OTHER,
+                                            true);
 
-            mAccount.setSubscribedFoldersOnly(false);
+                                    mAccount.setSubscribedFoldersOnly(false);
 
-            AccountSetupCheckSettings.actionCheckSettings(this, mAccount, true,
-                    false);
-        } catch (Exception e) {
-            failure(e);
-        }
+                                    AccountSetupCheckSettings.actionCheckSettings(mContext, mAccount, true,
+                                            false);
+                                } catch (Exception e) {
+                                    failure(e);
+                                }
+                            }
+                        })
+                .setNegativeButton(
+                        getString(R.string.cancel_action), null)
+                .show();
+    }
 
+    @Override
+    protected void onPrevious() {
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.account_setup_common_alert_discard_changes_title))
+                .setMessage(getString(R.string.account_setup_common_alert_discard_changes_message))
+                .setPositiveButton(
+                        getString(R.string.okay_action),
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                AccountSetupBasics.actionReNewAccount(mContext, mAccount);
+                                finish();
+                            }
+                        })
+                .setNegativeButton(
+                        getString(R.string.cancel_action), null)
+                .show();
     }
 
     public void onClick(View v) {
@@ -337,6 +382,9 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
             switch (v.getId()) {
                 case R.id.next:
                     onNext();
+                    break;
+                case R.id.previous:
+                    onPrevious();
                     break;
             }
         } catch (Exception e) {
@@ -352,5 +400,22 @@ public class AccountSetupIncoming extends RakuPhotoActivity implements
         Toast toast = Toast.makeText(getApplication(), toastText,
                 Toast.LENGTH_LONG);
         toast.show();
+    }
+
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        switch (mPasswordVisibleCheck.getId()) {
+            case R.id.account_incoming_password_visible_checkbox:
+                if (mPasswordVisibleCheck.isChecked()) {
+                    mPasswordView.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD | mPasswordVisibleCheckDefaultIType);
+                    mPasswordVisibleCheck.setText(getString(R.string.account_password_visible_checkbox_off));
+                } else {
+                    mPasswordView.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD | mPasswordVisibleCheckDefaultIType);
+                    mPasswordVisibleCheck.setText(getString(R.string.account_password_visible_checkbox_on));
+                }
+                mPasswordView.setSelection(mPasswordView.getText().length());
+                break;
+            default:
+        }
     }
 }

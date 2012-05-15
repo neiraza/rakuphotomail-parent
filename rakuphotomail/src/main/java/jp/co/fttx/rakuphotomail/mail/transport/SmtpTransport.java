@@ -1,4 +1,3 @@
-
 package jp.co.fttx.rakuphotomail.mail.transport;
 
 import android.util.Log;
@@ -80,6 +79,7 @@ public class SmtpTransport extends Transport {
      * @param _uri
      */
     public SmtpTransport(String _uri) throws MessagingException {
+
         URI uri;
         try {
             uri = new URI(_uri);
@@ -141,9 +141,9 @@ public class SmtpTransport extends Transport {
                             mConnectionSecurity == CONNECTION_SECURITY_SSL_OPTIONAL) {
                         SSLContext sslContext = SSLContext.getInstance("TLS");
                         boolean secure = mConnectionSecurity == CONNECTION_SECURITY_SSL_REQUIRED;
-                        sslContext.init(null, new TrustManager[] {
-                                            TrustManagerFactory.get(mHost, secure)
-                                        }, new SecureRandom());
+                        sslContext.init(null, new TrustManager[]{
+                                TrustManagerFactory.get(mHost, secure)
+                        }, new SecureRandom());
                         mSocket = sslContext.getSocketFactory().createSocket();
                         mSocket.connect(socketAddress, SOCKET_CONNECT_TIMEOUT);
                         mSecure = true;
@@ -194,14 +194,13 @@ public class SmtpTransport extends Transport {
             m8bitEncodingAllowed = results.contains("8BITMIME");
 
 
-
             /*
-             * using HELO on non STARTTLS connections because of AOL's mail
-             * server. It won't let you use AUTH without EHLO.
-             * We should really be paying more attention to the capabilities
-             * and only attempting auth if it's available, and warning the user
-             * if not.
-             */
+            * using HELO on non STARTTLS connections because of AOL's mail
+            * server. It won't let you use AUTH without EHLO.
+            * We should really be paying more attention to the capabilities
+            * and only attempting auth if it's available, and warning the user
+            * if not.
+            */
             if (mConnectionSecurity == CONNECTION_SECURITY_TLS_OPTIONAL
                     || mConnectionSecurity == CONNECTION_SECURITY_TLS_REQUIRED) {
                 if (results.contains("STARTTLS")) {
@@ -209,13 +208,13 @@ public class SmtpTransport extends Transport {
 
                     SSLContext sslContext = SSLContext.getInstance("TLS");
                     boolean secure = mConnectionSecurity == CONNECTION_SECURITY_TLS_REQUIRED;
-                    sslContext.init(null, new TrustManager[] {
-                                        TrustManagerFactory.get(mHost, secure)
-                                    }, new SecureRandom());
+                    sslContext.init(null, new TrustManager[]{
+                            TrustManagerFactory.get(mHost, secure)
+                    }, new SecureRandom());
                     mSocket = sslContext.getSocketFactory().createSocket(mSocket, mHost, mPort,
-                              true);
+                            true);
                     mIn = new PeekableInputStream(new BufferedInputStream(mSocket.getInputStream(),
-                                                  1024));
+                            1024));
                     mOut = mSocket.getOutputStream();
                     mSecure = true;
                     /*
@@ -239,6 +238,7 @@ public class SmtpTransport extends Transport {
             boolean authPlainSupported = false;
             boolean authCramMD5Supported = false;
             for (String result : results) {
+
                 if (result.matches(".*AUTH.*LOGIN.*$")) {
                     authLoginSupported = true;
                 }
@@ -274,7 +274,7 @@ public class SmtpTransport extends Transport {
                     }
                     try {
                         saslAuthPlain(mUsername, mPassword);
-                    } catch(MessagingException ex) {
+                    } catch (MessagingException ex) {
                         // PLAIN is a special case.  Historically, PLAIN has represented both PLAIN and LOGIN; only the
                         // protocol being advertised by the server would be used, with PLAIN taking precedence.  Instead
                         // of using only the requested protocol, we'll try PLAIN and then try LOGIN.
@@ -302,7 +302,7 @@ public class SmtpTransport extends Transport {
             throw new CertificateValidationException(e.getMessage(), e);
         } catch (GeneralSecurityException gse) {
             throw new MessagingException(
-                "Unable to open connection to SMTP server due to security error.", gse);
+                    "Unable to open connection to SMTP server due to security error.", gse);
         } catch (IOException ioe) {
             throw new MessagingException("Unable to open connection to SMTP server.", ioe);
         }
@@ -320,7 +320,7 @@ public class SmtpTransport extends Transport {
         message.setRecipients(RecipientType.BCC, null);
 
         HashMap<String, ArrayList<String>> charsetAddressesMap =
-            new HashMap<String, ArrayList<String>>();
+                new HashMap<String, ArrayList<String>>();
         for (Address address : addresses) {
             String addressString = address.getAddress();
             String charset = MimeUtility.getCharsetFromAddress(addressString);
@@ -342,7 +342,7 @@ public class SmtpTransport extends Transport {
     }
 
     private void sendMessageTo(ArrayList<String> addresses, Message message)
-    throws MessagingException {
+            throws MessagingException {
         boolean possibleSend = false;
 
         close();
@@ -351,7 +351,7 @@ public class SmtpTransport extends Transport {
         message.setEncoding(m8bitEncodingAllowed ? "8bit" : null);
         // If the message has attachments and our server has told us about a limit on
         // the size of messages, count the message's size before sending it
-        if (mLargestAcceptableMessage > 0 && ((LocalMessage)message).hasAttachments()) {
+        if (mLargestAcceptableMessage > 0 && ((LocalMessage) message).hasAttachments()) {
             if (message.calculateSize() > mLargestAcceptableMessage) {
                 MessagingException me = new MessagingException("Message too large for server");
                 me.setPermanentFailure(possibleSend);
@@ -368,10 +368,10 @@ public class SmtpTransport extends Transport {
             executeSimpleCommand("DATA");
 
             EOLConvertingOutputStream msgOut = new EOLConvertingOutputStream(
-                new SmtpDataStuffing(
-                    new LineWrapOutputStream(
-                        new BufferedOutputStream(mOut, 1024),
-                        1000)));
+                    new SmtpDataStuffing(
+                            new LineWrapOutputStream(
+                                    new BufferedOutputStream(mOut, 1024),
+                                    1000)));
 
             message.writeTo(msgOut);
 
@@ -420,12 +420,12 @@ public class SmtpTransport extends Transport {
         StringBuffer sb = new StringBuffer();
         int d;
         while ((d = mIn.read()) != -1) {
-            if (((char)d) == '\r') {
+            if (((char) d) == '\r') {
                 continue;
-            } else if (((char)d) == '\n') {
+            } else if (((char) d) == '\n') {
                 break;
             } else {
-                sb.append((char)d);
+                sb.append((char) d);
             }
         }
         String ret = sb.toString();
@@ -473,7 +473,7 @@ public class SmtpTransport extends Transport {
     }
 
     private List<String> executeSimpleCommand(String command, boolean sensitive)
-    throws IOException, MessagingException {
+            throws IOException, MessagingException {
         List<String> results = new ArrayList<String>();
         if (command != null) {
             writeLine(command, sensitive);
@@ -523,7 +523,7 @@ public class SmtpTransport extends Transport {
 //    S: 235 2.0.0 OK Authenticated
 
     private void saslAuthLogin(String username, String password) throws MessagingException,
-        AuthenticationFailedException, IOException {
+            AuthenticationFailedException, IOException {
         try {
             executeSimpleCommand("AUTH LOGIN");
             executeSimpleCommand(new String(Base64.encodeBase64(username.getBytes())), true);
@@ -531,14 +531,15 @@ public class SmtpTransport extends Transport {
         } catch (MessagingException me) {
             if (me.getMessage().length() > 1 && me.getMessage().charAt(1) == '3') {
                 throw new AuthenticationFailedException("AUTH LOGIN failed (" + me.getMessage()
-                                                        + ")");
+                        + ")");
             }
             throw me;
         }
     }
 
     private void saslAuthPlain(String username, String password) throws MessagingException,
-        AuthenticationFailedException, IOException {
+            AuthenticationFailedException, IOException {
+
         byte[] data = ("\000" + username + "\000" + password).getBytes();
         data = new Base64().encode(data);
         try {
@@ -546,14 +547,14 @@ public class SmtpTransport extends Transport {
         } catch (MessagingException me) {
             if (me.getMessage().length() > 1 && me.getMessage().charAt(1) == '3') {
                 throw new AuthenticationFailedException("AUTH PLAIN failed (" + me.getMessage()
-                                                        + ")");
+                        + ")");
             }
             throw me;
         }
     }
 
     private void saslAuthCramMD5(String username, String password) throws MessagingException,
-        AuthenticationFailedException, IOException {
+            AuthenticationFailedException, IOException {
 
         List<String> respList = executeSimpleCommand("AUTH CRAM-MD5");
         if (respList.size() != 1) {

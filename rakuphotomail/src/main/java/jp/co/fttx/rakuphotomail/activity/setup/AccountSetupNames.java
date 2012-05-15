@@ -141,7 +141,6 @@ public class AccountSetupNames extends RakuPhotoActivity implements OnClickListe
 
     private void validateFields() {
         mDoneButton.setEnabled(Utility.requiredFieldValid(mName));
-        Utility.setCompoundDrawablesAlpha(mDoneButton, mDoneButton.isEnabled() ? 255 : 128);
     }
 
     @Override

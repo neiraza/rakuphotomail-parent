@@ -25,7 +25,6 @@ import jp.co.fttx.rakuphotomail.mail.Store;
 import jp.co.fttx.rakuphotomail.mail.Transport;
 import jp.co.fttx.rakuphotomail.mail.filter.Hex;
 import jp.co.fttx.rakuphotomail.mail.store.TrustManagerFactory;
-import jp.co.fttx.rakuphotomail.mail.store.WebDavStore;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -79,8 +78,8 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.account_setup_check_settings);
         mMessageView = (TextView) findViewById(R.id.message);
         mProgressBar = (ProgressBar) findViewById(R.id.progress);
@@ -114,11 +113,13 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                         finish();
                         return;
                     }
+                    if (mCheckIncoming) {
+                        store = mAccount.getRemoteStore();
+                        setMessage(R.string.account_setup_check_settings_check_incoming_msg);
+                        store.checkSettings();
+                    }
                     if (mCheckOutgoing) {
-
-                        if (!(mAccount.getRemoteStore() instanceof WebDavStore)) {
-                            setMessage(R.string.account_setup_check_settings_check_outgoing_msg);
-                        }
+                        setMessage(R.string.account_setup_check_settings_check_outgoing_msg);
                         Transport transport = Transport.getInstance(mAccount);
                         transport.close();
                         transport.open();
@@ -135,7 +136,7 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                     finish();
                 } catch (final AuthenticationFailedException afe) {
                     Log.e(RakuPhotoMail.LOG_TAG, "Error while testing settings", afe);
-                    showErrorDialog(
+                    showErrorBackDialog(
                             R.string.account_setup_failed_dlg_auth_message_fmt,
                             afe.getMessage() == null ? "" : afe.getMessage());
                 } catch (final CertificateValidationException cve) {
@@ -145,7 +146,7 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                             cve);
                 } catch (final Throwable t) {
                     Log.e(RakuPhotoMail.LOG_TAG, "Error while testing settings", t);
-                    showErrorDialog(
+                    showErrorBackDialog(
                             R.string.account_setup_failed_dlg_server_message_fmt,
                             (t.getMessage() == null ? "" : t.getMessage()));
 
@@ -170,6 +171,29 @@ public class AccountSetupCheckSettings extends RakuPhotoActivity implements OnCl
                     return;
                 }
                 mMessageView.setText(getString(resId));
+            }
+        });
+    }
+
+    private void showErrorBackDialog(final int msgResId, final Object... args) {
+        mHandler.post(new Runnable() {
+            public void run() {
+                if (mDestroyed) {
+                    return;
+                }
+                mProgressBar.setIndeterminate(false);
+                new AlertDialog.Builder(AccountSetupCheckSettings.this)
+                        .setTitle(getString(R.string.account_setup_failed_dlg_title))
+                        .setMessage(getString(msgResId, args))
+                        .setCancelable(true)
+                        .setPositiveButton(
+                                getString(R.string.account_setup_failed_dlg_edit_action),
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        finish();
+                                    }
+                                })
+                        .show();
             }
         });
     }

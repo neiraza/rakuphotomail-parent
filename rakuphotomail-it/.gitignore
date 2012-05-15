@@ -4,3 +4,7 @@
 /bin
 /target
 /rakuphotomail-it.iml
+/local.properties
+/coverage
+/coverage.em
+/proguard.cfg

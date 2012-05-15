@@ -459,12 +459,13 @@
 
 
     <string name="account_setup_basics_title">メールアカウントセットアップ</string>
-    <string name="account_setup_basics_instructions">このアカウントで使用するメールアドレスを入力して下さい</string>
+    <string name="account_setup_basics_instructions">使用するメールアドレス、パスワードを入力します</string>
     <string name="account_setup_basics_instructions2_fmt">(追加する場合は
         <xliff:g id="number_accounts">%d</xliff:g>
         と異なるメールアドレスを入力して下さい)
     </string>
     <string name="account_setup_basics_email_hint">メールアドレス</string>
+    <string name="account_setup_basics_email_description">メールアドレスを入力して下さい</string>
     <string name="account_setup_basics_email_error_invalid_fmt">入力された
         <xliff:g id="email">%s</xliff:g>
         はメールアドレスとして正しくありません
@@ -474,8 +475,31 @@
         既に登録されています
     </string>
     <string name="account_setup_basics_password_hint">パスワード</string>
+    <string name="account_setup_basics_password_description">パスワードを入力して下さい</string>
     <string name="account_setup_basics_default_label">既定でこのアカウントからメールを送信する</string>
     <string name="account_setup_basics_manual_setup_action">手動設定</string>
+
+    <string name="account_password_visible_checkbox_on">パスワード非表示</string>
+    <string name="account_password_visible_checkbox_off">パスワード表示</string>
+
+    <string name="account_setup_basics_alert_confirmation_title">ご指定のプロバイダーは本アプリに登録されておりません</string>
+    <string name="account_setup_basics_alert_confirmation_message">
+        このプロバイダーが実在する場合は「OK」を選択し、
+        \n引き続き手動入力にて詳細情報を入力して下さい
+        \n入力内容を確認する場合は「キャンセル」を選択して下さい
+    </string>
+
+    <string name="account_setup_common_alert_update_title">本画面にて入力した内容でよろしいでしょうか</string>
+    <string name="account_setup_common_alert_update_message">
+        問題が無い場合は「OK」を選択して下さい
+        \n入力内容を確認する場合は「キャンセル」を選択して下さい
+    </string>
+
+    <string name="account_setup_common_alert_discard_changes_title">前の画面に戻ります</string>
+    <string name="account_setup_common_alert_discard_changes_message">
+        本画面にて修正した内容を破棄し、前の画面に戻ります。
+        \n問題が無い場合は「OK」を選択して下さい
+    </string>
 
     <string name="account_setup_check_settings_title"></string>
     <string name="account_setup_check_settings_retr_info_msg">アカウント情報を取得中\u2026</string>
@@ -637,16 +661,13 @@
     <string name="move_copy_cannot_copy_unsynced_message">サーバーと同期されていないメールをコピーまたは移動できません</string>
 
     <string name="account_setup_failed_dlg_title">設定エラー</string>
-    <string name="account_setup_failed_dlg_auth_message_fmt">アカウント名またはパスワード設定にエラーがあります\n(<xliff:g id="error">
-        %s</xliff:g>)
-    </string>
+    <string name="account_setup_failed_dlg_auth_message_fmt">アカウント名またはパスワード設定にエラーがあります</string>
     <!-- Username or password incorrect\n(ERR01 Account does not exist) -->
-    <string name="account_setup_failed_dlg_certificate_message_fmt">サーバに安全な接続ができません\n(<xliff:g id="error">%s</xliff:g>)
-    </string>
+    <string name="account_setup_failed_dlg_certificate_message_fmt">サーバに安全な接続ができません</string>
     <!-- Cannot safely connect to server\n(Invalid certificate) -->
-    <string name="account_setup_failed_dlg_server_message_fmt">サーバに接続できません\n(<xliff:g id="error">%s</xliff:g>)
-    </string>
+    <string name="account_setup_failed_dlg_server_message_fmt">サーバに接続できません</string>
     <!-- Cannot connect to server\n(Connection timed out) -->
+    <string name="account_setup_failed_dlg_edit_action">再入力</string>
     <string name="account_setup_failed_dlg_edit_details_action">詳細再編集</string>
     <string name="account_setup_failed_dlg_continue_action">続行</string>
 
@@ -1227,7 +1248,8 @@
     <string name="account_settings_scale_ratio_4">"もっと小さく"</string>
 
     <string name="account_settings_slide_show_sleep_mode_label">"スリープモードの有効/無効(スライドショー限定)"</string>
-    <string name="account_settings_slide_show_sleep_mode_description">"下記チェックを外した場合、スライドショー時のみスリープモードを利用しなくなります"</string>
+    <string name="account_settings_slide_show_sleep_mode_description">"下記チェックを外した場合、スライドショー時のみスリープモードを利用しなくなります"
+    </string>
     <string name="account_settings_slide_show_sleep_mode_summary_on">"端末の設定を変更しない"</string>
     <string name="account_settings_slide_show_sleep_mode_summary_off">"スリープモードを利用しない(スライドショー時のみ)"</string>
 
@@ -1248,7 +1270,8 @@
     <string name="progress_please_wait">Please wait</string>
     <string name="progress_slideshow_server_sync">スライドショー情報をサーバーと同期中です。
         \n完了次第、スライドショーを開始します。
-        \nしばらくお待ちください。</string>
+        \nしばらくお待ちください。
+    </string>
     <string name="error_rakuraku_exception">ERROR:RakuRakuException:</string>
     <string name="error_rakuraku_exception_pre_message">ERROR:RakuRakuException:前のメールが取得できません UID:</string>
     <string name="error_rakuraku_exception_next_message">ERROR:RakuRakuException:次のメールが取得できません UID:</string>
@@ -1256,28 +1279,39 @@
     <string name="error_messaging_exception">ERROR:MessagingException:</string>
     <string name="warning_server_no_message">現在、サーバー上に受信メールが存在しません</string>
     <string name="warning_server_no_message_alert">サーバー上にメールが存在しません。\n終了しますか？</string>
-    <string name="error_network_communication_disturbance_alert">ネットワークが切れている恐れがあります。\n電波状況を確認してみてください。\nアプリは可能な限りスライドショーを継続します。</string>
+    <string name="error_network_communication_disturbance_alert">
+        ネットワークが切れている恐れがあります。\n電波状況を確認してみてください。\nアプリは可能な限りスライドショーを継続します。
+    </string>
     <string name="warning_server_no_message_alert_yes">はい、終了します</string>
     <string name="warning_server_no_message_alert_no">いいえ、再度メールチェックを実施します</string>
     <string name="progress_slideshow_disp_preparation">スライドショーを表示しようとしています。
-        \nしばらくお待ちください。</string>
+        \nしばらくお待ちください。
+    </string>
     <string name="progress_slideshow_start">スライドショーを開始しようとしています。
-        \nしばらくお待ちください。</string>
+        \nしばらくお待ちください。
+    </string>
     <string name="progress_slideshow_stop">スライドショーを停止しようとしています。
-        \nしばらくお待ちください。</string>
+        \nしばらくお待ちください。
+    </string>
     <string name="disp_pre_mail_task_message">表示中のメールより１件古いメールを表示中です。
-        \nしばらくお待ちください。</string>
+        \nしばらくお待ちください。
+    </string>
     <string name="disp_next_mail_task_message">表示中のメールより１件新しいメールを表示中です。
-        \nしばらくお待ちください。</string>
+        \nしばらくお待ちください。
+    </string>
     <string name="disp_slide_start_task_message">スライドショーを開始中です。
-        \nしばらくお待ちください。</string>
+        \nしばらくお待ちください。
+    </string>
     <string name="new_mail_check_task_message">新着メッセージをサーバに確認しています。
-        \nしばらくお待ちください。</string>
+        \nしばらくお待ちください。
+    </string>
     <string name="download_attachment_task_message">スライドショー情報をサーバーと同期中です。
-        \nしばらくお待ちください。</string>
+        \nしばらくお待ちください。
+    </string>
     <string name="download_attachment_remove_cache">最適化を行う為にキャッシュ情報を収集中です。
         \n続行してよろしいでしょうか。
-        \nなお同じ症状が頻発する場合は、設定により画像表示サイズを小さくすることをお勧めします。</string>
+        \nなお同じ症状が頻発する場合は、設定により画像表示サイズを小さくすることをお勧めします。
+    </string>
     <string name="gallery_slide_stop_alert_memory_error_alert_yes">はい、続行します</string>
     <string name="gallery_slide_stop_alert_memory_error_alert_no">いいえ、終了します</string>
     <string name="warning_popup_no_click_event">PopupClickEvent#onClick is no Action !!!!</string>
@@ -1286,7 +1320,8 @@
     <string name="warning_popup_reply_no_mail">メールが存在しません UID:</string>
     <string name="no_mail_message">メールが存在しません。</string>
     <string name="setting_save_message">設定を保存しています。終了後、遷移元の画面に自動で戻ります。
-        \nしばらくお待ちください。</string>
+        \nしばらくお待ちください。
+    </string>
     <string name="common_message_unknown">不明</string>
     <string name="sending_message_address_unknown">送信先のアドレスが不正もしくは不明の為、送信できません</string>
 </resources>

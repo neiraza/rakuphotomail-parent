@@ -8,21 +8,22 @@ import android.content.Intent;
 import android.content.res.XmlResourceParser;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
+import android.widget.*;
 import jp.co.fttx.rakuphotomail.*;
 import jp.co.fttx.rakuphotomail.activity.RakuPhotoActivity;
 import jp.co.fttx.rakuphotomail.helper.Utility;
+import jp.co.fttx.rakuphotomail.rakuraku.util.RakuPhotoStringUtils;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 
 /**
@@ -33,9 +34,8 @@ import java.net.URLEncoder;
  * activity. If no settings are found the settings are handed off to the
  * AccountSetupAccountType activity.
  */
-// XXX アカウント設定君
 public class AccountSetupBasics extends RakuPhotoActivity
-        implements OnClickListener, TextWatcher {
+        implements OnClickListener, TextWatcher, CompoundButton.OnCheckedChangeListener {
     private final static String EXTRA_ACCOUNT = "jp.co.fttx.rakuphotomail.AccountSetupBasics.account";
     private final static int DIALOG_NOTE = 1;
     private final static String STATE_KEY_PROVIDER =
@@ -44,11 +44,11 @@ public class AccountSetupBasics extends RakuPhotoActivity
     private Preferences mPrefs;
     private EditText mEmailView;
     private EditText mPasswordView;
-    private CheckBox mDefaultView;
     private Button mNextButton;
-//    private Button mManualSetupButton;
     private Account mAccount;
     private Provider mProvider;
+    private CheckBox mPasswordVisibleCheck;
+    private int mPasswordVisibleCheckDefaultIType;
 
     private EmailAddressValidator mEmailValidator = new EmailAddressValidator();
 
@@ -57,33 +57,95 @@ public class AccountSetupBasics extends RakuPhotoActivity
         context.startActivity(i);
     }
 
+    public static void actionReNewAccount(Context context, Account account) {
+        Intent i = new Intent(context, AccountSetupBasics.class);
+        i.putExtra(EXTRA_ACCOUNT, account.getUuid());
+        context.startActivity(i);
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account_setup_basics);
         mPrefs = Preferences.getPreferences(this);
         mEmailView = (EditText) findViewById(R.id.account_email);
         mPasswordView = (EditText) findViewById(R.id.account_password);
-        mDefaultView = (CheckBox) findViewById(R.id.account_default);
+        mPasswordVisibleCheck = (CheckBox) findViewById(R.id.account_password_visible_checkbox);
         mNextButton = (Button) findViewById(R.id.next);
         mNextButton.setOnClickListener(this);
 
         mEmailView.addTextChangedListener(this);
         mPasswordView.addTextChangedListener(this);
-
-        if (mPrefs.getAccounts().length > 0) {
-            mDefaultView.setVisibility(View.VISIBLE);
-        }
+        mPasswordVisibleCheck.setOnCheckedChangeListener(this);
+        mPasswordVisibleCheckDefaultIType = mPasswordView.getInputType();
+        mPasswordView.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD | mPasswordVisibleCheckDefaultIType);
 
         if (savedInstanceState != null && savedInstanceState.containsKey(EXTRA_ACCOUNT)) {
             String accountUuid = savedInstanceState.getString(EXTRA_ACCOUNT);
             mAccount = Preferences.getPreferences(this).getAccount(accountUuid);
+        } else {
+            String accountUuid = getIntent().getStringExtra(EXTRA_ACCOUNT);
+            if (RakuPhotoStringUtils.isNotBlank(accountUuid)) {
+                mAccount = Preferences.getPreferences(this).getAccount(accountUuid);
+            }
         }
 
         if (savedInstanceState != null && savedInstanceState.containsKey(STATE_KEY_PROVIDER)) {
             mProvider = (Provider) savedInstanceState.getSerializable(STATE_KEY_PROVIDER);
         }
+
+        if (null != mAccount) {
+            dispAccountInfo();
+        }
+    }
+
+    private void dispAccountInfo() {
+        URI uri = null;
+        try {
+            uri = new URI(mAccount.getStoreUri());
+            String username = null;
+            String hostname = null;
+            String password = null;
+
+            if (null != uri.getUserInfo()) {
+                String[] userInfoParts = uri.getUserInfo().split(":");
+                if (userInfoParts.length == 3) {
+                    username = URLDecoder.decode(userInfoParts[1], "UTF-8");
+                    password = URLDecoder.decode(userInfoParts[2], "UTF-8");
+                } else if (userInfoParts.length == 2) {
+                    username = URLDecoder.decode(userInfoParts[0], "UTF-8");
+                    password = URLDecoder.decode(userInfoParts[1], "UTF-8");
+                } else if (userInfoParts.length == 1) {
+                    username = URLDecoder.decode(userInfoParts[0], "UTF-8");
+                }
+            }
+            hostname = uri.getHost();
+            StringBuilder email = new StringBuilder();
+            if (null != username && null != hostname) {
+                email.append(username);
+                email.append("@");
+                email.append(hostname);
+            } else if (null != username && null == hostname) {
+                email.append(username);
+            } else {
+            }
+            mEmailView.setText(mAccount.getEmail());
+            mPasswordView.setText(password);
+        } catch (URISyntaxException e) {
+            failure(e);
+        } catch (UnsupportedEncodingException e) {
+            failure(e);
+        }
+    }
+
+    private void failure(Exception use) {
+        Log.e(RakuPhotoMail.LOG_TAG, "Failure", use);
+        String toastText = getString(R.string.account_setup_bad_uri,
+                use.getMessage());
+
+        Toast toast = Toast.makeText(getApplication(), toastText,
+                Toast.LENGTH_LONG);
+        toast.show();
     }
 
     @Override
@@ -118,13 +180,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
         boolean valid = Utility.requiredFieldValid(mEmailView)
                 && Utility.requiredFieldValid(mPasswordView)
                 && mEmailValidator.isValidAddressOnly(email);
-
         mNextButton.setEnabled(valid);
-        /*
-         * Dim the next button's icon to 50% if the button is disabled.
-         * android:state_enabled
-         */
-        Utility.setCompoundDrawablesAlpha(mNextButton, mNextButton.isEnabled() ? 255 : 128);
     }
 
     private String getOwnerName() {
@@ -214,6 +270,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
 
 
             }
+
             mAccount = Preferences.getPreferences(this).newAccount();
             mAccount.setName(getOwnerName());
             mAccount.setEmail(email);
@@ -242,13 +299,26 @@ public class AccountSetupBasics extends RakuPhotoActivity
         String email = mEmailView.getText().toString();
         String[] emailParts = splitEmail(email);
         String domain = emailParts[1];
+
         mProvider = findProviderForDomain(domain);
         if (mProvider == null) {
             /*
              * We don't have default settings for this account, start the manual
              * setup process.
              */
-            onManualSetup();
+            new AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.account_setup_basics_alert_confirmation_title))
+                    .setMessage(getString(R.string.account_setup_basics_alert_confirmation_message))
+                    .setPositiveButton(
+                            getString(R.string.okay_action),
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    onManualSetup();
+                                }
+                            })
+                    .setNegativeButton(
+                            getString(R.string.cancel_action), null)
+                    .show();
             return;
         }
 
@@ -265,9 +335,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
         if (resultCode == RESULT_OK) {
             mAccount.setDescription(mAccount.getEmail());
             mAccount.save(Preferences.getPreferences(this));
-            if (mDefaultView.isChecked()) {
-                Preferences.getPreferences(this).setDefaultAccount(mAccount);
-            }
+            Preferences.getPreferences(this).setDefaultAccount(mAccount);
             RakuPhotoMail.setServicesEnabled(this);
             AccountSetupNames.actionSetNames(this, mAccount);
             finish();
@@ -276,7 +344,6 @@ public class AccountSetupBasics extends RakuPhotoActivity
     }
 
     private void onManualSetup() {
-
         String email = mEmailView.getText().toString();
         String password = mPasswordView.getText().toString();
         String[] emailParts = splitEmail(email);
@@ -307,7 +374,7 @@ public class AccountSetupBasics extends RakuPhotoActivity
         mAccount.setTrashFolderName(getString(R.string.special_mailbox_name_trash));
         mAccount.setSentFolderName(getString(R.string.special_mailbox_name_sent));
 
-        AccountSetupAccountType.actionSelectAccountType(this, mAccount, mDefaultView.isChecked());
+        AccountSetupAccountType.actionSelectAccountType(this, mAccount, true);
         finish();
 
     }
@@ -339,7 +406,6 @@ public class AccountSetupBasics extends RakuPhotoActivity
     }
 
     private Provider findProviderForDomain(String domain) {
-
         try {
             XmlResourceParser xml = getResources().getXml(R.xml.providers);
             int xmlEventType;
@@ -382,6 +448,23 @@ public class AccountSetupBasics extends RakuPhotoActivity
         retParts[0] = (emailParts.length > 0) ? emailParts[0] : "";
         retParts[1] = (emailParts.length > 1) ? emailParts[1] : "";
         return retParts;
+    }
+
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        switch (mPasswordVisibleCheck.getId()) {
+            case R.id.account_password_visible_checkbox:
+                if (mPasswordVisibleCheck.isChecked()) {
+                    mPasswordView.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD | mPasswordVisibleCheckDefaultIType);
+                    mPasswordVisibleCheck.setText(getString(R.string.account_password_visible_checkbox_off));
+                } else {
+                    mPasswordView.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD | mPasswordVisibleCheckDefaultIType);
+                    mPasswordVisibleCheck.setText(getString(R.string.account_password_visible_checkbox_on));
+                }
+                mPasswordView.setSelection(mPasswordView.getText().length());
+                break;
+            default:
+        }
     }
 
     static class Provider implements Serializable {
