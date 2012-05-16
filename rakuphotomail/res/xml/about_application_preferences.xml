@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceScreen
+            android:title="@string/about_application_app_name"
+            android:key="about_app_name"
+            android:summary="@string/app_full_name"/>
+
+    <PreferenceScreen
+            android:title="@string/about_application_produce"
+            android:key="about_app_produce"
+            android:summary="@string/app_authors"/>
+
+    <PreferenceScreen
+            android:title="@string/about_application_release_version"
+            android:key="about_app_release_version"/>
+
+    <PreferenceScreen
+            android:title="@string/about_application_copy_right"
+            android:key="about_app_copy_right"
+            android:summary="@string/app_copyright"/>
+
+    <PreferenceScreen
+            android:title="@string/about_application_legal"
+            android:key="about_app_copy_legal"
+            android:summary="作成中"/>
+
+</PreferenceScreen>

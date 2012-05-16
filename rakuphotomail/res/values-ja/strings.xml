@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">らくフォト</string>
+    <string name="app_full_name">らくらくフォトメール</string>
     <string name="beta_app_name">らくフォト BETA</string>
     <string name="app_authors">株式会社 UCOM</string>
-    <string name="app_copyright_fmt">Copyright 2011-
+    <string name="app_copyright">COPYRIGHT (C) 2012 UCOM CORPORATION ALL RIGHTS RESERVED.
+    </string>
+    <string name="app_copyright_fmt">Copyright 2012-
         <xliff:g>%s</xliff:g>
         COPYRIGHT (C) 2012 UCOM CORPORATION ALL RIGHTS RESERVED.
     </string>
-    <string name="app_license">Licensed under the Apache License, Version 2.0.</string>
+    <string name="app_license">Licensed under the UCOM License</string>
     <string name="app_authors_fmt">Authors:
         <xliff:g id="app_authors">%s</xliff:g>
     </string>
-    <string name="app_revision_url">https://isprod-red/redmine/projects/jijibaba-dpfs</string>
+    <string name="app_revision_url">https://</string>
+    <string name="app_package">jp.co.fttx.rakuphotomail</string>
     <string name="app_revision_fmt">Revision Information:
         <xliff:g id="app_revision_url">%s</xliff:g>
     </string>
@@ -38,7 +42,7 @@
     <string name="folder_list_title">
         <xliff:g id="account">%s</xliff:g>
     </string>
-    <string name="shortcuts_title">らくフォトメール アカウント</string>
+    <string name="shortcuts_title">らくらくフォトメール アカウント</string>
 
     <string name="message_list_title"><xliff:g id="account">%s</xliff:g>:
         <xliff:g id="folder">%s</xliff:g>
@@ -119,6 +123,7 @@
     <string name="preferences_save_back">戻る</string>
     <string name="open_action">開く</string>
     <string name="account_settings_action">アカウント設定</string>
+    <string name="about_application">アプリケーションについて</string>
     <string name="folder_settings_action">フォルダ設定</string>
     <string name="global_settings_action">グローバル設定</string>
     <string name="remove_account_action">アカウント削除</string>
@@ -168,6 +173,7 @@
     <string name="general_no_subject">(件名なし)</string>
     <string name="general_no_date">日付なし</string>
     <string name="general_no_sender">送信者なし</string>
+    <string name="general_unknown_sender">送信者不明</string>
     <string name="status_loading">取込中</string>
     <string name="status_loading_folder">(取込中
         <xliff:g id="folder">%s</xliff:g>
@@ -283,14 +289,14 @@
         フォルダにはその問題に関するエラーメッセージが含まれています。
     </string>
 
-    <string name="alert_header">らくフォトメール 警告</string>
+    <string name="alert_header">らくらくフォトメール 警告</string>
     <string name="no_connection_alert">送信ネットワークのリソース不足のため同期処理中断</string>
 
     <string name="end_of_folder">これ以上メールはありません</string>
 
     <string name="accounts_welcome">
-        らくフォトメール セットアップにようこそ。
-        \nらくフォトメールは一般的なメールの機能である「同期（IMAP）」を利用し、
+        らくらくフォトメール セットアップにようこそ。
+        \nらくらくフォトメールは一般的なメールの機能である「同期（IMAP）」を利用し、
         \nメールに添付された写真を、スライドショー表示にして楽しむアプリです。
         \n
         \nメールクライアントを使用する際と同様に、
@@ -1268,6 +1274,7 @@
     <string name="account_setup_names_user_name_hint">送信メールの表示名</string>
     <string name="account_settings_description_hint">アカウント名</string>
     <string name="progress_please_wait">Please wait</string>
+    <string name="progress_please_wait_mail_check">メールサーバーをチェックしています</string>
     <string name="progress_slideshow_server_sync">スライドショー情報をサーバーと同期中です。
         \n完了次第、スライドショーを開始します。
         \nしばらくお待ちください。
@@ -1323,5 +1330,18 @@
         \nしばらくお待ちください。
     </string>
     <string name="common_message_unknown">不明</string>
+    <string name="common_message_uid">UID</string>
     <string name="sending_message_address_unknown">送信先のアドレスが不正もしくは不明の為、送信できません</string>
+
+    <string name="about_application_app_name">アプリケーション</string>
+    <string name="about_application_release_version">リリースバージョン</string>
+    <string name="about_application_produce">作成者</string>
+    <string name="about_application_copy_right">コピーライト</string>
+    <string name="about_application_legal">法的情報</string>
+
+    <string name="error_network_connection_turn_off">ネットワーク接続が切れています</string>
+    <string name="message_new_mail_check">新着メールについてサーバーをチェックしています</string>
+    <string name="message_deleted_mail_check">削除済みメールについてサーバーをチェックしています</string>
+
+
 </resources>

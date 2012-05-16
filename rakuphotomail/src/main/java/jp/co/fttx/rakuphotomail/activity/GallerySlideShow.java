@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, UCOM Corporation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, UCOM Corporation and/or its affiliates. All rights reserved.
  * UCOM PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package jp.co.fttx.rakuphotomail.activity;
@@ -24,6 +24,7 @@ import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
+import jp.co.fttx.rakuphotomail.activity.setup.AboutApplication;
 import jp.co.fttx.rakuphotomail.activity.setup.AccountSettings;
 import jp.co.fttx.rakuphotomail.mail.MessagingException;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
@@ -254,29 +255,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         }
         context.startActivity(intent);
     }
-
-//    /**
-//     * @param context    context
-//     * @param account    account info
-//     * @param folder     receive folder name
-//     * @param startIndex message index
-//     * @param stopIndex  message index
-//     * @author tooru.oguri
-//     * @since rakuphoto 0.1-beta1
-//     */
-//    public static void actionSlideShow(Context context, Account account, String folder, int startIndex, int stopIndex) {
-//
-//        Intent intent = new Intent(context, GallerySlideShow.class);
-//        if (account != null) {
-//            intent.putExtra(EXTRA_ACCOUNT, account.getUuid());
-//        }
-//        if (folder != null) {
-//            intent.putExtra(EXTRA_FOLDER, folder);
-//        }
-//        intent.putExtra(EXTRA_START_INDEX, startIndex);
-//        intent.putExtra(EXTRA_STOP_INDEX, stopIndex);
-//        context.startActivity(intent);
-//    }
 
     /**
      * @param savedInstanceState saved
@@ -856,6 +834,10 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 onEditAccount();
                 return true;
             }
+            case R.id.about_application: {
+                onAboutApplication();
+                return true;
+            }
             default: {
                 return super.onOptionsItemSelected(item);
             }
@@ -866,6 +848,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         AccountSettings.actionSettings(mContext, mAccount);
     }
 
+    private void onAboutApplication() {
+        Log.d("refs#2871", "onAboutApplication slideshow");
+        AboutApplication.actionSettings(this);
+    }
+
     private void startMessageSyncTask() {
         if (RakuPhotoConnectivityCheck.isConnectivity(getApplicationContext())) {
             mMessageSyncTask = new MessageSyncTask(mContext);
@@ -873,8 +860,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 mMessageSyncTask.execute();
             }
         } else {
-            Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#startMessageSyncTask ネットワーク接続が切れています");
-            Toast.makeText(getApplicationContext(), "ネットワーク接続が切れています", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), getString(R.string.error_network_connection_turn_off), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -896,7 +882,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             if (!isFinishing()) {
                 progressDialog = new ProgressDialog(context);
                 progressDialog.setTitle(getString(R.string.progress_please_wait));
-                progressDialog.setMessage("メールサーバーをチェックしています(" + mPastMailCheckStartId + "~" + mPastMailCheckEndId + ")");
+                progressDialog.setMessage(getString(R.string.progress_please_wait_mail_check) +
+                        "(" + mPastMailCheckStartId + "~" + mPastMailCheckEndId + ")");
                 progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
                 progressDialog.setCancelable(true);
                 progressDialog.setOnCancelListener(this);
@@ -1069,8 +1056,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 mNewMailCheckTask.execute();
             }
         } else {
-            Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#startNewMailCheckTask ネットワーク接続が切れています");
-            Toast.makeText(getApplicationContext(), "ネットワーク接続が切れています", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), getString(R.string.error_network_connection_turn_off), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -1093,7 +1079,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         protected void onPreExecute() {
             progressDialog = new ProgressDialog(context);
             progressDialog.setTitle(getString(R.string.progress_please_wait));
-            progressDialog.setMessage("新着メールについてサーバーをチェックしています");
+            progressDialog.setMessage(getString(R.string.message_new_mail_check));
             progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             progressDialog.setCancelable(true);
             progressDialog.setOnCancelListener(this);
@@ -1185,8 +1171,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 mDeleteMailCheckTask.execute();
             }
         } else {
-            Log.w(RakuPhotoMail.LOG_TAG, "GallerySlideShow#startDeleteMailCheckTask ネットワーク接続が切れています");
-            Toast.makeText(getApplicationContext(), "ネットワーク接続が切れています", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), getString(R.string.error_network_connection_turn_off), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -1206,7 +1191,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         protected void onPreExecute() {
             progressDialog = new ProgressDialog(context);
             progressDialog.setTitle(getString(R.string.progress_please_wait));
-            progressDialog.setMessage("削除済みメールについてサーバーをチェックしています");
+            progressDialog.setMessage(getString(R.string.message_deleted_mail_check));
             progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             progressDialog.setCancelable(true);
             progressDialog.setOnCancelListener(this);

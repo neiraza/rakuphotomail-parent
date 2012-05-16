@@ -1,10 +1,9 @@
 /*
- * Copyright (c) 2011, UCOM Corporation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, UCOM Corporation and/or its affiliates. All rights reserved.
  * UCOM PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 package jp.co.fttx.rakuphotomail.activity;
 
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -19,6 +18,7 @@ import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.Preferences;
 import jp.co.fttx.rakuphotomail.R;
 import jp.co.fttx.rakuphotomail.RakuPhotoMail;
+import jp.co.fttx.rakuphotomail.activity.setup.AboutApplication;
 import jp.co.fttx.rakuphotomail.activity.setup.AccountSettings;
 import jp.co.fttx.rakuphotomail.mail.MessagingException;
 import jp.co.fttx.rakuphotomail.rakuraku.bean.AttachmentBean;
@@ -392,8 +392,7 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         if (null != senderName && !"".equals(senderName)) {
             mSenderName.setText(senderName.trim());
         } else {
-            Log.w(RakuPhotoMail.LOG_TAG, "UID:" + mMessageBean.getUid() + " 送信者不明：" + senderName);
-            mSenderName.setText("送信者不明");
+            mSenderName.setText(getString(R.string.general_unknown_sender));
         }
         setDate(mMessageBean.getDate());
         setAnswered(mMessageBean.isFlagAnswered());
@@ -728,6 +727,10 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
                 onEditAccount();
                 return true;
             }
+            case R.id.about_application: {
+                onAboutApplication();
+                return true;
+            }
             case R.id.buttons_disabled: {
                 onButtonsDisp();
                 return true;
@@ -740,6 +743,10 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
 
     private void onEditAccount() {
         AccountSettings.actionSettings(this, mAccount);
+    }
+
+    private void onAboutApplication() {
+        AboutApplication.actionSettings(this);
     }
 
     private void onButtonsDisp() {
@@ -819,28 +826,5 @@ public class GallerySlideStop extends RakuPhotoActivity implements View.OnClickL
         public void onCancel(DialogInterface dialog) {
             this.cancel(true);
         }
-    }
-
-    private void onAlertNoImage() {
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-        alertDialogBuilder.setTitle(getString(R.string.app_name));
-        alertDialogBuilder.setMessage(getString(R.string.gallery_slide_stop_alert_memory_error));
-        alertDialogBuilder.setPositiveButton(getString(R.string.gallery_slide_stop_alert_memory_error_alert_yes),
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                });
-        alertDialogBuilder.setNegativeButton(getString(R.string.gallery_slide_stop_alert_memory_error_alert_no),
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                });
-        alertDialogBuilder.setCancelable(false);
-        AlertDialog alertDialog = alertDialogBuilder.create();
-        alertDialog.show();
     }
 }

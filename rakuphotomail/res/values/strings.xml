@@ -7,11 +7,11 @@
         <xliff:g>%s</xliff:g>
         COPYRIGHT (C) 2012 UCOM CORPORATION ALL RIGHTS RESERVED.
     </string>
-    <string name="app_license">Licensed under the Apache License, Version 2.0.</string>
+    <string name="app_license">Licensed under the UCOM License</string>
     <string name="app_authors_fmt">Authors:
         <xliff:g id="app_authors">%s</xliff:g>
     </string>
-    <string name="app_revision_url">https://isprod-red/redmine/projects/jijibaba-dpfs</string>
+    <string name="app_revision_url">https://</string>
     <string name="app_revision_fmt">Revision Information:
         <xliff:g id="app_revision_url">%s</xliff:g>
     </string>
