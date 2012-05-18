@@ -5,7 +5,7 @@
 package jp.co.fttx.rakuphotomail.activity;
 
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -869,7 +869,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     private class MessageSyncTask extends AsyncTask<Void, Void, Boolean> implements DialogInterface.OnCancelListener {
         private Context context;
-        private ProgressDialog progressDialog;
+        private Dialog dialog;
 
         public MessageSyncTask(Context context) {
             this.context = context;
@@ -879,14 +879,13 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         protected void onPreExecute() {
             cancelSleep();
             if (!isFinishing()) {
-                progressDialog = new ProgressDialog(context);
-                progressDialog.setTitle(getString(R.string.progress_please_wait));
-                progressDialog.setMessage(getString(R.string.progress_please_wait_mail_check) +
+                dialog = new Dialog(context);
+                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                dialog.setContentView(R.layout.rakuphoto_progress_dialog);
+                dialog.getWindow().getAttributes().gravity = Gravity.BOTTOM | Gravity.RIGHT;
+                dialog.show();
+                Log.i(RakuPhotoMail.LOG_TAG, getString(R.string.progress_please_wait_mail_sync) +
                         "(" + mPastMailCheckStartId + "~" + mPastMailCheckEndId + ")");
-                progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                progressDialog.setCancelable(true);
-                progressDialog.setOnCancelListener(this);
-                progressDialog.show();
             }
         }
 
@@ -895,9 +894,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
          */
         @Override
         protected Boolean doInBackground(Void... params) {
-            if (null != progressDialog && !progressDialog.isIndeterminate() && !isFinishing()) {
-                progressDialog.show();
-            } else if (isFinishing()) {
+            if (isFinishing()) {
                 return false;
             }
             onRemove();
@@ -993,8 +990,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
         @Override
         protected void onCancelled() {
-            if (null != progressDialog && progressDialog.isShowing()) {
-                progressDialog.dismiss();
+            if (null != dialog) {
+                dialog.dismiss();
             }
             setSleepMode();
         }
@@ -1026,7 +1023,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         public void onCancel(DialogInterface dialog) {
             this.cancel(true);
         }
-
     }
 
     /**
@@ -1065,7 +1061,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      */
     private class NewMailCheckTask extends AsyncTask<Void, Void, Boolean> implements DialogInterface.OnCancelListener {
         private Context context;
-        private ProgressDialog progressDialog;
+        private Dialog dialog;
         private boolean isAllSync = false;
         private boolean isSync = false;
         private String localOldUid;
@@ -1076,13 +1072,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
         @Override
         protected void onPreExecute() {
-            progressDialog = new ProgressDialog(context);
-            progressDialog.setTitle(getString(R.string.progress_please_wait));
-            progressDialog.setMessage(getString(R.string.message_new_mail_check));
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progressDialog.setCancelable(true);
-            progressDialog.setOnCancelListener(this);
-            progressDialog.show();
+            dialog = new Dialog(context);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            dialog.setContentView(R.layout.rakuphoto_progress_dialog);
+            dialog.getWindow().getAttributes().gravity = Gravity.BOTTOM | Gravity.RIGHT;
+            dialog.show();
+            Log.i(RakuPhotoMail.LOG_TAG, getString(R.string.message_new_mail_check));
         }
 
         /**
@@ -1090,9 +1085,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
          */
         @Override
         protected Boolean doInBackground(Void... params) {
-            if (!progressDialog.isIndeterminate()) {
-                progressDialog.show();
-            }
             //チェック処理開始前に他の処理を止めたり
             mSlideShowLoopHandler.removeCallbacks(mSlideShowLoopRunnable);
             if (mAccount.isAllSync()) {
@@ -1127,8 +1119,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
         @Override
         protected void onCancelled() {
-            if (null != progressDialog && progressDialog.isShowing()) {
-                progressDialog.dismiss();
+            if (null != dialog) {
+                dialog.dismiss();
             }
         }
 
@@ -1179,8 +1171,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since 0.1-beta1
      */
     private class DeleteMailCheckTask extends AsyncTask<Void, Void, ArrayList<String>> implements DialogInterface.OnCancelListener {
-        Context context;
-        ProgressDialog progressDialog;
+        private Context context;
+        private Dialog dialog;
 
         public DeleteMailCheckTask(Context context) {
             this.context = context;
@@ -1188,13 +1180,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
         @Override
         protected void onPreExecute() {
-            progressDialog = new ProgressDialog(context);
-            progressDialog.setTitle(getString(R.string.progress_please_wait));
-            progressDialog.setMessage(getString(R.string.message_deleted_mail_check));
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progressDialog.setCancelable(true);
-            progressDialog.setOnCancelListener(this);
-            progressDialog.show();
+            dialog = new Dialog(context);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            dialog.setContentView(R.layout.rakuphoto_progress_dialog);
+            dialog.getWindow().getAttributes().gravity = Gravity.BOTTOM | Gravity.RIGHT;
+            dialog.show();
+            Log.i(RakuPhotoMail.LOG_TAG, getString(R.string.message_deleted_mail_check));
         }
 
         /**
@@ -1202,9 +1193,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
          */
         @Override
         protected ArrayList<String> doInBackground(Void... params) {
-            if (!progressDialog.isIndeterminate()) {
-                progressDialog.show();
-            }
             ArrayList<String> remoteUidList;
             ArrayList<String> localUidList;
             ArrayList<String> deleteList = new ArrayList<String>();
@@ -1236,8 +1224,8 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
         @Override
         protected void onCancelled() {
-            if (null != progressDialog && progressDialog.isShowing()) {
-                progressDialog.dismiss();
+            if (null != dialog) {
+                dialog.dismiss();
             }
         }
 

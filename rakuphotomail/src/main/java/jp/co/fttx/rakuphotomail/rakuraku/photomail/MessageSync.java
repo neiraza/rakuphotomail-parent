@@ -209,7 +209,6 @@ public class MessageSync {
         }
     }
 
-//    public static void syncMailbox(Account account, String folderName, int messageLimitCountFromRemote) {
 //
 //        Folder remoteFolder = null;
 //        LocalStore.LocalFolder localFolder = null;

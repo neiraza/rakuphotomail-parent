@@ -1275,6 +1275,7 @@
     <string name="account_settings_description_hint">アカウント名</string>
     <string name="progress_please_wait">Please wait</string>
     <string name="progress_please_wait_mail_check">メールサーバーをチェックしています</string>
+    <string name="progress_please_wait_mail_sync">同期中</string>
     <string name="progress_slideshow_server_sync">スライドショー情報をサーバーと同期中です。
         \n完了次第、スライドショーを開始します。
         \nしばらくお待ちください。
