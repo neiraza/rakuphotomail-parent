@@ -24,7 +24,7 @@ import java.util.HashMap;
  */
 public class MessageSync {
 
-//    private static Set<MessagingListener> mListeners = new CopyOnWriteArraySet<MessagingListener>();
+    //    private static Set<MessagingListener> mListeners = new CopyOnWriteArraySet<MessagingListener>();
     private static MessagingListener mListener;
     private static MessagingController.MemorizingListener memorizingListener = new MessagingController.MemorizingListener();
 

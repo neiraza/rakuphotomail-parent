@@ -10,7 +10,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -609,13 +608,14 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                     // がんばれ表示君
                     mAttachmentBeanList = null;
                     mAttachmentBeanList = mCurrentMessageBean.getAttachmentBeanList();
+                    boolean slideOK = false;
                     if (0 < mAttachmentBeanList.size()) {
                         AttachmentBean attachmentBean = mAttachmentBeanList.get(mAttachmentBeanListIndex);
                         mAttachmentBeanListIndex += 1;
                         if (SlideCheck.isSlide(attachmentBean)) {
                             try {
                                 mBitmap = SlideAttachment.getBitmap(getApplicationContext(), getWindowManager().getDefaultDisplay(), mAccount, attachmentBean);
-                                dispSlide(mCurrentMessageBean);
+                                slideOK = dispSlide(mCurrentMessageBean);
                             } catch (RakuRakuException e) {
                                 Log.w(RakuPhotoMail.LOG_TAG, "UID:" + mCurrentMessageBean.getUid() + " " + getString(R.string.error_rakuraku_exception) + e.getMessage());
                             }
@@ -623,7 +623,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                         }
                     } else {
                         try {
-                            dispSlide(mCurrentMessageBean);
+                            slideOK = dispSlide(mCurrentMessageBean);
                         } catch (RakuRakuException e) {
                             Log.w(RakuPhotoMail.LOG_TAG, "UID:" + mCurrentMessageBean.getUid() + " " + getString(R.string.error_rakuraku_exception) + e.getMessage());
                         }
@@ -632,9 +632,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                     if (isNewMailCheck()) {
                         mAccount.setNewMailCheckLatestDate(new Date());
                         startDeleteMailCheckTask();
-                    } else {
+                    } else if (slideOK) {
                         //次回起動
                         mSlideShowLoopHandler.postDelayed(this, mAccount.getSlideSleepTime());
+                    } else {
+                        Log.w(RakuPhotoMail.LOG_TAG, getString(R.string.message_slideshow_ng) + ":" + mCurrentMessageBean.toString());
+                        mSlideShowLoopHandler.postDelayed(this, 0);
                     }
                 }
             }
@@ -656,34 +659,31 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @author tooru.oguri
      * @since rakuphoto 0.1-beta1
      */
-    private void dispSlide(final MessageBean messageBean) throws RakuRakuException {
-        mDispUid = messageBean.getUid();
-        mSubject.setText(messageBean.getSubject());
-        String senderName = messageBean.getSenderName();
-
-        if (null != senderName && !"".equals(senderName)) {
-            mSenderName.setText(senderName.trim());
-        } else {
-            Log.w(RakuPhotoMail.LOG_TAG, "UID:" + messageBean.getUid() + " 送信者不明：" + senderName);
-            mSenderName.setText("送信者不明");
-        }
-
-        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
-        mDate.setText(sdf.format(messageBean.getDate()));
-        if (messageBean.isFlagAnswered()) {
-            mAnswered.setVisibility(View.VISIBLE);
-            mAnsweredMark.setVisibility(View.VISIBLE);
-        } else {
-            mAnswered.setVisibility(View.GONE);
-            mAnsweredMark.setVisibility(View.GONE);
-        }
-
+    private boolean dispSlide(final MessageBean messageBean) throws RakuRakuException {
         if (null != mBitmap) {
+            mDispUid = messageBean.getUid();
+            mSubject.setText(messageBean.getSubject());
+            String senderName = messageBean.getSenderName();
+
+            if (null != senderName && !"".equals(senderName)) {
+                mSenderName.setText(senderName.trim());
+            } else {
+                mSenderName.setText(getString(R.string.general_unknown_sender));
+            }
+
+            SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+            mDate.setText(sdf.format(messageBean.getDate()));
+            if (messageBean.isFlagAnswered()) {
+                mAnswered.setVisibility(View.VISIBLE);
+                mAnsweredMark.setVisibility(View.VISIBLE);
+            } else {
+                mAnswered.setVisibility(View.GONE);
+                mAnsweredMark.setVisibility(View.GONE);
+            }
             setVisibilityImageView().setImageBitmap(mBitmap);
-        } else {
-            setVisibilityImageView().setImageBitmap(BitmapFactory.decodeResource(
-                    getResources(), R.drawable.ucom_logo_black));
+            return true;
         }
+        return false;
     }
 
     private void onRemove() {
@@ -849,7 +849,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
     }
 
     private void onAboutApplication() {
-        Log.d("refs#2871", "onAboutApplication slideshow");
         AboutApplication.actionSettings(this);
     }
 

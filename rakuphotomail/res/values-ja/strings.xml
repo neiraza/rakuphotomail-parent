@@ -1342,6 +1342,7 @@
     <string name="error_network_connection_turn_off">ネットワーク接続が切れています</string>
     <string name="message_new_mail_check">新着メールについてサーバーをチェックしています</string>
     <string name="message_deleted_mail_check">削除済みメールについてサーバーをチェックしています</string>
+    <string name="message_slideshow_ng">スライド対象のメッセージではありませんでした</string>
 
 
 </resources>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="jp.co.fttx.rakuphotomail.test" android:versionCode="1"
-	android:versionName="0.1.6-BETA3">
+	android:versionName="0.1.7-BETA3">
 	<uses-sdk android:minSdkVersion="9" />
 	<instrumentation android:targetPackage="jp.co.fttx.rakuphotomail"
 		android:name="android.test.InstrumentationTestRunner" />

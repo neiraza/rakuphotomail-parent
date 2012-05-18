@@ -4,10 +4,9 @@
  */
 package jp.co.fttx.rakuphotomail.rakuraku.bean;
 
-import java.util.ArrayList;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import jp.co.fttx.rakuphotomail.mail.store.LocalStore.LocalMessage;
+
+import java.util.ArrayList;
 
 /**
  * @author tooru.oguri
@@ -377,5 +376,9 @@ public class MessageBean {
 
     public void setMimeType(String mimeType) {
         this.mimeType = mimeType;
+    }
+
+    public String toString() {
+        return id + "," + uid + "," + subject + "," + mimeType;
     }
 }
