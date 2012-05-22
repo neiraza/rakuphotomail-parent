@@ -239,7 +239,6 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
      * @since rakuphoto 0.1-beta1
      */
     public static void actionSlideShow(Context context, Account account, String folder, String uid) {
-
         Intent intent = new Intent(context, GallerySlideShow.class);
         if (account != null) {
             intent.putExtra(EXTRA_ACCOUNT, account.getUuid());
@@ -748,24 +747,50 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         mDispUid = savedInstanceStage.getString(INSTANCE_STATE_DISP_UID);
     }
 
+    private void onCancel(){
+        mSlideShowLoopHandler.removeCallbacks(mSlideShowLoopRunnable);
+
+        if (null != mMessageSyncTask) {
+            if (null != mMessageSyncTask.dialog && mMessageSyncTask.dialog.isShowing()) {
+                mMessageSyncTask.dialog.dismiss();
+                mMessageSyncTask.dialog = null;
+            }
+            if (!mMessageSyncTask.isCancelled()) {
+                mMessageSyncTask.cancel(true);
+            }
+        }
+
+        if (null != mNewMailCheckTask) {
+            if (null != mNewMailCheckTask.dialog && mNewMailCheckTask.dialog.isShowing()) {
+                mNewMailCheckTask.dialog.dismiss();
+                mNewMailCheckTask.dialog = null;
+            }
+            if (!mNewMailCheckTask.isCancelled()) {
+                mNewMailCheckTask.cancel(true);
+            }
+        }
+
+        if (null != mDeleteMailCheckTask) {
+            if (null != mDeleteMailCheckTask.dialog && mDeleteMailCheckTask.dialog.isShowing()) {
+                mDeleteMailCheckTask.dialog.dismiss();
+                mDeleteMailCheckTask.dialog = null;
+            }
+            if (!mDeleteMailCheckTask.isCancelled()) {
+                mDeleteMailCheckTask.cancel(true);
+            }
+        }
+    }
+
     @Override
     public void onPause() {
         super.onPause();
+        onCancel();
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        mSlideShowLoopHandler.removeCallbacks(mSlideShowLoopRunnable);
-        if (null != mMessageSyncTask) {
-            mMessageSyncTask.cancel(false);
-        }
-        if (null != mNewMailCheckTask) {
-            mNewMailCheckTask.cancel(false);
-        }
-        if (null != mDeleteMailCheckTask) {
-            mDeleteMailCheckTask.cancel(false);
-        }
+        onCancel();
     }
 
     @Override
@@ -884,6 +909,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
                 dialog.setContentView(R.layout.rakuphoto_progress_dialog);
                 dialog.getWindow().getAttributes().gravity = Gravity.BOTTOM | Gravity.RIGHT;
                 dialog.show();
+                dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        mMessageSyncTask.cancel(true);
+                    }
+                });
                 Log.i(RakuPhotoMail.LOG_TAG, getString(R.string.progress_please_wait_mail_sync) +
                         "(" + mPastMailCheckStartId + "~" + mPastMailCheckEndId + ")");
             }
@@ -990,10 +1021,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
         @Override
         protected void onCancelled() {
-            if (null != dialog) {
+            if (null != dialog && dialog.isShowing()) {
                 dialog.dismiss();
+                dialog = null;
             }
             setSleepMode();
+            super.onCancelled();
         }
 
         @Override
@@ -1077,6 +1110,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             dialog.setContentView(R.layout.rakuphoto_progress_dialog);
             dialog.getWindow().getAttributes().gravity = Gravity.BOTTOM | Gravity.RIGHT;
             dialog.show();
+            dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    mNewMailCheckTask.cancel(true);
+                }
+            });
             Log.i(RakuPhotoMail.LOG_TAG, getString(R.string.message_new_mail_check));
         }
 
@@ -1119,9 +1158,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
         @Override
         protected void onCancelled() {
-            if (null != dialog) {
+            if (null != dialog && dialog.isShowing()) {
                 dialog.dismiss();
+                dialog = null;
             }
+            super.onCancelled();
         }
 
         @Override
@@ -1185,6 +1226,12 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
             dialog.setContentView(R.layout.rakuphoto_progress_dialog);
             dialog.getWindow().getAttributes().gravity = Gravity.BOTTOM | Gravity.RIGHT;
             dialog.show();
+            dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    mDeleteMailCheckTask.cancel(true);
+                }
+            });
             Log.i(RakuPhotoMail.LOG_TAG, getString(R.string.message_deleted_mail_check));
         }
 
@@ -1224,9 +1271,11 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
 
         @Override
         protected void onCancelled() {
-            if (null != dialog) {
+            if (null != dialog && dialog.isShowing()) {
                 dialog.dismiss();
+                dialog = null;
             }
+            super.onCancelled();
         }
 
         @Override
