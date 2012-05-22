@@ -1,6 +1,5 @@
 package jp.co.fttx.rakuphotomail.rakuraku.util;
 
-import android.util.Log;
 import jp.co.fttx.rakuphotomail.Account;
 import jp.co.fttx.rakuphotomail.controller.UidComparator;
 import jp.co.fttx.rakuphotomail.mail.Message;
@@ -57,8 +56,6 @@ public class RakuPhotoListUtil {
     }
 
     public static ArrayList<String> getNewUidList(ArrayList<Message> oldList, ArrayList<Message> newList) throws MessagingException {
-        Log.d("ahokato", "GallerySlideShow#getNewUidList start");
-
         ArrayList<String> resultUid = new ArrayList<String>();
         for (Message newMessage : newList) {
             String newUid = newMessage.getUid();

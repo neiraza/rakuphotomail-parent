@@ -79,7 +79,6 @@ public class SmtpTransport extends Transport {
      * @param _uri
      */
     public SmtpTransport(String _uri) throws MessagingException {
-
         URI uri;
         try {
             uri = new URI(_uri);
@@ -310,7 +309,6 @@ public class SmtpTransport extends Transport {
 
     @Override
     public void sendMessage(Message message) throws MessagingException {
-
         ArrayList<Address> addresses = new ArrayList<Address>();
         {
             addresses.addAll(Arrays.asList(message.getRecipients(RecipientType.TO)));
@@ -381,6 +379,8 @@ public class SmtpTransport extends Transport {
             possibleSend = true; // After the "\r\n." is attempted, we may have sent the message
             executeSimpleCommand("\r\n.");
         } catch (Exception e) {
+            Log.e(RakuPhotoMail.LOG_TAG, e.getMessage());
+            Log.e(RakuPhotoMail.LOG_TAG, Arrays.toString(e.getStackTrace()));
             MessagingException me = new MessagingException("Unable to send message", e);
             me.setPermanentFailure(possibleSend);
             throw me;

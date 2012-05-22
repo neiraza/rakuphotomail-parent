@@ -107,7 +107,6 @@ public class SlideAttachment {
      * @throws RakuRakuException  rre
      */
     public static void clearCacheForAttachmentFile(Account account, String folderName, String uid) throws MessagingException, RakuRakuException {
-        Log.d("ahokato", "SlideAttachment#clearCacheForAttachmentFile uid:" + uid);
         LocalStore localStore = account.getLocalStore();
         LocalStore.LocalFolder localFolder = localStore.getFolder(folderName);
         long[] attachmentIdList = null;
@@ -116,14 +115,12 @@ public class SlideAttachment {
         try {
             attachmentIdList = localFolder.deleteAttachmentFile(uid);
             for (long attachmentId : attachmentIdList) {
-                Log.d("ahokato", "SlideAttachment#clearCacheForAttachmentFile attachmentId:" + attachmentId);
                 if (localFolder.clearContentUri(attachmentId)) {
                     MessageBean messageBean = SlideMessage.getMessage(account, folderName, uid);
                     arr = RakuPhotoStringUtils.splitFlags(messageBean.getFlags());
                     if (0 < arr.length) {
                         arrayList = new ArrayList<String>(Arrays.asList(arr));
                         int index = arrayList.indexOf("X_DOWNLOADED_FULL");
-                        Log.d("ahokato", "SlideAttachment#clearCacheForAttachmentFile index:" + index);
                         if (0 <= index) {
                             arrayList.remove(index);
                             localStore.setFlagAnswered(uid, arrayList.toArray(new String[arrayList.size()]));

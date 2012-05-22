@@ -1345,5 +1345,7 @@
     <string name="message_deleted_mail_check">削除済みメールについてサーバーをチェックしています</string>
     <string name="message_slideshow_ng">スライド対象のメッセージではありませんでした</string>
 
+    <string name="send_message_text">このメールはらくらくフォトメールを使用しています。</string>
+
 
 </resources>

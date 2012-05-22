@@ -2519,7 +2519,6 @@ public class LocalStore extends Store implements Serializable {
                             open(OpenMode.READ_WRITE);
                             LocalMessage message = new LocalMessage(uid, LocalFolder.this);
                             Cursor cursor = null;
-
                             try {
                                 cursor = db.rawQuery("SELECT " + GET_MESSAGES_COLS
                                         + "FROM messages WHERE uid = ? AND folder_id = ?", new String[]{
@@ -3095,7 +3094,6 @@ public class LocalStore extends Store implements Serializable {
                                     }
                                     long messageUid;
                                     messageUid = db.insert("messages", "uid", cv);
-
                                     for (Part attachment : attachments) {
                                         saveAttachment(messageUid, attachment, copy);
                                     }
@@ -3123,7 +3121,6 @@ public class LocalStore extends Store implements Serializable {
 
         public void deleteMessages(final ArrayList<String> uidList)
                 throws MessagingException {
-            Log.d("ahokato", "LocalFolder#deleteMessages start");
             open(OpenMode.READ_WRITE);
             try {
                 database.execute(true, new DbCallback<Void>() {
@@ -3132,7 +3129,6 @@ public class LocalStore extends Store implements Serializable {
                             UnavailableStorageException {
                         try {
                             for (String uid : uidList) {
-                                Log.d("ahokato", "LocalStore#deleteMessages delete UID:" + uid);
                                 deleteAttachments(uid);
                                 db.execSQL("DELETE FROM messages WHERE folder_id = ? AND uid = ?",
                                         new Object[]{mFolderId, uid});

@@ -136,43 +136,6 @@ public class MessageSync {
         return newMailUid;
     }
 
-//    public static ArrayList<String> isSlideRemoteMailList(final Account account, final String folder, final Message[] remoteMessages) throws MessagingException {
-//
-//        Folder remoteFolder = null;
-//        FetchProfile fp = null;
-//        ArrayList<Part> Unnecessary = null;
-//        ArrayList<Part> attachments = null;
-//        try {
-//            Store remoteStore = account.getRemoteStore();
-//            remoteFolder = remoteStore.getFolder(folder);
-//
-//            remoteFolder.open(Folder.OpenMode.READ_WRITE);
-//            fp = new FetchProfile();
-//            fp.add(FetchProfile.Item.BODY);
-//            remoteFolder.fetch(remoteMessages, fp, null);
-//
-//            ArrayList<String> result = new ArrayList<String>();
-//
-//            for (Message remoteMessage : remoteMessages) {
-//                Unnecessary = new ArrayList<Part>();
-//                attachments = new ArrayList<Part>();
-//                MimeUtility.collectParts(remoteMessage, Unnecessary, attachments);
-//                for (Part attachment : attachments) {
-//                    if (SlideCheck.isSlide(attachment)) {
-//                        result.add(remoteMessage.getUid());
-//                    }
-//                }
-//            }
-//            return result;
-//        } finally {
-//            fp = null;
-//            Unnecessary = null;
-//            attachments = null;
-//            closeFolder(remoteFolder);
-//            remoteFolder = null;
-//        }
-//    }
-
     public static boolean isSlideRemoteMail(final Account account, final String folder, final Message remoteMessage) throws MessagingException {
 
         Folder remoteFolder = null;
@@ -208,142 +171,6 @@ public class MessageSync {
             closeFolder(remoteFolder);
         }
     }
-
-//
-//        Folder remoteFolder = null;
-//        LocalStore.LocalFolder localFolder = null;
-//        try {
-//            localFolder = account.getLocalStore().getFolder(folderName);
-//            localFolder.open(Folder.OpenMode.READ_WRITE);
-//            localFolder.updateLastUid();
-//
-//            Message[] localMessages = localFolder.getMessages(null);
-//            HashMap<String, Message> localUidMap = new HashMap<String, Message>();
-//            for (Message message : localMessages) {
-//                localUidMap.put(message.getUid(), message);
-//            }
-//
-//            Store remoteStore = account.getRemoteStore();
-//            remoteFolder = remoteStore.getFolder(folderName);
-//            remoteFolder.open(Folder.OpenMode.READ_WRITE);
-//            int remoteMessageCount = remoteFolder.getMessageCount();
-//
-//            Message[] remoteMessageArray = new Message[0];
-//            HashMap<String, Message> remoteUidMap = new HashMap<String, Message>();
-//
-//            if (remoteMessageCount > 0) {
-//                int remoteStart = getRemoteStart(remoteMessageCount, messageLimitCountFromRemote);
-//                int remoteEnd = remoteMessageCount;
-//                remoteMessageArray = remoteFolder.getMessages(remoteStart, remoteEnd, null, null);
-//
-//                for (Message thisMessage : remoteMessageArray) {
-//                    remoteUidMap.put(thisMessage.getUid(), thisMessage);
-//                }
-//                remoteMessageArray = null;
-//            } else if (remoteMessageCount < 0) {
-//                throw new Exception("Message count " + remoteMessageCount + " for folder " + folderName);
-//            }
-//
-//            ArrayList<Message> destroyMessages = new ArrayList<Message>();
-//            for (Message localMessage : localMessages) {
-//
-//                if (remoteUidMap.get(localMessage.getUid()) == null) {
-//                    destroyMessages.add(localMessage);
-//                }
-//            }
-//            localFolder.destroyMessages(destroyMessages.toArray(new Message[0]));
-//            localMessages = null;
-//
-//            setLocalFlaggedCountToRemote(localFolder, remoteFolder);
-//
-//            localFolder.setLastChecked(System.currentTimeMillis());
-//            localFolder.setStatus(null);
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        } finally {
-//            closeFolder(remoteFolder);
-//            closeFolder(localFolder);
-//        }
-//    }
-//
-//    public static ArrayList<Message> getRemoteMessage(final Account account, final String folderName, final ArrayList<String> uids) throws MessagingException, RakuRakuException {
-//
-//        Folder remoteFolder = null;
-//        try {
-//            Store remoteStore = account.getRemoteStore();
-//            remoteFolder = remoteStore.getFolder(folderName);
-//            remoteFolder.open(Folder.OpenMode.READ_WRITE);
-//            int remoteMessageCount = remoteFolder.getMessageCount();
-//            Message[] remoteMessageArray;
-//            ArrayList<Message> messageList = new ArrayList<Message>();
-//            if (remoteMessageCount > 0) {
-//                remoteMessageArray = remoteFolder.getMessages(uids.toArray(new String[uids.size()]), null);
-//                for (Message thisMessage : remoteMessageArray) {
-//                    messageList.add(thisMessage);
-//                }
-//                remoteMessageArray = null;
-//            } else if (remoteMessageCount < 0) {
-//                throw new RakuRakuException("Message count " + remoteMessageCount + " for folder " + folderName);
-//            }
-//            return messageList;
-//        } finally {
-//            closeFolder(remoteFolder);
-//        }
-//    }
-//
-//    public static ArrayList<Message> getRemoteAllMessage(final Account account, final String folderName) throws MessagingException, RakuRakuException {
-//
-//        Folder remoteFolder = null;
-//        try {
-//            Store remoteStore = account.getRemoteStore();
-//            remoteFolder = remoteStore.getFolder(folderName);
-//            remoteFolder.open(Folder.OpenMode.READ_WRITE);
-//            int remoteMessageCount = remoteFolder.getMessageCount();
-//            Message[] remoteMessageArray;
-//            ArrayList<Message> allMessageList = new ArrayList<Message>();
-//            if (remoteMessageCount > 0) {
-//                int remoteStart = 1;
-//                int remoteEnd = remoteMessageCount;
-//                remoteMessageArray = remoteFolder.getMessages(remoteStart, remoteEnd, null, null);
-//                for (Message thisMessage : remoteMessageArray) {
-//                    allMessageList.add(thisMessage);
-//                }
-//                remoteMessageArray = null;
-//            } else if (remoteMessageCount < 0) {
-//                throw new RakuRakuException("Message count " + remoteMessageCount + " for folder " + folderName);
-//            }
-//            return allMessageList;
-//        } finally {
-//            closeFolder(remoteFolder);
-//        }
-//    }
-
-//    public static ArrayList<String> getRemoteUidSince(final Account account, final String folderName, final long date) throws MessagingException, RakuRakuException {
-//        Folder remoteFolder = null;
-//        try {
-//            Store remoteStore = account.getRemoteStore();
-//            remoteFolder = remoteStore.getFolder(folderName);
-//            remoteFolder.open(Folder.OpenMode.READ_WRITE);
-//            int remoteMessageCount = remoteFolder.getMessageCount();
-//            Message[] remoteMessageArray;
-//            ArrayList<String> result = new ArrayList<String>();
-//            if (remoteMessageCount > 0) {
-//                int remoteStart = 1;
-//                int remoteEnd = remoteMessageCount;
-//                remoteMessageArray = remoteFolder.getMessages(remoteStart, remoteEnd, null, null);
-//                for (Message thisMessage : remoteMessageArray) {
-//                    result.add(thisMessage.getRemoteUid());
-//                }
-//                remoteMessageArray = null;
-//            } else if (remoteMessageCount < 0) {
-//                throw new RakuRakuException("Message count " + remoteMessageCount + " for folder " + folderName);
-//            }
-//            return result;
-//        } finally {
-//            closeFolder(remoteFolder);
-//        }
-//    }
 
     public static String getRemoteUid(final Account account, final String folderName, int messageId) throws MessagingException, RakuRakuException {
 
@@ -451,25 +278,6 @@ public class MessageSync {
         }
     }
 
-//    public static Message getRemoteMessage(final Account account, final String folderName, final String uid) throws MessagingException, RakuRakuException {
-//
-//        Folder remoteFolder = null;
-//        try {
-//            Store remoteStore = account.getRemoteStore();
-//            remoteFolder = remoteStore.getFolder(folderName);
-//            remoteFolder.open(Folder.OpenMode.READ_WRITE);
-//
-//            Message remoteMessage = null;
-//            if (null != uid) {
-//                remoteMessage = remoteFolder.getMessage(uid);
-//            }
-//            return remoteMessage;
-//
-//        } finally {
-//            closeFolder(remoteFolder);
-//        }
-//    }
-
     public static int getRemoteMessageId(final Account account, final String folderName, final String uid) throws MessagingException, RakuRakuException {
         ArrayList<String> list = getRemoteUidList(account, folderName, 1, getRemoteMessageCount(account, folderName));
         return (list.indexOf(uid) + 1);
@@ -508,7 +316,6 @@ public class MessageSync {
      * @since rakuphoto 0.1-beta1
      */
     public static void sentMessageAfter(Account account, String folderName, String sentMessageUid) throws MessagingException, RakuRakuException {
-
         if (account.getErrorFolderName().equals(folderName)) {
             return;
         }
@@ -547,7 +354,6 @@ public class MessageSync {
             remoteFolder.appendMessages(new Message[]{localMessage});
 
             localFolder.changeUid(localMessage);
-
         } finally {
             closeFolder(remoteFolder);
             closeFolder(localFolder);
@@ -579,11 +385,6 @@ public class MessageSync {
         }
     }
 
-//    public static void addListeners(MessagingListener listener) {
-//        mListeners.add(listener);
-//        refreshListener(listener);
-//    }
-
     public static void addListener(MessagingListener listener) {
         mListener = listener;
         refreshListener(listener);
@@ -595,100 +396,11 @@ public class MessageSync {
         }
     }
 
-//    public static void removeListeners(MessagingListener listener) {
-//        mListeners.remove(listener);
-//    }
-//
-//    public static void removeListener(MessagingListener listener) {
-//        mListener = null;
-//    }
-//
-//    public static Set<MessagingListener> getListeners(MessagingListener listener) {
-//        if (listener == null) {
-//            return mListeners;
-//        }
-//
-//        Set<MessagingListener> listeners = new HashSet<MessagingListener>(
-//                mListeners);
-//        listeners.add(listener);
-//        return listeners;
-//    }
-//
-//    /**
-//     * [Account#getAttachmentCacheLimitCount() / 2] Cache Delete
-//     *
-//     * @param account user account
-//     * @param folder  imap folder
-//     * @param dispUid current dispUid
-//     * @throws MessagingException me
-//     * @throws RakuRakuException  rre
-//     */
-//    public static void removeCache(Account account, String folder, String dispUid) throws MessagingException, RakuRakuException {
-//        ArrayList<String> downloadedList = SlideMessage.getMessageUidRemoveTarget(account);
-//        if (downloadedList.size() > account.getAttachmentCacheLimitCount()) {
-//            int removeCount = account.getAttachmentCacheLimitCount() / 2;
-//            int currentIndex = downloadedList.indexOf(dispUid);
-//            ArrayList<String> removeList = createRemoveList(downloadedList, currentIndex, removeCount);
-//            for (String uid : removeList) {
-//                SlideAttachment.clearCacheForAttachmentFile(account, folder, uid);
-//            }
-//        }
-//    }
-
     public static void removeCache(Account account, String folder, ArrayList<String> removeList) throws MessagingException, RakuRakuException {
         for (String uid : removeList) {
             SlideAttachment.clearCacheForAttachmentFile(account, folder, uid);
         }
     }
-
-//    /**
-//     * [All] Cache Delete
-//     *
-//     * @param account user account
-//     * @param folder  imap folder
-//     * @throws MessagingException me
-//     * @throws RakuRakuException  rre
-//     */
-//    public static void removeAllCache(Account account, String folder) throws MessagingException, RakuRakuException {
-//        ArrayList<String> downloadedList = SlideMessage.getMessageUidRemoveTarget(account);
-//        for (String uid : downloadedList) {
-//            SlideAttachment.clearCacheForAttachmentFile(account, folder, uid);
-//        }
-//    }
-//
-//    private static ArrayList<String> createRemoveList(ArrayList<String> src, int currentIndex, int removeCount) {
-//        ArrayList<String> dest = new ArrayList<String>();
-//        if (0 == currentIndex) {
-//            //あるばあい リストの先頭で１つ後ろがないので逆にリストの後ろを消していく
-//            for (int i = (src.size() - 1); i >= (src.size() - removeCount); i--) {
-//                dest.add(src.get(i));
-//            }
-//        } else if (0 < currentIndex) {
-//            //あるばあい
-//            if (currentIndex >= removeCount) {
-//                //currentIndex-1 から -removeCount 件を削除リストにつっこむ
-//                for (int i = (currentIndex - 1); i >= (currentIndex - removeCount); i--) {
-//                    dest.add(src.get(i));
-//                }
-//            } else {
-//                System.out.println(Math.abs(currentIndex - removeCount));
-//                //abs(removeCount) の分だけ後ろからもってくる
-//                for (int i = (src.size() - 1); i >= (src.size() - Math.abs(currentIndex - removeCount)); i--) {
-//                    dest.add(src.get(i));
-//                }
-//                // currentIndex-1 から 先頭まで削除
-//                for (int i = (currentIndex - 1); i >= 0; i--) {
-//                    dest.add(src.get(i));
-//                }
-//            }
-//        } else {
-//            //ないばあい リストの一番後ろから件数分さくじょ
-//            for (int i = (src.size() - 1); i >= (src.size() - removeCount); i--) {
-//                dest.add(src.get(i));
-//            }
-//        }
-//        return dest;
-//    }
 
     /**
      * destroyはしないよ

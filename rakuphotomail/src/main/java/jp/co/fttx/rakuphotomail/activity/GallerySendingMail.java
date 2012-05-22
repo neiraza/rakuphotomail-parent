@@ -82,7 +82,7 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
         final Intent intent = getIntent();
         initInfo(intent);
         setMSentFlagVisibility();
-        MessagingController.getInstance(getApplication()).addListener(mListener);
+//        MessagingController.getInstance(getApplication()).addListener(mListener);
     }
 
     /**
@@ -150,8 +150,10 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
         }
 
         StringBuilder recipientTypeTo = new StringBuilder();
+
         String address = intent.getStringExtra(EXTRA_ADDRESS_TO);
-        recipientTypeTo.append(address == null ? "" : address);
+
+        recipientTypeTo.append(address == null ? "" : toRfcMailAddress(address));
         if (!RakuPhotoStringUtils.isNotBlank(address)) {
             address = getString(R.string.common_message_unknown);
             Log.w(RakuPhotoMail.LOG_TAG, getString(R.string.sending_message_address_unknown));
@@ -159,6 +161,7 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
             mSend.setEnabled(false);
         }
         String addressName = intent.getStringExtra(EXTRA_ADDRESS_TO_NAME);
+
         recipientTypeTo.append(addressName == null ? "" : addressName);
         if (!RakuPhotoStringUtils.isNotBlank(addressName)) {
             addressName = getString(R.string.common_message_unknown);
@@ -172,6 +175,13 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
         mInReplyTo = intent.getStringExtra(EXTRA_MESSAGE_ID);
         mReferences = intent.getStringExtra(EXTRA_MESSAGE_ID);
         mAnswered = intent.getBooleanExtra(EXTRA_MESSAGE_ANSWERED, false);
+    }
+
+    private String toRfcMailAddress(String address) {
+        StringBuilder tmp = new StringBuilder("<");
+        tmp.append(address);
+        tmp.append(">");
+        return tmp.toString();
     }
 
     /**
@@ -335,7 +345,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
          */
         @Override
         protected Void doInBackground(Void... params) {
-
             MimeMessage message;
             try {
                 message = createMessage();
@@ -394,7 +403,7 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
             message.setReferences(mReferences);
         }
         TextBody body = null;
-        body = new TextBody("このメールは、らくフォトメールの試験用メールです。");
+        body = new TextBody(getString(R.string.send_message_text));
         message.setBody(body);
         return message;
     }

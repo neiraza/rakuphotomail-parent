@@ -2086,7 +2086,7 @@ public class MessagingController implements Runnable {
 					 * processed on the next round.
 					 */
                 } catch (RakuRakuException e) {
-                    Log.e(RakuPhotoMail.LOG_TAG,"ERROR:"+e.getMessage());
+                    Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
                 }
             }
         });
@@ -2856,13 +2856,12 @@ public class MessagingController implements Runnable {
             localFolder.open(OpenMode.READ_WRITE);
             ArrayList<Message> messages = new ArrayList<Message>();
             for (String uid : uids) {
-                // Allows for re-allowing sending of messages that could not be
-                // sent
                 if (flag == Flag.FLAGGED && !newState && uid != null
                         && account.getOutboxFolderName().equals(folderName)) {
                     sendCount.remove(uid);
                 }
                 Message msg = localFolder.getMessage(uid);
+
                 if (msg != null) {
                     messages.add(msg);
                 }
@@ -3155,7 +3154,7 @@ public class MessagingController implements Runnable {
                     addErrorMessage(account, null, me);
 
                 } catch (RakuRakuException e) {
-                    Log.e(RakuPhotoMail.LOG_TAG,"ERROR:"+e.getMessage());
+                    Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
                 } finally {
                     closeFolder(localFolder);
                     closeFolder(remoteFolder);
@@ -3210,11 +3209,9 @@ public class MessagingController implements Runnable {
      * @param message //     * @param listener
      */
     public String sendMessage(final Account account, final Message message) {
-
         LocalStore localStore = null;
         try {
             localStore = account.getLocalStore();
-
             LocalFolder localFolder = localStore.getFolder(account
                     .getOutboxFolderName());
             localFolder.open(OpenMode.READ_WRITE);
@@ -3251,11 +3248,7 @@ public class MessagingController implements Runnable {
                 return null;
             }
             localFolder.open(OpenMode.READ_WRITE);
-
             Message[] localMessages = localFolder.getMessages(null);
-//            int progress = 0;
-            int todo = localMessages.length;
-
             FetchProfile fp = new FetchProfile();
             fp.add(FetchProfile.Item.ENVELOPE);
             fp.add(FetchProfile.Item.BODY);
@@ -3283,27 +3276,19 @@ public class MessagingController implements Runnable {
                                         + " attempts.  Giving up until the user restarts the device");
                         continue;
                     }
-
                     localFolder.fetch(new Message[]{message}, fp, null);
                     try {
                         if (message.getHeader(RakuPhotoMail.IDENTITY_HEADER) != null) {
                             continue;
-
                         }
-
                         message.setFlag(Flag.X_SEND_IN_PROGRESS, true);
-
                         transport.sendMessage(message);
-
                         message.setFlag(Flag.X_SEND_IN_PROGRESS, false);
                         message.setFlag(Flag.SEEN, true);
-
                         LocalFolder localSentFolder = (LocalFolder) localStore
                                 .getFolder(account.getSentFolderName());
-
                         localFolder.moveMessages(new Message[]{message},
                                 localSentFolder);
-//  }
                         return message.getUid();
 
                     } catch (Exception e) {
@@ -3785,7 +3770,7 @@ public class MessagingController implements Runnable {
                     moveOrCopyMessageSynchronous(account, srcFolder, messages,
                             destFolder, false, listener);
                 } catch (RakuRakuException e) {
-                    Log.e(RakuPhotoMail.LOG_TAG,"ERROR:"+e.getMessage());
+                    Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
                 }
             }
         });
@@ -3808,7 +3793,7 @@ public class MessagingController implements Runnable {
                     moveOrCopyMessageSynchronous(account, srcFolder, messages,
                             destFolder, true, listener);
                 } catch (RakuRakuException e) {
-                    Log.e(RakuPhotoMail.LOG_TAG,"ERROR:"+e.getMessage());
+                    Log.e(RakuPhotoMail.LOG_TAG, "ERROR:" + e.getMessage());
                 }
             }
         });
