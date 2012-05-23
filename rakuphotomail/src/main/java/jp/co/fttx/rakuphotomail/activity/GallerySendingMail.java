@@ -82,7 +82,6 @@ public class GallerySendingMail extends RakuPhotoActivity implements View.OnClic
         final Intent intent = getIntent();
         initInfo(intent);
         setMSentFlagVisibility();
-//        MessagingController.getInstance(getApplication()).addListener(mListener);
     }
 
     /**

@@ -747,7 +747,7 @@ public class GallerySlideShow extends RakuPhotoActivity implements View.OnClickL
         mDispUid = savedInstanceStage.getString(INSTANCE_STATE_DISP_UID);
     }
 
-    private void onCancel(){
+    private void onCancel() {
         mSlideShowLoopHandler.removeCallbacks(mSlideShowLoopRunnable);
 
         if (null != mMessageSyncTask) {
