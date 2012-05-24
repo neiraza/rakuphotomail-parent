@@ -15,14 +15,9 @@
             android:normalScreens="true"
             android:smallScreens="true"/>
 
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-    <uses-permission android:name="android.permission.READ_CONTACTS"/>
-    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS"/>
     <!-- Needed to mark a contact as contacted -->
-    <uses-permission android:name="android.permission.WRITE_CONTACTS"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="org.thialfihar.android.apg.permission.READ_KEY_DETAILS"/>
@@ -269,17 +264,17 @@
             <intent-filter>
 
                 <!--
-                     android.intent.action.MEDIA_MOUNTED * Broadcast Action: External 
-					media is present and mounted at its mount point. * The path to the mount 
-					point for the removed media is contained in the Intent.mData field. * The 
-					Intent contains an extra with name "read-only" and Boolean value to indicate 
-					if the * media was mounted read only.
+                     android.intent.action.MEDIA_MOUNTED * Broadcast Action: External
+          media is present and mounted at its mount point. * The path to the mount
+          point for the removed media is contained in the Intent.mData field. * The
+          Intent contains an extra with name "read-only" and Boolean value to indicate
+          if the * media was mounted read only.
                 -->
                 <action android:name="android.intent.action.MEDIA_MOUNTED"/>
                 <!--
-                     MEDIA_EJECT and MEDIA_UNMOUNTED are not defined here: they have 
-					to be dynamically registered otherwise it would make app start at the wrong 
-					time
+                     MEDIA_EJECT and MEDIA_UNMOUNTED are not defined here: they have
+          to be dynamically registered otherwise it would make app start at the wrong
+          time
                 -->
                 <data android:scheme="file"/>
             </intent-filter>
